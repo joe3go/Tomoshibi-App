@@ -61,16 +61,16 @@ export default function ScenarioSelection() {
   const getAvatarImage = (persona: any) => {
     if (persona?.type === 'teacher') return harukiAvatar;
     if (persona?.type === 'friend') return aoiAvatar;
-    return null;
+    return "";
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-deep-navy">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="glass-card rounded-3xl p-8">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 border-4 border-lantern-orange border-l-transparent rounded-full animate-spin"></div>
-            <span className="text-off-white">Loading scenarios...</span>
+            <div className="w-8 h-8 border-4 border-primary border-l-transparent rounded-full animate-spin"></div>
+            <span className="text-foreground">Loading scenarios...</span>
           </div>
         </div>
       </div>
@@ -149,7 +149,7 @@ export default function ScenarioSelection() {
 
         {/* Scenario Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {scenarios?.map((scenario: any) => {
+          {Array.isArray(scenarios) && scenarios.map((scenario: any) => {
             const IconComponent = getScenarioIcon(scenario.title);
             return (
               <Card 

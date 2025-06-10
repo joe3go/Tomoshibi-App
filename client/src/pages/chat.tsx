@@ -26,11 +26,11 @@ export default function Chat() {
     enabled: !!conversationId,
   });
 
-  const { data: personas } = useQuery({
+  const { data: personas = [] } = useQuery({
     queryKey: ["/api/personas"],
   });
 
-  const { data: scenarios } = useQuery({
+  const { data: scenarios = [] } = useQuery({
     queryKey: ["/api/scenarios"],
   });
 
@@ -59,7 +59,7 @@ export default function Chat() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [conversationData?.messages]);
+  }, [(conversationData as any)?.messages]);
 
   const handleSendMessage = () => {
     if (message.trim() && !sendMessageMutation.isPending) {
@@ -107,17 +107,17 @@ export default function Chat() {
     );
   }
 
-  const conversation = conversationData?.conversation;
-  const messages = conversationData?.messages || [];
+  const conversation = (conversationData as any)?.conversation;
+  const messages = (conversationData as any)?.messages || [];
   
   // Handle case where conversation doesn't exist
   if (!conversation) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-deep-navy">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <Card className="glass-card p-8 text-center">
-          <h2 className="text-xl font-semibold text-off-white mb-4">Conversation Not Found</h2>
-          <p className="text-off-white/70 mb-6">This conversation doesn't exist or you don't have access to it.</p>
-          <Button onClick={() => setLocation("/")} className="gradient-button">
+          <h2 className="text-xl font-semibold text-foreground mb-4">Conversation Not Found</h2>
+          <p className="text-muted-foreground mb-6">This conversation doesn't exist or you don't have access to it.</p>
+          <Button onClick={() => setLocation("/")} className="bg-primary text-primary-foreground hover:bg-primary/90">
             Return to Dashboard
           </Button>
         </Card>
@@ -125,11 +125,11 @@ export default function Chat() {
     );
   }
   
-  const persona = personas?.find((p: any) => p.id === conversation?.personaId);
-  const scenario = scenarios?.find((s: any) => s.id === conversation?.scenarioId);
+  const persona = Array.isArray(personas) ? personas.find((p: any) => p.id === conversation?.personaId) : null;
+  const scenario = Array.isArray(scenarios) ? scenarios.find((s: any) => s.id === conversation?.scenarioId) : null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-deep-navy">
+    <div className="min-h-screen flex flex-col bg-background">
       {/* Chat Header */}
       <header className="glass-card rounded-b-2xl p-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
@@ -137,7 +137,7 @@ export default function Chat() {
             variant="ghost"
             size="sm"
             onClick={() => setLocation("/")}
-            className="p-2 text-off-white hover:bg-kanji-glow"
+            className="p-2 text-foreground hover:bg-muted"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
