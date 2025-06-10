@@ -30,6 +30,7 @@ export const personas = pgTable("personas", {
   description: text("description"),
   systemPrompt: text("system_prompt").notNull(),
   personalityTraits: jsonb("personality_traits"),
+  avatarUrl: varchar("avatar_url", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

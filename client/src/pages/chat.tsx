@@ -106,10 +106,26 @@ export default function Chat() {
     );
   }
 
-  const conversation = conversationData.conversation;
-  const messages = conversationData.messages || [];
-  const persona = personas?.find((p: any) => p.id === conversation.personaId);
-  const scenario = scenarios?.find((s: any) => s.id === conversation.scenarioId);
+  const conversation = conversationData?.conversation;
+  const messages = conversationData?.messages || [];
+  
+  // Handle case where conversation doesn't exist
+  if (!conversation) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-deep-navy">
+        <Card className="glass-card p-8 text-center">
+          <h2 className="text-xl font-semibold text-off-white mb-4">Conversation Not Found</h2>
+          <p className="text-off-white/70 mb-6">This conversation doesn't exist or you don't have access to it.</p>
+          <Button onClick={() => setLocation("/")} className="gradient-button">
+            Return to Dashboard
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+  
+  const persona = personas?.find((p: any) => p.id === conversation?.personaId);
+  const scenario = scenarios?.find((s: any) => s.id === conversation?.scenarioId);
 
   return (
     <div className="min-h-screen flex flex-col bg-deep-navy">
