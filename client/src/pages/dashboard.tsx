@@ -54,8 +54,14 @@ export default function Dashboard() {
   });
 
   const handleLogout = () => {
+    // Clear session data
     removeAuthToken();
-    setLocation("/");
+    // Clear React Query cache
+    queryClient.clear();
+    // Clear any localStorage items
+    localStorage.clear();
+    // Route to landing page
+    window.location.href = "/";
   };
 
   const getAvatarImage = (persona: any) => {
@@ -81,11 +87,11 @@ export default function Dashboard() {
 
   if (personasLoading || scenariosLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-deep-navy">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="glass-card rounded-3xl p-8">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 border-4 border-lantern-orange border-l-transparent rounded-full animate-spin"></div>
-            <span className="text-off-white">Loading...</span>
+            <div className="w-8 h-8 border-4 border-primary border-l-transparent rounded-full animate-spin"></div>
+            <span className="text-foreground">Loading...</span>
           </div>
         </div>
       </div>

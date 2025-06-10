@@ -1,0 +1,82 @@
+1. Routing & Navigation Fixes:
+
+Fix the login routing error: “Did you forget to add your page router?”
+
+Ensure after login, users route smoothly to the hero landing page.
+
+Fix logout behavior so that when users log out:
+
+The app properly clears session data.
+
+The UI refreshes and routes back to the home or login page immediately.
+
+No stale data or cached user info remains visible.
+
+Implement error boundaries or graceful fallback UI to handle missing personaId or other data issues.
+
+2. Dark Theme UI with Japanese Palette:
+
+Use this Japanese-inspired dark color palette app-wide, including dashboards and chat:
+
+Role	Hex	Usage Example
+Primary Background	#2e1a47	茄子紺 (Eggplant navy) main bg
+Secondary Bg	#634950	藤煤竹 (Dusty violet) sections
+Cards/Surfaces	#888e7e	利休鼠 (Tea ceremony gray) cards
+Accent	#ffa94d	灯色 (Flame-orange) highlights
+Text Primary	#eaf4fc	月白 (Moon white) main text
+Text Secondary	#b69c9d	桜鼠 (Sakura gray-pink) captions
+
+Ensure good contrast and comfortable reading in all areas.
+
+3. Hero / Landing Page:
+
+Replace existing visuals with a refined Japanese-style lantern visual:
+
+Soft glow in 灯色 (#ffa94d).
+
+Organic shapes inspired by 和紙 (washi paper) textures or 折り紙 patterns.
+
+Background gradients blending 茄子紺 and 藤煤竹 for depth.
+
+Include a welcoming headline and call-to-action in 月白 (#eaf4fc) with subtle 桜鼠 (#b69c9d) accent highlights.
+
+4. Chat Interface:
+
+Use illustrated portraits of Haruki (female) and Aoi (male) as chat icons.
+
+Both images should share a consistent modern style with soft edges and colors from the palette.
+
+Display their names clearly near the icons using 桜鼠 (#b69c9d).
+
+Ensure the UI is clean and fits well within the dark theme.
+
+5. Dashboard Enhancements:
+
+Add dynamic visual elements such as:
+
+Interactive graphs (line, bar, pie charts).
+
+Progress bars and KPI indicators.
+
+Subtle animations on data updates (smooth transitions).
+
+Use the palette colors to style graph elements:
+
+Background areas in 茄子紺 or 藤煤竹.
+
+Highlight bars/lines in 灯色.
+
+Text and labels in 月白 and 桜鼠.
+
+Ensure charts are responsive and visually balanced on dark backgrounds.
+
+6. Additional Technical Notes:
+
+Ensure all routing is handled via your framework’s router properly (React Router, Next.js routing, etc.).
+
+Clear session/local storage on logout to prevent stale data.
+
+Use suspense or loading indicators when fetching data for smooth UX.
+
+Implement error handling to avoid crashes from undefined data.
+
