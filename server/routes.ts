@@ -49,8 +49,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create user
       const user = await storage.createUser({
         email,
-        password,
-        passwordHash,
+        password: passwordHash, // Use hashed password
         displayName,
         preferredKanjiDisplay: 'furigana',
       });

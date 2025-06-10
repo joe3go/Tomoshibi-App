@@ -79,7 +79,7 @@ export class DatabaseStorage implements IStorage {
     const { password, ...userData } = insertUser;
     const [user] = await db.insert(users).values({
       ...userData,
-      passwordHash: userData.passwordHash || password // Handle both cases
+      passwordHash: password
     }).returning();
     return user;
   }
