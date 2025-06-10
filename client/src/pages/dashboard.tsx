@@ -16,19 +16,19 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
-  const { data: personas, isLoading: personasLoading } = useQuery({
+  const { data: personas = [], isLoading: personasLoading } = useQuery({
     queryKey: ["/api/personas"],
   });
 
-  const { data: scenarios, isLoading: scenariosLoading } = useQuery({
+  const { data: scenarios = [], isLoading: scenariosLoading } = useQuery({
     queryKey: ["/api/scenarios"],
   });
 
-  const { data: progress } = useQuery({
+  const { data: progress = {} } = useQuery({
     queryKey: ["/api/progress"],
   });
 
-  const { data: conversations } = useQuery({
+  const { data: conversations = [] } = useQuery({
     queryKey: ["/api/conversations"],
   });
 
@@ -103,26 +103,26 @@ export default function Dashboard() {
       {/* Header */}
       <header className="glass-card rounded-2xl p-4 mb-6 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-blue-400 flex items-center justify-center">
-            <span className="text-gray-900 font-bold">
-              {user?.displayName?.[0]?.toUpperCase() || "U"}
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+            <span className="text-background font-bold">
+              {(user as any)?.displayName?.[0]?.toUpperCase() || "U"}
             </span>
           </div>
           <div>
-            <h2 className="font-semibold text-gray-100">{user?.displayName || "User"}</h2>
-            <p className="text-sm text-gray-400">JLPT N5 Learner</p>
+            <h2 className="font-semibold text-foreground">{(user as any)?.displayName || "User"}</h2>
+            <p className="text-sm text-muted-foreground">JLPT N5 Learner</p>
           </div>
         </div>
         
         <div className="flex items-center space-x-3">
-          <Button variant="ghost" size="sm" className="p-2 text-gray-300 hover:bg-gray-700">
+          <Button variant="ghost" size="sm" className="p-2 text-muted-foreground hover:bg-muted">
             <Settings className="w-5 h-5" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleLogout}
-            className="text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+            className="text-muted-foreground hover:text-foreground hover:bg-muted"
           >
             <LogOut className="w-4 h-4 mr-1" />
             Logout
@@ -132,17 +132,17 @@ export default function Dashboard() {
 
       {/* Start New Conversation */}
       <div className="mb-8 text-center">
-        <Card className="bg-gray-800/80 border border-orange-500/20 shadow-2xl shadow-orange-500/5 max-w-md mx-auto">
+        <Card className="bg-card/80 border border-primary/20 shadow-2xl shadow-primary/5 max-w-md mx-auto">
           <CardContent className="p-8">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-orange-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
-              <MessageCircle className="w-8 h-8 text-gray-900" />
+            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center shadow-lg">
+              <MessageCircle className="w-8 h-8 text-background" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-100 mb-2">Ready to Practice?</h3>
-            <p className="text-gray-300 mb-6">Choose your tutor and start a new conversation to improve your Japanese skills.</p>
+            <h3 className="text-xl font-semibold text-foreground mb-2">Ready to Practice?</h3>
+            <p className="text-muted-foreground mb-6">Choose your tutor and start a new conversation to improve your Japanese skills.</p>
             
             <Button 
               onClick={() => setLocation("/tutor-selection")}
-              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold text-lg py-3 rounded-xl shadow-lg hover:shadow-orange-500/20 hover:scale-105 transition-all duration-300"
+              className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white font-semibold text-lg py-3 rounded-xl shadow-lg hover:shadow-primary/20 hover:scale-105 transition-all duration-300"
             >
               Start New Conversation
             </Button>
@@ -151,47 +151,47 @@ export default function Dashboard() {
       </div>
 
       {/* Continue Conversations Section */}
-      {conversations && conversations.length > 0 && (
+      {Array.isArray(conversations) && conversations.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-100 mb-4 flex items-center">
-            <Clock className="w-5 h-5 mr-2 text-orange-500" />
+          <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center">
+            <Clock className="w-5 h-5 mr-2 text-primary" />
             Continue Your Conversations
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {conversations.slice(0, 6).map((conversation: any) => {
-              const persona = personas?.find((p: any) => p.id === conversation.personaId);
-              const scenario = scenarios?.find((s: any) => s.id === conversation.scenarioId);
+              const persona = Array.isArray(personas) ? personas.find((p: any) => p.id === conversation.personaId) : null;
+              const scenario = Array.isArray(scenarios) ? scenarios.find((s: any) => s.id === conversation.scenarioId) : null;
               
               return (
                 <Card 
                   key={conversation.id} 
-                  className="bg-gray-800 border-gray-700 hover:border-orange-500/30 transition-all duration-300 cursor-pointer group shadow-lg hover:shadow-orange-500/10"
+                  className="bg-card border-border hover:border-primary/30 transition-all duration-300 cursor-pointer group shadow-lg hover:shadow-primary/10"
                   onClick={() => setLocation(`/chat/${conversation.id}`)}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-center space-x-3 mb-3">
-                      <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-orange-500/30 shadow-md">
+                      <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/30 shadow-md">
                         <img 
-                          src={getAvatarImage(persona)} 
+                          src={getAvatarImage(persona) || ""} 
                           alt={persona?.name || "Tutor"}
                           className="w-full h-full object-cover"
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-medium text-gray-100 truncate">
+                        <h3 className="text-sm font-medium text-foreground truncate">
                           {persona?.name || "Unknown Tutor"}
                         </h3>
-                        <p className="text-xs text-gray-400 truncate">
+                        <p className="text-xs text-muted-foreground truncate">
                           {scenario?.title || "Free Chat"}
                         </p>
                       </div>
                     </div>
                     
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-muted-foreground">
                         {formatTimeAgo(conversation.updatedAt)}
                       </span>
-                      <ArrowRight className="w-4 h-4 text-orange-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <ArrowRight className="w-4 h-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
                   </CardContent>
                 </Card>
@@ -203,18 +203,18 @@ export default function Dashboard() {
 
       {/* Progress Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <Card className="bg-gray-800/80 border-gray-700">
+        <Card className="bg-card/80 border-border">
           <CardContent className="p-6">
             <div className="flex items-center space-x-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center">
-                <span className="text-orange-500 text-lg">🗣️</span>
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="text-primary text-lg">🗣️</span>
               </div>
-              <h3 className="font-semibold text-gray-100">Conversations</h3>
+              <h3 className="font-semibold text-foreground">Conversations</h3>
             </div>
-            <p className="text-2xl font-bold text-orange-500">
-              {conversations?.length || 0}
+            <p className="text-2xl font-bold text-primary">
+              {Array.isArray(conversations) ? conversations.length : 0}
             </p>
-            <p className="text-sm text-gray-400">Total completed</p>
+            <p className="text-sm text-muted-foreground">Total completed</p>
           </CardContent>
         </Card>
         
