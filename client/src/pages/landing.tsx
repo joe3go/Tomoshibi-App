@@ -37,7 +37,7 @@ export default function Landing() {
         <div className="max-w-4xl mx-auto text-center relative z-10">
           {/* Floating Lantern Animation */}
           <div className="mb-8 flex justify-center">
-            <div className="w-20 h-24 relative animate-pulse">
+            <div className="w-20 h-24 relative animate-float">
               <div className="absolute inset-0 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full opacity-20 blur-xl"></div>
               <div className="relative w-16 h-20 mx-auto bg-gradient-to-b from-amber-500 to-amber-700 rounded-lg border-2 border-amber-400 shadow-2xl shadow-amber-500/30">
                 <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-amber-200 rounded-full animate-pulse"></div>
