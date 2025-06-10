@@ -5,8 +5,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { removeAuthToken } from "@/lib/auth";
 import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Settings, LogOut } from "lucide-react";
+import { Settings, LogOut, MessageCircle, Clock, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import harukiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
+import aoiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
 
 
 export default function Dashboard() {
@@ -54,6 +56,23 @@ export default function Dashboard() {
   const handleLogout = () => {
     removeAuthToken();
     setLocation("/");
+  };
+
+  const getAvatarImage = (persona: any) => {
+    if (persona?.type === 'teacher') return harukiAvatar;
+    if (persona?.type === 'friend') return aoiAvatar;
+    return null;
+  };
+
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return "Just now";
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays}d ago`;
   };
 
   const startScenario = (scenarioId: number, personaId: number = 1) => {
@@ -104,6 +123,57 @@ export default function Dashboard() {
           </Button>
         </div>
       </header>
+
+      {/* Continue Conversations Section */}
+      {conversations && conversations.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-off-white mb-4 flex items-center">
+            <Clock className="w-5 h-5 mr-2 text-lantern-orange" />
+            Continue Your Conversations
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {conversations.slice(0, 6).map((conversation: any) => {
+              const persona = personas?.find((p: any) => p.id === conversation.personaId);
+              const scenario = scenarios?.find((s: any) => s.id === conversation.scenarioId);
+              
+              return (
+                <Card 
+                  key={conversation.id} 
+                  className="glass-card border-glass-border hover:border-lantern-orange/30 transition-all duration-300 cursor-pointer group"
+                  onClick={() => setLocation(`/chat/${conversation.id}`)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-lantern-orange/30">
+                        <img 
+                          src={getAvatarImage(persona)} 
+                          alt={persona?.name || "Tutor"}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-medium text-off-white truncate">
+                          {persona?.name || "Unknown Tutor"}
+                        </h3>
+                        <p className="text-xs text-off-white/60 truncate">
+                          {scenario?.title || "Free Chat"}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-off-white/50">
+                        {formatTimeAgo(conversation.updatedAt)}
+                      </span>
+                      <ArrowRight className="w-4 h-4 text-lantern-orange opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Progress Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -208,46 +278,24 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Scenario Selection */}
-      <div className="mb-8">
-        <h3 className="text-xl font-semibold mb-4 flex items-center text-off-white">
-          <span className="mr-2">🗺️</span>
-          Conversation Scenarios
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {scenarios?.map((scenario: any) => (
-            <Card key={scenario.id} className="glass-card border-glass-border hover-glow cursor-pointer group">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-lantern-orange to-sakura-blue flex items-center justify-center">
-                    <span className="text-lg">🏮</span>
-                  </div>
-                  <span className="px-2 py-1 rounded-lg bg-green-500/20 text-green-400 text-xs">
-                    Unlocked
-                  </span>
-                </div>
-                <h4 className="font-semibold mb-2 text-off-white">{scenario.title}</h4>
-                <p className="text-off-white/70 text-sm mb-3 font-japanese">
-                  {getScenarioJapanese(scenario.title)}
-                </p>
-                <p className="text-off-white/60 text-sm mb-4">{scenario.description}</p>
-                <div className="mb-4 flex items-center space-x-2">
-                  <span className="px-2 py-1 rounded-lg bg-kanji-glow text-xs text-off-white/70">
-                    N5 Level
-                  </span>
-                </div>
-                <Button
-                  onClick={() => startScenario(scenario.id)}
-                  disabled={createConversationMutation.isPending}
-                  className="w-full gradient-button hover-glow"
-                >
-                  Start Conversation
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      {/* Start New Conversation */}
+      <div className="mb-8 text-center">
+        <Card className="glass-card border-glass-border max-w-md mx-auto">
+          <CardContent className="p-8">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-lantern-orange to-sakura-blue rounded-2xl flex items-center justify-center">
+              <MessageCircle className="w-8 h-8 text-deep-navy" />
+            </div>
+            <h3 className="text-xl font-semibold text-off-white mb-2">Ready to Practice?</h3>
+            <p className="text-off-white/70 mb-6">Choose your tutor and start a new conversation to improve your Japanese skills.</p>
+            
+            <Button 
+              onClick={() => setLocation("/tutor-selection")}
+              className="w-full gradient-button text-lg py-3 hover:scale-105 transition-transform duration-300"
+            >
+              Start New Conversation
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
