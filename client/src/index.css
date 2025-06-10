@@ -79,14 +79,14 @@
 
 @layer components {
   .glass-card {
-    background: rgba(255, 255, 255, 0.03);
+    background: hsl(var(--charcoal));
     backdrop-filter: blur(12px);
-    border: 1px solid var(--glass-border);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
   }
 
   .glow-border {
-    box-shadow: 0 0 20px rgba(242, 163, 101, 0.2);
+    box-shadow: 0 0 20px hsla(17, 100%, 61%, 0.2);
   }
 
   .hover-glow {
@@ -94,8 +94,21 @@
   }
 
   .hover-glow:hover {
-    box-shadow: 0 0 25px rgba(242, 163, 101, 0.4);
+    box-shadow: 0 0 25px hsla(17, 100%, 61%, 0.4);
     transform: translateY(-2px);
+  }
+
+  .gradient-button {
+    background: linear-gradient(135deg, hsl(var(--warm-orange)), hsl(var(--soft-blue)));
+    color: hsl(var(--deep-navy));
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px hsla(17, 100%, 61%, 0.2);
+  }
+
+  .gradient-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px hsla(17, 100%, 61%, 0.3);
   }
 
   .chat-bubble-user {
