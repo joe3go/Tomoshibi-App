@@ -50,7 +50,7 @@ export default function Landing() {
           <div className="space-y-6 animate-fade-in-up">
             <h1 className="text-5xl md:text-7xl font-bold leading-tight">
               Speak Japanese{" "}
-              <span className="bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-lantern-orange to-sakura-blue bg-clip-text text-transparent">
                 Confidently
               </span>
             </h1>
@@ -67,19 +67,19 @@ export default function Landing() {
             <div className="pt-8">
               <Button
                 onClick={() => setLocation("/login")}
-                className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-black font-semibold text-lg px-8 py-4 rounded-xl shadow-2xl shadow-amber-500/30 transform hover:scale-105 transition-all duration-300 hover:shadow-amber-500/50"
+                className="bg-gradient-to-r from-lantern-orange to-sakura-blue hover:from-lantern-orange/90 hover:to-sakura-blue/90 text-deep-navy font-semibold text-lg px-8 py-4 rounded-xl shadow-2xl shadow-lantern-orange/30 transform hover:scale-105 transition-all duration-300 hover:shadow-lantern-orange/50"
               >
                 Start Learning Free
               </Button>
             </div>
 
-            <div className="pt-4 flex justify-center items-center space-x-6 text-sm text-gray-400">
+            <div className="pt-4 flex justify-center items-center space-x-6 text-sm text-off-white/60">
               <div className="flex items-center space-x-1">
-                <CheckCircle className="w-4 h-4 text-green-400" />
+                <CheckCircle className="w-4 h-4 text-sakura-blue" />
                 <span>No credit card required</span>
               </div>
               <div className="flex items-center space-x-1">
-                <Star className="w-4 h-4 text-amber-400" />
+                <Star className="w-4 h-4 text-lantern-orange" />
                 <span>500+ learners</span>
               </div>
             </div>
@@ -94,8 +94,8 @@ export default function Landing() {
             {/* Feature 1 */}
             <Card className="bg-gradient-to-br from-gray-900/60 to-gray-800/60 border-gray-700 backdrop-blur-sm hover:from-gray-800/70 hover:to-gray-700/70 transition-all duration-300 hover:scale-105">
               <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-amber-500 to-yellow-500 rounded-2xl flex items-center justify-center">
-                  <Users className="w-8 h-8 text-black" />
+                <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-lantern-orange to-sakura-blue rounded-2xl flex items-center justify-center">
+                  <Users className="w-8 h-8 text-deep-navy" />
                 </div>
                 <h3 className="text-xl font-semibold mb-4 text-white">Personalized AI Tutors</h3>
                 <p className="text-gray-400 leading-relaxed">
@@ -107,8 +107,8 @@ export default function Landing() {
             {/* Feature 2 */}
             <Card className="bg-gradient-to-br from-gray-900/60 to-gray-800/60 border-gray-700 backdrop-blur-sm hover:from-gray-800/70 hover:to-gray-700/70 transition-all duration-300 hover:scale-105">
               <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center">
-                  <BookOpen className="w-8 h-8 text-white" />
+                <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-sakura-blue to-lantern-orange rounded-2xl flex items-center justify-center">
+                  <BookOpen className="w-8 h-8 text-deep-navy" />
                 </div>
                 <h3 className="text-xl font-semibold mb-4 text-white">JLPT N5 Scenarios</h3>
                 <p className="text-gray-400 leading-relaxed">
@@ -120,8 +120,8 @@ export default function Landing() {
             {/* Feature 3 */}
             <Card className="bg-gradient-to-br from-gray-900/60 to-gray-800/60 border-gray-700 backdrop-blur-sm hover:from-gray-800/70 hover:to-gray-700/70 transition-all duration-300 hover:scale-105">
               <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center">
-                  <TrendingUp className="w-8 h-8 text-white" />
+                <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-off-white to-sakura-blue rounded-2xl flex items-center justify-center">
+                  <TrendingUp className="w-8 h-8 text-deep-navy" />
                 </div>
                 <h3 className="text-xl font-semibold mb-4 text-white">Real-Time Feedback</h3>
                 <p className="text-gray-400 leading-relaxed">
@@ -139,16 +139,16 @@ export default function Landing() {
           <h3 className="text-2xl font-semibold mb-8 text-white">Join hundreds of learners mastering Japanese</h3>
           <div className="grid md:grid-cols-3 gap-8 text-center">
             <div>
-              <div className="text-4xl font-bold text-amber-400 mb-2">500+</div>
-              <div className="text-gray-400">Active Learners</div>
+              <div className="text-4xl font-bold text-lantern-orange mb-2">500+</div>
+              <div className="text-off-white/60">Active Learners</div>
             </div>
             <div>
-              <div className="text-4xl font-bold text-amber-400 mb-2">10+</div>
-              <div className="text-gray-400">Conversation Scenarios</div>
+              <div className="text-4xl font-bold text-lantern-orange mb-2">10+</div>
+              <div className="text-off-white/60">Conversation Scenarios</div>
             </div>
             <div>
-              <div className="text-4xl font-bold text-amber-400 mb-2">95%</div>
-              <div className="text-gray-400">Satisfaction Rate</div>
+              <div className="text-4xl font-bold text-lantern-orange mb-2">95%</div>
+              <div className="text-off-white/60">Satisfaction Rate</div>
             </div>
           </div>
         </div>
