@@ -9,6 +9,8 @@ import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import Chat from "@/pages/chat";
 import NotFound from "@/pages/not-found";
+import TutorSelection from "@/pages/tutor-selection";
+import ScenarioSelection from "@/pages/scenario-selection";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -37,6 +39,8 @@ function Router() {
         <>
           <Route path="/" component={Dashboard} />
           <Route path="/dashboard" component={Dashboard} />
+          <Route path="/tutor-selection" component={TutorSelection} />
+          <Route path="/scenario-selection/:personaId" component={ScenarioSelection} />
           <Route path="/chat/:conversationId" component={Chat} />
         </>
       )}
