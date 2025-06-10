@@ -158,13 +158,13 @@ export default function Landing() {
       <footer className="py-12 px-6 border-t border-gray-800">
         <div className="max-w-6xl mx-auto text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <h3 className="text-2xl font-bold text-amber-400">Tomoshibi</h3>
-            <span className="text-amber-300 text-lg">灯火</span>
+            <h3 className="text-2xl font-bold text-lantern-orange">Tomoshibi</h3>
+            <span className="text-sakura-blue text-lg">灯火</span>
           </div>
-          <p className="text-gray-400 mb-6">Your First Japanese Journey</p>
+          <p className="text-off-white/60 mb-6">Your First Japanese Journey</p>
           <Button
             onClick={() => setLocation("/login")}
-            className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-black font-semibold px-6 py-3 rounded-lg"
+            className="bg-gradient-to-r from-lantern-orange to-sakura-blue hover:from-lantern-orange/90 hover:to-sakura-blue/90 text-deep-navy font-semibold px-6 py-3 rounded-lg"
           >
             Get Started Today
           </Button>
