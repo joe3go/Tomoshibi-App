@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { setAuthToken } from "@/lib/auth";
 import { useLocation } from "wouter";
 
@@ -81,11 +81,16 @@ export default function Login() {
     },
     onSuccess: (data) => {
       setAuthToken(data.token);
-      setLocation("/");
+      // Invalidate auth queries to refresh user data
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       toast({
         title: "Welcome to Tomoshibi!",
         description: "Your account has been created successfully.",
       });
+      // Use setTimeout to ensure the query has time to refresh
+      setTimeout(() => {
+        setLocation("/");
+      }, 100);
     },
     onError: (error) => {
       toast({
