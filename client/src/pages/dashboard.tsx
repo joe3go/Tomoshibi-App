@@ -279,15 +279,15 @@ export default function Dashboard() {
                 <div className="flex items-center space-x-2">
                   <span className={`px-2 py-1 rounded-lg text-xs ${
                     persona.type === 'teacher' 
-                      ? 'bg-lantern-orange/20 text-lantern-orange' 
-                      : 'bg-sakura-blue/20 text-sakura-blue'
+                      ? 'bg-orange-500/20 text-orange-400' 
+                      : 'bg-blue-500/20 text-blue-400'
                   }`}>
                     {persona.type === 'teacher' ? 'Polite Form' : 'Casual Form'}
                   </span>
                   <span className={`px-2 py-1 rounded-lg text-xs ${
                     persona.type === 'teacher' 
-                      ? 'bg-lantern-orange/20 text-lantern-orange' 
-                      : 'bg-sakura-blue/20 text-sakura-blue'
+                      ? 'bg-orange-500/20 text-orange-400' 
+                      : 'bg-blue-500/20 text-blue-400'
                   }`}>
                     {persona.type === 'teacher' ? 'Detailed' : 'Natural'}
                   </span>
