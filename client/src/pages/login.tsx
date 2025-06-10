@@ -60,10 +60,10 @@ export default function Login() {
         title: "Welcome back!",
         description: "Successfully logged in.",
       });
-      // Use setTimeout to ensure the query has time to refresh
-      setTimeout(() => {
-        setLocation("/");
-      }, 100);
+      // Force immediate navigation to dashboard
+      queryClient.refetchQueries({ queryKey: ["/api/auth/me"] }).then(() => {
+        setLocation("/dashboard");
+      });
     },
     onError: (error) => {
       toast({
@@ -87,10 +87,10 @@ export default function Login() {
         title: "Welcome to Tomoshibi!",
         description: "Your account has been created successfully.",
       });
-      // Use setTimeout to ensure the query has time to refresh
-      setTimeout(() => {
-        setLocation("/");
-      }, 100);
+      // Force immediate navigation to dashboard
+      queryClient.refetchQueries({ queryKey: ["/api/auth/me"] }).then(() => {
+        setLocation("/dashboard");
+      });
     },
     onError: (error) => {
       toast({

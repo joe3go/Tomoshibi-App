@@ -7,18 +7,18 @@ export default function Landing() {
   const [, setLocation] = useLocation();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1E1E1E] via-[#2A2A2A] to-[#1E1E1E] text-white">
+    <div className="min-h-screen bg-deep-navy text-off-white">
       {/* Navigation */}
       <nav className="absolute top-0 left-0 right-0 z-50 p-6">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <h1 className="text-2xl font-bold text-amber-400">Tomoshibi</h1>
-            <span className="text-amber-300 text-lg">灯火</span>
+            <h1 className="text-2xl font-bold text-lantern-orange">Tomoshibi</h1>
+            <span className="text-sakura-blue text-lg">灯火</span>
           </div>
           <Button
             onClick={() => setLocation("/login")}
             variant="outline"
-            className="border-amber-400 text-amber-400 hover:bg-amber-400 hover:text-black"
+            className="border-lantern-orange text-lantern-orange hover:bg-lantern-orange hover:text-deep-navy"
           >
             Sign In
           </Button>
@@ -29,19 +29,19 @@ export default function Landing() {
       <section className="relative min-h-screen flex items-center justify-center px-6 pt-20">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-1/4 left-1/4 w-32 h-32 border border-amber-400 rounded-full"></div>
-          <div className="absolute top-3/4 right-1/4 w-24 h-24 border border-amber-300 rounded-full"></div>
-          <div className="absolute bottom-1/4 left-1/3 w-16 h-16 border border-amber-200 rounded-full"></div>
+          <div className="absolute top-1/4 left-1/4 w-32 h-32 border border-lantern-orange rounded-full"></div>
+          <div className="absolute top-3/4 right-1/4 w-24 h-24 border border-sakura-blue rounded-full"></div>
+          <div className="absolute bottom-1/4 left-1/3 w-16 h-16 border border-off-white rounded-full"></div>
         </div>
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
           {/* Floating Lantern Animation */}
           <div className="mb-8 flex justify-center">
             <div className="w-20 h-24 relative animate-float">
-              <div className="absolute inset-0 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full opacity-20 blur-xl"></div>
-              <div className="relative w-16 h-20 mx-auto bg-gradient-to-b from-amber-500 to-amber-700 rounded-lg border-2 border-amber-400 shadow-2xl shadow-amber-500/30">
-                <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-amber-200 rounded-full animate-pulse"></div>
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-3 bg-amber-800 rounded-b-lg"></div>
+              <div className="absolute inset-0 bg-gradient-to-b from-lantern-orange to-sakura-blue rounded-full opacity-20 blur-xl"></div>
+              <div className="relative w-16 h-20 mx-auto bg-gradient-to-b from-lantern-orange to-deep-navy rounded-lg border-2 border-lantern-orange shadow-2xl shadow-lantern-orange/30">
+                <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-off-white rounded-full animate-pulse"></div>
+                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-3 bg-deep-navy rounded-b-lg"></div>
               </div>
             </div>
           </div>
