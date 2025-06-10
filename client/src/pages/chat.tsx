@@ -22,7 +22,7 @@ export default function Chat() {
   const conversationId = params?.conversationId ? parseInt(params.conversationId) : 0;
 
   const { data: conversationData, isLoading } = useQuery({
-    queryKey: ["/api/conversations", conversationId],
+    queryKey: [`/api/conversations/${conversationId}`],
     enabled: !!conversationId,
   });
 
@@ -42,7 +42,7 @@ export default function Chat() {
       return await response.json();
     },
     onSuccess: (messages) => {
-      queryClient.setQueryData(["/api/conversations", conversationId], (oldData: any) => ({
+      queryClient.setQueryData([`/api/conversations/${conversationId}`], (oldData: any) => ({
         ...oldData,
         messages,
       }));
@@ -96,7 +96,8 @@ export default function Chat() {
       <div className="min-h-screen flex items-center justify-center bg-deep-navy">
         <Card className="glass-card border-glass-border">
           <CardContent className="p-8 text-center">
-            <h2 className="text-xl font-semibold text-off-white mb-2">Conversation not found</h2>
+            <h2 className="text-xl font-semibold text-off-white mb-2">Conversation Not Found</h2>
+            <p className="text-off-white/70 mb-4">This conversation doesn't exist or you don't have access to it.</p>
             <Button onClick={() => setLocation("/")} className="gradient-button">
               Return to Dashboard
             </Button>
