@@ -19,11 +19,11 @@ export default function TutorSelection() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-deep-navy">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="glass-card rounded-3xl p-8">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 border-4 border-lantern-orange border-l-transparent rounded-full animate-spin"></div>
-            <span className="text-off-white">Loading tutors...</span>
+            <div className="w-8 h-8 border-4 border-primary border-l-transparent rounded-full animate-spin"></div>
+            <span className="text-foreground">Loading tutors...</span>
           </div>
         </div>
       </div>
@@ -37,34 +37,34 @@ export default function TutorSelection() {
   };
 
   return (
-    <div className="min-h-screen bg-deep-navy p-4">
+    <div className="min-h-screen bg-background p-4">
       {/* Header */}
-      <header className="glass-card rounded-2xl p-4 mb-6 flex items-center justify-between">
+      <header className="glass-card rounded-2xl p-4 mb-6 flex items-center justify-between subtle-depth">
         <div className="flex items-center space-x-3">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setLocation("/")}
-            className="p-2 text-off-white hover:bg-kanji-glow"
+            className="p-2 text-foreground hover:bg-muted tomoshibi-glow"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-xl font-semibold text-off-white">Choose Your Tutor</h1>
+          <h1 className="text-xl font-semibold text-foreground">Choose Your Tutor</h1>
         </div>
       </header>
 
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-off-white mb-2">Who would you like to practice with?</h2>
-          <p className="text-off-white/70">Each tutor has a unique teaching style to match your learning preferences.</p>
+        <div className="text-center mb-8 ma-spacing">
+          <h2 className="text-2xl font-bold text-foreground mb-2">Who would you like to practice with?</h2>
+          <p className="text-muted-foreground">Each tutor has a unique teaching style to match your learning preferences.</p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-8">
           {personas?.map((persona: any) => (
-            <Card key={persona.id} className="glass-card border-glass-border hover:border-lantern-orange/30 transition-all duration-300 group cursor-pointer" onClick={() => handleTutorSelect(persona.id)}>
-              <CardContent className="p-8 text-center">
+            <Card key={persona.id} className="glass-card subtle-depth hover:scale-105 transition-all duration-300 group cursor-pointer tomoshibi-glow" onClick={() => handleTutorSelect(persona.id)}>
+              <CardContent className="p-8 text-center space-y-6">
                 {/* Avatar */}
-                <div className="w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden border-4 border-lantern-orange/20 group-hover:border-lantern-orange/50 transition-all duration-300">
+                <div className="w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-primary/30 group-hover:border-primary/60 transition-all duration-300 shadow-xl">
                   <img 
                     src={getAvatarImage(persona)} 
                     alt={persona.name}
@@ -73,22 +73,22 @@ export default function TutorSelection() {
                 </div>
 
                 {/* Name & Title */}
-                <h3 className="text-2xl font-bold text-off-white mb-2">
-                  {persona.name} {persona.type === 'teacher' ? '(陽輝)' : '(葵)'}
-                </h3>
-                
-                <div className="mb-4">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                <div className="space-y-3">
+                  <h3 className="text-2xl font-bold text-foreground">
+                    {persona.name} {persona.type === 'teacher' ? '(陽輝)' : '(葵)'}
+                  </h3>
+                  
+                  <span className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${
                     persona.type === 'teacher' 
-                      ? 'bg-lantern-orange/20 text-lantern-orange' 
-                      : 'bg-sakura-blue/20 text-sakura-blue'
+                      ? 'bg-primary/20 text-primary border border-primary/30' 
+                      : 'bg-secondary/20 text-secondary border border-secondary/30'
                   }`}>
                     {persona.type === 'teacher' ? 'Formal Teacher' : 'Friendly Tutor'}
                   </span>
                 </div>
 
                 {/* Description */}
-                <p className="text-off-white/70 mb-6 leading-relaxed">
+                <p className="text-muted-foreground leading-relaxed">
                   {persona.description}
                 </p>
 
