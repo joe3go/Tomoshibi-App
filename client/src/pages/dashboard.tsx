@@ -7,6 +7,7 @@ import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Settings, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import logoPath from "@assets/generation-95d80019-0952-41c3-b978-73b1b565e05a (1)_1749528942341.png";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -77,13 +78,16 @@ export default function Dashboard() {
       {/* Header */}
       <header className="glass-card rounded-2xl p-4 mb-6 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-lantern-orange to-sakura-blue flex items-center justify-center">
-            <span className="text-deep-navy font-bold">
-              {user?.displayName?.[0]?.toUpperCase() || "U"}
-            </span>
-          </div>
+          <img 
+            src={logoPath} 
+            alt="Tomoshibi Logo" 
+            className="w-10 h-10"
+          />
           <div>
-            <h2 className="font-semibold text-off-white">{user?.displayName || "User"}</h2>
+            <h2 className="font-semibold text-off-white flex items-center">
+              <span className="text-lantern-orange mr-2">Tomoshibi</span>
+              {user?.displayName && `- ${user.displayName}`}
+            </h2>
             <p className="text-sm text-off-white/60">JLPT N5 Learner</p>
           </div>
         </div>
