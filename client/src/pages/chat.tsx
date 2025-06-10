@@ -9,7 +9,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import FuriganaText from "@/components/furigana-text";
 import InteractiveKanji from "@/components/interactive-kanji";
-import logoPath from "@assets/generation-95d80019-0952-41c3-b978-73b1b565e05a (1)_1749528942341.png";
+
 
 export default function Chat() {
   const [, params] = useRoute("/chat/:conversationId");
@@ -125,11 +125,6 @@ export default function Chat() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex items-center space-x-3">
-            <img 
-              src={logoPath} 
-              alt="Tomoshibi" 
-              className="w-8 h-8"
-            />
             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
               persona?.type === 'teacher' 
                 ? 'bg-gradient-to-br from-lantern-orange to-lantern-orange/60' 

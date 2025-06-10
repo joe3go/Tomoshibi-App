@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { setAuthToken } from "@/lib/auth";
 import { useLocation } from "wouter";
-import logoPath from "@assets/generation-95d80019-0952-41c3-b978-73b1b565e05a (1)_1749528942341.png";
+
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -54,11 +54,16 @@ export default function Login() {
     },
     onSuccess: (data) => {
       setAuthToken(data.token);
-      setLocation("/");
+      // Invalidate auth queries to refresh user data
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       toast({
         title: "Welcome back!",
         description: "Successfully logged in.",
       });
+      // Use setTimeout to ensure the query has time to refresh
+      setTimeout(() => {
+        setLocation("/");
+      }, 100);
     },
     onError: (error) => {
       toast({
@@ -114,14 +119,7 @@ export default function Login() {
       <Card className="glass-card w-full max-w-md relative z-10 border-glass-border">
         <CardContent className="p-8">
           <div className="text-center mb-8">
-            <div className="flex items-center justify-center mb-4">
-              <img 
-                src={logoPath} 
-                alt="Tomoshibi Logo" 
-                className="w-16 h-16 mr-3"
-              />
-              <h1 className="text-4xl font-bold text-lantern-orange">Tomoshibi</h1>
-            </div>
+            <h1 className="text-4xl font-bold mb-2 text-lantern-orange">Tomoshibi</h1>
             <p className="text-sakura-blue text-lg font-japanese">灯火</p>
             <p className="text-off-white/70 mt-2">Your First Japanese Journey</p>
           </div>
