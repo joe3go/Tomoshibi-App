@@ -41,25 +41,26 @@
 }
 
 .dark {
-  --background: hsl(220, 20%, 9%);
-  --foreground: hsl(0, 0%, 91%);
-  --muted: hsl(220, 15%, 13%);
-  --muted-foreground: hsl(215, 10%, 65%);
-  --popover: hsl(220, 18%, 11%);
-  --popover-foreground: hsl(0, 0%, 91%);
-  --card: hsl(220, 18%, 11%);
-  --card-foreground: hsl(0, 0%, 91%);
-  --border: hsl(220, 15%, 18%);
-  --input: hsl(220, 15%, 18%);
-  --primary: hsl(24, 100%, 58%);
-  --primary-foreground: hsl(220, 20%, 9%);
-  --secondary: hsl(210, 100%, 70%);
-  --secondary-foreground: hsl(220, 20%, 9%);
-  --accent: hsl(220, 15%, 18%);
-  --accent-foreground: hsl(0, 0%, 91%);
-  --destructive: hsl(0, 84%, 60%);
-  --destructive-foreground: hsl(0, 0%, 98%);
-  --ring: hsl(24, 100%, 58%);
+  /* Japanese-inspired dark palette */
+  --background: 271 42% 18%;              /* 茄子紺 (Eggplant navy) main bg */
+  --foreground: 210 60% 97%;              /* 月白 (Moon white) main text */
+  --muted: 348 18% 35%;                   /* 藤煤竹 (Dusty violet) sections */
+  --muted-foreground: 4 16% 70%;          /* 桜鼠 (Sakura gray-pink) captions */
+  --popover: 348 18% 35%;
+  --popover-foreground: 210 60% 97%;
+  --card: 36 7% 53%;                      /* 利休鼠 (Tea ceremony gray) cards */
+  --card-foreground: 210 60% 97%;
+  --border: 36 7% 53%;
+  --input: 36 7% 53%;
+  --primary: 26 100% 65%;                 /* 灯色 (Flame-orange) highlights */
+  --primary-foreground: 271 42% 18%;
+  --secondary: 348 18% 35%;
+  --secondary-foreground: 210 60% 97%;
+  --accent: 26 100% 65%;
+  --accent-foreground: 271 42% 18%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 60% 97%;
+  --ring: 26 100% 65%;
 }
 
 @layer base {
