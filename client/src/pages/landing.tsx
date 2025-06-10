@@ -104,20 +104,29 @@ export default function Landing() {
               </div>
             </div>
 
-            {/* Right Content - Paper Lantern */}
+            {/* Right Content - Refined Paper Lantern */}
             <div className="flex justify-center lg:justify-end">
               <div className="relative">
-                {/* Main Paper Lantern */}
-                <div className="relative w-64 h-80">
-                  {/* Lantern Body */}
-                  <div className="paper-lantern w-full h-full rounded-full relative">
-                    {/* Lantern Ribs */}
-                    <div className="absolute inset-4 border-t border-primary/20"></div>
-                    <div className="absolute inset-4 top-8 border-t border-primary/20"></div>
-                    <div className="absolute inset-4 top-16 border-t border-primary/20"></div>
-                    <div className="absolute inset-4 top-24 border-t border-primary/20"></div>
-                    <div className="absolute inset-4 top-32 border-t border-primary/20"></div>
-                    <div className="absolute inset-4 top-40 border-t border-primary/20"></div>
+                {/* Main Paper Lantern with Washi Paper Texture */}
+                <div className="relative w-72 h-96">
+                  {/* Lantern Body with Soft Glow */}
+                  <div className="paper-lantern w-full h-full relative overflow-hidden">
+                    {/* Inner Glow Effect */}
+                    <div className="absolute inset-8 bg-gradient-radial from-primary/30 via-primary/10 to-transparent rounded-full animate-pulse"></div>
+                    
+                    {/* Washi Paper Texture Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-card/90 via-card/70 to-card/90 rounded-full border-2 border-primary/20"></div>
+                    
+                    {/* Traditional Lantern Ribs */}
+                    <div className="absolute inset-6 space-y-6">
+                      <div className="border-t border-primary/30 w-full"></div>
+                      <div className="border-t border-primary/25 w-full"></div>
+                      <div className="border-t border-primary/30 w-full"></div>
+                      <div className="border-t border-primary/25 w-full"></div>
+                      <div className="border-t border-primary/30 w-full"></div>
+                      <div className="border-t border-primary/25 w-full"></div>
+                      <div className="border-t border-primary/30 w-full"></div>
+                    </div>
                     <div className="absolute inset-4 top-48 border-t border-primary/20"></div>
                     <div className="absolute inset-4 top-56 border-t border-primary/20"></div>
                     
