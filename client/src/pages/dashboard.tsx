@@ -93,30 +93,30 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-deep-navy p-4">
+    <div className="min-h-screen bg-background p-4">
       {/* Header */}
       <header className="glass-card rounded-2xl p-4 mb-6 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-lantern-orange to-sakura-blue flex items-center justify-center">
-            <span className="text-deep-navy font-bold">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-blue-400 flex items-center justify-center">
+            <span className="text-gray-900 font-bold">
               {user?.displayName?.[0]?.toUpperCase() || "U"}
             </span>
           </div>
           <div>
-            <h2 className="font-semibold text-off-white">{user?.displayName || "User"}</h2>
-            <p className="text-sm text-off-white/60">JLPT N5 Learner</p>
+            <h2 className="font-semibold text-gray-100">{user?.displayName || "User"}</h2>
+            <p className="text-sm text-gray-400">JLPT N5 Learner</p>
           </div>
         </div>
         
         <div className="flex items-center space-x-3">
-          <Button variant="ghost" size="sm" className="p-2 text-off-white hover:bg-kanji-glow">
+          <Button variant="ghost" size="sm" className="p-2 text-gray-300 hover:bg-gray-700">
             <Settings className="w-5 h-5" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleLogout}
-            className="text-off-white/60 hover:text-off-white hover:bg-kanji-glow"
+            className="text-gray-400 hover:text-gray-200 hover:bg-gray-700"
           >
             <LogOut className="w-4 h-4 mr-1" />
             Logout
@@ -126,17 +126,17 @@ export default function Dashboard() {
 
       {/* Start New Conversation */}
       <div className="mb-8 text-center">
-        <Card className="bg-gradient-to-br from-charcoal to-charcoal-light border border-warm-orange/20 shadow-2xl shadow-warm-orange/5 max-w-md mx-auto">
+        <Card className="bg-gray-800/80 border border-orange-500/20 shadow-2xl shadow-orange-500/5 max-w-md mx-auto">
           <CardContent className="p-8">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-warm-orange to-soft-blue rounded-2xl flex items-center justify-center shadow-lg">
-              <MessageCircle className="w-8 h-8 text-deep-navy" />
+            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-orange-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
+              <MessageCircle className="w-8 h-8 text-gray-900" />
             </div>
-            <h3 className="text-xl font-semibold text-off-white mb-2">Ready to Practice?</h3>
-            <p className="text-medium-gray mb-6">Choose your tutor and start a new conversation to improve your Japanese skills.</p>
+            <h3 className="text-xl font-semibold text-gray-100 mb-2">Ready to Practice?</h3>
+            <p className="text-gray-300 mb-6">Choose your tutor and start a new conversation to improve your Japanese skills.</p>
             
             <Button 
               onClick={() => setLocation("/tutor-selection")}
-              className="w-full bg-gradient-to-r from-warm-orange to-warm-orange/90 hover:from-warm-orange/90 hover:to-warm-orange text-deep-navy font-semibold text-lg py-3 rounded-xl shadow-lg hover:shadow-warm-orange/20 hover:scale-105 transition-all duration-300"
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold text-lg py-3 rounded-xl shadow-lg hover:shadow-orange-500/20 hover:scale-105 transition-all duration-300"
             >
               Start New Conversation
             </Button>
