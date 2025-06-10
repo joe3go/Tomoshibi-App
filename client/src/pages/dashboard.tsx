@@ -124,11 +124,31 @@ export default function Dashboard() {
         </div>
       </header>
 
+      {/* Start New Conversation */}
+      <div className="mb-8 text-center">
+        <Card className="bg-gradient-to-br from-charcoal to-charcoal-light border border-warm-orange/20 shadow-2xl shadow-warm-orange/5 max-w-md mx-auto">
+          <CardContent className="p-8">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-warm-orange to-soft-blue rounded-2xl flex items-center justify-center shadow-lg">
+              <MessageCircle className="w-8 h-8 text-deep-navy" />
+            </div>
+            <h3 className="text-xl font-semibold text-off-white mb-2">Ready to Practice?</h3>
+            <p className="text-medium-gray mb-6">Choose your tutor and start a new conversation to improve your Japanese skills.</p>
+            
+            <Button 
+              onClick={() => setLocation("/tutor-selection")}
+              className="w-full bg-gradient-to-r from-warm-orange to-warm-orange/90 hover:from-warm-orange/90 hover:to-warm-orange text-deep-navy font-semibold text-lg py-3 rounded-xl shadow-lg hover:shadow-warm-orange/20 hover:scale-105 transition-all duration-300"
+            >
+              Start New Conversation
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Continue Conversations Section */}
       {conversations && conversations.length > 0 && (
         <div className="mb-8">
           <h2 className="text-xl font-semibold text-off-white mb-4 flex items-center">
-            <Clock className="w-5 h-5 mr-2 text-lantern-orange" />
+            <Clock className="w-5 h-5 mr-2 text-warm-orange" />
             Continue Your Conversations
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -139,12 +159,12 @@ export default function Dashboard() {
               return (
                 <Card 
                   key={conversation.id} 
-                  className="glass-card border-glass-border hover:border-lantern-orange/30 transition-all duration-300 cursor-pointer group"
+                  className="bg-charcoal border-charcoal-light hover:border-warm-orange/30 transition-all duration-300 cursor-pointer group shadow-lg hover:shadow-warm-orange/10"
                   onClick={() => setLocation(`/chat/${conversation.id}`)}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-center space-x-3 mb-3">
-                      <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-lantern-orange/30">
+                      <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-warm-orange/30 shadow-md">
                         <img 
                           src={getAvatarImage(persona)} 
                           alt={persona?.name || "Tutor"}
@@ -155,17 +175,17 @@ export default function Dashboard() {
                         <h3 className="text-sm font-medium text-off-white truncate">
                           {persona?.name || "Unknown Tutor"}
                         </h3>
-                        <p className="text-xs text-off-white/60 truncate">
+                        <p className="text-xs text-medium-gray truncate">
                           {scenario?.title || "Free Chat"}
                         </p>
                       </div>
                     </div>
                     
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-off-white/50">
+                      <span className="text-xs text-medium-gray/70">
                         {formatTimeAgo(conversation.updatedAt)}
                       </span>
-                      <ArrowRight className="w-4 h-4 text-lantern-orange opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <ArrowRight className="w-4 h-4 text-warm-orange opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
                   </CardContent>
                 </Card>
@@ -278,25 +298,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Start New Conversation */}
-      <div className="mb-8 text-center">
-        <Card className="glass-card border-glass-border max-w-md mx-auto">
-          <CardContent className="p-8">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-lantern-orange to-sakura-blue rounded-2xl flex items-center justify-center">
-              <MessageCircle className="w-8 h-8 text-deep-navy" />
-            </div>
-            <h3 className="text-xl font-semibold text-off-white mb-2">Ready to Practice?</h3>
-            <p className="text-off-white/70 mb-6">Choose your tutor and start a new conversation to improve your Japanese skills.</p>
-            
-            <Button 
-              onClick={() => setLocation("/tutor-selection")}
-              className="w-full gradient-button text-lg py-3 hover:scale-105 transition-transform duration-300"
-            >
-              Start New Conversation
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }

@@ -68,7 +68,7 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    background-color: var(--deep-navy);
+    background-color: hsl(var(--deep-navy));
     font-family: 'Inter', sans-serif;
   }
 

@@ -257,8 +257,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           sender: 'ai',
           content: aiResponse.content,
           feedback: aiResponse.feedback,
-          vocabUsed: aiResponse.vocabUsed,
-          grammarUsed: aiResponse.grammarUsed,
+          vocabUsed: aiResponse.vocabUsed || [],
+          grammarUsed: aiResponse.grammarUsed || [],
         });
       }
       
