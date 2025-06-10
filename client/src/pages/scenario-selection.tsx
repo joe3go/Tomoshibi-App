@@ -14,11 +14,11 @@ export default function ScenarioSelection() {
   const { toast } = useToast();
   const personaId = parseInt(params?.personaId || "0");
 
-  const { data: personas } = useQuery({
+  const { data: personas = [] } = useQuery({
     queryKey: ["/api/personas"],
   });
 
-  const { data: scenarios, isLoading } = useQuery({
+  const { data: scenarios = [], isLoading } = useQuery({
     queryKey: ["/api/scenarios"],
   });
 
@@ -40,7 +40,7 @@ export default function ScenarioSelection() {
     },
   });
 
-  const persona = personas?.find((p: any) => p.id === personaId);
+  const persona = Array.isArray(personas) ? personas.find((p: any) => p.id === personaId) : null;
 
   const getScenarioIcon = (title: string) => {
     if (title.includes("Introduction")) return Users;

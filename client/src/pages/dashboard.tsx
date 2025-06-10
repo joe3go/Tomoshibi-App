@@ -218,83 +218,71 @@ export default function Dashboard() {
           </CardContent>
         </Card>
         
-        <Card className="bg-gray-800/80 border-gray-700">
+        <Card className="bg-card/80 border-border">
           <CardContent className="p-6">
             <div className="flex items-center space-x-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
-                <span className="text-blue-500 text-lg font-japanese">漢</span>
+              <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
+                <span className="text-accent text-lg font-japanese">漢</span>
               </div>
-              <h3 className="font-semibold text-gray-100">Vocabulary</h3>
+              <h3 className="font-semibold text-foreground">Vocabulary</h3>
             </div>
-            <p className="text-2xl font-bold text-blue-500">
-              {progress?.vocabEncountered?.length || 0}
+            <p className="text-2xl font-bold text-accent">
+              {(progress as any)?.vocabEncountered?.length || 0}
             </p>
-            <p className="text-sm text-gray-400">Words learned</p>
+            <p className="text-sm text-muted-foreground">Words learned</p>
           </CardContent>
         </Card>
         
-        <Card className="bg-gray-800/80 border-gray-700">
+        <Card className="bg-card/80 border-border">
           <CardContent className="p-6">
             <div className="flex items-center space-x-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
-                <span className="text-amber-500 text-lg">🏮</span>
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="text-primary text-lg">🏮</span>
               </div>
-              <h3 className="font-semibold text-gray-100">Journey</h3>
+              <h3 className="font-semibold text-foreground">Journey</h3>
             </div>
-            <p className="text-2xl font-bold text-amber-500">
-              {scenarios?.length || 0}/10
+            <p className="text-2xl font-bold text-primary">
+              {Array.isArray(scenarios) ? scenarios.length : 0}/10
             </p>
-            <p className="text-sm text-gray-400">Scenarios unlocked</p>
+            <p className="text-sm text-muted-foreground">Scenarios unlocked</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Persona Selection */}
       <div className="mb-8">
-        <h3 className="text-xl font-semibold mb-4 flex items-center text-gray-100">
+        <h3 className="text-xl font-semibold mb-4 flex items-center text-foreground">
           <span className="mr-2">👥</span>
           Choose Your Conversation Partner
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {personas?.map((persona: any) => (
-            <Card key={persona.id} className="bg-gray-800/80 border-gray-700 hover:border-orange-500/30 cursor-pointer group transition-all duration-300">
+          {Array.isArray(personas) && personas.map((persona: any) => (
+            <Card key={persona.id} className="bg-card/80 border-border hover:border-primary/30 cursor-pointer group transition-all duration-300">
               <CardContent className="p-6">
                 <div className="flex items-center space-x-4 mb-4">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                    persona.type === 'teacher' 
-                      ? 'bg-gradient-to-br from-orange-500 to-orange-600' 
-                      : 'bg-gradient-to-br from-blue-500 to-blue-600'
-                  }`}>
-                    <span className="text-2xl">
-                      {persona.type === 'teacher' ? '👩‍🏫' : '🧑‍🎤'}
-                    </span>
+                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/30">
+                    <img 
+                      src={getAvatarImage(persona) || ""} 
+                      alt={persona.name}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <div>
-                    <h4 className={`font-semibold ${
-                      persona.type === 'teacher' ? 'text-orange-400' : 'text-blue-400'
-                    }`}>
+                    <h4 className="font-semibold text-primary">
                       {persona.name}
                     </h4>
-                    <p className="text-sm text-gray-300">
+                    <p className="text-sm text-muted-foreground">
                       {persona.type === 'teacher' ? 'Formal Teacher' : 'Casual Friend'}
                     </p>
                   </div>
                 </div>
-                <p className="text-gray-300 text-sm mb-3">{persona.description}</p>
+                <p className="text-muted-foreground text-sm mb-3">{persona.description}</p>
                 <div className="flex items-center space-x-2">
-                  <span className={`px-2 py-1 rounded-lg text-xs ${
-                    persona.type === 'teacher' 
-                      ? 'bg-orange-500/20 text-orange-400' 
-                      : 'bg-blue-500/20 text-blue-400'
-                  }`}>
+                  <span className="px-2 py-1 rounded-lg text-xs bg-primary/20 text-primary">
                     {persona.type === 'teacher' ? 'Polite Form' : 'Casual Form'}
                   </span>
-                  <span className={`px-2 py-1 rounded-lg text-xs ${
-                    persona.type === 'teacher' 
-                      ? 'bg-orange-500/20 text-orange-400' 
-                      : 'bg-blue-500/20 text-blue-400'
-                  }`}>
+                  <span className="px-2 py-1 rounded-lg text-xs bg-accent/20 text-accent">
                     {persona.type === 'teacher' ? 'Detailed' : 'Natural'}
                   </span>
                 </div>

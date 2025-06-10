@@ -9,7 +9,7 @@ import aoiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1
 export default function TutorSelection() {
   const [, setLocation] = useLocation();
 
-  const { data: personas, isLoading } = useQuery({
+  const { data: personas = [], isLoading } = useQuery({
     queryKey: ["/api/personas"],
   });
 
@@ -33,7 +33,7 @@ export default function TutorSelection() {
   const getAvatarImage = (persona: any) => {
     if (persona.type === 'teacher') return harukiAvatar;
     if (persona.type === 'friend') return aoiAvatar;
-    return null;
+    return "";
   };
 
   return (
@@ -60,7 +60,7 @@ export default function TutorSelection() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
-          {personas?.map((persona: any) => (
+          {Array.isArray(personas) && personas.map((persona: any) => (
             <Card key={persona.id} className="glass-card subtle-depth hover:scale-105 transition-all duration-300 group cursor-pointer tomoshibi-glow" onClick={() => handleTutorSelect(persona.id)}>
               <CardContent className="p-8 text-center space-y-6">
                 {/* Avatar */}
