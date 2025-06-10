@@ -111,6 +111,9 @@ export const userProgress = pgTable("user_progress", {
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
+  passwordHash: true,
+}).extend({
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 export const insertPersonaSchema = createInsertSchema(personas).omit({

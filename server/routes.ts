@@ -35,7 +35,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.post('/api/auth/register', async (req, res) => {
     try {
-      const { email, password, displayName } = insertUserSchema.parse(req.body);
+      const { email, displayName, password } = insertUserSchema.parse(req.body);
       
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(email);
@@ -49,6 +49,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create user
       const user = await storage.createUser({
         email,
+        password,
         passwordHash,
         displayName,
         preferredKanjiDisplay: 'furigana',
