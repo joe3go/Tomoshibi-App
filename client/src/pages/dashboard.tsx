@@ -147,8 +147,8 @@ export default function Dashboard() {
       {/* Continue Conversations Section */}
       {conversations && conversations.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-off-white mb-4 flex items-center">
-            <Clock className="w-5 h-5 mr-2 text-warm-orange" />
+          <h2 className="text-xl font-semibold text-gray-100 mb-4 flex items-center">
+            <Clock className="w-5 h-5 mr-2 text-orange-500" />
             Continue Your Conversations
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -159,12 +159,12 @@ export default function Dashboard() {
               return (
                 <Card 
                   key={conversation.id} 
-                  className="bg-charcoal border-charcoal-light hover:border-warm-orange/30 transition-all duration-300 cursor-pointer group shadow-lg hover:shadow-warm-orange/10"
+                  className="bg-gray-800 border-gray-700 hover:border-orange-500/30 transition-all duration-300 cursor-pointer group shadow-lg hover:shadow-orange-500/10"
                   onClick={() => setLocation(`/chat/${conversation.id}`)}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-center space-x-3 mb-3">
-                      <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-warm-orange/30 shadow-md">
+                      <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-orange-500/30 shadow-md">
                         <img 
                           src={getAvatarImage(persona)} 
                           alt={persona?.name || "Tutor"}
@@ -172,20 +172,20 @@ export default function Dashboard() {
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-medium text-off-white truncate">
+                        <h3 className="text-sm font-medium text-gray-100 truncate">
                           {persona?.name || "Unknown Tutor"}
                         </h3>
-                        <p className="text-xs text-medium-gray truncate">
+                        <p className="text-xs text-gray-400 truncate">
                           {scenario?.title || "Free Chat"}
                         </p>
                       </div>
                     </div>
                     
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-medium-gray/70">
+                      <span className="text-xs text-gray-500">
                         {formatTimeAgo(conversation.updatedAt)}
                       </span>
-                      <ArrowRight className="w-4 h-4 text-warm-orange opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <ArrowRight className="w-4 h-4 text-orange-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
                   </CardContent>
                 </Card>
@@ -197,68 +197,68 @@ export default function Dashboard() {
 
       {/* Progress Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <Card className="glass-card border-glass-border">
+        <Card className="bg-gray-800/80 border-gray-700">
           <CardContent className="p-6">
             <div className="flex items-center space-x-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-lantern-orange/20 flex items-center justify-center">
-                <span className="text-lantern-orange text-lg">🗣️</span>
+              <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center">
+                <span className="text-orange-500 text-lg">🗣️</span>
               </div>
-              <h3 className="font-semibold text-off-white">Conversations</h3>
+              <h3 className="font-semibold text-gray-100">Conversations</h3>
             </div>
-            <p className="text-2xl font-bold text-lantern-orange">
+            <p className="text-2xl font-bold text-orange-500">
               {conversations?.length || 0}
             </p>
-            <p className="text-sm text-off-white/60">Total completed</p>
+            <p className="text-sm text-gray-400">Total completed</p>
           </CardContent>
         </Card>
         
-        <Card className="glass-card border-glass-border">
+        <Card className="bg-gray-800/80 border-gray-700">
           <CardContent className="p-6">
             <div className="flex items-center space-x-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-sakura-blue/20 flex items-center justify-center">
-                <span className="text-sakura-blue text-lg font-japanese">漢</span>
+              <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+                <span className="text-blue-500 text-lg font-japanese">漢</span>
               </div>
-              <h3 className="font-semibold text-off-white">Vocabulary</h3>
+              <h3 className="font-semibold text-gray-100">Vocabulary</h3>
             </div>
-            <p className="text-2xl font-bold text-sakura-blue">
+            <p className="text-2xl font-bold text-blue-500">
               {progress?.vocabEncountered?.length || 0}
             </p>
-            <p className="text-sm text-off-white/60">Words learned</p>
+            <p className="text-sm text-gray-400">Words learned</p>
           </CardContent>
         </Card>
         
-        <Card className="glass-card border-glass-border">
+        <Card className="bg-gray-800/80 border-gray-700">
           <CardContent className="p-6">
             <div className="flex items-center space-x-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-lantern-orange/20 flex items-center justify-center">
-                <span className="text-lantern-orange text-lg">🏮</span>
+              <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
+                <span className="text-amber-500 text-lg">🏮</span>
               </div>
-              <h3 className="font-semibold text-off-white">Journey</h3>
+              <h3 className="font-semibold text-gray-100">Journey</h3>
             </div>
-            <p className="text-2xl font-bold text-lantern-orange">
+            <p className="text-2xl font-bold text-amber-500">
               {scenarios?.length || 0}/10
             </p>
-            <p className="text-sm text-off-white/60">Scenarios unlocked</p>
+            <p className="text-sm text-gray-400">Scenarios unlocked</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Persona Selection */}
       <div className="mb-8">
-        <h3 className="text-xl font-semibold mb-4 flex items-center text-off-white">
+        <h3 className="text-xl font-semibold mb-4 flex items-center text-gray-100">
           <span className="mr-2">👥</span>
           Choose Your Conversation Partner
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {personas?.map((persona: any) => (
-            <Card key={persona.id} className="glass-card border-glass-border hover-glow cursor-pointer group">
+            <Card key={persona.id} className="bg-gray-800/80 border-gray-700 hover:border-orange-500/30 cursor-pointer group transition-all duration-300">
               <CardContent className="p-6">
                 <div className="flex items-center space-x-4 mb-4">
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
                     persona.type === 'teacher' 
-                      ? 'bg-gradient-to-br from-lantern-orange to-lantern-orange/60' 
-                      : 'bg-gradient-to-br from-sakura-blue to-sakura-blue/60'
+                      ? 'bg-gradient-to-br from-orange-500 to-orange-600' 
+                      : 'bg-gradient-to-br from-blue-500 to-blue-600'
                   }`}>
                     <span className="text-2xl">
                       {persona.type === 'teacher' ? '👩‍🏫' : '🧑‍🎤'}
@@ -266,16 +266,16 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <h4 className={`font-semibold ${
-                      persona.type === 'teacher' ? 'text-lantern-orange' : 'text-sakura-blue'
+                      persona.type === 'teacher' ? 'text-orange-400' : 'text-blue-400'
                     }`}>
                       {persona.name}
                     </h4>
-                    <p className="text-sm text-off-white/70">
+                    <p className="text-sm text-gray-300">
                       {persona.type === 'teacher' ? 'Formal Teacher' : 'Casual Friend'}
                     </p>
                   </div>
                 </div>
-                <p className="text-off-white/80 text-sm mb-3">{persona.description}</p>
+                <p className="text-gray-300 text-sm mb-3">{persona.description}</p>
                 <div className="flex items-center space-x-2">
                   <span className={`px-2 py-1 rounded-lg text-xs ${
                     persona.type === 'teacher' 
