@@ -5,60 +5,62 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(0, 0%, 7%);
-  --foreground: hsl(0, 0%, 88%);
-  --muted: hsl(0, 0%, 12%);
-  --muted-foreground: hsl(0, 0%, 55%);
-  --popover: hsl(0, 0%, 12%);
-  --popover-foreground: hsl(0, 0%, 88%);
-  --card: hsl(0, 0%, 12%);
-  --card-foreground: hsl(0, 0%, 88%);
-  --border: hsl(0, 0%, 16%);
-  --input: hsl(0, 0%, 16%);
-  --primary: hsl(17, 100%, 61%);
-  --primary-foreground: hsl(0, 0%, 7%);
-  --secondary: hsl(184, 45%, 73%);
-  --secondary-foreground: hsl(0, 0%, 7%);
-  --accent: hsl(0, 0%, 16%);
-  --accent-foreground: hsl(0, 0%, 88%);
+  /* Soft twilight dark theme - Japanese-inspired */
+  --background: hsl(220, 20%, 9%);
+  --foreground: hsl(0, 0%, 91%);
+  --muted: hsl(220, 15%, 13%);
+  --muted-foreground: hsl(215, 10%, 65%);
+  --popover: hsl(220, 18%, 11%);
+  --popover-foreground: hsl(0, 0%, 91%);
+  --card: hsl(220, 18%, 11%);
+  --card-foreground: hsl(0, 0%, 91%);
+  --border: hsl(220, 15%, 18%);
+  --input: hsl(220, 15%, 18%);
+  --primary: hsl(24, 100%, 58%);
+  --primary-foreground: hsl(220, 20%, 9%);
+  --secondary: hsl(210, 100%, 70%);
+  --secondary-foreground: hsl(220, 20%, 9%);
+  --accent: hsl(220, 15%, 18%);
+  --accent-foreground: hsl(0, 0%, 91%);
   --destructive: hsl(0, 84%, 60%);
   --destructive-foreground: hsl(0, 0%, 98%);
-  --ring: hsl(17, 100%, 61%);
+  --ring: hsl(24, 100%, 58%);
   --radius: 0.75rem;
   
-  /* Modern warm dark theme colors */
-  --deep-navy: hsl(0, 0%, 7%);
-  --charcoal: hsl(0, 0%, 12%);
-  --charcoal-light: hsl(0, 0%, 16%);
-  --warm-orange: hsl(17, 100%, 61%);
-  --soft-blue: hsl(184, 45%, 73%);
-  --off-white: hsl(0, 0%, 88%);
-  --medium-gray: hsl(0, 0%, 55%);
-  --glass-border: hsla(0, 0%, 88%, 0.12);
-  --warm-glow: hsla(17, 100%, 61%, 0.1);
-  --blue-glow: hsla(184, 45%, 73%, 0.1);
+  /* Twilight theme custom colors */
+  --twilight-bg: hsl(220, 20%, 9%);
+  --twilight-surface: hsl(220, 18%, 11%);
+  --twilight-surface-alt: hsl(218, 16%, 15%);
+  --twilight-border: hsl(220, 15%, 18%);
+  --flame-orange: hsl(24, 100%, 58%);
+  --calm-blue: hsl(210, 100%, 70%);
+  --warm-amber: hsl(36, 100%, 71%);
+  --text-primary: hsl(0, 0%, 91%);
+  --text-secondary: hsl(215, 10%, 65%);
+  --glass-bg: hsla(220, 18%, 11%, 0.8);
+  --glass-border: hsla(0, 0%, 91%, 0.08);
 }
 
 .dark {
-  --background: hsl(0, 0%, 7%);
-  --foreground: hsl(0, 0%, 88%);
-  --muted: hsl(0, 0%, 12%);
-  --muted-foreground: hsl(0, 0%, 55%);
-  --popover: hsl(0, 0%, 12%);
-  --popover-foreground: hsl(0, 0%, 88%);
-  --card: hsl(0, 0%, 12%);
-  --card-foreground: hsl(0, 0%, 88%);
-  --border: hsl(0, 0%, 16%);
-  --input: hsl(0, 0%, 16%);
-  --primary: hsl(17, 100%, 61%);
-  --primary-foreground: hsl(0, 0%, 7%);
-  --secondary: hsl(184, 45%, 73%);
-  --secondary-foreground: hsl(0, 0%, 7%);
-  --accent: hsl(0, 0%, 16%);
-  --accent-foreground: hsl(0, 0%, 88%);
+  --background: hsl(220, 20%, 9%);
+  --foreground: hsl(0, 0%, 91%);
+  --muted: hsl(220, 15%, 13%);
+  --muted-foreground: hsl(215, 10%, 65%);
+  --popover: hsl(220, 18%, 11%);
+  --popover-foreground: hsl(0, 0%, 91%);
+  --card: hsl(220, 18%, 11%);
+  --card-foreground: hsl(0, 0%, 91%);
+  --border: hsl(220, 15%, 18%);
+  --input: hsl(220, 15%, 18%);
+  --primary: hsl(24, 100%, 58%);
+  --primary-foreground: hsl(220, 20%, 9%);
+  --secondary: hsl(210, 100%, 70%);
+  --secondary-foreground: hsl(220, 20%, 9%);
+  --accent: hsl(220, 15%, 18%);
+  --accent-foreground: hsl(0, 0%, 91%);
   --destructive: hsl(0, 84%, 60%);
   --destructive-foreground: hsl(0, 0%, 98%);
-  --ring: hsl(17, 100%, 61%);
+  --ring: hsl(24, 100%, 58%);
 }
 
 @layer base {
@@ -68,8 +70,9 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    background-color: hsl(var(--deep-navy));
+    background: linear-gradient(135deg, hsl(var(--twilight-bg)) 0%, hsl(var(--twilight-surface)) 100%);
     font-family: 'Inter', sans-serif;
+    line-height: 1.6;
   }
 
   .font-japanese {
@@ -79,54 +82,61 @@
 
 @layer components {
   .glass-card {
-    background: hsl(var(--charcoal));
-    backdrop-filter: blur(12px);
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(20px);
     border: 1px solid hsl(var(--glass-border));
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 1rem;
   }
 
   .glow-border {
-    box-shadow: 0 0 20px hsla(17, 100%, 61%, 0.2);
+    box-shadow: 0 0 20px hsla(24, 100%, 58%, 0.3);
   }
 
   .hover-glow {
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .hover-glow:hover {
-    box-shadow: 0 0 25px hsla(17, 100%, 61%, 0.4);
+    box-shadow: 0 0 30px hsla(24, 100%, 58%, 0.4);
     transform: translateY(-2px);
+    border-color: hsl(var(--flame-orange));
   }
 
   .gradient-button {
-    background: linear-gradient(135deg, hsl(var(--warm-orange)), hsl(var(--soft-blue)));
-    color: hsl(var(--deep-navy));
+    background: linear-gradient(135deg, hsl(var(--flame-orange)), hsl(var(--warm-amber)));
+    color: hsl(var(--twilight-bg));
     font-weight: 600;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px hsla(17, 100%, 61%, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 14px hsla(24, 100%, 58%, 0.25);
+    border-radius: 0.75rem;
   }
 
   .gradient-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px hsla(17, 100%, 61%, 0.3);
+    box-shadow: 0 8px 25px hsla(24, 100%, 58%, 0.4), 0 0 20px hsla(24, 100%, 58%, 0.2);
   }
 
   .chat-bubble-user {
-    background: linear-gradient(135deg, rgba(152, 193, 217, 0.2), rgba(152, 193, 217, 0.1));
-    border: 1px solid var(--secondary);
+    background: linear-gradient(135deg, hsl(var(--twilight-surface-alt)), hsl(var(--twilight-surface)));
+    border: 1px solid hsl(var(--calm-blue));
+    border-radius: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   }
 
   .chat-bubble-ai {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: hsl(var(--twilight-surface));
+    border: 1px solid hsl(var(--twilight-border));
+    border-radius: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   }
 
   .furigana {
     font-size: 0.7em;
     line-height: 1;
     margin-bottom: -0.5em;
-    color: var(--lantern-orange);
-    opacity: 0.6;
+    color: hsl(var(--flame-orange));
+    opacity: 0.7;
   }
 
   .interactive-kanji {

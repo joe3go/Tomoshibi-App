@@ -45,9 +45,9 @@ export async function generateAIResponse(context: ConversationContext): Promise<
     return {
       content: result.response || "すみません、もう一度言ってください。",
       feedback: result.feedback,
-      vocabUsed: result.vocabUsed || [],
-      grammarUsed: result.grammarUsed || [],
-      suggestions: result.suggestions || [],
+      vocabUsed: Array.isArray(result.vocabUsed) ? result.vocabUsed.filter((id: any) => typeof id === 'number') : [],
+      grammarUsed: Array.isArray(result.grammarUsed) ? result.grammarUsed.filter((id: any) => typeof id === 'number') : [],
+      suggestions: Array.isArray(result.suggestions) ? result.suggestions : [],
     };
   } catch (error) {
     console.error("OpenAI API error:", error);
