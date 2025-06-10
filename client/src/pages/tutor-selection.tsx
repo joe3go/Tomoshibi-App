@@ -93,9 +93,9 @@ export default function TutorSelection() {
                 </p>
 
                 {/* Teaching Style */}
-                <div className="bg-deep-navy/50 rounded-lg p-4 mb-6">
-                  <h4 className="text-sm font-semibold text-lantern-orange mb-2">Teaching Style:</h4>
-                  <p className="text-sm text-off-white/80">
+                <div className="bg-card/50 rounded-lg p-4 border border-border/30">
+                  <h4 className="text-sm font-semibold text-primary mb-2">Teaching Style:</h4>
+                  <p className="text-sm text-muted-foreground">
                     {persona.type === 'teacher' 
                       ? 'Focuses on proper grammar, cultural context, and formal expressions. Perfect for building strong foundations.'
                       : 'Emphasizes natural conversation flow, casual expressions, and practical communication. Great for building confidence.'
@@ -105,10 +105,10 @@ export default function TutorSelection() {
 
                 {/* Select Button */}
                 <Button 
-                  className={`w-full gradient-button group-hover:scale-105 transition-transform duration-300 ${
+                  className={`w-full tomoshibi-glow group-hover:scale-105 transition-transform duration-300 ${
                     persona.type === 'teacher' 
-                      ? 'bg-gradient-to-r from-lantern-orange to-lantern-orange/80' 
-                      : 'bg-gradient-to-r from-sakura-blue to-sakura-blue/80'
+                      ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
+                      : 'bg-secondary hover:bg-secondary/90 text-secondary-foreground'
                   }`}
                   onClick={(e) => {
                     e.stopPropagation();
