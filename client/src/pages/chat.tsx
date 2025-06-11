@@ -8,6 +8,8 @@ import { ArrowLeft, Settings, MoreHorizontal, Send, CheckCircle } from "lucide-r
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import FuriganaText from "@/components/furigana-text";
+import harukiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
+import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
 
 
 export default function Chat() {
@@ -106,6 +108,12 @@ export default function Chat() {
     setMessage(prev => prev + text);
   };
 
+  const getAvatarImage = (persona: any) => {
+    if (persona?.type === 'teacher') return aoiAvatar; // Aoi is the female teacher
+    if (persona?.type === 'friend') return harukiAvatar; // Haruki is the male friend
+    return aoiAvatar; // Default fallback
+  };
+
 
 
   if (isLoading) {
@@ -172,14 +180,28 @@ export default function Chat() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex items-center space-x-3">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-              persona?.type === 'teacher' 
-                ? 'bg-gradient-to-br from-lantern-orange to-lantern-orange/60' 
-                : 'bg-gradient-to-br from-sakura-blue to-sakura-blue/60'
-            }`}>
-              <span className="text-lg">
-                {persona?.type === 'teacher' ? '👩‍🏫' : '🧑‍🎤'}
-              </span>
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/30">
+              <img 
+                src={getAvatarImage(persona)} 
+                alt={persona?.name || 'Persona'}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback to text avatar if image fails
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  target.parentElement!.innerHTML = `
+                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br ${
+                      persona?.type === 'teacher' 
+                        ? 'from-lantern-orange to-lantern-orange/60' 
+                        : 'from-sakura-blue to-sakura-blue/60'
+                    }">
+                      <span class="text-lg">
+                        ${persona?.type === 'teacher' ? '👩‍🏫' : '🧑‍🎤'}
+                      </span>
+                    </div>
+                  `;
+                }}
+              />
             </div>
             <div>
               <h3 className="font-semibold text-off-white">{persona?.name || 'AI'}</h3>
@@ -225,10 +247,24 @@ export default function Chat() {
               msg.sender === 'user' ? 'justify-end' : ''
             }`}>
               {msg.sender === 'ai' && (
-                <div className={`avatar ${persona?.type === 'teacher' ? 'sensei' : 'yuki'} flex-shrink-0`}>
-                  <span className="text-sm font-japanese">
-                    {persona?.type === 'teacher' ? '先' : '友'}
-                  </span>
+                <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
+                  <img 
+                    src={getAvatarImage(persona)} 
+                    alt={persona?.name || 'AI'}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback to text avatar if image fails
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.parentElement!.innerHTML = `
+                        <div class="avatar ${persona?.type === 'teacher' ? 'sensei' : 'yuki'} w-full h-full flex items-center justify-center">
+                          <span class="text-sm font-japanese">
+                            ${persona?.type === 'teacher' ? '先' : '友'}
+                          </span>
+                        </div>
+                      `;
+                    }}
+                  />
                 </div>
               )}
               
@@ -267,15 +303,29 @@ export default function Chat() {
           {/* Typing Indicator */}
           {sendMessageMutation.isPending && (
             <div className="flex items-start space-x-3">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                persona?.type === 'teacher' 
-                  ? 'bg-gradient-to-br from-lantern-orange to-lantern-orange/60' 
-                  : 'bg-gradient-to-br from-sakura-blue to-sakura-blue/60'
-              }`}>
-                <span className="text-sm">
-                  {persona?.type === 'teacher' ? '👩‍🏫' : '🧑‍🎤'}
-                </span>
-              </div>
+              <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
+              <img 
+                src={getAvatarImage(persona)} 
+                alt={persona?.name || 'AI'}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback to emoji if image fails
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  target.parentElement!.innerHTML = `
+                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br ${
+                      persona?.type === 'teacher' 
+                        ? 'from-lantern-orange to-lantern-orange/60' 
+                        : 'from-sakura-blue to-sakura-blue/60'
+                    }">
+                      <span class="text-sm">
+                        ${persona?.type === 'teacher' ? '👩‍🏫' : '🧑‍🎤'}
+                      </span>
+                    </div>
+                  `;
+                }}
+              />
+            </div>
               <div className="chat-bubble-ai rounded-2xl rounded-tl-sm p-4">
                 <div className="flex space-x-1">
                   <div className="w-2 h-2 bg-lantern-orange/50 rounded-full animate-bounce"></div>
