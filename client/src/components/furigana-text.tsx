@@ -9,24 +9,27 @@ interface FuriganaTextProps {
   onToggleFurigana?: (show: boolean) => void;
 }
 
-export default function FuriganaText({ 
-  text, 
-  className = "", 
+export default function FuriganaText({
+  text,
+  className = "",
   showToggleButton = true,
   showFurigana: externalShowFurigana,
-  onToggleFurigana
+  onToggleFurigana,
 }: FuriganaTextProps) {
   const [internalShowFurigana, setInternalShowFurigana] = useState(true);
-  
+
   // Use external state if provided, otherwise use internal state
-  const showFurigana = externalShowFurigana !== undefined ? externalShowFurigana : internalShowFurigana;
+  const showFurigana =
+    externalShowFurigana !== undefined
+      ? externalShowFurigana
+      : internalShowFurigana;
 
   // Load preference from localStorage on mount (only for internal state)
   useEffect(() => {
     if (externalShowFurigana === undefined) {
-      const savedPreference = localStorage.getItem('furigana-visible');
+      const savedPreference = localStorage.getItem("furigana-visible");
       if (savedPreference !== null) {
-        setInternalShowFurigana(savedPreference === 'true');
+        setInternalShowFurigana(savedPreference === "true");
       }
     }
   }, [externalShowFurigana]);
@@ -38,13 +41,14 @@ export default function FuriganaText({
       onToggleFurigana(newState);
     } else {
       setInternalShowFurigana(newState);
-      localStorage.setItem('furigana-visible', newState.toString());
+      localStorage.setItem("furigana-visible", newState.toString());
     }
   };
 
-  // Parse text to identify kanji with furigana notation: 漢字(かんじ)
+  // Parse text to identify kanji with furigana notation: 漢字(かんじ) or 漢字（かんじ）
   const parseText = (input: string) => {
-    const furiganaPattern = /([一-龯]+)\(([あ-んァ-ヶー]+)\)/g;
+    // Matches both Japanese and standard parentheses
+    const furiganaPattern = /([一-龯々]+)[（\(]([ぁ-んァ-ヶー]+)[）\)]/g;
     const parts = [];
     let lastIndex = 0;
     let match;
@@ -53,30 +57,30 @@ export default function FuriganaText({
       // Add text before the match
       if (match.index > lastIndex) {
         parts.push({
-          type: 'text',
-          content: input.slice(lastIndex, match.index)
+          type: "text",
+          content: input.slice(lastIndex, match.index),
         });
       }
 
       // Add the furigana match
       parts.push({
-        type: 'furigana',
+        type: "furigana",
         kanji: match[1],
-        reading: match[2]
+        reading: match[2],
       });
 
-      lastIndex = match.index + match[0].length;
+      lastIndex = furiganaPattern.lastIndex;
     }
 
     // Add remaining text
     if (lastIndex < input.length) {
       parts.push({
-        type: 'text',
-        content: input.slice(lastIndex)
+        type: "text",
+        content: input.slice(lastIndex),
       });
     }
 
-    return parts;
+    return parts.length > 0 ? parts : [{ type: "text", content: input }];
   };
 
   const parsedText = parseText(text);
@@ -95,17 +99,17 @@ export default function FuriganaText({
           </Button>
         </div>
       )}
-      
-      <div className="text-lg leading-relaxed">
+
+      <div className="text-lg leading-relaxed ruby-text-container">
         {parsedText.map((part, index) => {
-          if (part.type === 'furigana') {
+          if (part.type === "furigana") {
             return (
-              <ruby 
-                key={index} 
-                className={`toggle-furigana ${showFurigana ? '' : 'hide-furigana'}`}
+              <ruby
+                key={index}
+                className={`inline ${showFurigana ? "" : "hide-furigana"}`}
               >
                 {part.kanji}
-                <rt>{part.reading}</rt>
+                <rt className="ruby-text">{part.reading}</rt>
               </ruby>
             );
           }
