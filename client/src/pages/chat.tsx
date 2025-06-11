@@ -64,7 +64,7 @@ export default function Chat() {
     mutationFn: async () => {
       const response = await apiRequest("PATCH", `/api/conversations/${conversationId}`, {
         status: "completed",
-        completedAt: new Date(),
+        completedAt: new Date().toISOString(),
       });
       return await response.json();
     },

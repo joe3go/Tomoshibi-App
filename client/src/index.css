@@ -171,6 +171,42 @@ body {
 /*==============================
   🧧 Component Styles
 ==============================*/
+
+/* Furigana Ruby Text Styling */
+ruby {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+rt {
+  position: absolute;
+  top: -1.5em;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.6em;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  color: inherit;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.hide-furigana rt {
+  opacity: 0;
+}
+
+.toggle-furigana rt {
+  opacity: 1;
+}
+
+/* Ensure proper spacing for ruby text */
+ruby rt::before {
+  content: "";
+  display: block;
+  height: 1.5em;
+}
 .gold-frame {
   @apply border-2 border-accent-gold rounded-[var(--radius)] p-4 relative bg-card;
   box-shadow:
