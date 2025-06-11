@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { useLocation } from "wouter";
 import { MessageCircle, BookOpen, TrendingUp, Users, Star, CheckCircle } from "lucide-react";
 
@@ -15,13 +16,16 @@ export default function Landing() {
             <h1 className="text-2xl font-bold text-primary font-japanese">Tomoshibi</h1>
             <span className="text-secondary text-lg font-japanese">灯火</span>
           </div>
-          <Button
-            onClick={() => setLocation("/login")}
-            variant="outline"
-            className="border-primary/30 text-foreground hover:bg-primary hover:text-primary-foreground tomoshibi-glow"
-          >
-            Sign In
-          </Button>
+          <div className="flex items-center space-x-3">
+            <ThemeToggle />
+            <Button
+              onClick={() => setLocation("/login")}
+              variant="outline"
+              className="border-primary/30 text-foreground hover:bg-primary hover:text-primary-foreground"
+            >
+              Sign In
+            </Button>
+          </div>
         </div>
       </nav>
 

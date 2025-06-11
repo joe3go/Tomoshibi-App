@@ -1,6 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/hooks/useAuth";
 import { removeAuthToken } from "@/lib/auth";
 import { useLocation } from "wouter";
@@ -115,6 +116,7 @@ export default function Dashboard() {
         </div>
         
         <div className="flex items-center space-x-3">
+          <ThemeToggle />
           <Button variant="ghost" size="sm" className="p-2 text-muted-foreground hover:bg-muted">
             <Settings className="w-5 h-5" />
           </Button>
