@@ -8,14 +8,13 @@ import { ArrowLeft, Settings, MoreHorizontal, Send } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import FuriganaText from "@/components/furigana-text";
-import InteractiveKanji from "@/components/interactive-kanji";
 
 
 export default function Chat() {
   const [, params] = useRoute("/chat/:conversationId");
   const [, setLocation] = useLocation();
   const [message, setMessage] = useState("");
-  const [showFurigana, setShowFurigana] = useState(true);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -159,14 +158,6 @@ export default function Chat() {
         </div>
         
         <div className="flex items-center space-x-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowFurigana(!showFurigana)}
-            className="px-3 py-1 text-xs hover:bg-lantern-orange/20 transition-colors text-off-white"
-          >
-            {showFurigana ? 'ふりがな' : '漢字'}
-          </Button>
           <Button variant="ghost" size="sm" className="p-2 text-off-white hover:bg-kanji-glow">
             <Settings className="w-5 h-5" />
           </Button>
@@ -198,7 +189,7 @@ export default function Chat() {
                 <div className="font-japanese mb-2">
                   <FuriganaText 
                     text={msg.content} 
-                    showFurigana={showFurigana}
+                    showToggleButton={false}
                     className={msg.sender === 'user' ? 'text-white' : 'text-primary'}
                   />
                 </div>
