@@ -101,28 +101,31 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background p-4">
       {/* Header */}
-      <header className="glass-card rounded-2xl p-4 mb-6 flex items-center justify-between">
+      <header className="lesson-card rounded-2xl p-4 mb-6 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-            <span className="text-background font-bold">
+          <div className="w-10 h-10 rounded-full bg-aka flex items-center justify-center">
+            <span className="font-bold font-japanese" style={{ color: 'var(--washi)' }}>
               {(user as any)?.displayName?.[0]?.toUpperCase() || "U"}
             </span>
           </div>
           <div>
-            <h2 className="font-semibold text-foreground">{(user as any)?.displayName || "User"}</h2>
-            <p className="text-sm text-muted-foreground">JLPT N5 Learner</p>
+            <h2 className="font-semibold font-japanese" style={{ color: 'var(--washi)' }}>
+              {(user as any)?.displayName || "User"}
+            </h2>
+            <p className="text-sm" style={{ color: 'var(--kin)' }}>JLPT N5 Learner</p>
           </div>
         </div>
         
         <div className="flex items-center space-x-3">
-          <Button variant="ghost" size="sm" className="p-2 text-muted-foreground hover:bg-muted">
+          <Button variant="ghost" size="sm" className="p-2 hover:bg-sumi" style={{ color: 'var(--kin)' }}>
             <Settings className="w-5 h-5" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleLogout}
-            className="text-muted-foreground hover:text-foreground hover:bg-muted"
+            className="hover:bg-sumi"
+            style={{ color: 'var(--washi)' }}
           >
             <LogOut className="w-4 h-4 mr-1" />
             Logout
@@ -132,22 +135,27 @@ export default function Dashboard() {
 
       {/* Start New Conversation */}
       <div className="mb-8 text-center">
-        <Card className="bg-card/80 border border-primary/20 shadow-2xl shadow-primary/5 max-w-md mx-auto">
-          <CardContent className="p-8">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center shadow-lg">
-              <MessageCircle className="w-8 h-8 text-background" />
+        <div className="lesson-card max-w-md mx-auto fade-in-up">
+          <div className="p-8">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ backgroundColor: 'var(--kin)' }}>
+              <span className="icon-chat text-2xl"></span>
             </div>
-            <h3 className="text-xl font-semibold text-foreground mb-2">Ready to Practice?</h3>
-            <p className="text-muted-foreground mb-6">Choose your tutor and start a new conversation to improve your Japanese skills.</p>
+            <h3 className="text-xl font-semibold font-japanese mb-2" style={{ color: 'var(--washi)' }}>
+              Ready to Practice?
+            </h3>
+            <p className="mb-6" style={{ color: 'var(--kin)' }}>
+              Choose your tutor and start a new conversation to improve your Japanese skills.
+            </p>
             
             <Button 
               onClick={() => setLocation("/tutor-selection")}
-              className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white font-semibold text-lg py-3 rounded-xl shadow-lg hover:shadow-primary/20 hover:scale-105 transition-all duration-300"
+              className="w-full font-semibold text-lg py-3 rounded-xl lesson-card"
+              style={{ backgroundColor: 'var(--aka)', color: 'var(--washi)' }}
             >
               Start New Conversation
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Continue Conversations Section */}
@@ -203,50 +211,56 @@ export default function Dashboard() {
 
       {/* Progress Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <Card className="bg-card/80 border-border">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-primary text-lg">🗣️</span>
-              </div>
-              <h3 className="font-semibold text-foreground">Conversations</h3>
+        <div className="lesson-card p-6 fade-in-up">
+          <div className="flex items-center space-x-3 mb-3">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--kin)' }}>
+              <span className="icon-chat text-lg"></span>
             </div>
-            <p className="text-2xl font-bold text-primary">
-              {Array.isArray(conversations) ? conversations.length : 0}
-            </p>
-            <p className="text-sm text-muted-foreground">Total completed</p>
-          </CardContent>
-        </Card>
+            <h3 className="font-semibold font-japanese" style={{ color: 'var(--washi)' }}>Conversations</h3>
+          </div>
+          <p className="text-2xl font-bold" style={{ color: 'var(--aka)' }}>
+            {Array.isArray(conversations) ? conversations.length : 0}
+          </p>
+          <p className="text-sm" style={{ color: 'var(--kin)' }}>Total completed</p>
+          
+          <div className="progress-bar mt-3 h-2">
+            <div className="progress-fill" style={{ width: `${Math.min(100, (Array.isArray(conversations) ? conversations.length : 0) * 20)}%` }}></div>
+          </div>
+        </div>
         
-        <Card className="bg-card/80 border-border">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
-                <span className="text-accent text-lg font-japanese">漢</span>
-              </div>
-              <h3 className="font-semibold text-foreground">Vocabulary</h3>
+        <div className="lesson-card p-6 fade-in-up">
+          <div className="flex items-center space-x-3 mb-3">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--kin)' }}>
+              <span className="icon-learn text-lg"></span>
             </div>
-            <p className="text-2xl font-bold text-accent">
-              {(progress as any)?.vocabEncountered?.length || 0}
-            </p>
-            <p className="text-sm text-muted-foreground">Words learned</p>
-          </CardContent>
-        </Card>
+            <h3 className="font-semibold font-japanese" style={{ color: 'var(--washi)' }}>Vocabulary</h3>
+          </div>
+          <p className="text-2xl font-bold" style={{ color: 'var(--aka)' }}>
+            {(progress as any)?.vocabEncountered?.length || 0}
+          </p>
+          <p className="text-sm" style={{ color: 'var(--kin)' }}>Words learned</p>
+          
+          <div className="progress-bar mt-3 h-2">
+            <div className="progress-fill" style={{ width: `${Math.min(100, ((progress as any)?.vocabEncountered?.length || 0) * 5)}%` }}></div>
+          </div>
+        </div>
         
-        <Card className="bg-card/80 border-border">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-primary text-lg">🏮</span>
-              </div>
-              <h3 className="font-semibold text-foreground">Journey</h3>
+        <div className="lesson-card p-6 fade-in-up">
+          <div className="flex items-center space-x-3 mb-3">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--kin)' }}>
+              <span className="icon-progress text-lg"></span>
             </div>
-            <p className="text-2xl font-bold text-primary">
-              {Array.isArray(scenarios) ? scenarios.length : 0}/10
-            </p>
-            <p className="text-sm text-muted-foreground">Scenarios unlocked</p>
-          </CardContent>
-        </Card>
+            <h3 className="font-semibold font-japanese" style={{ color: 'var(--washi)' }}>Journey</h3>
+          </div>
+          <p className="text-2xl font-bold" style={{ color: 'var(--aka)' }}>
+            {Array.isArray(scenarios) ? scenarios.length : 0}/10
+          </p>
+          <p className="text-sm" style={{ color: 'var(--kin)' }}>Scenarios unlocked</p>
+          
+          <div className="progress-bar mt-3 h-2">
+            <div className="progress-fill" style={{ width: `${Math.min(100, (Array.isArray(scenarios) ? scenarios.length : 0) * 10)}%` }}></div>
+          </div>
+        </div>
       </div>
 
       {/* Persona Selection */}

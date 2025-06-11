@@ -192,14 +192,14 @@ export default function Chat() {
                 </div>
               )}
               
-              <div className={`rounded-2xl p-4 max-w-lg ${
+              <div className={`p-4 max-w-lg ${
                 msg.sender === 'user' 
-                  ? 'chat-bubble-user rounded-tr-sm' 
-                  : 'chat-bubble-ai rounded-tl-sm'
+                  ? 'message-user' 
+                  : 'message-ai'
               }`}>
                 {msg.feedback && (
-                  <div className="mb-2 p-2 rounded-lg bg-green-500/10 border border-green-500/20">
-                    <p className="text-green-400 text-sm">✨ {msg.feedback}</p>
+                  <div className="mb-2 p-2 rounded-lg" style={{ backgroundColor: 'var(--kin)', opacity: 0.2 }}>
+                    <p className="text-sm" style={{ color: 'var(--kin)' }}>✨ {msg.feedback}</p>
                   </div>
                 )}
                 
@@ -207,12 +207,13 @@ export default function Chat() {
                   <FuriganaText 
                     text={msg.content} 
                     showFurigana={showFurigana}
-                    className={msg.sender === 'user' ? 'text-off-white' : 'text-off-white'}
+                    className="text-washi"
+                    style={{ color: 'var(--washi)' }}
                   />
                 </div>
                 
                 {msg.sender === 'ai' && (
-                  <div className="mt-2 text-xs text-sakura-blue">
+                  <div className="mt-2 text-xs" style={{ color: 'var(--kin)' }}>
                     💡 Keep practicing! You're doing great!
                   </div>
                 )}
