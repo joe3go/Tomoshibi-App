@@ -101,31 +101,30 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background p-4">
       {/* Header */}
-      <header className="lesson-card rounded-2xl p-4 mb-6 flex items-center justify-between">
+      <header className="cyberpunk-card p-4 mb-6 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full bg-aka flex items-center justify-center">
-            <span className="font-bold font-japanese" style={{ color: 'var(--washi)' }}>
+          <div className="avatar-user">
+            <span className="font-bold font-japanese">
               {(user as any)?.displayName?.[0]?.toUpperCase() || "U"}
             </span>
           </div>
           <div>
-            <h2 className="font-semibold font-japanese" style={{ color: 'var(--washi)' }}>
+            <h2 className="font-semibold font-japanese text-white">
               {(user as any)?.displayName || "User"}
             </h2>
-            <p className="text-sm" style={{ color: 'var(--kin)' }}>JLPT N5 Learner</p>
+            <p className="text-sm text-secondary font-tech">JLPT N5 Fighter</p>
           </div>
         </div>
         
         <div className="flex items-center space-x-3">
-          <Button variant="ghost" size="sm" className="p-2 hover:bg-sumi" style={{ color: 'var(--kin)' }}>
+          <Button variant="ghost" size="sm" className="p-2 hover:bg-primary/20 text-secondary">
             <Settings className="w-5 h-5" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleLogout}
-            className="hover:bg-sumi"
-            style={{ color: 'var(--washi)' }}
+            className="hover:bg-primary/20 text-white font-tech"
           >
             <LogOut className="w-4 h-4 mr-1" />
             Logout
@@ -135,24 +134,23 @@ export default function Dashboard() {
 
       {/* Start New Conversation */}
       <div className="mb-8 text-center">
-        <div className="lesson-card max-w-md mx-auto fade-in-up">
+        <div className="cyberpunk-card max-w-md mx-auto fade-in-up">
           <div className="p-8">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ backgroundColor: 'var(--kin)' }}>
-              <span className="icon-chat text-2xl"></span>
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary flex items-center justify-center">
+              <span className="text-2xl">⚔️</span>
             </div>
-            <h3 className="text-xl font-semibold font-japanese mb-2" style={{ color: 'var(--washi)' }}>
-              Ready to Practice?
+            <h3 className="text-xl font-semibold font-japanese mb-2 text-white glitch" data-text="Ready for Battle?">
+              Ready for Battle?
             </h3>
-            <p className="mb-6" style={{ color: 'var(--kin)' }}>
-              Choose your tutor and start a new conversation to improve your Japanese skills.
+            <p className="mb-6 text-muted-foreground font-tech">
+              Choose your sparring partner and begin intense conversation training.
             </p>
             
             <Button 
               onClick={() => setLocation("/tutor-selection")}
-              className="w-full font-semibold text-lg py-3 rounded-xl lesson-card"
-              style={{ backgroundColor: 'var(--aka)', color: 'var(--washi)' }}
+              className="cta-button w-full font-semibold text-lg py-3 font-japanese"
             >
-              Start New Conversation
+              Start Combat Training
             </Button>
           </div>
         </div>
@@ -209,56 +207,56 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Progress Overview */}
+      {/* Progress Overview - Fighting Game Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="lesson-card p-6 fade-in-up">
+        <div className="cyberpunk-card p-6 fade-in-up">
           <div className="flex items-center space-x-3 mb-3">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--kin)' }}>
-              <span className="icon-chat text-lg"></span>
+            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+              <span className="text-lg">💬</span>
             </div>
-            <h3 className="font-semibold font-japanese" style={{ color: 'var(--washi)' }}>Conversations</h3>
+            <h3 className="font-semibold font-japanese text-white">Combat Rounds</h3>
           </div>
-          <p className="text-2xl font-bold" style={{ color: 'var(--aka)' }}>
+          <p className="text-2xl font-bold text-primary font-tech">
             {Array.isArray(conversations) ? conversations.length : 0}
           </p>
-          <p className="text-sm" style={{ color: 'var(--kin)' }}>Total completed</p>
+          <p className="text-sm text-muted-foreground font-tech">Battles completed</p>
           
-          <div className="progress-bar mt-3 h-2">
-            <div className="progress-fill" style={{ width: `${Math.min(100, (Array.isArray(conversations) ? conversations.length : 0) * 20)}%` }}></div>
+          <div className="progress-container mt-3">
+            <div className="progress-bar" style={{ width: `${Math.min(100, (Array.isArray(conversations) ? conversations.length : 0) * 20)}%` }}></div>
           </div>
         </div>
         
-        <div className="lesson-card p-6 fade-in-up">
+        <div className="cyberpunk-card p-6 fade-in-up">
           <div className="flex items-center space-x-3 mb-3">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--kin)' }}>
-              <span className="icon-learn text-lg"></span>
+            <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
+              <span className="text-lg font-japanese">語</span>
             </div>
-            <h3 className="font-semibold font-japanese" style={{ color: 'var(--washi)' }}>Vocabulary</h3>
+            <h3 className="font-semibold font-japanese text-white">Vocabulary Arsenal</h3>
           </div>
-          <p className="text-2xl font-bold" style={{ color: 'var(--aka)' }}>
+          <p className="text-2xl font-bold text-secondary font-tech">
             {(progress as any)?.vocabEncountered?.length || 0}
           </p>
-          <p className="text-sm" style={{ color: 'var(--kin)' }}>Words learned</p>
+          <p className="text-sm text-muted-foreground font-tech">Words mastered</p>
           
-          <div className="progress-bar mt-3 h-2">
-            <div className="progress-fill" style={{ width: `${Math.min(100, ((progress as any)?.vocabEncountered?.length || 0) * 5)}%` }}></div>
+          <div className="progress-container mt-3">
+            <div className="progress-bar" style={{ width: `${Math.min(100, ((progress as any)?.vocabEncountered?.length || 0) * 5)}%` }}></div>
           </div>
         </div>
         
-        <div className="lesson-card p-6 fade-in-up">
+        <div className="cyberpunk-card p-6 fade-in-up">
           <div className="flex items-center space-x-3 mb-3">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--kin)' }}>
-              <span className="icon-progress text-lg"></span>
+            <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center">
+              <span className="text-lg">🌸</span>
             </div>
-            <h3 className="font-semibold font-japanese" style={{ color: 'var(--washi)' }}>Journey</h3>
+            <h3 className="font-semibold font-japanese text-white">Territory</h3>
           </div>
-          <p className="text-2xl font-bold" style={{ color: 'var(--aka)' }}>
+          <p className="text-2xl font-bold text-accent font-tech">
             {Array.isArray(scenarios) ? scenarios.length : 0}/10
           </p>
-          <p className="text-sm" style={{ color: 'var(--kin)' }}>Scenarios unlocked</p>
+          <p className="text-sm text-muted-foreground font-tech">Areas conquered</p>
           
-          <div className="progress-bar mt-3 h-2">
-            <div className="progress-fill" style={{ width: `${Math.min(100, (Array.isArray(scenarios) ? scenarios.length : 0) * 10)}%` }}></div>
+          <div className="progress-container mt-3">
+            <div className="progress-bar" style={{ width: `${Math.min(100, (Array.isArray(scenarios) ? scenarios.length : 0) * 10)}%` }}></div>
           </div>
         </div>
       </div>

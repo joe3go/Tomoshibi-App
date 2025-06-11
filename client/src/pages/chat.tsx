@@ -181,13 +181,9 @@ export default function Chat() {
               msg.sender === 'user' ? 'justify-end' : ''
             }`}>
               {msg.sender === 'ai' && (
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  persona?.type === 'teacher' 
-                    ? 'bg-gradient-to-br from-lantern-orange to-lantern-orange/60' 
-                    : 'bg-gradient-to-br from-sakura-blue to-sakura-blue/60'
-                }`}>
-                  <span className="text-sm">
-                    {persona?.type === 'teacher' ? '👩‍🏫' : '🧑‍🎤'}
+                <div className="avatar-ai flex-shrink-0">
+                  <span className="text-sm font-japanese">
+                    {persona?.type === 'teacher' ? '先' : '友'}
                   </span>
                 </div>
               )}
@@ -219,8 +215,8 @@ export default function Chat() {
               </div>
               
               {msg.sender === 'user' && (
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sakura-blue to-sakura-blue/60 flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm">U</span>
+                <div className="avatar-user flex-shrink-0">
+                  <span className="text-sm font-japanese">生</span>
                 </div>
               )}
             </div>
