@@ -269,7 +269,7 @@ export default function Dashboard() {
                     <div className="status-tag n5 mb-2">
                       {persona.jlptLevel} Level
                     </div>
-                    <p className="text-sm text-secondary">
+                    <p className="text-sm text-muted-foreground">
                       {persona.description}
                     </p>
                   </div>

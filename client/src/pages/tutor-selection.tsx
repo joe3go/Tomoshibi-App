@@ -31,8 +31,8 @@ export default function TutorSelection() {
   }
 
   const getAvatarImage = (persona: any) => {
-    if (persona.type === 'teacher') return harukiAvatar;
-    if (persona.type === 'friend') return aoiAvatar;
+    if (persona.type === 'teacher') return aoiAvatar; // Aoi is now the male teacher
+    if (persona.type === 'friend') return harukiAvatar; // Haruki is now the female friend
     return "";
   };
 
@@ -75,7 +75,7 @@ export default function TutorSelection() {
                 {/* Name & Title */}
                 <div className="space-y-3">
                   <h3 className="text-2xl font-bold text-foreground">
-                    {persona.name} {persona.type === 'teacher' ? '(陽輝)' : '(葵)'}
+                    {persona.name} {persona.type === 'teacher' ? '(葵)' : '(陽輝)'}
                   </h3>
                   
                   <span className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${

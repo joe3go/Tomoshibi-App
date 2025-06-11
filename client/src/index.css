@@ -38,8 +38,8 @@ Quick color changes:
   /* Background Colors */
   --background: hsl(35, 25%, 95%);
   /* Slightly lighter, more dominant background */
-  --foreground: hsl(25, 15%, 25%);
-  /* Main text color - good contrast */
+  --foreground: hsl(25, 15%, 15%);
+  /* Main text color - darker for better contrast */
 
   --card: hsl(35, 25%, 98%);
   /* Lighter card background for contrast */
