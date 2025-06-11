@@ -5,62 +5,50 @@
 @tailwind utilities;
 
 :root {
-  /* Japanese-inspired dark palette */
-  --background: 271 42% 18%;              /* 茄子紺 (Eggplant navy) main bg */
-  --foreground: 210 60% 97%;              /* 月白 (Moon white) main text */
-  --muted: 348 18% 35%;                   /* 藤煤竹 (Dusty violet) sections */
-  --muted-foreground: 4 16% 70%;          /* 桜鼠 (Sakura gray-pink) captions */
-  --popover: 348 18% 35%;
-  --popover-foreground: 210 60% 97%;
-  --card: 36 7% 53%;                      /* 利休鼠 (Tea ceremony gray) cards */
-  --card-foreground: 210 60% 97%;
-  --border: 36 7% 53%;
-  --input: 36 7% 53%;
-  --primary: 26 100% 65%;                 /* 灯色 (Flame-orange) highlights */
-  --primary-foreground: 271 42% 18%;
-  --secondary: 348 18% 35%;
-  --secondary-foreground: 210 60% 97%;
-  --accent: 26 100% 65%;
-  --accent-foreground: 271 42% 18%;
+  /* Japanese color palette - exact hex values */
+  --background: 46 42% 18%;               /* #2e1a47 茄子紺 (Eggplant navy) main bg */
+  --foreground: 210 40% 95%;              /* #eaf4fc 月白 (Moon white) main text */
+  --muted: 348 18% 35%;                   /* #634950 藤煤竹 (Dusty violet) sections */
+  --muted-foreground: 4 16% 70%;          /* #b69c9d 桜鼠 (Sakura gray-pink) captions */
+  --popover: 36 7% 53%;                   /* #888e7e 利休鼠 (Tea ceremony gray) */
+  --popover-foreground: 210 40% 95%;      /* #eaf4fc 月白 (Moon white) */
+  --card: 36 7% 53%;                      /* #888e7e 利休鼠 (Tea ceremony gray) cards */
+  --card-foreground: 210 40% 95%;         /* #eaf4fc 月白 (Moon white) */
+  --border: 36 7% 53%;                    /* #888e7e 利休鼠 (Tea ceremony gray) */
+  --input: 36 7% 53%;                     /* #888e7e 利休鼠 (Tea ceremony gray) */
+  --primary: 26 100% 65%;                 /* #ffa94d 灯色 (Flame-orange) highlights */
+  --primary-foreground: 46 42% 18%;       /* #2e1a47 茄子紺 (Eggplant navy) */
+  --secondary: 348 18% 35%;               /* #634950 藤煤竹 (Dusty violet) */
+  --secondary-foreground: 210 40% 95%;    /* #eaf4fc 月白 (Moon white) */
+  --accent: 26 100% 65%;                  /* #ffa94d 灯色 (Flame-orange) */
+  --accent-foreground: 46 42% 18%;        /* #2e1a47 茄子紺 (Eggplant navy) */
   --destructive: 0 84% 60%;
-  --destructive-foreground: 210 60% 97%;
-  --ring: 26 100% 65%;
+  --destructive-foreground: 210 40% 95%;
+  --ring: 26 100% 65%;                    /* #ffa94d 灯色 (Flame-orange) */
   --radius: 0.75rem;
-  
-  /* Named Japanese colors */
-  --nasu-kon: 271 42% 18%;               /* 茄子紺 - eggplant navy background */
-  --fujisusutake: 348 18% 35%;           /* 藤煤竹 - dusty violet sections */
-  --rikyu-nezumi: 36 7% 53%;             /* 利休鼠 - tea ceremony gray cards */
-  --tomoiro: 26 100% 65%;                /* 灯色 - flame orange highlights */
-  --tsukishiro: 210 60% 97%;             /* 月白 - moon white main text */
-  --sakura-nezumi: 4 16% 70%;            /* 桜鼠 - sakura gray-pink captions */
-  
-  /* Glass effects */
-  --glass-bg: hsla(348, 18%, 35%, 0.8);
-  --glass-border: hsla(210, 60%, 97%, 0.1);
 }
 
 .dark {
-  /* Japanese-inspired dark palette */
-  --background: 271 42% 18%;              /* 茄子紺 (Eggplant navy) main bg */
-  --foreground: 210 60% 97%;              /* 月白 (Moon white) main text */
-  --muted: 348 18% 35%;                   /* 藤煤竹 (Dusty violet) sections */
-  --muted-foreground: 4 16% 70%;          /* 桜鼠 (Sakura gray-pink) captions */
-  --popover: 348 18% 35%;
-  --popover-foreground: 210 60% 97%;
-  --card: 36 7% 53%;                      /* 利休鼠 (Tea ceremony gray) cards */
-  --card-foreground: 210 60% 97%;
-  --border: 36 7% 53%;
-  --input: 36 7% 53%;
-  --primary: 26 100% 65%;                 /* 灯色 (Flame-orange) highlights */
-  --primary-foreground: 271 42% 18%;
-  --secondary: 348 18% 35%;
-  --secondary-foreground: 210 60% 97%;
-  --accent: 26 100% 65%;
-  --accent-foreground: 271 42% 18%;
+  /* Japanese color palette - exact hex values */
+  --background: 46 42% 18%;               /* #2e1a47 茄子紺 (Eggplant navy) main bg */
+  --foreground: 210 40% 95%;              /* #eaf4fc 月白 (Moon white) main text */
+  --muted: 348 18% 35%;                   /* #634950 藤煤竹 (Dusty violet) sections */
+  --muted-foreground: 4 16% 70%;          /* #b69c9d 桜鼠 (Sakura gray-pink) captions */
+  --popover: 36 7% 53%;                   /* #888e7e 利休鼠 (Tea ceremony gray) */
+  --popover-foreground: 210 40% 95%;      /* #eaf4fc 月白 (Moon white) */
+  --card: 36 7% 53%;                      /* #888e7e 利休鼠 (Tea ceremony gray) cards */
+  --card-foreground: 210 40% 95%;         /* #eaf4fc 月白 (Moon white) */
+  --border: 36 7% 53%;                    /* #888e7e 利休鼠 (Tea ceremony gray) */
+  --input: 36 7% 53%;                     /* #888e7e 利休鼠 (Tea ceremony gray) */
+  --primary: 26 100% 65%;                 /* #ffa94d 灯色 (Flame-orange) highlights */
+  --primary-foreground: 46 42% 18%;       /* #2e1a47 茄子紺 (Eggplant navy) */
+  --secondary: 348 18% 35%;               /* #634950 藤煤竹 (Dusty violet) */
+  --secondary-foreground: 210 40% 95%;    /* #eaf4fc 月白 (Moon white) */
+  --accent: 26 100% 65%;                  /* #ffa94d 灯色 (Flame-orange) */
+  --accent-foreground: 46 42% 18%;        /* #2e1a47 茄子紺 (Eggplant navy) */
   --destructive: 0 84% 60%;
-  --destructive-foreground: 210 60% 97%;
-  --ring: 26 100% 65%;
+  --destructive-foreground: 210 40% 95%;
+  --ring: 26 100% 65%;                    /* #ffa94d 灯色 (Flame-orange) */
 }
 
 @layer base {
@@ -70,7 +58,7 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    background: linear-gradient(135deg, #2e1a47 0%, #634950 100%);
+    background: #2e1a47;
     font-family: 'Inter', 'Noto Sans JP', sans-serif;
     line-height: 1.6;
     min-height: 100vh;

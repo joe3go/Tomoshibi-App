@@ -103,7 +103,7 @@ export default function Dashboard() {
       {/* Header */}
       <header className="glass-card rounded-2xl p-4 mb-6 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
             <span className="text-background font-bold">
               {(user as any)?.displayName?.[0]?.toUpperCase() || "U"}
             </span>
@@ -134,7 +134,7 @@ export default function Dashboard() {
       <div className="mb-8 text-center">
         <Card className="bg-card/80 border border-primary/20 shadow-2xl shadow-primary/5 max-w-md mx-auto">
           <CardContent className="p-8">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center shadow-lg">
+            <div className="w-16 h-16 mx-auto mb-4 bg-primary rounded-2xl flex items-center justify-center shadow-lg">
               <MessageCircle className="w-8 h-8 text-background" />
             </div>
             <h3 className="text-xl font-semibold text-foreground mb-2">Ready to Practice?</h3>
@@ -142,7 +142,7 @@ export default function Dashboard() {
             
             <Button 
               onClick={() => setLocation("/tutor-selection")}
-              className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white font-semibold text-lg py-3 rounded-xl shadow-lg hover:shadow-primary/20 hover:scale-105 transition-all duration-300"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-lg py-3 rounded-xl shadow-lg transition-all duration-300"
             >
               Start New Conversation
             </Button>

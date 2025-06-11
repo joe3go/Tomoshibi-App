@@ -66,7 +66,7 @@ export default function Landing() {
                 <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
                   When the learning
                   <br />
-                  <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                  <span className="text-primary">
                     illuminates
                   </span>
                 </h1>
@@ -80,7 +80,7 @@ export default function Landing() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button
                   onClick={() => setLocation("/login")}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium px-8 py-6 text-lg tomoshibi-glow"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium px-8 py-6 text-lg"
                 >
                   Begin Your Journey
                 </Button>
@@ -112,10 +112,10 @@ export default function Landing() {
                   {/* Lantern Body with Soft Glow */}
                   <div className="paper-lantern w-full h-full relative overflow-hidden">
                     {/* Inner Glow Effect */}
-                    <div className="absolute inset-8 bg-gradient-radial from-primary/30 via-primary/10 to-transparent rounded-full animate-pulse"></div>
+                    <div className="absolute inset-8 bg-primary/20 rounded-full animate-pulse"></div>
                     
                     {/* Washi Paper Texture Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-card/90 via-card/70 to-card/90 rounded-full border-2 border-primary/20"></div>
+                    <div className="absolute inset-0 bg-card/80 rounded-full border-2 border-primary/20"></div>
                     
                     {/* Traditional Lantern Ribs */}
                     <div className="absolute inset-6 space-y-6">
