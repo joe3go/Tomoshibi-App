@@ -5,7 +5,7 @@ const themeVariables = {
   colors: {
     background: "hsl(35, 25%, 92%)", // 🎨 EDIT: Main background color
     foreground: "hsl(25, 15%, 25%)", // 🎨 EDIT: Main text color
-    card: "hsl(221, 21%, 24%)", // 🎨 EDIT: Card background color
+    card: "hsl(35, 25%, 98%)", // 🎨 EDIT: Card background color
     popover: "hsl(35, 35%, 96%)", // 🎨 EDIT: Popover background
     primary: "hsl(350, 65%, 45%)", // 🎨 EDIT: Primary button/accent color
     secondary: "hsl(0, 0%, 100%)", // 🎨 EDIT: Secondary color (White)

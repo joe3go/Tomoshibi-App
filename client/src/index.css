@@ -38,13 +38,13 @@ Quick color changes:
   /* Background Colors */
   --background: hsl(35, 25%, 95%);
   /* Slightly lighter, more dominant background */
-  --foreground: hsl(25, 15%, 15%);
-  /* Main text color - darker for better contrast */
+  --foreground: hsl(25, 15%, 10%);
+  /* Main text color - much darker for better contrast */
 
   --card: hsl(35, 25%, 98%);
   /* Lighter card background for contrast */
-  --card-foreground: hsl(25, 15%, 25%);
-  /* Dark text on cards, matches main text */
+  --card-foreground: hsl(25, 15%, 10%);
+  /* Very dark text on cards for better readability */
 
   --popover: hsl(35, 35%, 96%);
   /* Good as is */
@@ -60,8 +60,8 @@ Quick color changes:
   /* Secondary Colors - Soft Pink/Rose or a more neutral secondary */
   --secondary: hsl(0, 0%, 100%);
   /* White - keep for clear buttons/elements */
-  --secondary-foreground: hsl(25, 15%, 25%);
-  /* Dark text on secondary - good as is */
+  --secondary-foreground: hsl(25, 15%, 10%);
+  /* Very dark text on secondary for better visibility */
 
   /* Muted Colors */
   --muted: hsl(35, 20%, 90%);
