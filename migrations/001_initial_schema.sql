@@ -85,6 +85,20 @@ CREATE TABLE user_progress (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) UNIQUE,
     jlpt_level VARCHAR(10) DEFAULT 'N5',
+    vocab_encountered INTEGER[],
+    vocab_mastered INTEGER[],
+    grammar_encountered INTEGER[],
+    grammar_mastered INTEGER[],
+    total_conversations INTEGER DEFAULT 0,
+    total_messages_sent INTEGER DEFAULT 0,
+    last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- User progress tracking
+CREATE TABLE user_progress (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) UNIQUE,
+    jlpt_level VARCHAR(10) DEFAULT 'N5',
     vocab_encountered INTEGER[] DEFAULT '{}',
     vocab_mastered INTEGER[] DEFAULT '{}',
     grammar_encountered INTEGER[] DEFAULT '{}',

@@ -206,7 +206,7 @@ export class DatabaseStorage implements IStorage {
       .insert(userProgress)
       .values({ ...progress, userId })
       .onConflictDoUpdate({
-        target: userProgress.userId,
+        target: [userProgress.userId],
         set: progress,
       })
       .returning();
