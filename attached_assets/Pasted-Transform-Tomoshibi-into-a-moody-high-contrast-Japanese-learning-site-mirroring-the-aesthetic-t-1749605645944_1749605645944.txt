@@ -1,0 +1,116 @@
+Transform Tomoshibi into a moody, high-contrast Japanese learning site mirroring the 手花色 aesthetic—think shadowy kabuki meets Blade Runner cyberpunk. All visuals should feel like a premium fighting game UI.
+
+🎴 Core Aesthetic (Based on Your Image)
+1. Color Palette
+Primary Black: #0A0A0A (like sumi ink)
+
+Accent Red: #FF0033 (vibrant as aka blood splatter)
+
+Neon Gold: #FFCC00 (for rankings/CTAs)
+
+Text:
+
+Headings: #FFFFFF with 1px #FF0033 stroke
+
+Body: #AAAAAA (smoky gray)
+
+2. Typography
+Japanese Font: "Noto Sans JP" (700 weight for headers)
+
+English Font: "Rajdhani" (semi-bold, techy feel)
+
+Text Effects:
+
+css
+h1 {
+  text-shadow: 0 0 8px rgba(255, 0, 51, 0.7);
+  letter-spacing: -0.05em;
+}
+3. UI Components
+A. Hero Section
+
+Background: Micro-texture of kanji strokes at 3% opacity
+
+Key Visual: Glowing shodo brush-stroke divider (SVG)
+
+CTA Button:
+
+css
+.cta {
+  background: #0A0A0A;
+  border: 1px solid #FF0033;
+  box-shadow: 0 0 15px rgba(255, 0, 51, 0.5);
+}
+B. Leaderboard (Like "推荐选手")
+
+Ranking Cards:
+
+Zebra stripes with #111111 and #0A0A0A
+
+Neon gold badges for top 3 (#FFCC00)
+
+C. Lesson Modules
+
+Fighting Game-Inspired Progress Bars:
+
+css
+.progress-bar {
+  background: linear-gradient(90deg, #FF0033, #990033);
+  height: 4px;
+  box-shadow: 0 0 10px #FF0033;
+}
+🎮 Interactive Elements
+1. Hover Effects
+Buttons: Quick shinkansen zoom (110% scale)
+
+Cards: RGB split glitch effect on hover:
+
+css
+.card:hover {
+  filter: drop-shadow(0 0 5px #FF0033);
+  transform: translateY(-3px);
+}
+2. Animations
+Kanji Stroke Order Practice:
+
+SVG path drawing animation (like The World Ends With You)
+
+AI Chat Responses:
+
+Typing effect with matrix-style falling characters
+
+🎲 Asset List for Replit
+Textures:
+
+kanji-noise.png (4px repeating kanji at 3% opacity)
+
+SVGs:
+
+Shodo brush dividers
+
+Pixel-art oni mascot for 404 pages
+
+Fonts:
+
+"Noto Sans JP" + "Rajdhani" (Google Fonts)
+
+⚔️ Implementation Notes
+Performance:
+
+Use CSS mix-blend-mode: screen for neon effects
+
+Avoid PNGs where CSS can replicate (e.g., gradients)
+
+Accessibility:
+
+Dark mode forced (no light theme)
+
+prefers-reduced-motion disables glitch effects
+
+Want to push further? I can add:
+
+Yakuza-style heat gauge for daily streaks
+
+Katana slash animations on scroll
+
+Let me know which elements to prioritize!
