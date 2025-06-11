@@ -28,23 +28,46 @@
   --radius: 0.75rem;
 }
 
+:root {
+  /* Light mode - Traditional Japanese aesthetic */
+  --background: 0 0% 98%;                 /* Near-white warm background */
+  --foreground: 46 42% 18%;               /* #2e1a47 茄子紺 (Eggplant navy) - dark text */
+  --muted: 0 0% 96%;                      /* Very light gray for muted areas */
+  --muted-foreground: 0 0% 45%;           /* Medium gray for readable muted text */
+  --popover: 0 0% 100%;                   /* Pure white for popovers */
+  --popover-foreground: 46 42% 18%;       /* #2e1a47 茄子紺 (Eggplant navy) */
+  --card: 0 0% 100%;                      /* Pure white cards for clean contrast */
+  --card-foreground: 46 42% 18%;          /* #2e1a47 茄子紺 (Eggplant navy) */
+  --border: 0 0% 90%;                     /* Light gray borders */
+  --input: 0 0% 100%;                     /* White input backgrounds */
+  --primary: 26 100% 65%;                 /* #ffa94d 灯色 (Flame-orange) - warm accent */
+  --primary-foreground: 46 42% 18%;       /* #2e1a47 茄子紺 (Eggplant navy) */
+  --secondary: 348 18% 35%;               /* #634950 藤煤竹 (Dusty violet) - elegant secondary */
+  --secondary-foreground: 210 40% 95%;    /* #eaf4fc 月白 (Moon white) */
+  --accent: 4 16% 70%;                    /* #b69c9d 桜鼠 (Sakura gray-pink) - soft accent */
+  --accent-foreground: 46 42% 18%;        /* #2e1a47 茄子紺 (Eggplant navy) */
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 40% 95%;
+  --ring: 26 100% 65%;                    /* #ffa94d 灯色 (Flame-orange) */
+}
+
 .dark {
-  /* Japanese color palette - exact hex values */
+  /* Dark mode - Enhanced contrast with Japanese colors */
   --background: 46 42% 18%;               /* #2e1a47 茄子紺 (Eggplant navy) main bg */
   --foreground: 210 40% 95%;              /* #eaf4fc 月白 (Moon white) main text */
-  --muted: 348 18% 35%;                   /* #634950 藤煤竹 (Dusty violet) sections */
-  --muted-foreground: 4 16% 70%;          /* #b69c9d 桜鼠 (Sakura gray-pink) captions */
-  --popover: 36 7% 53%;                   /* #888e7e 利休鼠 (Tea ceremony gray) */
+  --muted: 46 42% 22%;                    /* Slightly lighter than background */
+  --muted-foreground: 4 16% 70%;          /* #b69c9d 桜鼠 (Sakura gray-pink) readable muted */
+  --popover: 348 18% 35%;                 /* #634950 藤煤竹 (Dusty violet) for depth */
   --popover-foreground: 210 40% 95%;      /* #eaf4fc 月白 (Moon white) */
-  --card: 36 7% 53%;                      /* #888e7e 利休鼠 (Tea ceremony gray) cards */
+  --card: 348 18% 35%;                    /* #634950 藤煤竹 (Dusty violet) cards with contrast */
   --card-foreground: 210 40% 95%;         /* #eaf4fc 月白 (Moon white) */
-  --border: 36 7% 53%;                    /* #888e7e 利休鼠 (Tea ceremony gray) */
-  --input: 36 7% 53%;                     /* #888e7e 利休鼠 (Tea ceremony gray) */
-  --primary: 26 100% 65%;                 /* #ffa94d 灯色 (Flame-orange) highlights */
+  --border: 36 7% 53%;                    /* #888e7e 利休鼠 (Tea ceremony gray) subtle borders */
+  --input: 348 18% 35%;                   /* #634950 藤煤竹 (Dusty violet) input backgrounds */
+  --primary: 26 100% 65%;                 /* #ffa94d 灯色 (Flame-orange) warm highlights */
   --primary-foreground: 46 42% 18%;       /* #2e1a47 茄子紺 (Eggplant navy) */
-  --secondary: 348 18% 35%;               /* #634950 藤煤竹 (Dusty violet) */
+  --secondary: 36 7% 53%;                 /* #888e7e 利休鼠 (Tea ceremony gray) secondary */
   --secondary-foreground: 210 40% 95%;    /* #eaf4fc 月白 (Moon white) */
-  --accent: 26 100% 65%;                  /* #ffa94d 灯色 (Flame-orange) */
+  --accent: 4 16% 70%;                    /* #b69c9d 桜鼠 (Sakura gray-pink) soft accent */
   --accent-foreground: 46 42% 18%;        /* #2e1a47 茄子紺 (Eggplant navy) */
   --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 95%;
@@ -58,10 +81,10 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    background: #2e1a47;
     font-family: 'Inter', 'Noto Sans JP', sans-serif;
     line-height: 1.6;
     min-height: 100vh;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   .font-japanese {
@@ -71,11 +94,15 @@
 
 @layer components {
   .glass-card {
-    background: var(--glass-bg);
+    @apply bg-card border border-border;
     backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-    box-shadow: 0 8px 32px hsla(271, 42%, 10%, 0.4), 0 2px 8px hsla(271, 42%, 10%, 0.2);
+    box-shadow: 0 4px 24px hsl(var(--background) / 0.1), 0 2px 8px hsl(var(--background) / 0.05);
     border-radius: 1rem;
+    transition: all 0.3s ease;
+  }
+  
+  .glass-card:hover {
+    box-shadow: 0 8px 32px hsl(var(--background) / 0.15), 0 4px 12px hsl(var(--background) / 0.1);
   }
 
   .tomoshibi-glow {
