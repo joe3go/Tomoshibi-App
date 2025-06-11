@@ -106,43 +106,7 @@ export default function Chat() {
     setMessage(prev => prev + text);
   };
 
-  const renderJapaneseText = (text: string, showFurigana: boolean) => {
-    const furiganaPattern = /([一-龯]+)\(([あ-んァ-ヶー]+)\)/g;
-    const parts = [];
-    let lastIndex = 0;
-    let match;
 
-    while ((match = furiganaPattern.exec(text)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push(text.slice(lastIndex, match.index));
-      }
-      parts.push({
-        type: 'furigana',
-        kanji: match[1],
-        reading: match[2]
-      });
-      lastIndex = match.index + match[0].length;
-    }
-
-    if (lastIndex < text.length) {
-      parts.push(text.slice(lastIndex));
-    }
-
-    return parts.map((part, index) => {
-      if (typeof part === 'string') {
-        return <span key={index}>{part}</span>;
-      }
-      return (
-        <ruby 
-          key={index} 
-          className={`toggle-furigana ${showFurigana ? '' : 'hide-furigana'}`}
-        >
-          {part.kanji}
-          <rt>{part.reading}</rt>
-        </ruby>
-      );
-    });
-  };
 
   if (isLoading) {
     return (
@@ -276,7 +240,11 @@ export default function Chat() {
                 )}
                 
                 <div className={`font-japanese mb-2 ${msg.sender === 'user' ? 'text-white' : 'text-primary'}`}>
-                  {renderJapaneseText(msg.content, showFurigana)}
+                  <FuriganaText 
+                    text={msg.content} 
+                    showFurigana={showFurigana}
+                    className="text-inherit"
+                  />
                 </div>
                 
                 {msg.sender === 'ai' && (

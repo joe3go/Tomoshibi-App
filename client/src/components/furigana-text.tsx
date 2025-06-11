@@ -5,14 +5,21 @@ interface FuriganaTextProps {
   text: string;
   className?: string;
   showToggleButton?: boolean;
+  showFurigana?: boolean;
+  onToggleFurigana?: (show: boolean) => void;
 }
 
 export default function FuriganaText({ 
   text, 
   className = "", 
-  showToggleButton = true 
+  showToggleButton = true,
+  showFurigana: externalShowFurigana,
+  onToggleFurigana
 }: FuriganaTextProps) {
-  const [showFurigana, setShowFurigana] = useState(true);
+  const [internalShowFurigana, setInternalShowFurigana] = useState(true);
+  
+  // Use external state if provided, otherwise use internal state
+  const showFurigana = externalShowFurigana !== undefined ? externalShowFurigana : internalShowFurigana;
 
   // Load preference from localStorage on mount
   useEffect(() => {
