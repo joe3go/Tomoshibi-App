@@ -75,7 +75,7 @@ export default function TutorSelection() {
                 {/* Name & Title */}
                 <div className="space-y-3">
                   <h3 className="text-2xl font-bold text-foreground">
-                    {persona.type === 'teacher' ? 'Aoi (葵) - Female Teacher' : 'Haruki (陽輝) - Male Friend'}
+                    {persona.type === 'teacher' ? 'Aoi (葵) - Teacher' : 'Haruki (陽輝) - Friend'}
                   </h3>
                   
                   <span className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${

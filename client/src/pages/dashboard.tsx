@@ -316,7 +316,7 @@ export default function Dashboard() {
                           {persona.name}
                         </h4>
                         <div className="status-tag n5 mb-2">
-                          {persona.jlptLevel || "N5"} Level • {persona.type === "teacher" ? "Female Teacher" : "Male Friend"}
+                          {persona.jlptLevel || "N5"} Level • {persona.type === "teacher" ? "Teacher" : "Friend"}
                         </div>
                         <p className="text-sm text-foreground opacity-80">
                           {persona.description ||
