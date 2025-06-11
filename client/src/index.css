@@ -5,39 +5,41 @@
 @tailwind utilities;
 
 :root {
-  /* Japanese-inspired dark palette */
-  --background: 271 42% 18%;              /* 茄子紺 (Eggplant navy) main bg */
-  --foreground: 210 60% 97%;              /* 月白 (Moon white) main text */
-  --muted: 348 18% 35%;                   /* 藤煤竹 (Dusty violet) sections */
-  --muted-foreground: 4 16% 70%;          /* 桜鼠 (Sakura gray-pink) captions */
-  --popover: 348 18% 35%;
-  --popover-foreground: 210 60% 97%;
-  --card: 36 7% 53%;                      /* 利休鼠 (Tea ceremony gray) cards */
-  --card-foreground: 210 60% 97%;
-  --border: 36 7% 53%;
-  --input: 36 7% 53%;
-  --primary: 26 100% 65%;                 /* 灯色 (Flame-orange) highlights */
-  --primary-foreground: 271 42% 18%;
-  --secondary: 348 18% 35%;
-  --secondary-foreground: 210 60% 97%;
-  --accent: 26 100% 65%;
-  --accent-foreground: 271 42% 18%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 210 60% 97%;
-  --ring: 26 100% 65%;
+  /* Authentic wa-modern color palette */
+  --urushi: #1F0303;        /* lacquer black-red */
+  --aka: #E3170A;           /* torii gate red */
+  --kin: #FFB347;           /* kintsugi gold */
+  --washi: #FFEEED;         /* paper white */
+  --sumi: #0A122A;          /* ink blue-black */
+  
+  /* Shadcn mappings to wa-modern palette */
+  --background: 0 91% 6%;                 /* urushi */
+  --foreground: 0 18% 97%;                /* washi */
+  --muted: 211 70% 10%;                   /* sumi */
+  --muted-foreground: 0 18% 85%;          /* lighter washi */
+  --popover: 0 91% 6%;
+  --popover-foreground: 0 18% 97%;
+  --card: 0 91% 6%;                       /* urushi with transparency */
+  --card-foreground: 0 18% 97%;
+  --border: 11 91% 52%;                   /* kin */
+  --input: 211 70% 10%;
+  --primary: 4 93% 47%;                   /* aka */
+  --primary-foreground: 0 18% 97%;
+  --secondary: 211 70% 10%;
+  --secondary-foreground: 0 18% 97%;
+  --accent: 11 91% 52%;                   /* kin */
+  --accent-foreground: 0 91% 6%;
+  --destructive: 4 93% 47%;
+  --destructive-foreground: 0 18% 97%;
+  --ring: 4 93% 47%;
   --radius: 0.75rem;
   
-  /* Named Japanese colors */
-  --nasu-kon: 271 42% 18%;               /* 茄子紺 - eggplant navy background */
-  --fujisusutake: 348 18% 35%;           /* 藤煤竹 - dusty violet sections */
-  --rikyu-nezumi: 36 7% 53%;             /* 利休鼠 - tea ceremony gray cards */
-  --tomoiro: 26 100% 65%;                /* 灯色 - flame orange highlights */
-  --tsukishiro: 210 60% 97%;             /* 月白 - moon white main text */
-  --sakura-nezumi: 4 16% 70%;            /* 桜鼠 - sakura gray-pink captions */
-  
-  /* Glass effects */
-  --glass-bg: hsla(348, 18%, 35%, 0.8);
-  --glass-border: hsla(210, 60%, 97%, 0.1);
+  /* Texture data URLs for washi paper effect */
+  --noise: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAABYSURBVAiZY/z//z8DDAwMDIxQwv///1kYGBgY/oMBAxQwMjL+Z2Rk/A+STUxM/5mZmf9DFcA0MDAwMDIyMv5nZGT8DwYMDAwMjIyM/xkZGf8zMjL+Z2Rk/A8A7+wTX+VqFSMAAAAASUVORK5CYII=');
+  --washi-texture: radial-gradient(circle at 30% 40%, rgba(255, 179, 71, 0.03) 0%, transparent 50%),
+                   radial-gradient(circle at 70% 70%, rgba(227, 23, 10, 0.02) 0%, transparent 50%),
+                   linear-gradient(45deg, rgba(255, 238, 237, 0.01) 25%, transparent 25%),
+                   linear-gradient(-45deg, rgba(255, 238, 237, 0.01) 25%, transparent 25%);
 }
 
 .dark {
@@ -69,10 +71,14 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    background: linear-gradient(135deg, #2e1a47 0%, #634950 100%);
-    font-family: 'Inter', 'Noto Sans JP', sans-serif;
+    background: 
+      var(--noise),
+      var(--washi-texture),
+      var(--urushi);
+    font-family: 'Noto Sans JP', 'Inter', sans-serif;
     line-height: 1.6;
     min-height: 100vh;
+    color: var(--washi);
   }
 
   .font-japanese {
@@ -81,30 +87,112 @@
 }
 
 @layer components {
+  /* Wa-modern component styles */
   .glass-card {
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-    box-shadow: 0 8px 32px hsla(271, 42%, 10%, 0.4), 0 2px 8px hsla(271, 42%, 10%, 0.2);
+    background: rgba(31, 3, 3, 0.7);
+    border: 1px solid var(--kin);
+    box-shadow: 0 2px 4px rgba(227, 23, 10, 0.3);
+    backdrop-filter: blur(20px) saturate(180%);
     border-radius: 1rem;
   }
 
-  .tomoshibi-glow {
-    box-shadow: 0 0 8px hsl(var(--tomoiro) / 0.4);
-    transition: box-shadow 0.3s ease;
+  .lesson-card {
+    background: rgba(31, 3, 3, 0.7);
+    border: 1px solid var(--kin);
+    box-shadow: 0 2px 4px rgba(227, 23, 10, 0.3);
+    transition: all 0.3s ease;
+    border-radius: 0.5rem;
   }
 
-  .tomoshibi-glow:hover {
-    box-shadow: 0 0 16px hsl(var(--tomoiro) / 0.6);
+  .lesson-card:hover {
+    background: rgba(31, 3, 3, 0.85);
+    border-color: var(--aka);
+    box-shadow: 0 4px 8px rgba(227, 23, 10, 0.4);
+    transform: translateY(-2px);
   }
 
-  .paper-lantern {
-    background: radial-gradient(ellipse at center, hsl(var(--tomoiro) / 0.9) 0%, hsl(var(--tomoiro) / 0.6) 40%, hsl(var(--tomoiro) / 0.3) 70%, transparent 100%);
-    border: 2px solid hsl(var(--tomoiro) / 0.8);
-    box-shadow: 
-      inset 0 2px 4px hsl(var(--tomoiro) / 0.3),
-      0 8px 24px hsl(var(--tomoiro) / 0.4),
-      0 0 40px hsl(var(--tomoiro) / 0.2);
+  /* Chat message bubbles with brush stroke effect */
+  .message-user {
+    background: var(--aka);
+    color: var(--washi);
+    position: relative;
+    border-radius: 1rem 1rem 0.25rem 1rem;
+  }
+
+  .message-user::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--aka), transparent, var(--aka));
+    opacity: 0.7;
+  }
+
+  .message-ai {
+    background: var(--sumi);
+    color: var(--washi);
+    border: 1px solid var(--kin);
+    border-radius: 1rem 1rem 1rem 0.25rem;
+  }
+
+  /* Progress bars with kintsugi aesthetic */
+  .progress-bar {
+    background: rgba(10, 18, 42, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    background: linear-gradient(90deg, var(--aka), var(--kin));
+    height: 100%;
+    transition: width 0.8s ease-out;
+  }
+
+  /* Navbar with enkaken dot for active links */
+  .navbar {
+    background: var(--urushi);
+    border-bottom: 1px dashed var(--kin);
+  }
+
+  .nav-link.active {
+    text-decoration: underline;
+    position: relative;
+  }
+
+  .nav-link.active::before {
+    content: '●';
+    color: var(--kin);
+    position: absolute;
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  /* Icon system using kanji */
+  .icon-chat::before {
+    content: "話";
+    color: var(--kin);
+    text-shadow: 0 0 5px var(--aka);
+    font-weight: bold;
+    margin-right: 0.5rem;
+  }
+
+  .icon-learn::before {
+    content: "学";
+    color: var(--kin);
+    text-shadow: 0 0 5px var(--aka);
+    font-weight: bold;
+    margin-right: 0.5rem;
+  }
+
+  .icon-progress::before {
+    content: "進";
+    color: var(--kin);
+    text-shadow: 0 0 5px var(--aka);
+    font-weight: bold;
+    margin-right: 0.5rem;
   }
 
   .ma-spacing {
@@ -112,8 +200,62 @@
     margin: 2rem 0;
   }
 
-  .subtle-depth {
-    box-shadow: 0 2px 8px hsla(271, 42%, 10%, 0.3);
+  .ma-spacing > * + * {
+    margin-top: 2rem;
+  }
+
+  /* Motion presets with Japanese easing */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .fade-in-up {
+    animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  /* Kanji stroke animation */
+  @keyframes strokeOrder {
+    from {
+      stroke-dashoffset: 100;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  .kanji-animate {
+    stroke-dasharray: 100;
+    animation: strokeOrder 2s ease-in-out;
+  }
+
+  /* Chōchin lantern with glow */
+  .paper-lantern {
+    background: 
+      radial-gradient(ellipse at center, var(--kin) 0%, transparent 70%),
+      var(--urushi);
+    border: 2px solid var(--kin);
+    box-shadow: 
+      0 0 20px rgba(255, 179, 71, 0.4),
+      inset 0 0 20px rgba(255, 179, 71, 0.1);
+    filter: drop-shadow(0 0 10px rgba(255, 179, 71, 0.3));
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .fade-in-up,
+    .lesson-card,
+    .progress-fill,
+    .kanji-animate {
+      animation: none;
+      transition: none;
+    }
   }
 
   .hover-glow {

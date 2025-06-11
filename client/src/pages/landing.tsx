@@ -9,16 +9,17 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Navigation */}
-      <nav className="absolute top-0 left-0 right-0 z-50 p-6">
+      <nav className="navbar absolute top-0 left-0 right-0 z-50 p-6">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-3">
-            <h1 className="text-2xl font-bold text-primary font-japanese">Tomoshibi</h1>
-            <span className="text-secondary text-lg font-japanese">灯火</span>
+            <h1 className="text-2xl font-bold font-japanese" style={{ color: 'var(--kin)' }}>Tomoshibi</h1>
+            <span className="text-lg font-japanese" style={{ color: 'var(--washi)' }}>灯火</span>
           </div>
           <Button
             onClick={() => setLocation("/login")}
             variant="outline"
-            className="border-primary/30 text-foreground hover:bg-primary hover:text-primary-foreground tomoshibi-glow"
+            className="lesson-card text-washi hover:bg-aka"
+            style={{ borderColor: 'var(--kin)', color: 'var(--washi)' }}
           >
             Sign In
           </Button>
@@ -104,51 +105,71 @@ export default function Landing() {
               </div>
             </div>
 
-            {/* Right Content - Refined Paper Lantern */}
+            {/* Right Content - Authentic Chōchin Lantern */}
             <div className="flex justify-center lg:justify-end">
-              <div className="relative">
-                {/* Main Paper Lantern with Washi Paper Texture */}
-                <div className="relative w-72 h-96">
-                  {/* Lantern Body with Soft Glow */}
-                  <div className="paper-lantern w-full h-full relative overflow-hidden">
-                    {/* Inner Glow Effect */}
-                    <div className="absolute inset-8 bg-gradient-radial from-primary/30 via-primary/10 to-transparent rounded-full animate-pulse"></div>
+              <div className="relative fade-in-up">
+                {/* Chōchin Lantern SVG with Glow */}
+                <div className="relative w-64 h-80">
+                  <svg viewBox="0 0 200 300" className="w-full h-full">
+                    {/* Lantern Body */}
+                    <ellipse cx="100" cy="150" rx="80" ry="120" 
+                      fill="var(--urushi)" 
+                      stroke="var(--kin)" 
+                      strokeWidth="2"
+                      opacity="0.9"/>
                     
-                    {/* Washi Paper Texture Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-card/90 via-card/70 to-card/90 rounded-full border-2 border-primary/20"></div>
-                    
-                    {/* Traditional Lantern Ribs */}
-                    <div className="absolute inset-6 space-y-6">
-                      <div className="border-t border-primary/30 w-full"></div>
-                      <div className="border-t border-primary/25 w-full"></div>
-                      <div className="border-t border-primary/30 w-full"></div>
-                      <div className="border-t border-primary/25 w-full"></div>
-                      <div className="border-t border-primary/30 w-full"></div>
-                      <div className="border-t border-primary/25 w-full"></div>
-                      <div className="border-t border-primary/30 w-full"></div>
-                    </div>
-                    <div className="absolute inset-4 top-48 border-t border-primary/20"></div>
-                    <div className="absolute inset-4 top-56 border-t border-primary/20"></div>
+                    {/* Horizontal Ribs */}
+                    <line x1="20" y1="80" x2="180" y2="80" stroke="var(--kin)" strokeWidth="1" opacity="0.6"/>
+                    <line x1="25" y1="110" x2="175" y2="110" stroke="var(--kin)" strokeWidth="1" opacity="0.6"/>
+                    <line x1="30" y1="140" x2="170" y2="140" stroke="var(--kin)" strokeWidth="1" opacity="0.6"/>
+                    <line x1="30" y1="170" x2="170" y2="170" stroke="var(--kin)" strokeWidth="1" opacity="0.6"/>
+                    <line x1="25" y1="200" x2="175" y2="200" stroke="var(--kin)" strokeWidth="1" opacity="0.6"/>
+                    <line x1="20" y1="230" x2="180" y2="230" stroke="var(--kin)" strokeWidth="1" opacity="0.6"/>
                     
                     {/* Inner Glow */}
-                    <div className="absolute inset-8 bg-gradient-to-b from-primary/60 to-primary/30 rounded-full blur-sm"></div>
+                    <ellipse cx="100" cy="150" rx="60" ry="100" 
+                      fill="var(--kin)" 
+                      opacity="0.3"/>
                     
-                    {/* Central Light */}
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-primary rounded-full animate-pulse shadow-xl"></div>
-                  </div>
+                    {/* Central Flame */}
+                    <ellipse cx="100" cy="150" rx="15" ry="20" 
+                      fill="var(--aka)" 
+                      className="animate-pulse"/>
+                    
+                    {/* Top Cap */}
+                    <rect x="85" y="25" width="30" height="15" 
+                      fill="var(--sumi)" 
+                      stroke="var(--kin)" 
+                      strokeWidth="1" 
+                      rx="3"/>
+                    
+                    {/* Bottom Cap */}
+                    <rect x="80" y="275" width="40" height="12" 
+                      fill="var(--sumi)" 
+                      stroke="var(--kin)" 
+                      strokeWidth="1" 
+                      rx="2"/>
+                    
+                    {/* Hanging String */}
+                    <line x1="100" y1="10" x2="100" y2="25" 
+                      stroke="var(--kin)" 
+                      strokeWidth="2"/>
+                    
+                    {/* Glow Filter */}
+                    <defs>
+                      <filter id="glow">
+                        <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                        <feMerge> 
+                          <feMergeNode in="coloredBlur"/>
+                          <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                      </filter>
+                    </defs>
+                  </svg>
                   
-                  {/* Top Cap */}
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-16 h-8 bg-card border border-border rounded-t-lg"></div>
-                  
-                  {/* Bottom Cap */}
-                  <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-20 h-6 bg-card border border-border rounded-b-lg"></div>
-                  
-                  {/* Hanging String */}
-                  <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 w-0.5 h-8 bg-muted-foreground/40"></div>
+                  {/* Apply the paper-lantern class for additional glow */}
+                  <div className="absolute inset-0 paper-lantern rounded-full opacity-30 -z-10"></div>
                 </div>
-
-                {/* Ambient Glow */}
-                <div className="absolute inset-0 bg-gradient-to-b from-primary/20 to-transparent rounded-full scale-150 blur-3xl -z-10"></div>
               </div>
             </div>
           </div>
