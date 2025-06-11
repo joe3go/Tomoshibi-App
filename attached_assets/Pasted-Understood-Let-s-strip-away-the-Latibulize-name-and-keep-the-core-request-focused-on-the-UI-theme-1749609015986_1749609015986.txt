@@ -1,0 +1,40 @@
+Understood! Let's strip away the "Latibulize" name and keep the core request focused on the UI theme and layout based only on the provided screenshot.
+
+Here's the revised prompt for your AI builder:
+
+Prompt for AI Builder to Update Site UI (Based on Provided Screenshot's Aesthetic):
+
+"Objective: Analyze the provided screenshot of a Japanese language learning site UI and extract its core visual and layout characteristics. Apply these characteristics consistently to other sections and new features of the platform to ensure a unified and familiar user experience.
+
+Focus Area for Analysis (from Provided Screenshot):
+
+Color Palette:
+Identify the dominant background color (light, likely white or off-white).
+Identify the primary accent colors (e.g., the specific shade of blue used for main text and elements, the distinct orange used for calls-to-action and highlights).
+Note any subtle grayscale or secondary text colors (e.g., for disabled states or less prominent text).
+Typography:
+Identify font families used for headings and body text (e.g., sans-serif, clean, readable).
+Analyze font weights and sizes used for different UI elements (e.g., large, bold headers; slightly smaller, regular-weight body text; very small, light text for metadata).
+Component Styling:
+Cards/Panels: Note the styling of content blocks (e.g., crisp, defined borders, slight rounded corners, subtle shadows if any, consistent background color).
+Buttons: Analyze the design of call-to-action buttons (e.g., fill color, text color, corner radius, any subtle gradients or hover effects). Pay attention to the 'Start Conversation' button.
+Labels/Tags: How are labels like 'N5 Level' styled (e.g., background color, text color, padding, corner radius, font style)?
+Input Fields/Selections/Toggles: If visible, how are interactive elements like "Select Partner" or "Polite Form" toggles styled (e.g., distinct borders, background changes for selected states, clear labels)?
+Progress Indicators: How are elements indicating progress or completion (e.g., 'Total completed') designed in terms of text style, accompanying icons, or visual markers?
+Avatars/Icons: Note the simple, clear style of avatars or icons (e.g., Sensei, Yuki).
+Layout & Spacing:
+Observe the overall content alignment (e.g., clean, left-aligned primary content, well-defined sections).
+Analyze the consistent spacing and padding between elements, within content cards, and between major UI sections.
+Note the effective use of white space to create visual hierarchy and prevent clutter.
+Overall Aesthetic:
+Characterize the general feel: Is it professional, minimalistic, modern, friendly, educational?
+Instructions for Application (to other site areas/new features):
+
+Global Styling: Ensure that all new and existing UI components (e.g., navigation menus, profile settings, lesson content, quiz interfaces, vocabulary lists) adopt the extracted color palette, typography, and component styling.
+Consistency: Maintain consistent padding, margins, border-radii, and component sizing across the entire platform.
+Hierarchy: Use the identified visual cues (font size, weight, color, spacing) to maintain a clear visual hierarchy on all pages.
+Responsive Design: Apply the design principles to ensure the UI remains clean and usable across various screen sizes.
+Functional Clarity: The applied styling must enhance readability and usability for a learning environment.
+Avoid Deviation: Explicitly prevent the introduction of conflicting aesthetics, such as 'dark mode', 'cyberpunk', 'gaming', overly ornamental, or highly stylized elements that deviate from the professional, clean, light-themed style of the provided screenshot.
+Expected Output:
+A comprehensive set of design guidelines, including specific color hex codes, recommended font stack(s), typical border-radius values, subtle shadow properties (if any), and consistent spacing rules (e.g., in px or rem units), all derived directly from the visual analysis of the provided screenshot. This output should serve as a blueprint for implementing the theme across the entire website.

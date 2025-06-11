@@ -181,21 +181,17 @@ export default function Chat() {
               msg.sender === 'user' ? 'justify-end' : ''
             }`}>
               {msg.sender === 'ai' && (
-                <div className="avatar-ai flex-shrink-0">
+                <div className={`avatar ${persona?.type === 'teacher' ? 'sensei' : 'yuki'} flex-shrink-0`}>
                   <span className="text-sm font-japanese">
                     {persona?.type === 'teacher' ? '先' : '友'}
                   </span>
                 </div>
               )}
               
-              <div className={`p-4 max-w-lg ${
-                msg.sender === 'user' 
-                  ? 'message-bubble-user' 
-                  : 'message-bubble-ai'
-              }`}>
+              <div className={`message-bubble ${msg.sender === 'user' ? 'user' : 'ai'}`}>
                 {msg.feedback && (
-                  <div className="mb-2 p-2 rounded-lg bg-secondary/20 border border-secondary/30">
-                    <p className="text-sm text-secondary">✨ {msg.feedback}</p>
+                  <div className="mb-2 p-2 rounded-lg bg-green-50 border border-green-200">
+                    <p className="text-sm text-green-700">✨ {msg.feedback}</p>
                   </div>
                 )}
                 
@@ -203,7 +199,7 @@ export default function Chat() {
                   <FuriganaText 
                     text={msg.content} 
                     showFurigana={showFurigana}
-                    className="text-white"
+                    className={msg.sender === 'user' ? 'text-white' : 'text-primary'}
                   />
                 </div>
                 
@@ -215,8 +211,8 @@ export default function Chat() {
               </div>
               
               {msg.sender === 'user' && (
-                <div className="avatar-user flex-shrink-0">
-                  <span className="text-sm font-japanese">生</span>
+                <div className="avatar student flex-shrink-0">
+                  <span className="text-sm">You</span>
                 </div>
               )}
             </div>
