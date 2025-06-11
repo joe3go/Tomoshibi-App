@@ -1,17 +1,24 @@
 
 import React, { useState, useEffect } from 'react';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 
 interface ColorPickerProps {
-  isVisible: boolean;
-  onToggle: () => void;
+  initialColor: string;
+  label: string;
+  onColorChange: (color: string) => void;
+  cssVariable?: string;
+  className?: string;
 }
 
-export const ColorPicker: React.FC<ColorPickerProps> = ({ isVisible, onToggle }) => {
-  const [colors, setColors] = useState({
-    background: '#f0e9e4', // hsl(35, 25%, 92%) converted to hex
-    header: '#855a5a',     // hsl(354, 33%, 36%) converted to hex
-    card: '#3d3f47'        // hsl(221, 21%, 24%) converted to hex
-  });
+const InlineColorPicker: React.FC<ColorPickerProps> = ({
+  initialColor,
+  label,
+  onColorChange,
+  cssVariable,
+  className = ''
+}) => {
+  const [color, setColor] = useState(initialColor);
+  const [isOpen, setIsOpen] = useState(false);
 
   const hexToHsl = (hex: string) => {
     const r = parseInt(hex.slice(1, 3), 16) / 255;
@@ -36,102 +43,128 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({ isVisible, onToggle })
     return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
   };
 
-  const updateCSSVariable = (property: string, value: string) => {
-    const hslValue = hexToHsl(value);
-    document.documentElement.style.setProperty(`--${property}`, hslValue);
+  const handleColorChange = (newColor: string) => {
+    setColor(newColor);
+    onColorChange(newColor);
+    
+    if (cssVariable) {
+      const hslValue = hexToHsl(newColor);
+      document.documentElement.style.setProperty(`--${cssVariable}`, hslValue);
+    }
   };
 
-  const handleColorChange = (colorType: keyof typeof colors, value: string) => {
-    setColors(prev => ({ ...prev, [colorType]: value }));
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className={`inline-flex items-center gap-2 px-2 py-1 rounded-md border border-gray-300 hover:border-gray-400 transition-colors ${className}`}
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          <div
+            className="w-4 h-4 rounded border border-gray-300"
+            style={{ backgroundColor: color }}
+          />
+          <span className="text-sm font-mono text-gray-700">{label}</span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-4">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium">{label}</label>
+            <div
+              className="w-6 h-6 rounded border border-gray-300"
+              style={{ backgroundColor: color }}
+            />
+          </div>
+          <input
+            type="color"
+            value={color}
+            onChange={(e) => handleColorChange(e.target.value)}
+            className="w-full h-10 rounded border border-gray-300 cursor-pointer"
+          />
+          <div className="text-xs text-gray-500">
+            Hex: {color}
+            <br />
+            HSL: {hexToHsl(color)}
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+export const ColorPicker: React.FC = () => {
+  const [colors, setColors] = useState({
+    background: '#f0e9e4', // hsl(35, 25%, 92%)
+    header: '#855a5a',     // hsl(354, 33%, 36%)
+    card: '#3d3f47'        // hsl(221, 21%, 24%)
+  });
+
+  const updateColor = (colorType: keyof typeof colors, newColor: string) => {
+    setColors(prev => ({ ...prev, [colorType]: newColor }));
     
+    // Apply changes to the DOM
     switch (colorType) {
       case 'background':
-        document.body.style.background = value;
-        updateCSSVariable('background', value);
+        document.body.style.background = newColor;
         break;
       case 'header':
         const navbars = document.querySelectorAll('.navbar, .bottom-nav');
         navbars.forEach(navbar => {
-          (navbar as HTMLElement).style.background = value;
+          (navbar as HTMLElement).style.background = newColor;
         });
         break;
       case 'card':
-        const cards = document.querySelectorAll('.content-card, .color-picker-panel');
+        const cards = document.querySelectorAll('.content-card');
         cards.forEach(card => {
-          (card as HTMLElement).style.background = value;
+          (card as HTMLElement).style.background = newColor;
         });
-        updateCSSVariable('card', value);
         break;
     }
   };
 
-  useEffect(() => {
-    // Initialize colors on mount
-    Object.entries(colors).forEach(([key, value]) => {
-      handleColorChange(key as keyof typeof colors, value);
-    });
-  }, []);
-
-  if (!isVisible) {
-    return (
-      <button 
-        onClick={onToggle}
-        className="color-toggle-btn"
-      >
-        🎨 Colors
-      </button>
-    );
-  }
-
   return (
-    <>
-      <button 
-        onClick={onToggle}
-        className="color-toggle-btn"
-      >
-        ✕ Close
-      </button>
+    <div className="fixed top-4 right-4 z-50 bg-white rounded-lg shadow-lg p-4 border border-gray-200">
+      <h3 className="text-lg font-semibold mb-4 text-gray-800">🎨 Color Editor</h3>
       
-      <div className="color-picker-panel">
-        <h3 className="text-lg font-semibold mb-4 text-white">Customize Colors</h3>
-        
-        <div className="color-input-group">
-          <label htmlFor="background-color">Background Color</label>
-          <input
-            id="background-color"
-            type="color"
-            value={colors.background}
-            onChange={(e) => handleColorChange('background', e.target.value)}
-            className="color-input"
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600 w-20">Background:</span>
+          <InlineColorPicker
+            initialColor={colors.background}
+            label="bg"
+            onColorChange={(color) => updateColor('background', color)}
+            cssVariable="background"
           />
         </div>
 
-        <div className="color-input-group">
-          <label htmlFor="header-color">Header/Navigation Color</label>
-          <input
-            id="header-color"
-            type="color"
-            value={colors.header}
-            onChange={(e) => handleColorChange('header', e.target.value)}
-            className="color-input"
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600 w-20">Header:</span>
+          <InlineColorPicker
+            initialColor={colors.header}
+            label="nav"
+            onColorChange={(color) => updateColor('header', color)}
           />
         </div>
 
-        <div className="color-input-group">
-          <label htmlFor="card-color">Card Color</label>
-          <input
-            id="card-color"
-            type="color"
-            value={colors.card}
-            onChange={(e) => handleColorChange('card', e.target.value)}
-            className="color-input"
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600 w-20">Cards:</span>
+          <InlineColorPicker
+            initialColor={colors.card}
+            label="card"
+            onColorChange={(color) => updateColor('card', color)}
+            cssVariable="card"
           />
-        </div>
-
-        <div className="mt-4 text-xs text-gray-300">
-          Click on the color squares to customize your theme
         </div>
       </div>
-    </>
+
+      <div className="mt-4 pt-3 border-t border-gray-200">
+        <p className="text-xs text-gray-500">
+          Click color swatches to open picker popups
+        </p>
+      </div>
+    </div>
   );
 };
+
+export default ColorPicker;

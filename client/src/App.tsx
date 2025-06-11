@@ -12,6 +12,7 @@ import Chat from "@/pages/chat";
 import NotFound from "@/pages/not-found";
 import TutorSelection from "@/pages/tutor-selection";
 import ScenarioSelection from "@/pages/scenario-selection";
+import { ColorPicker } from "@/components/color-picker"; // Added ColorPicker import
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -56,6 +57,7 @@ function App() {
       <TooltipProvider>
         <div className="dark min-h-screen bg-background">
           <Toaster />
+          <ColorPicker /> {/* Added ColorPicker component */}
           <Router />
         </div>
       </TooltipProvider>
