@@ -12,6 +12,7 @@ import Chat from "@/pages/chat";
 import NotFound from "@/pages/not-found";
 import TutorSelection from "@/pages/tutor-selection";
 import ScenarioSelection from "@/pages/scenario-selection";
+import FuriganaDemo from "@/pages/furigana-demo";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -43,6 +44,7 @@ function Router() {
           <Route path="/tutor-selection" component={TutorSelection} />
           <Route path="/scenario-selection/:personaId" component={ScenarioSelection} />
           <Route path="/chat/:conversationId" component={Chat} />
+          <Route path="/furigana-demo" component={FuriganaDemo} />
         </>
       )}
       <Route component={NotFound} />

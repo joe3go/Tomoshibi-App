@@ -135,12 +135,21 @@ export default function Dashboard() {
               Japanese skills.
             </p>
 
-            <Button
-              onClick={() => setLocation("/tutor-selection")}
-              className="btn-primary w-full"
-            >
-              Start New Conversation
-            </Button>
+            <div className="space-y-3">
+              <Button
+                onClick={() => setLocation("/tutor-selection")}
+                className="btn-primary w-full"
+              >
+                Start New Conversation
+              </Button>
+              <Button
+                onClick={() => setLocation("/furigana-demo")}
+                variant="outline"
+                className="w-full"
+              >
+                View Furigana Demo
+              </Button>
+            </div>
           </div>
         </div>
 

@@ -4,6 +4,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Furigana (Ruby Text) Styles */
+ruby.toggle-furigana {
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+ruby.toggle-furigana rt {
+  display: inline;
+  font-size: 0.6em;
+  line-height: 1;
+  text-align: center;
+  color: hsl(var(--muted-foreground));
+}
+
+ruby.toggle-furigana.hide-furigana rt {
+  display: none;
+}
+
 /*==============================
   🎨 EASY THEME CUSTOMIZATION GUIDE
 ==============================*/
