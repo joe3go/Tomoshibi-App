@@ -34,12 +34,16 @@ Quick color changes:
 ==============================*/
 :root {
   /* 🎨 EASY COLOR EDITING - Change the numbers below to customize your theme */
-  
+
   /* Background Colors */
-  --background: 35 25% 92%;     /* 🎨 CHANGE ME: Main page background (hue saturation lightness) */
-  --foreground: 0 0% 100%;      /* 🎨 CHANGE ME: Main text color */
-  --card: 221 21% 24%;          /* 🎨 CHANGE ME: Card background color */
-  --card-foreground: 35 25% 92%; /* 🎨 CHANGE ME: Card text color */
+  --background: 35 25% 92%;
+  /* 🎨 CHANGE ME: Main page background (hue saturation lightness) */
+  --foreground: 0 0% 100%;
+  /* 🎨 CHANGE ME: Main text color */
+  --card: hsl(20, 9%, 73%);
+  /* 🎨 CHANGE ME: Card background color */
+  --card-foreground: 35 25% 92%;
+  /* 🎨 CHANGE ME: Card text color */
   --popover: 221 19% 25%;
   --popover-foreground: 25 15% 25%;
 
