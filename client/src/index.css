@@ -36,68 +36,98 @@ Quick color changes:
   /* 🎨 EASY COLOR EDITING - Change the hsl() values below to customize your theme */
 
   /* Background Colors */
-  --background: hsl(35, 25%, 92%);
-  /* 🎨 CHANGE ME: Main page background */
+  --background: hsl(35, 25%, 95%);
+  /* Slightly lighter, more dominant background */
   --foreground: hsl(25, 15%, 25%);
-  /* 🎨 CHANGE ME: Main text color */
-  --card: hsl(221, 21%, 24%);
-  /* 🎨 CHANGE ME: Card background color */
-  --card-foreground: hsl(35, 25%, 92%);
-  /* 🎨 CHANGE ME: Card text color */
+  /* Main text color - good contrast */
+
+  --card: hsl(35, 25%, 98%);
+  /* Lighter card background for contrast */
+  --card-foreground: hsl(25, 15%, 25%);
+  /* Dark text on cards, matches main text */
+
   --popover: hsl(35, 35%, 96%);
+  /* Good as is */
   --popover-foreground: hsl(25, 15%, 25%);
+  /* Good as is */
 
   /* Primary Colors - Deep Red/Burgundy */
   --primary: hsl(350, 65%, 45%);
-  /* Deep red like in the reference */
+  /* Deep red - good as is */
   --primary-foreground: hsl(35, 25%, 95%);
+  /* Light text on primary - good as is */
 
-  /* Secondary Colors - Soft Pink/Rose */
+  /* Secondary Colors - Soft Pink/Rose or a more neutral secondary */
   --secondary: hsl(0, 0%, 100%);
-  /* White */
+  /* White - keep for clear buttons/elements */
   --secondary-foreground: hsl(25, 15%, 25%);
+  /* Dark text on secondary - good as is */
 
   /* Muted Colors */
-  --muted: hsl(25, 15%, 88%);
+  --muted: hsl(35, 20%, 90%);
+  /* Slightly more defined muted background */
   --muted-foreground: hsl(25, 10%, 55%);
+  /* Good as is */
 
   /* Accent Colors */
   --accent: hsl(15, 25%, 85%);
+  /* Slightly more distinct accent */
   --accent-foreground: hsl(25, 15%, 25%);
+  /* Good as is */
   --accent-gold: hsl(47, 85%, 60%);
-  /* Warmer gold */
+  /* Warmer gold - good as is */
   --accent-red: hsl(350, 65%, 45%);
+  /* Same as primary for consistency */
   --accent-pink: hsl(345, 45%, 75%);
-  /* Cherry blossom pink */
+  /* Cherry blossom pink - good as is */
 
   /* Destructive Colors */
   --destructive: hsl(0, 75%, 55%);
+  /* Good as is */
   --destructive-foreground: hsl(35, 25%, 95%);
+  /* Good as is */
 
   /* Borders */
-  --border: hsl(25, 15%, 75%);
-  --input: hsl(35, 25%, 90%);
+  --border: hsl(25, 15%, 80%);
+  /* Slightly lighter, better contrast */
+  --input: hsl(35, 25%, 92%);
+  /* Slightly more defined input */
   --ring: hsl(350, 65%, 45%);
+  /* Good as is */
 
   /* Radius */
   --radius: 0.75rem;
+  /* Good as is */
 
-  /* Chart Colors - Warm palette */
+  /* Chart Colors - Warm palette (Consider if you need this many distinct chart colors or can use primary/accent) */
   --chart-1: hsl(350, 65%, 45%);
+  /* Deep red */
   --chart-2: hsl(47, 85%, 60%);
+  /* Gold */
   --chart-3: hsl(15, 45%, 65%);
+  /* Warm orange-brown */
   --chart-4: hsl(25, 35%, 55%);
+  /* Deeper brown */
   --chart-5: hsl(345, 45%, 75%);
+  /* Soft pink */
 
   /* Sidebar Colors */
-  --sidebar-background: hsl(25, 20%, 88%);
+  --sidebar-background: hsl(25, 20%, 85%);
+  /* Slightly darker than main background for separation */
   --sidebar-foreground: hsl(25, 15%, 25%);
+  /* Dark text */
   --sidebar-primary: hsl(350, 65%, 45%);
+  /* Deep red for active/highlight */
   --sidebar-primary-foreground: hsl(35, 25%, 95%);
-  --sidebar-accent: hsl(15, 25%, 82%);
+  /* Light text on primary */
+  --sidebar-accent: hsl(15, 25%, 80%);
+  /* Subtle accent for hover/focus */
   --sidebar-accent-foreground: hsl(25, 15%, 25%);
-  --sidebar-border: hsl(25, 15%, 70%);
+  /* Dark text */
+  --sidebar-border: hsl(25, 15%, 75%);
+  /* Consistent border */
   --sidebar-ring: hsl(350, 65%, 45%);
+  /* Consistent ring */
 }
 
 /*==============================
