@@ -225,6 +225,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const conversationId = parseInt(req.params.id);
       const updates = req.body;
       
+      // Convert ISO string to Date object for timestamp fields
+      if (updates.completedAt && typeof updates.completedAt === 'string') {
+        updates.completedAt = new Date(updates.completedAt);
+      }
+      
       // Verify conversation belongs to user
       const conversation = await storage.getConversation(conversationId);
       if (!conversation || conversation.userId !== req.userId) {

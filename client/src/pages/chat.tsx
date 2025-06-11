@@ -243,6 +243,8 @@ export default function Chat() {
                   <FuriganaText 
                     text={msg.content} 
                     showFurigana={showFurigana}
+                    onToggleFurigana={(show) => setShowFurigana(show)}
+                    showToggleButton={false}
                     className="text-inherit"
                   />
                 </div>
