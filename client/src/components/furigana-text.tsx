@@ -21,19 +21,25 @@ export default function FuriganaText({
   // Use external state if provided, otherwise use internal state
   const showFurigana = externalShowFurigana !== undefined ? externalShowFurigana : internalShowFurigana;
 
-  // Load preference from localStorage on mount
+  // Load preference from localStorage on mount (only for internal state)
   useEffect(() => {
-    const savedPreference = localStorage.getItem('furigana-visible');
-    if (savedPreference !== null) {
-      setShowFurigana(savedPreference === 'true');
+    if (externalShowFurigana === undefined) {
+      const savedPreference = localStorage.getItem('furigana-visible');
+      if (savedPreference !== null) {
+        setInternalShowFurigana(savedPreference === 'true');
+      }
     }
-  }, []);
+  }, [externalShowFurigana]);
 
-  // Save preference to localStorage when changed
+  // Toggle function handles both internal and external state
   const toggleFurigana = () => {
     const newState = !showFurigana;
-    setShowFurigana(newState);
-    localStorage.setItem('furigana-visible', newState.toString());
+    if (onToggleFurigana) {
+      onToggleFurigana(newState);
+    } else {
+      setInternalShowFurigana(newState);
+      localStorage.setItem('furigana-visible', newState.toString());
+    }
   };
 
   // Parse text to identify kanji with furigana notation: 漢字(かんじ)
