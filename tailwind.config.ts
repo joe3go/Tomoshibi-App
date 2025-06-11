@@ -1,23 +1,23 @@
 import type { Config } from "tailwindcss";
 
-// Theme constants
+// Theme constants - Edit colors directly here
 const themeVariables = {
   colors: {
-    background: "35 25% 92%", // Warm creamy background
-    foreground: "25 15% 25%", // Dark brown text
-    card: "221 21% 24%", // Dark slate/navy shade for cards
-    popover: "35 35% 96%",
-    primary: "350 65% 45%", // Deep red like in reference
-    secondary: "0 0% 100%" /* White */,
-    muted: "25 15% 88%",
-    accent: "15 25% 85%",
-    destructive: "0 75% 55%",
-    border: "25 15% 75%",
-    input: "35 25% 90%",
-    ring: "350 65% 45%",
-    gold: "47 85% 60%", // Warmer gold
-    red: "350 65% 45%",
-    pink: "345 45% 75%", // Cherry blossom pink
+    background: "35 25% 92%", // 🎨 EDIT: Main background color
+    foreground: "25 15% 25%", // 🎨 EDIT: Main text color
+    card: "221 21% 24%", // 🎨 EDIT: Card background color
+    popover: "35 35% 96%", // 🎨 EDIT: Popover background
+    primary: "350 65% 45%", // 🎨 EDIT: Primary button/accent color
+    secondary: "0 0% 100%", // 🎨 EDIT: Secondary color (White)
+    muted: "25 15% 88%", // 🎨 EDIT: Muted text/backgrounds
+    accent: "15 25% 85%", // 🎨 EDIT: Accent color
+    destructive: "0 75% 55%", // 🎨 EDIT: Error/destructive color
+    border: "25 15% 75%", // 🎨 EDIT: Border color
+    input: "35 25% 90%", // 🎨 EDIT: Input field background
+    ring: "350 65% 45%", // 🎨 EDIT: Focus ring color
+    gold: "47 85% 60%", // 🎨 EDIT: Gold accent color
+    red: "350 65% 45%", // 🎨 EDIT: Red accent
+    pink: "345 45% 75%", // 🎨 EDIT: Cherry blossom pink
     chart: {
       1: "350 65% 45%",
       2: "47 85% 60%",
