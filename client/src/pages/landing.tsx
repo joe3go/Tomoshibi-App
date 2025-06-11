@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { useLocation } from "wouter";
 import { MessageCircle, BookOpen, TrendingUp, Users, Star, CheckCircle } from "lucide-react";
 
@@ -16,16 +15,13 @@ export default function Landing() {
             <h1 className="text-2xl font-bold text-primary font-japanese">Tomoshibi</h1>
             <span className="text-secondary text-lg font-japanese">灯火</span>
           </div>
-          <div className="flex items-center space-x-3">
-            <ThemeToggle />
-            <Button
-              onClick={() => setLocation("/login")}
-              variant="outline"
-              className="border-primary/30 text-foreground hover:bg-primary hover:text-primary-foreground"
-            >
-              Sign In
-            </Button>
-          </div>
+          <Button
+            onClick={() => setLocation("/login")}
+            variant="outline"
+            className="border-primary/30 text-foreground hover:bg-primary hover:text-primary-foreground tomoshibi-glow"
+          >
+            Sign In
+          </Button>
         </div>
       </nav>
 
@@ -70,7 +66,7 @@ export default function Landing() {
                 <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
                   When the learning
                   <br />
-                  <span className="text-primary">
+                  <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                     illuminates
                   </span>
                 </h1>
@@ -84,7 +80,7 @@ export default function Landing() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button
                   onClick={() => setLocation("/login")}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium px-8 py-6 text-lg"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium px-8 py-6 text-lg tomoshibi-glow"
                 >
                   Begin Your Journey
                 </Button>
@@ -116,10 +112,10 @@ export default function Landing() {
                   {/* Lantern Body with Soft Glow */}
                   <div className="paper-lantern w-full h-full relative overflow-hidden">
                     {/* Inner Glow Effect */}
-                    <div className="absolute inset-8 bg-primary/20 rounded-full animate-pulse"></div>
+                    <div className="absolute inset-8 bg-gradient-radial from-primary/30 via-primary/10 to-transparent rounded-full animate-pulse"></div>
                     
                     {/* Washi Paper Texture Overlay */}
-                    <div className="absolute inset-0 bg-card/80 rounded-full border-2 border-primary/20"></div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-card/90 via-card/70 to-card/90 rounded-full border-2 border-primary/20"></div>
                     
                     {/* Traditional Lantern Ribs */}
                     <div className="absolute inset-6 space-y-6">
@@ -135,7 +131,7 @@ export default function Landing() {
                     <div className="absolute inset-4 top-56 border-t border-primary/20"></div>
                     
                     {/* Inner Glow */}
-                    <div className="absolute inset-8 bg-primary/40 rounded-full blur-sm"></div>
+                    <div className="absolute inset-8 bg-gradient-to-b from-primary/60 to-primary/30 rounded-full blur-sm"></div>
                     
                     {/* Central Light */}
                     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-primary rounded-full animate-pulse shadow-xl"></div>
@@ -152,7 +148,7 @@ export default function Landing() {
                 </div>
 
                 {/* Ambient Glow */}
-                <div className="absolute inset-0 bg-primary/10 rounded-full scale-150 blur-3xl -z-10"></div>
+                <div className="absolute inset-0 bg-gradient-to-b from-primary/20 to-transparent rounded-full scale-150 blur-3xl -z-10"></div>
               </div>
             </div>
           </div>
@@ -174,7 +170,7 @@ export default function Landing() {
             {/* Feature 1 - Personalized AI Tutors */}
             <Card className="glass-card subtle-depth hover:scale-105 transition-all duration-300 group">
               <CardContent className="p-8 text-center space-y-6">
-                <div className="w-16 h-16 mx-auto bg-primary/20 rounded-2xl flex items-center justify-center border border-primary/20">
+                <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl flex items-center justify-center border border-primary/20">
                   <Users className="w-8 h-8 text-primary" />
                 </div>
                 <div className="space-y-3">
@@ -190,7 +186,7 @@ export default function Landing() {
             {/* Feature 2 - JLPT N5 Scenarios */}
             <Card className="glass-card subtle-depth hover:scale-105 transition-all duration-300 group">
               <CardContent className="p-8 text-center space-y-6">
-                <div className="w-16 h-16 mx-auto bg-secondary/20 rounded-2xl flex items-center justify-center border border-secondary/20">
+                <div className="w-16 h-16 mx-auto bg-gradient-to-br from-secondary/20 to-primary/20 rounded-2xl flex items-center justify-center border border-secondary/20">
                   <BookOpen className="w-8 h-8 text-secondary" />
                 </div>
                 <div className="space-y-3">
@@ -206,7 +202,7 @@ export default function Landing() {
             {/* Feature 3 - Real-Time Feedback */}
             <Card className="glass-card subtle-depth hover:scale-105 transition-all duration-300 group">
               <CardContent className="p-8 text-center space-y-6">
-                <div className="w-16 h-16 mx-auto bg-primary/20 rounded-2xl flex items-center justify-center border border-primary/20">
+                <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl flex items-center justify-center border border-primary/20">
                   <TrendingUp className="w-8 h-8 text-primary" />
                 </div>
                 <div className="space-y-3">
