@@ -3,33 +3,34 @@ import type { Config } from "tailwindcss";
 // Theme constants
 const themeVariables = {
   colors: {
-    background: '220 36% 9%',
-    foreground: '0 0% 98%',
-    card: '220 36% 12%',
-    popover: '220 36% 12%',
-    primary: '350 72% 40%',
-    secondary: '215 28% 17%',
-    muted: '215 28% 17%',
-    accent: '215 28% 17%',
-    destructive: '0 84% 60%',
-    border: '215 28% 17%',
-    input: '215 28% 17%',
-    ring: '350 72% 40%',
-    gold: '47 96% 53%', // Added gold color
-    red: '350 72% 40%',
+    background: '35 25% 92%',        // Warm creamy background
+    foreground: '25 15% 25%',        // Dark brown text
+    card: '35 35% 96%',              // Slightly warmer cream for cards
+    popover: '35 35% 96%',
+    primary: '350 65% 45%',          // Deep red like in reference
+    secondary: '15 25% 85%',         // Soft pink-beige
+    muted: '25 15% 88%',
+    accent: '15 25% 85%',
+    destructive: '0 75% 55%',
+    border: '25 15% 75%',
+    input: '35 25% 90%',
+    ring: '350 65% 45%',
+    gold: '47 85% 60%',              // Warmer gold
+    red: '350 65% 45%',
+    pink: '345 45% 75%',             // Cherry blossom pink
     chart: {
-      1: '350 72% 40%',
-      2: '47 96% 53%',
-      3: '142 71% 45%',
-      4: '217 91% 60%',
-      5: '262 83% 58%'
+      1: '350 65% 45%',
+      2: '47 85% 60%',
+      3: '15 45% 65%',
+      4: '25 35% 55%',
+      5: '345 45% 75%'
     },
     sidebar: {
-      background: '220 36% 7%',
-      foreground: '0 0% 98%',
-      primary: '350 72% 40%',
-      accent: '215 28% 15%',
-      border: '215 28% 12%'
+      background: '25 20% 88%',
+      foreground: '25 15% 25%',
+      primary: '350 65% 45%',
+      accent: '15 25% 82%',
+      border: '25 15% 70%'
     }
   },
   radius: '0.5rem',
@@ -61,8 +62,9 @@ export default {
         accent: {
           DEFAULT: `hsl(${themeVariables.colors.accent})`,
           foreground: `hsl(${themeVariables.colors.foreground})`,
-          gold: `hsl(${themeVariables.colors.gold})`, // Added this line to fix the error
+          gold: `hsl(${themeVariables.colors.gold})`,
           red: `hsl(${themeVariables.colors.red})`,
+          pink: `hsl(${themeVariables.colors.pink})`,
         },
 
         // Other color groups
