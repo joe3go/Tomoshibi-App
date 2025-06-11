@@ -105,6 +105,14 @@ export default function Dashboard() {
             <Button
               variant="ghost"
               size="sm"
+              onClick={() => setLocation("/transcripts")}
+              className="text-foreground hover:text-primary"
+            >
+              View Transcripts
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               className="p-2 text-foreground hover:text-primary"
             >
               <Settings className="w-5 h-5" />

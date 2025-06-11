@@ -199,10 +199,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/conversations', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const conversations = await storage.getUserConversations(req.userId!);
-      res.json(conversations);
+      // Filter out completed conversations for the main dashboard
+      const activeConversations = conversations.filter(c => c.status !== 'completed');
+      res.json(activeConversations);
     } catch (error) {
       console.error('Get user conversations error:', error);
       res.status(500).json({ message: 'Failed to get conversations' });
+    }
+  });
+
+  app.get('/api/conversations/completed', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const conversations = await storage.getUserConversations(req.userId!);
+      // Only return completed conversations for transcripts
+      const completedConversations = conversations.filter(c => c.status === 'completed');
+      res.json(completedConversations);
+    } catch (error) {
+      console.error('Get completed conversations error:', error);
+      res.status(500).json({ message: 'Failed to get completed conversations' });
+    }
+  });
+
+  app.patch('/api/conversations/:id', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const conversationId = parseInt(req.params.id);
+      const updates = req.body;
+      
+      // Verify conversation belongs to user
+      const conversation = await storage.getConversation(conversationId);
+      if (!conversation || conversation.userId !== req.userId) {
+        return res.status(404).json({ message: 'Conversation not found' });
+      }
+      
+      const updatedConversation = await storage.updateConversation(conversationId, updates);
+      res.json(updatedConversation);
+    } catch (error) {
+      console.error('Update conversation error:', error);
+      res.status(500).json({ message: 'Failed to update conversation' });
     }
   });
 
