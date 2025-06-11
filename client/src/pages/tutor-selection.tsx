@@ -31,9 +31,9 @@ export default function TutorSelection() {
   }
 
   const getAvatarImage = (persona: any) => {
-    if (persona.type === 'teacher') return aoiAvatar; // Aoi is now the male teacher
-    if (persona.type === 'friend') return harukiAvatar; // Haruki is now the female friend
-    return "";
+    if (persona.type === 'teacher') return aoiAvatar; // Aoi is the male teacher
+    if (persona.type === 'friend') return harukiAvatar; // Haruki is the female friend
+    return aoiAvatar; // Default fallback
   };
 
   return (
@@ -75,7 +75,7 @@ export default function TutorSelection() {
                 {/* Name & Title */}
                 <div className="space-y-3">
                   <h3 className="text-2xl font-bold text-foreground">
-                    {persona.name} {persona.type === 'teacher' ? '(葵)' : '(陽輝)'}
+                    {persona.type === 'teacher' ? 'Aoi (葵) - Male Teacher' : 'Haruki (陽輝) - Female Friend'}
                   </h3>
                   
                   <span className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${
@@ -107,8 +107,8 @@ export default function TutorSelection() {
                 <Button 
                   className={`w-full tomoshibi-glow group-hover:scale-105 transition-transform duration-300 ${
                     persona.type === 'teacher' 
-                      ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
-                      : 'bg-secondary hover:bg-secondary/90 text-secondary-foreground'
+                      ? 'bg-primary hover:bg-primary/90 text-white' 
+                      : 'bg-secondary hover:bg-secondary/90 text-foreground border border-border'
                   }`}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -116,7 +116,7 @@ export default function TutorSelection() {
                   }}
                 >
                   <MessageCircle className="w-4 h-4 mr-2" />
-                  Start Learning with {persona.name}
+                  Start Learning with {persona.type === 'teacher' ? 'Aoi' : 'Haruki'}
                 </Button>
               </CardContent>
             </Card>

@@ -248,32 +248,39 @@ export default function Dashboard() {
 
         {/* Tutors Section */}
         <div className="mb-8">
-          <h3 className="text-xl font-semibold mb-4 text-primary">Meet Your Tutors</h3>
+          <h3 className="text-xl font-semibold mb-4 text-foreground">Meet Your Tutors</h3>
           <div className="grid md:grid-cols-2 gap-6">
-            {Array.isArray(personas) && personas.map((persona: any) => (
+            {Array.isArray(personas) && personas.length > 0 ? personas.map((persona: any) => (
               <div
                 key={persona.id}
-                className="content-card cursor-pointer group"
+                className="content-card cursor-pointer group hover:shadow-lg transition-shadow"
                 onClick={() => setLocation("/tutor-selection")}
               >
                 <div className="flex items-start space-x-4">
-                  <div className={`avatar ${persona.type === 'teacher' ? 'sensei' : 'yuki'} flex-shrink-0`}>
-                    <span className="font-japanese">
+                  <div className={`avatar ${persona.type === 'teacher' ? 'sensei' : 'student'} flex-shrink-0`}>
+                    <span className="font-japanese text-foreground">
                       {persona.type === 'teacher' ? '先' : '友'}
                     </span>
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-semibold text-primary group-hover:text-blue-600 transition-colors mb-1">
-                      {persona.name}
+                    <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors mb-1">
+                      {persona.name} {persona.type === 'teacher' ? '(Aoi - Male)' : '(Haruki - Female)'}
                     </h4>
                     <div className="status-tag n5 mb-2">
-                      {persona.jlptLevel} Level
+                      {persona.jlptLevel || 'N5'} Level
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {persona.description}
+                    <p className="text-sm text-foreground opacity-80">
+                      {persona.description || (persona.type === 'teacher' ? 'Formal teaching style with cultural context' : 'Friendly conversational approach')}
                     </p>
                   </div>
                 </div>
+              </div>
+            )) : (
+              <div className="col-span-2 content-card text-center py-8">
+                <p className="text-foreground mb-4">No tutors available at the moment.</p>
+                <p className="text-sm text-foreground opacity-60">Click below to explore tutor selection anyway.</p>
+              </div>
+            )}
               </div>
             ))}
           </div>
