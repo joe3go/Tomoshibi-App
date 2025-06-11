@@ -7,8 +7,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Settings, LogOut, MessageCircle, User, Calendar } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import harukiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
-import aoiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
+import harukiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
+import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -280,8 +280,8 @@ export default function Dashboard() {
                 index === self.findIndex((p: any) => p.id === persona.id)
               ).map((persona: any) => {
                 const getAvatarImage = (persona: any) => {
-                  if (persona.type === 'teacher') return aoiAvatar; // Aoi is the male teacher
-                  if (persona.type === 'friend') return harukiAvatar; // Haruki is the female friend
+                  if (persona.type === 'teacher') return aoiAvatar; // Aoi is the female teacher
+                  if (persona.type === 'friend') return harukiAvatar; // Haruki is the male friend
                   return aoiAvatar; // Default fallback
                 };
 
@@ -316,7 +316,7 @@ export default function Dashboard() {
                           {persona.name}
                         </h4>
                         <div className="status-tag n5 mb-2">
-                          {persona.jlptLevel || "N5"} Level • {persona.type === "teacher" ? "Male Teacher" : "Female Friend"}
+                          {persona.jlptLevel || "N5"} Level • {persona.type === "teacher" ? "Female Teacher" : "Male Friend"}
                         </div>
                         <p className="text-sm text-foreground opacity-80">
                           {persona.description ||

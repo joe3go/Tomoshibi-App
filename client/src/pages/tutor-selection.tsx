@@ -3,8 +3,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { ArrowLeft, MessageCircle } from "lucide-react";
-import harukiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
-import aoiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
+import harukiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
+import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
 
 export default function TutorSelection() {
   const [, setLocation] = useLocation();
@@ -31,8 +31,8 @@ export default function TutorSelection() {
   }
 
   const getAvatarImage = (persona: any) => {
-    if (persona.type === 'teacher') return aoiAvatar; // Aoi is the male teacher
-    if (persona.type === 'friend') return harukiAvatar; // Haruki is the female friend
+    if (persona.type === 'teacher') return aoiAvatar; // Aoi is the female teacher
+    if (persona.type === 'friend') return harukiAvatar; // Haruki is the male friend
     return aoiAvatar; // Default fallback
   };
 
@@ -75,7 +75,7 @@ export default function TutorSelection() {
                 {/* Name & Title */}
                 <div className="space-y-3">
                   <h3 className="text-2xl font-bold text-foreground">
-                    {persona.type === 'teacher' ? 'Aoi (葵) - Male Teacher' : 'Haruki (陽輝) - Female Friend'}
+                    {persona.type === 'teacher' ? 'Aoi (葵) - Female Teacher' : 'Haruki (陽輝) - Male Friend'}
                   </h3>
                   
                   <span className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${
