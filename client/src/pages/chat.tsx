@@ -4,7 +4,7 @@ import { useRoute, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Settings, MoreHorizontal, Send } from "lucide-react";
+import { ArrowLeft, Settings, MoreHorizontal, Send, CheckCircle } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import FuriganaText from "@/components/furigana-text";
@@ -14,6 +14,10 @@ export default function Chat() {
   const [, params] = useRoute("/chat/:conversationId");
   const [, setLocation] = useLocation();
   const [message, setMessage] = useState("");
+  const [showFurigana, setShowFurigana] = useState(() => {
+    const saved = localStorage.getItem('furigana-visible');
+    return saved !== null ? saved === 'true' : true;
+  });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -56,6 +60,31 @@ export default function Chat() {
     },
   });
 
+  const completeConversationMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("PATCH", `/api/conversations/${conversationId}`, {
+        status: "completed",
+        completedAt: new Date().toISOString(),
+      });
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
+      toast({
+        title: "Conversation completed!",
+        description: "Great job! This conversation has been moved to your transcripts.",
+      });
+      setLocation("/dashboard");
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to complete conversation",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [(conversationData as any)?.messages]);
@@ -75,6 +104,44 @@ export default function Chat() {
 
   const insertSuggestion = (text: string) => {
     setMessage(prev => prev + text);
+  };
+
+  const renderJapaneseText = (text: string, showFurigana: boolean) => {
+    const furiganaPattern = /([一-龯]+)\(([あ-んァ-ヶー]+)\)/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = furiganaPattern.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(text.slice(lastIndex, match.index));
+      }
+      parts.push({
+        type: 'furigana',
+        kanji: match[1],
+        reading: match[2]
+      });
+      lastIndex = match.index + match[0].length;
+    }
+
+    if (lastIndex < text.length) {
+      parts.push(text.slice(lastIndex));
+    }
+
+    return parts.map((part, index) => {
+      if (typeof part === 'string') {
+        return <span key={index}>{part}</span>;
+      }
+      return (
+        <ruby 
+          key={index} 
+          className={`toggle-furigana ${showFurigana ? '' : 'hide-furigana'}`}
+        >
+          {part.kanji}
+          <rt>{part.reading}</rt>
+        </ruby>
+      );
+    });
   };
 
   if (isLoading) {
@@ -158,6 +225,28 @@ export default function Chat() {
         </div>
         
         <div className="flex items-center space-x-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              const newState = !showFurigana;
+              setShowFurigana(newState);
+              localStorage.setItem('furigana-visible', newState.toString());
+            }}
+            className="px-3 py-1 text-xs hover:bg-lantern-orange/20 transition-colors text-off-white"
+          >
+            {showFurigana ? 'Hide Furigana' : 'Show Furigana'}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => completeConversationMutation.mutate()}
+            disabled={completeConversationMutation.isPending}
+            className="px-3 py-1 text-xs hover:bg-green-500/20 transition-colors text-off-white flex items-center space-x-1"
+          >
+            <CheckCircle className="w-4 h-4" />
+            <span>Complete</span>
+          </Button>
           <Button variant="ghost" size="sm" className="p-2 text-off-white hover:bg-kanji-glow">
             <Settings className="w-5 h-5" />
           </Button>
@@ -186,12 +275,8 @@ export default function Chat() {
                   </div>
                 )}
                 
-                <div className="font-japanese mb-2">
-                  <FuriganaText 
-                    text={msg.content} 
-                    showToggleButton={false}
-                    className={msg.sender === 'user' ? 'text-white' : 'text-primary'}
-                  />
+                <div className={`font-japanese mb-2 ${msg.sender === 'user' ? 'text-white' : 'text-primary'}`}>
+                  {renderJapaneseText(msg.content, showFurigana)}
                 </div>
                 
                 {msg.sender === 'ai' && (
