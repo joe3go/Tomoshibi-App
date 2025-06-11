@@ -4,6 +4,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
+import { ColorPicker } from "@/components/color-picker";
+import { useState } from "react";
 import Landing from "@/pages/landing";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
@@ -50,12 +52,18 @@ function Router() {
 }
 
 function App() {
+  const [showColorPicker, setShowColorPicker] = useState(false);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <div className="dark min-h-screen bg-background">
           <Toaster />
           <Router />
+          <ColorPicker 
+            isVisible={showColorPicker} 
+            onToggle={() => setShowColorPicker(!showColorPicker)} 
+          />
         </div>
       </TooltipProvider>
     </QueryClientProvider>

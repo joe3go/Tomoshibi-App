@@ -5,7 +5,7 @@ const themeVariables = {
   colors: {
     background: "35 25% 92%", // Warm creamy background
     foreground: "25 15% 25%", // Dark brown text
-    card: "221 19% 25%", // ⬅️ Updated: Dark slate/navy shade
+    card: "221 21% 24%", // Dark slate/navy shade for cards
     popover: "35 35% 96%",
     primary: "350 65% 45%", // Deep red like in reference
     secondary: "0 0% 100%" /* White */,

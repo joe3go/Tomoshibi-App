@@ -77,31 +77,11 @@
 ==============================*/
 body {
   @apply bg-background text-foreground;
-  background:
-    radial-gradient(ellipse at top, rgba(252, 231, 243, 0.3) 0%, transparent 50%),
-    radial-gradient(ellipse at bottom right, rgba(254, 242, 242, 0.4) 0%, transparent 50%),
-    linear-gradient(135deg, hsl(var(--background)) 0%, hsl(35 30% 94%) 100%);
-  background-attachment: fixed;
+  background: hsl(35, 25%, 92%);
   font-family: "Noto Sans JP", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   position: relative;
-}
-
-/* Japanese pattern overlay */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image:
-    radial-gradient(circle at 20% 50%, rgba(248, 113, 113, 0.05) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(251, 191, 36, 0.05) 0%, transparent 50%),
-    radial-gradient(circle at 40% 80%, rgba(239, 68, 68, 0.03) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: -1;
 }
 
 /*==============================
@@ -156,9 +136,8 @@ body::before {
   @apply bg-card border border-border rounded-xl p-4;
   box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.05),
-    0 1px 2px rgba(0, 0, 0, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(35 40% 97%) 100%);
+    0 1px 2px rgba(0, 0, 0, 0.05);
+  background: hsl(221, 21%, 24%);
 }
 
 /*==============================
@@ -211,9 +190,8 @@ body::before {
 }
 
 .bottom-nav {
-  @apply flex justify-around bg-card border-t border-border py-3 text-sm text-muted-foreground;
-  background: linear-gradient(180deg, hsl(var(--card)) 0%, hsl(35 40% 94%) 100%);
-  backdrop-filter: blur(8px);
+  @apply flex justify-around border-t border-border py-3 text-sm text-muted-foreground;
+  background: hsl(354, 33%, 36%);
 }
 
 .bottom-nav i {
@@ -256,10 +234,8 @@ body::before {
 
 /* Navbar styling */
 .navbar {
-  @apply border-b border-border bg-card/80 backdrop-blur-md py-4;
-  background: linear-gradient(135deg,
-      hsl(var(--card)) 0%,
-      hsl(35 40% 96%) 100%);
+  @apply border-b border-border py-4;
+  background: hsl(354, 33%, 36%);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
@@ -299,6 +275,34 @@ body::before {
 .progress-bar .progress-fill {
   @apply h-full rounded-full;
   background: linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(350 70% 50%) 100%);
+}
+
+/*==============================
+  🎨 Color Picker Controls
+==============================*/
+.color-picker-panel {
+  @apply fixed top-4 right-4 bg-card border border-border rounded-xl p-4 shadow-lg z-50;
+  background: hsl(221, 21%, 24%);
+  color: white;
+}
+
+.color-input-group {
+  @apply flex flex-col gap-2 mb-3;
+}
+
+.color-input-group label {
+  @apply text-sm font-medium text-white;
+}
+
+.color-input {
+  @apply w-full h-10 rounded-lg border border-border cursor-pointer;
+  background: transparent;
+}
+
+.color-toggle-btn {
+  @apply fixed top-4 left-4 bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg z-50 cursor-pointer;
+  background: hsl(354, 33%, 36%);
+  color: white;
 }
 
 /*==============================
