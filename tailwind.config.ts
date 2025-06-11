@@ -3,34 +3,34 @@ import type { Config } from "tailwindcss";
 // Theme constants - Edit colors directly here
 const themeVariables = {
   colors: {
-    background: "35 25% 92%", // 🎨 EDIT: Main background color
-    foreground: "25 15% 25%", // 🎨 EDIT: Main text color
-    card: "221 21% 24%", // 🎨 EDIT: Card background color
-    popover: "35 35% 96%", // 🎨 EDIT: Popover background
-    primary: "350 65% 45%", // 🎨 EDIT: Primary button/accent color
-    secondary: "0 0% 100%", // 🎨 EDIT: Secondary color (White)
-    muted: "25 15% 88%", // 🎨 EDIT: Muted text/backgrounds
-    accent: "15 25% 85%", // 🎨 EDIT: Accent color
-    destructive: "0 75% 55%", // 🎨 EDIT: Error/destructive color
-    border: "25 15% 75%", // 🎨 EDIT: Border color
-    input: "35 25% 90%", // 🎨 EDIT: Input field background
-    ring: "350 65% 45%", // 🎨 EDIT: Focus ring color
-    gold: "47 85% 60%", // 🎨 EDIT: Gold accent color
-    red: "350 65% 45%", // 🎨 EDIT: Red accent
-    pink: "345 45% 75%", // 🎨 EDIT: Cherry blossom pink
+    background: "hsl(35, 25%, 92%)", // 🎨 EDIT: Main background color
+    foreground: "hsl(25, 15%, 25%)", // 🎨 EDIT: Main text color
+    card: "hsl(221, 21%, 24%)", // 🎨 EDIT: Card background color
+    popover: "hsl(35, 35%, 96%)", // 🎨 EDIT: Popover background
+    primary: "hsl(350, 65%, 45%)", // 🎨 EDIT: Primary button/accent color
+    secondary: "hsl(0, 0%, 100%)", // 🎨 EDIT: Secondary color (White)
+    muted: "hsl(25, 15%, 88%)", // 🎨 EDIT: Muted text/backgrounds
+    accent: "hsl(15, 25%, 85%)", // 🎨 EDIT: Accent color
+    destructive: "hsl(0, 75%, 55%)", // 🎨 EDIT: Error/destructive color
+    border: "hsl(25, 15%, 75%)", // 🎨 EDIT: Border color
+    input: "hsl(35, 25%, 90%)", // 🎨 EDIT: Input field background
+    ring: "hsl(350, 65%, 45%)", // 🎨 EDIT: Focus ring color
+    gold: "hsl(47, 85%, 60%)", // 🎨 EDIT: Gold accent color
+    red: "hsl(350, 65%, 45%)", // 🎨 EDIT: Red accent
+    pink: "hsl(345, 45%, 75%)", // 🎨 EDIT: Cherry blossom pink
     chart: {
-      1: "350 65% 45%",
-      2: "47 85% 60%",
-      3: "15 45% 65%",
-      4: "25 35% 55%",
-      5: "345 45% 75%",
+      1: "hsl(350, 65%, 45%)",
+      2: "hsl(47, 85%, 60%)",
+      3: "hsl(15, 45%, 65%)",
+      4: "hsl(25, 35%, 55%)",
+      5: "hsl(345, 45%, 75%)",
     },
     sidebar: {
-      background: "25 20% 88%",
-      foreground: "25 15% 25%",
-      primary: "350 65% 45%",
-      accent: "15 25% 82%",
-      border: "25 15% 70%",
+      background: "hsl(25, 20%, 88%)",
+      foreground: "hsl(25, 15%, 25%)",
+      primary: "hsl(350, 65%, 45%)",
+      accent: "hsl(15, 25%, 82%)",
+      border: "hsl(25, 15%, 70%)",
     },
   },
   radius: "0.5rem",
@@ -54,63 +54,63 @@ export default {
       },
       colors: {
         // Main colors
-        background: `hsl(${themeVariables.colors.background})`,
-        foreground: `hsl(${themeVariables.colors.foreground})`,
+        background: themeVariables.colors.background,
+        foreground: themeVariables.colors.foreground,
 
         // Gold color definitions (FIXED)
-        gold: `hsl(${themeVariables.colors.gold})`,
+        gold: themeVariables.colors.gold,
         accent: {
-          DEFAULT: `hsl(${themeVariables.colors.accent})`,
-          foreground: `hsl(${themeVariables.colors.foreground})`,
-          gold: `hsl(${themeVariables.colors.gold})`,
-          red: `hsl(${themeVariables.colors.red})`,
-          pink: `hsl(${themeVariables.colors.pink})`,
+          DEFAULT: themeVariables.colors.accent,
+          foreground: themeVariables.colors.foreground,
+          gold: themeVariables.colors.gold,
+          red: themeVariables.colors.red,
+          pink: themeVariables.colors.pink,
         },
 
         // Other color groups
         card: {
-          DEFAULT: `hsl(${themeVariables.colors.card})`,
-          foreground: `hsl(${themeVariables.colors.foreground})`,
+          DEFAULT: themeVariables.colors.card,
+          foreground: themeVariables.colors.foreground,
         },
         popover: {
-          DEFAULT: `hsl(${themeVariables.colors.popover})`,
-          foreground: `hsl(${themeVariables.colors.foreground})`,
+          DEFAULT: themeVariables.colors.popover,
+          foreground: themeVariables.colors.foreground,
         },
         primary: {
-          DEFAULT: `hsl(${themeVariables.colors.primary})`,
-          foreground: `hsl(${themeVariables.colors.foreground})`,
+          DEFAULT: themeVariables.colors.primary,
+          foreground: themeVariables.colors.foreground,
         },
         secondary: {
-          DEFAULT: `hsl(${themeVariables.colors.secondary})`,
-          foreground: `hsl(${themeVariables.colors.foreground})`,
+          DEFAULT: themeVariables.colors.secondary,
+          foreground: themeVariables.colors.foreground,
         },
         muted: {
-          DEFAULT: `hsl(${themeVariables.colors.muted})`,
-          foreground: `hsl(${themeVariables.colors.muted})`,
+          DEFAULT: themeVariables.colors.muted,
+          foreground: themeVariables.colors.muted,
         },
         destructive: {
-          DEFAULT: `hsl(${themeVariables.colors.destructive})`,
-          foreground: `hsl(${themeVariables.colors.foreground})`,
+          DEFAULT: themeVariables.colors.destructive,
+          foreground: themeVariables.colors.foreground,
         },
-        border: `hsl(${themeVariables.colors.border})`,
-        input: `hsl(${themeVariables.colors.input})`,
-        ring: `hsl(${themeVariables.colors.ring})`,
+        border: themeVariables.colors.border,
+        input: themeVariables.colors.input,
+        ring: themeVariables.colors.ring,
         chart: {
-          1: `hsl(${themeVariables.colors.chart[1]})`,
-          2: `hsl(${themeVariables.colors.chart[2]})`,
-          3: `hsl(${themeVariables.colors.chart[3]})`,
-          4: `hsl(${themeVariables.colors.chart[4]})`,
-          5: `hsl(${themeVariables.colors.chart[5]})`,
+          1: themeVariables.colors.chart[1],
+          2: themeVariables.colors.chart[2],
+          3: themeVariables.colors.chart[3],
+          4: themeVariables.colors.chart[4],
+          5: themeVariables.colors.chart[5],
         },
         sidebar: {
-          DEFAULT: `hsl(${themeVariables.colors.sidebar.background})`,
-          foreground: `hsl(${themeVariables.colors.sidebar.foreground})`,
-          primary: `hsl(${themeVariables.colors.sidebar.primary})`,
-          "primary-foreground": `hsl(${themeVariables.colors.sidebar.foreground})`,
-          accent: `hsl(${themeVariables.colors.sidebar.accent})`,
-          "accent-foreground": `hsl(${themeVariables.colors.sidebar.foreground})`,
-          border: `hsl(${themeVariables.colors.sidebar.border})`,
-          ring: `hsl(${themeVariables.colors.primary})`,
+          DEFAULT: themeVariables.colors.sidebar.background,
+          foreground: themeVariables.colors.sidebar.foreground,
+          primary: themeVariables.colors.sidebar.primary,
+          "primary-foreground": themeVariables.colors.sidebar.foreground,
+          accent: themeVariables.colors.sidebar.accent,
+          "accent-foreground": themeVariables.colors.sidebar.foreground,
+          border: themeVariables.colors.sidebar.border,
+          ring: themeVariables.colors.primary,
         },
       },
       boxShadow: {
@@ -187,7 +187,7 @@ export default {
         },
         ".scrollbar-japanese": {
           "scrollbar-width": "thin",
-          "scrollbar-color": `hsl(${themeVariables.colors.gold}) transparent`,
+          "scrollbar-color": `${themeVariables.colors.gold} transparent`,
           "&::-webkit-scrollbar": {
             width: "8px",
           },
@@ -195,7 +195,7 @@ export default {
             background: "transparent",
           },
           "&::-webkit-scrollbar-thumb": {
-            backgroundColor: `hsl(${themeVariables.colors.gold})`,
+            backgroundColor: themeVariables.colors.gold,
             borderRadius: "4px",
           },
         },
@@ -207,7 +207,7 @@ export default {
           "@apply border border-accent-gold rounded-[var(--radius)] p-4 relative":
             {},
           "box-shadow": "0 0 0 2px rgba(250, 204, 21, 0.1)",
-          background: `hsl(${themeVariables.colors.card})`,
+          background: themeVariables.colors.card,
         },
         ".gold-frame::before": {
           '@apply content-[""] absolute inset-0 pointer-events-none': {},
@@ -234,8 +234,8 @@ export default {
         ".btn-japanese": {
           "@apply px-6 py-3 rounded-[var(--radius)] font-japanese font-medium transition-all":
             {},
-          background: `hsl(${themeVariables.colors.primary})`,
-          color: `hsl(${themeVariables.colors.foreground})`,
+          background: themeVariables.colors.primary,
+          color: themeVariables.colors.foreground,
           position: "relative",
           overflow: "hidden",
           "&:hover": {
