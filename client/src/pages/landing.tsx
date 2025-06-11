@@ -131,7 +131,7 @@ export default function Landing() {
                     <div className="absolute inset-4 top-56 border-t border-primary/20"></div>
                     
                     {/* Inner Glow */}
-                    <div className="absolute inset-8 bg-gradient-to-b from-primary/60 to-primary/30 rounded-full blur-sm"></div>
+                    <div className="absolute inset-8 bg-primary/40 rounded-full blur-sm"></div>
                     
                     {/* Central Light */}
                     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-primary rounded-full animate-pulse shadow-xl"></div>
@@ -148,7 +148,7 @@ export default function Landing() {
                 </div>
 
                 {/* Ambient Glow */}
-                <div className="absolute inset-0 bg-gradient-to-b from-primary/20 to-transparent rounded-full scale-150 blur-3xl -z-10"></div>
+                <div className="absolute inset-0 bg-primary/10 rounded-full scale-150 blur-3xl -z-10"></div>
               </div>
             </div>
           </div>
@@ -170,7 +170,7 @@ export default function Landing() {
             {/* Feature 1 - Personalized AI Tutors */}
             <Card className="glass-card subtle-depth hover:scale-105 transition-all duration-300 group">
               <CardContent className="p-8 text-center space-y-6">
-                <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl flex items-center justify-center border border-primary/20">
+                <div className="w-16 h-16 mx-auto bg-primary/20 rounded-2xl flex items-center justify-center border border-primary/20">
                   <Users className="w-8 h-8 text-primary" />
                 </div>
                 <div className="space-y-3">
@@ -186,7 +186,7 @@ export default function Landing() {
             {/* Feature 2 - JLPT N5 Scenarios */}
             <Card className="glass-card subtle-depth hover:scale-105 transition-all duration-300 group">
               <CardContent className="p-8 text-center space-y-6">
-                <div className="w-16 h-16 mx-auto bg-gradient-to-br from-secondary/20 to-primary/20 rounded-2xl flex items-center justify-center border border-secondary/20">
+                <div className="w-16 h-16 mx-auto bg-secondary/20 rounded-2xl flex items-center justify-center border border-secondary/20">
                   <BookOpen className="w-8 h-8 text-secondary" />
                 </div>
                 <div className="space-y-3">
@@ -202,7 +202,7 @@ export default function Landing() {
             {/* Feature 3 - Real-Time Feedback */}
             <Card className="glass-card subtle-depth hover:scale-105 transition-all duration-300 group">
               <CardContent className="p-8 text-center space-y-6">
-                <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl flex items-center justify-center border border-primary/20">
+                <div className="w-16 h-16 mx-auto bg-primary/20 rounded-2xl flex items-center justify-center border border-primary/20">
                   <TrendingUp className="w-8 h-8 text-primary" />
                 </div>
                 <div className="space-y-3">
