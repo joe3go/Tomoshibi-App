@@ -7,14 +7,22 @@
 /* Furigana (Ruby Text) Styles */
 ruby.toggle-furigana {
   font-family: 'Noto Sans JP', sans-serif;
+  position: relative;
+  display: inline-block;
 }
 
 ruby.toggle-furigana rt {
-  display: inline;
-  font-size: 0.6em;
+  display: block;
+  font-size: 0.5em;
   line-height: 1;
   text-align: center;
   color: hsl(var(--muted-foreground));
+  position: absolute;
+  top: -0.8em;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 ruby.toggle-furigana.hide-furigana rt {
