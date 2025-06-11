@@ -5,13 +5,7 @@ export default function Landing() {
   const [, setLocation] = useLocation();
 
   return (
-    <div className="min-h-screen bg-background relative">
-      {/* Japanese Aesthetic Elements */}
-      <div className="japanese-lantern"></div>
-      <div className="sakura-branch"></div>
-      <div className="cloud-bottom-left"></div>
-      <div className="cloud-bottom-right"></div>
-      
+    <div className="min-h-screen bg-background">
       {/* Navigation */}
       <nav className="navbar">
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
@@ -213,7 +207,7 @@ export default function Landing() {
       </section>
 
       {/* CTA Section */}
-      <section className="section-padding" style={{ background: 'rgba(183, 62, 62, 0.1)' }}>
+      <section className="section-padding bg-blue-50">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <h2 className="text-3xl font-bold text-primary mb-4">Ready to Start Your Japanese Journey?</h2>
           <p className="text-xl text-secondary mb-8">

@@ -4,22 +4,20 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Japanese Aesthetic Theme */
+/* Clean Professional Theme (Based on Reference Screenshot) */
 :root {
-  /* Japanese Color Palette */
-  --background-light: #f8f8f8;
-  --background-card: rgba(255, 255, 255, 0.9);
-  --text-primary: #2d3748;
-  --text-secondary: #4a5568;
-  --text-muted: #718096;
-  --accent-blue: #2c5aa0;
-  --accent-red: #b73e3e;
+  /* Primary Color Palette from Reference */
+  --background-light: #FAFAFA;
+  --background-card: rgba(255, 255, 255, 0.85);
+  --text-primary: #1F2937;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+  --accent-blue: #3B82F6;
   --accent-orange: #F97316;
-  --border-light: rgba(255, 255, 255, 0.1);
-  --border-medium: rgba(255, 255, 255, 0.2);
+  --accent-red: #EF4444;
+  --border-light: #E5E7EB;
+  --border-medium: #D1D5DB;
   --success-green: #10B981;
-  --lantern-red: #b73e3e;
-  --sakura-pink: #ffb7c5;
   
   /* Shadcn theme mapping */
   --background: 0 0% 100%;
@@ -46,14 +44,14 @@
 
 body {
   background: hsl(var(--background));
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAGUlEQVQYV2NkYGAQYcAP3uCTZhw1gGGYcgAAFb0CHtTxw1cAAAAASUVORK5CYII=');
+  background-repeat: repeat;
+  background-size: 10px 10px;
   color: hsl(var(--foreground));
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  position: relative;
-  min-height: 100vh;
 }
 
 /* Typography System */
@@ -97,7 +95,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-primary:hover {
-  background: #1e3a8a;
+  background: #2563EB;
   transform: translateY(-1px);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
@@ -372,121 +370,4 @@ select:focus {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
-}
-
-/* Japanese Aesthetic Elements */
-.japanese-lantern {
-  position: absolute;
-  top: 2rem;
-  right: 2rem;
-  width: 60px;
-  height: 80px;
-  background: linear-gradient(to bottom, var(--lantern-red) 0%, #d45555 50%, var(--lantern-red) 100%);
-  border-radius: 30px 30px 15px 15px;
-  opacity: 0.8;
-  z-index: 10;
-}
-
-.japanese-lantern::before {
-  content: '';
-  position: absolute;
-  top: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 30px;
-  height: 15px;
-  background: #4a4a4a;
-  border-radius: 15px 15px 0 0;
-}
-
-.japanese-lantern::after {
-  content: '';
-  position: absolute;
-  bottom: -15px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 8px;
-  height: 20px;
-  background: var(--lantern-red);
-  border-radius: 0 0 4px 4px;
-}
-
-.sakura-branch {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 200px;
-  height: 150px;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150"><path d="M20 140 Q 60 120 100 100 Q 130 85 160 70" stroke="%23654321" stroke-width="3" fill="none"/><circle cx="50" cy="125" r="4" fill="%23ffb7c5"/><circle cx="80" cy="110" r="3" fill="%23ffc0cb"/><circle cx="110" cy="95" r="4" fill="%23ffb7c5"/><circle cx="140" cy="80" r="3" fill="%23ffc0cb"/></svg>') no-repeat;
-  background-size: contain;
-  opacity: 0.7;
-  z-index: 5;
-}
-
-.cloud-bottom-left {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 300px;
-  height: 150px;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 150"><path d="M0 150 Q 30 120 60 130 Q 90 110 120 125 Q 150 115 180 125 Q 210 110 240 120 Q 270 110 300 125 L 300 150 Z" fill="rgba(255,255,255,0.1)"/></svg>') no-repeat;
-  background-size: cover;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.cloud-bottom-right {
-  position: fixed;
-  bottom: 0;
-  right: 0;
-  width: 300px;
-  height: 150px;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 150"><path d="M0 125 Q 30 110 60 120 Q 90 110 120 115 Q 150 125 180 110 Q 210 130 240 120 Q 270 150 300 150 L 300 150 L 0 150 Z" fill="rgba(255,255,255,0.08)"/></svg>') no-repeat;
-  background-size: cover;
-  z-index: 1;
-  pointer-events: none;
-}
-
-/* Header styling with red color */
-h1, h2, h3, h4, h5, h6 {
-  font-weight: 600;
-  color: var(--lantern-red);
-  line-height: 1.25;
-}
-
-/* Update text colors for better contrast on dark background */
-.text-primary {
-  color: #f7fafc;
-}
-
-.text-secondary {
-  color: #e2e8f0;
-}
-
-.text-muted {
-  color: #a0aec0;
-}
-
-/* Update card styling for dark theme */
-.content-card {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  transition: all 0.2s ease-in-out;
-}
-
-.content-card:hover {
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-}
-
-/* Update navbar for dark theme */
-.navbar {
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 1rem 0;
 }
