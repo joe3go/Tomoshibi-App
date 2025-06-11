@@ -5,18 +5,41 @@
 @tailwind utilities;
 
 /*==============================
+  🎨 EASY THEME CUSTOMIZATION GUIDE
+==============================*/
+
+/* 
+🎨 HOW TO CHANGE COLORS:
+
+1. Find the :root section below
+2. Change the numbers in the CSS variables
+3. HSL format: hue (0-360) saturation (0-100%) lightness (0-100%)
+
+Examples:
+- Red: 0 100% 50%
+- Blue: 240 100% 50%
+- Green: 120 100% 50%
+- Dark: any-hue any-saturation 20%
+- Light: any-hue any-saturation 80%
+
+Quick color changes:
+- Make darker: decrease the lightness % (third number)
+- Make brighter: increase the lightness % (third number)
+- Make more colorful: increase saturation % (second number)
+- Change hue: change first number (0=red, 120=green, 240=blue)
+*/
+
+/*==============================
   🎎 Japanese-Inspired UI Theme
 ==============================*/
 :root {
-  /* Base Colors - Warm Japanese Palette */
-  --background: 35 25% 92%;
-  /* 🎨 EDIT: Main page background */
-  --foreground: 0 0% 100%;
-  /* 🎨 EDIT: Main text color */
-  --card: 35 25% 92%;
-  /* 🎨 EDIT: Card background color */
-  --card-foreground: 35 25% 92%;
-  /* 🎨 EDIT: Card text color */
+  /* 🎨 EASY COLOR EDITING - Change the numbers below to customize your theme */
+  
+  /* Background Colors */
+  --background: 35 25% 92%;     /* 🎨 CHANGE ME: Main page background (hue saturation lightness) */
+  --foreground: 0 0% 100%;      /* 🎨 CHANGE ME: Main text color */
+  --card: 221 21% 24%;          /* 🎨 CHANGE ME: Card background color */
+  --card-foreground: 35 25% 92%; /* 🎨 CHANGE ME: Card text color */
   --popover: 221 19% 25%;
   --popover-foreground: 25 15% 25%;
 
@@ -78,8 +101,8 @@
 ==============================*/
 body {
   @apply bg-background text-foreground;
-  background: hsl(35, 25%, 92%);
-  /* 🎨 EDIT: Change page background color here */
+  background: hsl(var(--background));
+  /* 🎨 EDIT: Page background uses --background variable */
   font-family: "Noto Sans JP", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -139,8 +162,8 @@ body {
   box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.05),
     0 1px 2px rgba(0, 0, 0, 0.05);
-  background: hsl(221, 21%, 24%);
-  /* 🎨 EDIT: Card background color */
+  background: hsl(var(--card));
+  /* 🎨 EDIT: Card background uses --card variable above */
 }
 
 /*==============================
@@ -194,8 +217,8 @@ body {
 
 .bottom-nav {
   @apply flex justify-around border-t border-border py-3 text-sm text-muted-foreground;
-  background: hsl(354, 33%, 36%);
-  /* 🎨 EDIT: Navigation bar background color */
+  background: hsl(var(--primary));
+  /* 🎨 EDIT: Navigation uses --primary variable */
 }
 
 .bottom-nav i {
@@ -239,8 +262,8 @@ body {
 /* Navbar styling */
 .navbar {
   @apply border-b border-border py-4;
-  background: hsl(354, 33%, 36%);
-  /* 🎨 EDIT: Header/navbar background color */
+  background: hsl(var(--primary));
+  /* 🎨 EDIT: Header/navbar uses --primary variable */
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
