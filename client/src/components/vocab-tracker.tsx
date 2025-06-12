@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,43 +8,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookOpen, TrendingUp, Clock, Filter } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import type { 
+  VocabularyTrackerEntry, 
+  VocabularyStatistics, 
+  JlptLevel,
+  BaseComponentProps,
+  ChangeHandler 
+} from '@/types';
+import { JLPT_LEVELS, JLPT_TARGETS, JLPT_LEVEL_COLORS, API_ENDPOINTS } from '@/utils/constants';
 import harukiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
 import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
-
-interface VocabularyTrackerEntry {
-  id: number;
-  userId: number;
-  wordId: number;
-  frequency: number;
-  userUsageCount: number;
-  aiEncounterCount: number;
-  lastSeenAt: string | null;
-  memoryStrength: number;
-  nextReviewAt: string | null;
-  source: string;
-  word: {
-    id: number;
-    kanji: string | null;
-    hiragana: string;
-    englishMeaning: string;
-    jlptLevel: string;
-    wordType: string | null;
-  };
-}
-
-interface VocabularyStatistics {
-  totalWords: number;
-  wordsByLevel: Record<string, number>;
-}
-
-const JLPT_LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'];
-const JLPT_TARGETS = {
-  N5: 800,
-  N4: 1500,
-  N3: 3750,
-  N2: 6000,
-  N1: 10000
-};
 
 export default function VocabTracker() {
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
