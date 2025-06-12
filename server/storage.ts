@@ -26,54 +26,54 @@ import {
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
 
-export interface IStorage {
-  // User operations
-  getUser(id: number): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
-  updateUser(id: number, updates: Partial<User>): Promise<User>;
+export interface IDataStorageInterface {
+  // User account management operations
+  getUserAccountById(id: number): Promise<User | undefined>;
+  getUserAccountByEmail(email: string): Promise<User | undefined>;
+  createUserAccount(user: InsertUser): Promise<User>;
+  updateUserAccount(id: number, updates: Partial<User>): Promise<User>;
 
-  // Persona operations
-  getAllPersonas(): Promise<Persona[]>;
-  getPersona(id: number): Promise<Persona | undefined>;
+  // Teaching persona management operations
+  getAllTeachingPersonas(): Promise<Persona[]>;
+  getTeachingPersonaById(id: number): Promise<Persona | undefined>;
 
-  // Scenario operations
-  getAllScenarios(): Promise<Scenario[]>;
-  getScenario(id: number): Promise<Scenario | undefined>;
-  getUnlockedScenarios(userId: number): Promise<Scenario[]>;
+  // Learning scenario management operations
+  getAllLearningScenarios(): Promise<Scenario[]>;
+  getLearningScenarioById(id: number): Promise<Scenario | undefined>;
+  getUserUnlockedScenarios(userId: number): Promise<Scenario[]>;
 
-  // Conversation operations
-  createConversation(conversation: InsertConversation): Promise<Conversation>;
-  getConversation(id: number): Promise<Conversation | undefined>;
-  getUserConversations(userId: number): Promise<Conversation[]>;
-  updateConversation(id: number, updates: Partial<Conversation>): Promise<Conversation>;
+  // Conversation session management operations
+  createConversationSession(conversation: InsertConversation): Promise<Conversation>;
+  getConversationSessionById(id: number): Promise<Conversation | undefined>;
+  getUserConversationSessions(userId: number): Promise<Conversation[]>;
+  updateConversationSession(id: number, updates: Partial<Conversation>): Promise<Conversation>;
 
-  // Message operations
-  createMessage(message: InsertMessage): Promise<Message>;
-  getConversationMessages(conversationId: number): Promise<Message[]>;
+  // Conversation message operations
+  createConversationMessage(message: InsertMessage): Promise<Message>;
+  getConversationMessageHistory(conversationId: number): Promise<Message[]>;
 
-  // Vocabulary operations
-  getAllVocab(): Promise<JlptVocab[]>;
-  getVocabByIds(ids: number[]): Promise<JlptVocab[]>;
-  searchVocab(query: string): Promise<JlptVocab[]>;
+  // Vocabulary word management operations
+  getAllVocabularyWords(): Promise<JlptVocab[]>;
+  getVocabularyWordsByIds(ids: number[]): Promise<JlptVocab[]>;
+  searchVocabularyWords(query: string): Promise<JlptVocab[]>;
 
-  // Grammar operations
-  getAllGrammar(): Promise<JlptGrammar[]>;
-  getGrammarByIds(ids: number[]): Promise<JlptGrammar[]>;
+  // Grammar pattern management operations
+  getAllGrammarPatterns(): Promise<JlptGrammar[]>;
+  getGrammarPatternsByIds(ids: number[]): Promise<JlptGrammar[]>;
 
-  // Progress operations
-  getUserProgress(userId: number): Promise<UserProgress | undefined>;
-  updateUserProgress(userId: number, progress: InsertUserProgress): Promise<UserProgress>;
+  // User learning progress operations
+  getUserLearningProgress(userId: number): Promise<UserProgress | undefined>;
+  updateUserLearningProgress(userId: number, progress: InsertUserProgress): Promise<UserProgress>;
 
-  // Vocabulary tracker operations
-  getVocabTracker(userId: number, wordId: number): Promise<VocabTracker | undefined>;
-  createVocabTracker(tracker: InsertVocabTracker): Promise<VocabTracker>;
-  updateVocabTracker(userId: number, wordId: number, updates: Partial<VocabTracker>): Promise<VocabTracker>;
-  getUserVocabTracker(userId: number): Promise<(VocabTracker & { word: JlptVocab })[]>;
-  incrementWordFrequency(userId: number, wordId: number, source?: 'user' | 'ai' | 'hover'): Promise<VocabTracker>;
+  // Vocabulary tracking system operations
+  getVocabularyTrackingEntry(userId: number, wordId: number): Promise<VocabTracker | undefined>;
+  createVocabularyTrackingEntry(tracker: InsertVocabTracker): Promise<VocabTracker>;
+  updateVocabularyTrackingEntry(userId: number, wordId: number, updates: Partial<VocabTracker>): Promise<VocabTracker>;
+  getUserVocabularyTrackingData(userId: number): Promise<(VocabTracker & { word: JlptVocab })[]>;
+  incrementVocabularyWordFrequency(userId: number, wordId: number, source?: 'user' | 'ai' | 'hover'): Promise<VocabTracker>;
 }
 
-export class DatabaseStorage implements IStorage {
+export class DatabaseStorage implements IDataStorageInterface {
   // User operations
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
