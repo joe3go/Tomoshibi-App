@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import type { Persona, Scenario, JlptVocabularyWord, JlptGrammarPattern } from "@shared/schema";
+import type { Persona, Scenario, JlptVocab, JlptGrammar } from "@shared/schema";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({
@@ -11,8 +11,8 @@ export interface ConversationContext {
   scenario: Scenario;
   conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>;
   userMessage: string;
-  targetVocabularyWords: JlptVocabularyWord[];
-  targetGrammarPatterns: JlptGrammarPattern[];
+  targetVocab: JlptVocab[];
+  targetGrammar: JlptGrammar[];
 }
 
 export interface AIResponse {
@@ -56,14 +56,14 @@ export async function generateAIResponse(context: ConversationContext): Promise<
 }
 
 function buildSystemPrompt(context: ConversationContext): string {
-  const { persona, scenario, conversationHistory, targetVocabularyWords, targetGrammarPatterns } = context;
+  const { persona, scenario, conversationHistory, targetVocab, targetGrammar } = context;
 
-  const vocabularyList = targetVocabularyWords.map((vocabularyWord: JlptVocabularyWord) => 
-    `${vocabularyWord.kanji || vocabularyWord.hiragana} (${vocabularyWord.hiragana}) - ${vocabularyWord.englishMeaning}`
+  const vocabList = targetVocab.map((v: JlptVocab) => 
+    `${v.kanji || v.hiragana} (${v.hiragana}) - ${v.englishMeaning}`
   ).join(', ');
 
-  const grammarPatternsList = targetGrammarPatterns.map((grammarPattern: JlptGrammarPattern) => 
-    `${grammarPattern.pattern} - ${grammarPattern.englishExplanation}`
+  const grammarList = targetGrammar.map((g: JlptGrammar) => 
+    `${g.pattern} - ${g.englishExplanation}`
   ).join(', ');
 
   // Analyze user performance from conversation history
