@@ -23,6 +23,8 @@ export default function Chat() {
   const [, params] = useRoute("/chat/:conversationId");
   const [, setLocation] = useLocation();
   const [message, setMessage] = useState("");
+  const [translatedMessage, setTranslatedMessage] = useState("");
+  const [isTranslating, setIsTranslating] = useState(false);
   const [showFurigana, setShowFurigana] = useState(() => {
     const saved = localStorage.getItem("furigana-visible");
     return saved !== null ? saved === "true" : true;
@@ -46,6 +48,33 @@ export default function Chat() {
 
   const { data: scenarios = [] } = useQuery({
     queryKey: ["/api/scenarios"],
+  });
+
+  const translateMutation = useMutation({
+    mutationFn: async (text: string) => {
+      if (!text.trim()) return "";
+      const response = await apiRequest("POST", "/api/translate", {
+        text: text.trim()
+      });
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      if (data && data.translations && data.translations.length > 0) {
+        let translated = message;
+        data.translations.forEach((trans: any) => {
+          const regex = new RegExp(`\\b${trans.english}\\b`, 'gi');
+          translated = translated.replace(regex, trans.japanese);
+        });
+        setTranslatedMessage(translated);
+      } else {
+        setTranslatedMessage("");
+      }
+      setIsTranslating(false);
+    },
+    onError: () => {
+      setTranslatedMessage("");
+      setIsTranslating(false);
+    }
   });
 
   const sendMessageMutation = useMutation({
@@ -121,6 +150,7 @@ export default function Chat() {
       }
 
       setMessage("");
+      setTranslatedMessage("");
     },
     onError: (error) => {
       // Remove the optimistic user message on error
@@ -177,6 +207,20 @@ export default function Chat() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [(conversationData as any)?.messages]);
+
+  // Real-time translation effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (message.trim() && /[a-zA-Z]/.test(message)) {
+        setIsTranslating(true);
+        translateMutation.mutate(message);
+      } else {
+        setTranslatedMessage("");
+      }
+    }, 500); // Debounce for 500ms
+
+    return () => clearTimeout(timeoutId);
+  }, [message]);
 
   const handleSendMessage = () => {
     if (message.trim() && !sendMessageMutation.isPending) {
@@ -483,6 +527,21 @@ export default function Chat() {
       {/* Chat Input */}
       <div className="content-card rounded-t-2xl p-4 border-t border-border">
         <div className="max-w-4xl mx-auto">
+          {/* Translation Preview */}
+          {(translatedMessage || isTranslating) && (
+            <div className="mb-3 p-3 bg-muted/50 rounded-lg border border-border/50">
+              <div className="flex items-center space-x-2 mb-2">
+                <span className="text-xs font-medium text-muted-foreground">Translation Preview:</span>
+                {isTranslating && (
+                  <div className="w-3 h-3 border-2 border-primary border-l-transparent rounded-full animate-spin"></div>
+                )}
+              </div>
+              <div className="font-japanese text-sm text-foreground">
+                {isTranslating ? "Translating..." : translatedMessage}
+              </div>
+            </div>
+          )}
+          
           <div className="flex items-end space-x-3">
             <div className="flex-1">
               <Textarea

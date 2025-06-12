@@ -339,6 +339,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Translation endpoint for real-time typing
+  app.post("/api/translate", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { text } = req.body;
+
+      if (!text || typeof text !== 'string') {
+        return res.status(400).json({ error: "Text is required" });
+      }
+
+      console.log('[TRANSLATE] Translating text:', text);
+
+      // Use existing translation function
+      const translations = await detectAndTranslateEnglish(text);
+
+      console.log('[TRANSLATE] Translation result:', translations);
+
+      res.json({ translations });
+    } catch (error) {
+      console.error('[TRANSLATE] Error:', error);
+      res.status(500).json({ error: "Translation failed" });
+    }
+  });
+
   // Message routes
   app.post('/api/conversations/:id/messages', authenticateToken, async (req: AuthRequest, res) => {
     try {
