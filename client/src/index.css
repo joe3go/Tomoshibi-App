@@ -63,7 +63,13 @@
      ============================== */
   body {
     @apply bg-background text-foreground;
-    background: var(--background);
+    background: 
+      linear-gradient(rgba(250, 247, 242, 0.85), rgba(250, 247, 242, 0.85)),
+      url('/src/assets/cherry-blossom-background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
     font-family: "Noto Sans JP", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
       "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -124,6 +130,54 @@
   }
 
   /* ==============================
+     🌸 Background Integration
+     ============================== */
+  .cherry-blossom-overlay {
+    position: relative;
+  }
+
+  .cherry-blossom-overlay::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      linear-gradient(rgba(250, 247, 242, 0.75), rgba(250, 247, 242, 0.75)),
+      url('/src/assets/cherry-blossom-background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .glass-card {
+    @apply bg-card/90 backdrop-blur-sm border border-border/50;
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.1),
+      0 0 0 1px rgba(255, 255, 255, 0.2);
+  }
+
+  .subtle-depth {
+    box-shadow: 
+      0 4px 16px rgba(0, 0, 0, 0.08),
+      0 1px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .tomoshibi-glow {
+    transition: all 0.3s ease;
+  }
+
+  .tomoshibi-glow:hover {
+    box-shadow: 
+      0 8px 25px rgba(220, 38, 38, 0.15),
+      0 0 20px rgba(220, 38, 38, 0.1);
+  }
+
+  /* ==============================
      🧩 Components
      ============================== */
 
@@ -156,11 +210,15 @@
   }
 
   .message-bubble.ai {
-    background: var(--card);
-    border: 1px solid var(--border);
+    background: rgba(250, 247, 242, 0.95);
+    border: 1px solid rgba(209, 196, 175, 0.5);
     color: var(--foreground);
     border-radius: 18px 18px 18px 6px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 
+      0 4px 12px rgba(0, 0, 0, 0.1),
+      0 1px 3px rgba(0, 0, 0, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(8px);
   }
 
   .message-bubble.user {
@@ -185,11 +243,12 @@
 
   /* Content Card */
   .content-card {
-    @apply bg-card border border-border rounded-xl p-4;
+    @apply bg-card/90 border border-border/50 rounded-xl p-4 backdrop-blur-sm;
     box-shadow:
-      0 4px 6px -1px rgba(0, 0, 0, 0.05),
-      0 1px 2px rgba(0, 0, 0, 0.05);
-    background: var(--card);
+      0 8px 25px rgba(0, 0, 0, 0.1),
+      0 2px 8px rgba(0, 0, 0, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    background: rgba(250, 247, 242, 0.9);
   }
 
   /* Cherry Blossom Decoration */
@@ -293,6 +352,18 @@
     @apply border-b border-border py-4;
     background: var(--primary);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Page Background */
+  .page-background {
+    min-height: 100vh;
+    background: 
+      linear-gradient(rgba(250, 247, 242, 0.85), rgba(250, 247, 242, 0.85)),
+      url('/src/assets/cherry-blossom-background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
   }
 
   /* Section Padding */
