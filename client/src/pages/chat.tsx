@@ -1,11 +1,16 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Settings, MoreHorizontal, Send, CheckCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  Settings,
+  MoreHorizontal,
+  Send,
+  CheckCircle,
+} from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import FuriganaText from "@/components/furigana-text";
@@ -17,14 +22,16 @@ export default function Chat() {
   const [, setLocation] = useLocation();
   const [message, setMessage] = useState("");
   const [showFurigana, setShowFurigana] = useState(() => {
-    const saved = localStorage.getItem('furigana-visible');
-    return saved !== null ? saved === 'true' : true;
+    const saved = localStorage.getItem("furigana-visible");
+    return saved !== null ? saved === "true" : true;
   });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  const conversationId = params?.conversationId ? parseInt(params.conversationId) : 0;
+  const conversationId = params?.conversationId
+    ? parseInt(params.conversationId)
+    : 0;
 
   const { data: conversationData, isLoading } = useQuery({
     queryKey: [`/api/conversations/${conversationId}`],
@@ -41,16 +48,23 @@ export default function Chat() {
 
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
-      const response = await apiRequest("POST", `/api/conversations/${conversationId}/messages`, {
-        content,
-      });
+      const response = await apiRequest(
+        "POST",
+        `/api/conversations/${conversationId}/messages`,
+        {
+          content,
+        },
+      );
       return await response.json();
     },
     onSuccess: (messages) => {
-      queryClient.setQueryData([`/api/conversations/${conversationId}`], (oldData: any) => ({
-        ...oldData,
-        messages,
-      }));
+      queryClient.setQueryData(
+        [`/api/conversations/${conversationId}`],
+        (oldData: any) => ({
+          ...oldData,
+          messages,
+        }),
+      );
       setMessage("");
     },
     onError: (error) => {
@@ -64,17 +78,22 @@ export default function Chat() {
 
   const completeConversationMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("PATCH", `/api/conversations/${conversationId}`, {
-        status: "completed",
-        completedAt: new Date().toISOString(),
-      });
+      const response = await apiRequest(
+        "PATCH",
+        `/api/conversations/${conversationId}`,
+        {
+          status: "completed",
+          completedAt: new Date().toISOString(),
+        },
+      );
       return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
       toast({
         title: "Conversation completed!",
-        description: "Great job! This conversation has been moved to your transcripts.",
+        description:
+          "Great job! This conversation has been moved to your transcripts.",
       });
       setLocation("/dashboard");
     },
@@ -105,18 +124,18 @@ export default function Chat() {
   };
 
   const insertSuggestion = (text: string) => {
-    setMessage(prev => prev + text);
+    setMessage((prev) => prev + text);
   };
 
   const handleFuriganaToggle = () => {
     const newState = !showFurigana;
     setShowFurigana(newState);
-    localStorage.setItem('furigana-visible', newState.toString());
+    localStorage.setItem("furigana-visible", newState.toString());
   };
 
   const getAvatarImage = (persona: any) => {
-    if (persona?.type === 'teacher') return aoiAvatar; // Aoi is the female teacher
-    if (persona?.type === 'friend') return harukiAvatar; // Haruki is the male friend
+    if (persona?.type === "teacher") return aoiAvatar; // Aoi is the female teacher
+    if (persona?.type === "friend") return harukiAvatar; // Haruki is the male friend
     return aoiAvatar; // Default fallback
   };
 
@@ -138,9 +157,16 @@ export default function Chat() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Card className="content-card">
           <CardContent className="p-8 text-center">
-            <h2 className="text-xl font-semibold text-foreground mb-2">Conversation Not Found</h2>
-            <p className="text-muted-foreground mb-4">This conversation doesn't exist or you don't have access to it.</p>
-            <Button onClick={() => setLocation("/dashboard")} className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              Conversation Not Found
+            </h2>
+            <p className="text-muted-foreground mb-4">
+              This conversation doesn't exist or you don't have access to it.
+            </p>
+            <Button
+              onClick={() => setLocation("/dashboard")}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
               Return to Dashboard
             </Button>
           </CardContent>
@@ -151,24 +177,35 @@ export default function Chat() {
 
   const conversation = (conversationData as any)?.conversation;
   const messages = (conversationData as any)?.messages || [];
-  
+
   // Handle case where conversation doesn't exist
   if (!conversation) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Card className="content-card p-8 text-center">
-          <h2 className="text-xl font-semibold text-foreground mb-4">Conversation Not Found</h2>
-          <p className="text-muted-foreground mb-6">This conversation doesn't exist or you don't have access to it.</p>
-          <Button onClick={() => setLocation("/dashboard")} className="bg-primary text-primary-foreground hover:bg-primary/90">
+          <h2 className="text-xl font-semibold text-foreground mb-4">
+            Conversation Not Found
+          </h2>
+          <p className="text-muted-foreground mb-6">
+            This conversation doesn't exist or you don't have access to it.
+          </p>
+          <Button
+            onClick={() => setLocation("/dashboard")}
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+          >
             Return to Dashboard
           </Button>
         </Card>
       </div>
     );
   }
-  
-  const persona = Array.isArray(personas) ? personas.find((p: any) => p.id === conversation?.personaId) : null;
-  const scenario = Array.isArray(scenarios) ? scenarios.find((s: any) => s.id === conversation?.scenarioId) : null;
+
+  const persona = Array.isArray(personas)
+    ? personas.find((p: any) => p.id === conversation?.personaId)
+    : null;
+  const scenario = Array.isArray(scenarios)
+    ? scenarios.find((s: any) => s.id === conversation?.scenarioId)
+    : null;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -185,22 +222,22 @@ export default function Chat() {
           </Button>
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/30">
-              <img 
-                src={getAvatarImage(persona)} 
-                alt={persona?.name || 'Persona'}
+              <img
+                src={getAvatarImage(persona)}
+                alt={persona?.name || "Persona"}
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   // Fallback to text avatar if image fails
                   const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
+                  target.style.display = "none";
                   target.parentElement!.innerHTML = `
                     <div class="w-full h-full flex items-center justify-center bg-gradient-to-br ${
-                      persona?.type === 'teacher' 
-                        ? 'from-primary to-primary/60' 
-                        : 'from-accent to-accent/60'
+                      persona?.type === "teacher"
+                        ? "from-primary to-primary/60"
+                        : "from-accent to-accent/60"
                     }">
                       <span class="text-lg text-foreground">
-                        ${persona?.type === 'teacher' ? '👩‍🏫' : '🧑‍🎤'}
+                        ${persona?.type === "teacher" ? "👩‍🏫" : "🧑‍🎤"}
                       </span>
                     </div>
                   `;
@@ -208,12 +245,16 @@ export default function Chat() {
               />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground">{persona?.name || 'AI'}</h3>
-              <p className="text-sm text-muted-foreground">{scenario?.title || 'Conversation'}</p>
+              <h3 className="font-semibold text-foreground">
+                {persona?.name || "AI"}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {scenario?.title || "Conversation"}
+              </p>
             </div>
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <Button
             variant="ghost"
@@ -221,7 +262,7 @@ export default function Chat() {
             onClick={handleFuriganaToggle}
             className="px-3 py-1 text-xs hover:bg-primary/20 transition-colors text-foreground"
           >
-            {showFurigana ? 'Hide Furigana' : 'Show Furigana'}
+            {showFurigana ? "Hide Furigana" : "Show Furigana"}
           </Button>
           <Button
             variant="ghost"
@@ -233,7 +274,11 @@ export default function Chat() {
             <CheckCircle className="w-4 h-4" />
             <span>Complete</span>
           </Button>
-          <Button variant="ghost" size="sm" className="p-2 text-foreground hover:bg-muted">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="p-2 text-foreground hover:bg-muted"
+          >
             <Settings className="w-5 h-5" />
           </Button>
         </div>
@@ -243,27 +288,30 @@ export default function Chat() {
       <div className="flex-1 p-4 overflow-y-auto">
         <div className="max-w-4xl mx-auto space-y-4">
           {messages.map((msg: any) => (
-            <div key={msg.id} className={`flex items-start space-x-3 ${
-              msg.sender === 'user' ? 'justify-end' : ''
-            }`}>
-              {msg.sender === 'ai' && (
+            <div
+              key={msg.id}
+              className={`flex items-start space-x-3 ${
+                msg.sender === "user" ? "justify-end" : ""
+              }`}
+            >
+              {msg.sender === "ai" && (
                 <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
-                  <img 
-                    src={getAvatarImage(persona)} 
-                    alt={persona?.name || 'AI'}
+                  <img
+                    src={getAvatarImage(persona)}
+                    alt={persona?.name || "AI"}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       // Fallback to text avatar if image fails
                       const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
+                      target.style.display = "none";
                       target.parentElement!.innerHTML = `
                         <div class="w-full h-full flex items-center justify-center bg-gradient-to-br ${
-                          persona?.type === 'teacher' 
-                            ? 'from-primary to-primary/60' 
-                            : 'from-accent to-accent/60'
+                          persona?.type === "teacher"
+                            ? "from-primary to-primary/60"
+                            : "from-accent to-accent/60"
                         }">
                           <span class="text-sm font-japanese text-foreground">
-                            ${persona?.type === 'teacher' ? '先' : '友'}
+                            ${persona?.type === "teacher" ? "先" : "友"}
                           </span>
                         </div>
                       `;
@@ -271,59 +319,65 @@ export default function Chat() {
                   />
                 </div>
               )}
-              
-              <div className={`message-bubble ${msg.sender === 'user' ? 'user' : 'ai'}`}>
+
+              <div
+                className={`message-bubble ${msg.sender === "user" ? "user" : "ai"}`}
+              >
                 {msg.feedback && (
                   <div className="mb-2 p-2 rounded-lg bg-green-50 border border-green-200">
                     <p className="text-sm text-green-700">✨ {msg.feedback}</p>
                   </div>
                 )}
-                
-                <div className={`font-japanese mb-2 ${msg.sender === 'user' ? 'text-primary-foreground' : 'text-foreground'}`}>
-                  <FuriganaText 
-                    text={msg.content} 
+
+                <div
+                  className={`font-japanese mb-2 ${msg.sender === "user" ? "text-primary-foreground" : "text-foreground"}`}
+                >
+                  <FuriganaText
+                    text={msg.content}
                     showFurigana={showFurigana}
                     onToggleFurigana={handleFuriganaToggle}
                     showToggleButton={false}
                     className="text-inherit"
                   />
                 </div>
-                
-                {msg.sender === 'ai' && (
+
+                {msg.sender === "ai" && (
                   <div className="mt-2 text-xs text-muted-foreground">
                     💡 Keep practicing! You're doing great!
                   </div>
                 )}
               </div>
-              
-              {msg.sender === 'user' && (
+
+              {msg.sender === "user" && (
                 <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm text-primary-foreground font-medium">You</span>
+                  <span className="text-sm text-primary-foreground font-medium">
+                    You
+                  </span>
                 </div>
               )}
             </div>
           ))}
-          
+
           {/* Enhanced Typing Indicator */}
           {sendMessageMutation.isPending && (
             <div className="flex items-start space-x-3">
               <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
-                <img 
-                  src={getAvatarImage(persona)} 
-                  alt={persona?.name || 'AI'}
+                <img
+                  src={getAvatarImage(persona)}
+                  alt={persona?.name || "AI"}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     // Fallback to emoji if image fails
                     const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
+                    target.style.display = "none";
                     target.parentElement!.innerHTML = `
                       <div class="w-full h-full flex items-center justify-center bg-gradient-to-br ${
-                        persona?.type === 'teacher' 
-                          ? 'from-primary to-primary/60' 
-                          : 'from-accent to-accent/60'
+                        persona?.type === "teacher"
+                          ? "from-primary to-primary/60"
+                          : "from-accent to-accent/60"
                       }">
                         <span class="text-sm text-foreground">
-                          ${persona?.type === 'teacher' ? '👩‍🏫' : '🧑‍🎤'}
+                          ${persona?.type === "teacher" ? "👩‍🏫" : "🧑‍🎤"}
                         </span>
                       </div>
                     `;
@@ -334,10 +388,18 @@ export default function Chat() {
                 <div className="flex items-center space-x-2">
                   <div className="flex space-x-1">
                     <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                    <div
+                      className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.1s" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.2s" }}
+                    ></div>
                   </div>
-                  <span className="text-xs text-muted-foreground">Thinking...</span>
+                  <span className="text-xs text-muted-foreground">
+                    Thinking...
+                  </span>
                 </div>
               </div>
             </div>
@@ -358,7 +420,7 @@ export default function Chat() {
                 placeholder="Type your response in Japanese... (English is ok too!)"
                 className="bg-input border-border text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary/20 resize-none"
                 rows={1}
-                style={{ maxHeight: '120px' }}
+                style={{ maxHeight: "120px" }}
               />
             </div>
             <Button
@@ -370,13 +432,13 @@ export default function Chat() {
               <Send className="w-4 h-4" />
             </Button>
           </div>
-          
+
           {/* Input Suggestions */}
           <div className="mt-3 flex flex-wrap gap-2">
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => insertSuggestion('私は')}
+              onClick={() => insertSuggestion("私は")}
               className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
             >
               私は
@@ -384,7 +446,7 @@ export default function Chat() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => insertSuggestion('です')}
+              onClick={() => insertSuggestion("です")}
               className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
             >
               です
@@ -392,7 +454,7 @@ export default function Chat() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => insertSuggestion('から来ました')}
+              onClick={() => insertSuggestion("から来ました")}
               className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
             >
               から来ました
@@ -400,7 +462,7 @@ export default function Chat() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => insertSuggulation('よろしくお願いします')}
+              onClick={() => insertSuggestion("よろしくお願いします")}
               className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
             >
               よろしくお願いします
