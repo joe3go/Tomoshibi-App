@@ -25,38 +25,38 @@ export default function Dashboard() {
   const [soundNotifications, setSoundNotifications] = useState((user as any)?.soundNotifications ?? true);
   const [desktopNotifications, setDesktopNotifications] = useState((user as any)?.desktopNotifications ?? true);
 
-  // Fetch conversations
-  const { data: conversations, isLoading: conversationsLoading } = useQuery({
+  // Fetch user conversation history
+  const { data: userConversations, isLoading: isLoadingConversations } = useQuery({
     queryKey: ["/api/conversations"],
   });
 
-  // Fetch scenarios
-  const { data: scenarios, isLoading: scenariosLoading } = useQuery({
+  // Fetch available learning scenarios
+  const { data: learningScenarios, isLoading: isLoadingScenarios } = useQuery({
     queryKey: ["/api/scenarios"],
   });
 
-  // Fetch personas
-  const { data: personas, isLoading: personasLoading } = useQuery({
+  // Fetch AI teaching personas
+  const { data: teachingPersonas, isLoading: isLoadingPersonas } = useQuery({
     queryKey: ["/api/personas"],
   });
 
-  // Fetch progress
-  const { data: progress, isLoading: progressLoading } = useQuery({
+  // Fetch user learning progress
+  const { data: learningProgress, isLoading: isLoadingProgress } = useQuery({
     queryKey: ["/api/progress"],
   });
 
-  // Fetch vocabulary tracker data
-  const { data: vocabData = [] } = useQuery({
+  // Fetch vocabulary tracking data
+  const { data: vocabularyTrackingData = [] } = useQuery({
     queryKey: ['/api/vocab-tracker'],
   });
 
   // Filter conversations for different sections with proper status checking
-  const activeConversations = Array.isArray(conversations) 
-    ? conversations.filter((c: any) => c.status === 'active' || !c.status)
+  const activeConversations = Array.isArray(userConversations) 
+    ? userConversations.filter((conversation: any) => conversation.status === 'active' || !conversation.status)
     : [];
   
-  const completedConversations = Array.isArray(conversations) 
-    ? conversations.filter((c: any) => c.status === 'completed')
+  const completedConversations = Array.isArray(userConversations) 
+    ? userConversations.filter((conversation: any) => conversation.status === 'completed')
     : [];
 
   const logoutMutation = useMutation({
@@ -93,9 +93,9 @@ export default function Dashboard() {
   };
 
   const getProgressionLabel = () => {
-    const vocabCount = (vocabData as any[]).length;
+    const vocabularyCount = (vocabularyTrackingData as any[]).length;
     const completedCount = (completedConversations as any[]).length;
-    const totalInteractions = vocabCount + completedCount;
+    const totalInteractions = vocabularyCount + completedCount;
 
     if (totalInteractions >= 100) return "🌸 Sakura Scholar";
     if (totalInteractions >= 75) return "🗾 Island Explorer";
@@ -223,10 +223,10 @@ export default function Dashboard() {
   };
 
   if (
-    conversationsLoading ||
-    scenariosLoading ||
-    personasLoading ||
-    progressLoading
+    isLoadingConversations ||
+    isLoadingScenarios ||
+    isLoadingPersonas ||
+    isLoadingProgress
   ) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -327,11 +327,11 @@ export default function Dashboard() {
             </div>
             <div className="grid gap-3 md:grid-cols-3">
               {activeConversations.slice(0, 3).map((conversation: any) => {
-                const persona = Array.isArray(personas)
-                  ? personas.find((p: any) => p.id === conversation.personaId)
+                const conversationPersona = Array.isArray(teachingPersonas)
+                  ? teachingPersonas.find((persona: any) => persona.id === conversation.personaId)
                   : null;
-                const scenario = Array.isArray(scenarios)
-                  ? scenarios.find((s: any) => s.id === conversation.scenarioId)
+                const conversationScenario = Array.isArray(learningScenarios)
+                  ? learningScenarios.find((scenario: any) => scenario.id === conversation.scenarioId)
                   : null;
 
                 const formatDate = (dateString: string) => {
@@ -452,7 +452,7 @@ export default function Dashboard() {
               </div>
               
               {(() => {
-                const vocabStats = (vocabData as any[]).reduce((acc: any, entry: any) => {
+                const vocabularyStatistics = (vocabularyTrackingData as any[]).reduce((statisticsAccumulator: any, vocabularyEntry: any) => {
                   const level = entry.word?.jlptLevel || 'N5';
                   acc[level] = (acc[level] || 0) + 1;
                   acc.userUsage += entry.userUsageCount || 0;
@@ -539,7 +539,7 @@ export default function Dashboard() {
               
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Messages Sent</span>
-                <span className="font-semibold">{(progress as any)?.totalMessagesSent || 0}</span>
+                <span className="font-semibold">{(learningProgress as any)?.totalMessagesSent || 0}</span>
               </div>
               
               {(() => {
