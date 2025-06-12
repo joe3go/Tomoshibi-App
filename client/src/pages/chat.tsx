@@ -22,7 +22,6 @@ export default function Chat() {
   const [, params] = useRoute("/chat/:conversationId");
   const [, setLocation] = useLocation();
   const [message, setMessage] = useState("");
-  const [kanaPreview, setKanaPreview] = useState("");
   const [showFurigana, setShowFurigana] = useState(() => {
     const saved = localStorage.getItem("furigana-visible");
     return saved !== null ? saved === "true" : true;
@@ -54,9 +53,7 @@ export default function Chat() {
     if (textareaRef.current) {
       // Bind WanaKana to the textarea for IME-like conversion
       wanakana.bind(textareaRef.current, { 
-        IMEMode: true,
-        customKanaMapping: {},
-        customRomajiMapping: {}
+        IMEMode: true
       });
 
       return () => {
@@ -67,23 +64,10 @@ export default function Chat() {
     }
   }, []);
 
-  // Handle inline kana conversion
+  // Handle input changes with WanaKana bound conversion
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setMessage(value);
-    
-    // Clear preview when typing
-    setKanaPreview("");
-  };
-
-  const insertKanaConversion = () => {
-    if (message.trim()) {
-      const converted = wanakana.toKana(message);
-      if (converted !== message) {
-        setMessage(converted);
-        setKanaPreview("");
-      }
-    }
   };
 
   const sendMessageMutation = useMutation({
@@ -126,7 +110,6 @@ export default function Chat() {
       );
 
       setMessage("");
-      setKanaPreview("");
     },
     onError: (error) => {
       // Remove the optimistic user message on error
@@ -496,20 +479,12 @@ export default function Chat() {
                 value={message}
                 onChange={handleInputChange}
                 onKeyPress={handleKeyPress}
-                placeholder="Type in romaji and click 'Convert to Kana', or type directly in Japanese..."
+                placeholder="Type in romaji for automatic conversion to hiragana..."
                 className="bg-input border-border text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary/20 resize-none font-japanese"
                 rows={1}
                 style={{ maxHeight: "120px" }}
               />
             </div>
-            <Button
-              onClick={insertKanaConversion}
-              disabled={!message.trim()}
-              variant="outline"
-              className="border-primary/30 text-primary hover:bg-primary/10 flex items-center space-x-2"
-            >
-              <span>Convert to Kana</span>
-            </Button>
             <Button
               onClick={handleSendMessage}
               disabled={!message.trim() || sendMessageMutation.isPending}
