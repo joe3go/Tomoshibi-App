@@ -43,6 +43,34 @@ interface ConversationWithDetails {
 export default function History() {
   const [, setLocation] = useLocation();
   const [selectedTab, setSelectedTab] = useState('all');
+  const queryClient = useQueryClient();
+
+  const endSessionMutation = useMutation({
+    mutationFn: async (conversationId: number) => {
+      const response = await fetch(`/api/conversations/${conversationId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ 
+          status: 'completed',
+          completedAt: new Date().toISOString()
+        })
+      });
+      
+      if (!response.ok) throw new Error('Failed to end session');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/conversations/completed'] });
+    }
+  });
+
+  const handleEndSession = (conversationId: number) => {
+    endSessionMutation.mutate(conversationId);
+  };
 
   // Fetch all conversations (both active and completed)
   const { data: activeConversations = [], isLoading: loadingActive } = useQuery({
