@@ -213,10 +213,10 @@ export default function VocabTracker() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {JLPT_LEVELS.map(level => {
+              {JLPT_LEVELS.map((level, index) => {
                 const levelWords = stats.byLevel[level] || 0;
                 return (
-                  <div key={level} className="flex justify-between items-center">
+                  <div key={`level-${level}-${index}`} className="flex justify-between items-center">
                     <span className="text-sm font-medium">{level}:</span>
                     <Badge variant="outline">{levelWords} unique words</Badge>
                   </div>

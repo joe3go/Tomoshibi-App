@@ -16,21 +16,20 @@ import { useToast } from "@/hooks/use-toast";
 import EnhancedFuriganaText from "@/components/enhanced-furigana-text";
 import harukiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
 import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
-
-// Translation is now handled server-side
+import * as wanakana from 'wanakana';
 
 export default function Chat() {
   const [, params] = useRoute("/chat/:conversationId");
   const [, setLocation] = useLocation();
   const [message, setMessage] = useState("");
-  const [translatedMessage, setTranslatedMessage] = useState("");
-  const [isTranslating, setIsTranslating] = useState(false);
+  const [kanaPreview, setKanaPreview] = useState("");
   const [showFurigana, setShowFurigana] = useState(() => {
     const saved = localStorage.getItem("furigana-visible");
     return saved !== null ? saved === "true" : true;
   });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
 
   const conversationId = params?.conversationId
@@ -50,32 +49,33 @@ export default function Chat() {
     queryKey: ["/api/scenarios"],
   });
 
-  const translateMutation = useMutation({
-    mutationFn: async (text: string) => {
-      if (!text.trim()) return "";
-      const response = await apiRequest("POST", "/api/translate", {
-        text: text.trim()
+  // WanaKana integration for real-time romaji to kana conversion
+  useEffect(() => {
+    if (textareaRef.current) {
+      // Bind WanaKana to the textarea for IME-like conversion
+      wanakana.bind(textareaRef.current, { 
+        IMEMode: true,
+        customKanaMapping: {},
+        customRomajiMapping: {}
       });
-      return await response.json();
-    },
-    onSuccess: (data) => {
-      if (data && data.translations && data.translations.length > 0) {
-        let translated = message;
-        data.translations.forEach((trans: any) => {
-          const regex = new RegExp(`\\b${trans.english}\\b`, 'gi');
-          translated = translated.replace(regex, trans.japanese);
-        });
-        setTranslatedMessage(translated);
-      } else {
-        setTranslatedMessage("");
-      }
-      setIsTranslating(false);
-    },
-    onError: () => {
-      setTranslatedMessage("");
-      setIsTranslating(false);
+
+      return () => {
+        if (textareaRef.current) {
+          wanakana.unbind(textareaRef.current);
+        }
+      };
     }
-  });
+  }, []);
+
+  // Update kana preview when message changes
+  useEffect(() => {
+    if (message.trim()) {
+      const converted = wanakana.toKana(message);
+      setKanaPreview(converted !== message ? converted : "");
+    } else {
+      setKanaPreview("");
+    }
+  }, [message]);
 
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
@@ -97,60 +97,27 @@ export default function Chat() {
         }),
       );
 
-      // Send original content to server - server handles translation
+      // Send content to server
       const response = await apiRequest(
         "POST",
         `/api/conversations/${conversationId}/messages`,
         {
-          content: content, // Send original content
+          content: content,
         },
       );
       return await response.json();
     },
     onSuccess: (responseData) => {
-      // Handle both messages and translations from server
-      const { messages, translations } = responseData;
-      
-      // Update the most recent user message content to show Japanese translation if available
-      if (messages && translations && translations.length > 0) {
-        // Find the most recent user message (the one we just sent)
-        for (let i = messages.length - 1; i >= 0; i--) {
-          if (messages[i].sender === 'user') {
-            // Replace English words with Japanese translations in the user message
-            let translatedContent = messages[i].content;
-            translations.forEach((trans: any) => {
-              const regex = new RegExp(`\\b${trans.english}\\b`, 'gi');
-              translatedContent = translatedContent.replace(regex, trans.japanese);
-            });
-            messages[i].content = translatedContent;
-            break; // Only update the most recent user message
-          }
-        }
-      }
-      
       queryClient.setQueryData(
         [`/api/conversations/${conversationId}`],
         (oldData: any) => ({
           ...oldData,
-          messages: messages || responseData, // Fallback for backward compatibility
+          messages: responseData.messages || responseData,
         }),
       );
 
-      // Show translation notification if translations were provided
-      if (translations && translations.length > 0) {
-        const translationText = translations.map((t: any) => 
-          `${t.english} → ${t.japanese} (${t.hiragana})`
-        ).join(', ');
-        
-        toast({
-          title: "Translation applied",
-          description: `English words translated: ${translationText}`,
-          duration: 4000,
-        });
-      }
-
       setMessage("");
-      setTranslatedMessage("");
+      setKanaPreview("");
     },
     onError: (error) => {
       // Remove the optimistic user message on error
@@ -207,20 +174,6 @@ export default function Chat() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [(conversationData as any)?.messages]);
-
-  // Real-time translation effect
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (message.trim() && /[a-zA-Z]/.test(message)) {
-        setIsTranslating(true);
-        translateMutation.mutate(message);
-      } else {
-        setTranslatedMessage("");
-      }
-    }, 500); // Debounce for 500ms
-
-    return () => clearTimeout(timeoutId);
-  }, [message]);
 
   const handleSendMessage = () => {
     if (message.trim() && !sendMessageMutation.isPending) {
@@ -527,31 +480,26 @@ export default function Chat() {
       {/* Chat Input */}
       <div className="content-card rounded-t-2xl p-4 border-t border-border">
         <div className="max-w-4xl mx-auto">
+          {/* Kana Preview */}
+          {kanaPreview && (
+            <div className="mb-2 p-2 bg-primary/10 border border-primary/20 rounded text-sm font-japanese text-primary">
+              <span className="text-muted-foreground">Preview: </span>
+              {kanaPreview}
+            </div>
+          )}
+          
           <div className="flex items-end space-x-3">
             <div className="flex-1 relative">
               <Textarea
+                ref={textareaRef}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Type your response in Japanese... (English is ok too!)"
-                className="bg-input border-border text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary/20 resize-none"
+                placeholder="Type in romaji for automatic kana conversion, or type directly in Japanese..."
+                className="bg-input border-border text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary/20 resize-none font-japanese"
                 rows={1}
                 style={{ maxHeight: "120px" }}
               />
-              {/* Inline Translation Overlay */}
-              {translatedMessage && translatedMessage !== message && (
-                <div className="absolute inset-0 pointer-events-none p-3 text-transparent">
-                  <span className="relative">
-                    {message}
-                    <div className="absolute left-0 top-6 bg-primary/90 text-primary-foreground text-xs px-2 py-1 rounded shadow-lg font-japanese whitespace-nowrap z-10">
-                      {translatedMessage}
-                      {isTranslating && (
-                        <div className="inline-block w-2 h-2 border border-primary-foreground border-l-transparent rounded-full animate-spin ml-1"></div>
-                      )}
-                    </div>
-                  </span>
-                </div>
-              )}
             </div>
             <Button
               onClick={handleSendMessage}
@@ -568,34 +516,34 @@ export default function Chat() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => insertSuggestion("私は")}
-              className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
+              onClick={() => insertSuggestion("watashi wa ")}
+              className="px-3 py-1 text-sm hover:bg-primary/20 text-foreground"
             >
-              私は
+              watashi wa (私は)
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => insertSuggestion("です")}
-              className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
+              onClick={() => insertSuggestion("desu ")}
+              className="px-3 py-1 text-sm hover:bg-primary/20 text-foreground"
             >
-              です
+              desu (です)
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => insertSuggestion("から来ました")}
-              className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
+              onClick={() => insertSuggestion("kara kimashita ")}
+              className="px-3 py-1 text-sm hover:bg-primary/20 text-foreground"
             >
-              から来ました
+              kara kimashita (から来ました)
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => insertSuggestion("よろしくお願いします")}
-              className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
+              onClick={() => insertSuggestion("yoroshiku onegaishimasu ")}
+              className="px-3 py-1 text-sm hover:bg-primary/20 text-foreground"
             >
-              よろしくお願いします
+              yoroshiku (よろしく)
             </Button>
           </div>
         </div>

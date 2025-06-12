@@ -339,28 +339,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Translation endpoint for real-time typing
-  app.post("/api/translate", authenticateToken, async (req: AuthRequest, res) => {
-    try {
-      const { text } = req.body;
-
-      if (!text || typeof text !== 'string') {
-        return res.status(400).json({ error: "Text is required" });
-      }
-
-      console.log('[TRANSLATE] Translating text:', text);
-
-      // Use existing translation function
-      const translations = await detectAndTranslateEnglish(text);
-
-      console.log('[TRANSLATE] Translation result:', translations);
-
-      res.json({ translations });
-    } catch (error) {
-      console.error('[TRANSLATE] Error:', error);
-      res.status(500).json({ error: "Translation failed" });
-    }
-  });
+  // Translation is now handled client-side with WanaKana
 
   // Message routes
   app.post('/api/conversations/:id/messages', authenticateToken, async (req: AuthRequest, res) => {
@@ -376,11 +355,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Message content is required' });
       }
 
-      // Detect and translate English content to Japanese
-      console.log(`[CHAT] Detecting/translating English for conversation ${conversationId}`);
-      const translationResult = await detectAndTranslateEnglish(content.trim());
-      console.log(`[CHAT] Translation result:`, translationResult.translations.length > 0 ? 'Found translations' : 'No translations needed');
-
       // Create user message with original content
       console.log(`[CHAT] Creating user message in conversation ${conversationId}`);
       const userMessage = await storage.createMessage({
@@ -393,23 +367,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Process vocabulary from both original message and translations
       console.log(`[CHAT] Tracking vocabulary for user ${req.userId}`);
       await trackVocabularyFromMessage(req.userId!, content, 'user');
-
-      // If we have translations, also track the Japanese vocabulary
-      if (translationResult.translations.length > 0) {
-        for (const trans of translationResult.translations) {
-          // Try to find the Japanese word in our vocabulary database
-          const vocab = await storage.getAllVocab();
-          const matchingVocab = vocab.find(v => 
-            v.kanji === trans.japanese || 
-            v.hiragana === trans.hiragana ||
-            v.englishMeaning.toLowerCase().includes(trans.english.toLowerCase())
-          );
-
-          if (matchingVocab) {
-            await storage.incrementWordFrequency(req.userId!, matchingVocab.id, 'user');
-          }
-        }
-      }
 
       // Get conversation context for AI response
       console.log(`[CHAT] Getting conversation context for ${conversationId}`);
@@ -432,11 +389,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const systemPrompt = persona?.systemPrompt || "You are a helpful Japanese language tutor.";
       const contextPrompt = scenario ? `\n\nScenario context: ${scenario.description}` : '';
 
-      // Include translation context in system prompt if translations were made
-      const translationContext = translationResult.translations.length > 0 
-        ? `\n\nNote: The user included English words that translate to: ${translationResult.translations.map(t => `${t.english} → ${t.japanese} (${t.hiragana})`).join(', ')}. You may reference these translations in your response.`
-        : '';
-
       const chatMessages = messages.slice(-10).map(msg => ({
         role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
         content: msg.content
@@ -450,7 +402,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userMessage: content,
         targetVocab: targetVocab.slice(0, 20), // Limit for context
         targetGrammar: targetGrammar.slice(0, 10), // Limit for context,
-        translationContext
       });
       console.log(`[CHAT] AI response generated successfully`);
 
@@ -475,7 +426,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedMessages = await storage.getConversationMessages(conversationId);
       const responseData = {
         messages: updatedMessages,
-        translations: translationResult.translations.length > 0 ? translationResult.translations : undefined
       };
 
       console.log(`[CHAT] Successfully processed message for conversation ${conversationId}`);
