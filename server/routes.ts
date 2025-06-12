@@ -281,9 +281,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/conversations', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const conversations = await storage.getUserConversations(req.userId!);
-      // Filter out completed conversations for the main dashboard
-      const activeConversations = conversations.filter(c => c.status !== 'completed');
-      res.json(activeConversations);
+      // Return all conversations - let frontend filter as needed
+      res.json(conversations);
     } catch (error) {
       console.error('Get user conversations error:', error);
       res.status(500).json({ message: 'Failed to get conversations' });
@@ -451,28 +450,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If not found locally, try Jisho.org API (reliable external source)
       try {
         console.log(`Fetching definition for word: ${word}`);
-        const response = await fetch(`https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(word)}`);
+        const url = `https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(word)}`;
+        
+        const response = await fetch(url, {
+          headers: {
+            'User-Agent': 'Tomoshibi-App/1.0',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
         
         if (response.ok) {
           const data = await response.json();
-          console.log(`Jisho API response:`, JSON.stringify(data, null, 2));
+          console.log(`Jisho API response status: ${response.status}`);
           
           if (data.data && data.data.length > 0) {
             const entry = data.data[0];
-            const japanese = entry.japanese[0];
-            const sense = entry.senses[0];
+            const japanese = entry.japanese && entry.japanese[0] ? entry.japanese[0] : {};
+            const sense = entry.senses && entry.senses[0] ? entry.senses[0] : {};
             
             return res.json({
-              word: japanese.word || japanese.reading,
-              reading: japanese.reading,
-              meaning: sense.english_definitions.join(', '),
-              wordType: sense.parts_of_speech.join(', '),
+              word: japanese.word || japanese.reading || word,
+              reading: japanese.reading || word,
+              meaning: sense.english_definitions ? sense.english_definitions.join(', ') : 'Definition not available',
+              wordType: sense.parts_of_speech ? sense.parts_of_speech.join(', ') : 'Unknown',
               source: 'external'
             });
           }
         }
         
-        console.log(`No definition found for word: ${word}`);
+        console.log(`No definition found for word: ${word}, status: ${response.status}`);
         res.status(404).json({ message: 'Definition not found' });
       } catch (apiError) {
         console.error('External API error:', apiError);

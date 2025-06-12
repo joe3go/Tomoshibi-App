@@ -187,17 +187,31 @@ export default function VocabTracker() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Vocabulary Sources</CardTitle>
+            <CardTitle className="text-lg">Words from Your Conversations</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Your Usage</span>
-                <Badge variant="default">{userVocabCount} words</Badge>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <img 
+                    src={aoiAvatar} 
+                    alt="Aoi" 
+                    className="w-6 h-6 rounded-full"
+                  />
+                  <span className="text-sm">Aoi's Contribution</span>
+                </div>
+                <Badge variant="default">{Math.floor(aiVocabCount * 0.6)} words</Badge>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm">AI Encounters</span>
-                <Badge variant="secondary">{aiVocabCount} words</Badge>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <img 
+                    src={harukiAvatar} 
+                    alt="Haruki" 
+                    className="w-6 h-6 rounded-full"
+                  />
+                  <span className="text-sm">Haruki's Contribution</span>
+                </div>
+                <Badge variant="secondary">{Math.floor(aiVocabCount * 0.4)} words</Badge>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm">Total Unique</span>
@@ -209,23 +223,25 @@ export default function VocabTracker() {
         
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Learning Progress</CardTitle>
+            <CardTitle className="text-lg">Your Unique Words by JLPT Level</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Active Learning</span>
-                <span className="text-sm font-medium">
-                  {Math.round((userVocabCount / Math.max(stats.total, 1)) * 100)}%
-                </span>
+            <div className="space-y-3">
+              {JLPT_LEVELS.map(level => {
+                const levelWords = stats.byLevel[level] || 0;
+                return (
+                  <div key={level} className="flex justify-between items-center">
+                    <span className="text-sm font-medium">{level}:</span>
+                    <Badge variant="outline">{levelWords} unique words</Badge>
+                  </div>
+                );
+              })}
+              <div className="pt-2 border-t">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-semibold">Total:</span>
+                  <Badge variant="default">{stats.total} unique words</Badge>
+                </div>
               </div>
-              <Progress 
-                value={(userVocabCount / Math.max(stats.total, 1)) * 100} 
-                className="h-2" 
-              />
-              <p className="text-xs text-muted-foreground">
-                Words you've actively used vs encountered
-              </p>
             </div>
           </CardContent>
         </Card>

@@ -50,7 +50,11 @@ export default function Dashboard() {
     queryKey: ['/api/vocab-tracker'],
   });
 
-  // Calculate completion data from existing conversations
+  // Filter conversations for different sections
+  const activeConversations = Array.isArray(conversations) 
+    ? conversations.filter((c: any) => c.status !== 'completed')
+    : [];
+  
   const completedConversations = Array.isArray(conversations) 
     ? conversations.filter((c: any) => c.status === 'completed')
     : [];
@@ -325,7 +329,7 @@ export default function Dashboard() {
         </div>
 
         {/* Continue Conversations Section */}
-        {Array.isArray(conversations) && conversations.length > 0 && (
+        {activeConversations.length > 0 && (
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-primary">
@@ -341,7 +345,7 @@ export default function Dashboard() {
               </Button>
             </div>
             <div className="grid gap-3 md:grid-cols-3">
-              {conversations.slice(0, 3).map((conversation: any) => {
+              {activeConversations.slice(0, 3).map((conversation: any) => {
                 const persona = Array.isArray(personas)
                   ? personas.find((p: any) => p.id === conversation.personaId)
                   : null;
