@@ -1,0 +1,9 @@
+
+node_modules/
+dist/
+build/
+*.config.js
+*.config.ts
+.replit
+migrations/
+attached_assets/
