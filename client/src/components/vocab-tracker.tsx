@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookOpen, TrendingUp, Clock, Filter } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import type { 
-  VocabularyTrackerEntry, 
+  VocabularyTrackingEntry, 
   VocabularyStatistics, 
   JlptLevel,
   BaseComponentProps,
@@ -19,37 +19,57 @@ import { JLPT_LEVELS, JLPT_TARGETS, JLPT_LEVEL_COLORS, API_ENDPOINTS } from '@/u
 import harukiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
 import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
 
-export default function VocabTracker() {
-  const [selectedLevel, setSelectedLevel] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<string>('frequency');
-  const [activeTab, setActiveTab] = useState<string>('all');
+interface VocabTrackerProps extends BaseComponentProps {
+  showFilterOptions?: boolean;
+  initialLevel?: JlptLevel | 'all';
+}
 
-  const { data: vocabularyData = [], isLoading } = useQuery<VocabularyTrackerEntry[]>({
-    queryKey: ['/api/vocab-tracker'],
+const VocabTracker: React.FC<VocabTrackerProps> = React.memo(({
+  className,
+  showFilterOptions = true,
+  initialLevel = 'all'
+}) => {
+  const [selectedLevel, setSelectedLevel] = useState<JlptLevel | 'all'>(initialLevel);
+  const [sortBy, setSortBy] = useState<'frequency' | 'lastSeen' | 'memoryStrength'>('frequency');
+  const [activeTab, setActiveTab] = useState<'all' | 'user' | 'ai'>('all');
+
+  const { data: vocabularyData = [], isLoading } = useQuery<VocabularyTrackingEntry[]>({
+    queryKey: [API_ENDPOINTS.VOCAB_TRACKER],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 
   const { data: allVocabularyWords = [] } = useQuery({
     queryKey: ['/api/vocab'],
+    staleTime: 10 * 60 * 1000, // 10 minutes
   });
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[200px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-          <p className="text-muted-foreground">Loading vocabulary tracker...</p>
-        </div>
-      </div>
-    );
-  }
+  // Memoized vocabulary statistics calculation
+  const vocabularyStatistics: VocabularyStatistics = useMemo(() => ({
+    totalWords: vocabularyData.length,
+    wordsByLevel: vocabularyData.reduce((acc, entry) => {
+      const level = entry.word.jlptLevel as JlptLevel;
+      acc[level] = (acc[level] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>),
+    masteredWords: vocabularyData.filter(entry => entry.memoryStrength >= 80).length,
+    reviewDueWords: vocabularyData.filter(entry => 
+      entry.nextReviewAt && new Date(entry.nextReviewAt) <= new Date()
+    ).length
+  }), [vocabularyData]);
 
-  // Calculate comprehensive vocabulary statistics
-  const vocabularyStatistics: VocabularyStatistics = (vocabularyData as VocabularyTrackerEntry[]).reduce((accumulator: VocabularyStatistics, vocabularyEntry: VocabularyTrackerEntry) => {
-    accumulator.totalWords += 1;
-    const jlptLevel = vocabularyEntry.word.jlptLevel;
-    accumulator.wordsByLevel[jlptLevel] = (accumulator.wordsByLevel[jlptLevel] || 0) + 1;
-    return accumulator;
-  }, { totalWords: 0, wordsByLevel: {} });
+  // Event handlers with useCallback for performance optimization
+  const handleLevelChange: ChangeHandler<JlptLevel | 'all'> = useCallback((value) => {
+    setSelectedLevel(value);
+  }, []);
+
+  const handleSortChange: ChangeHandler<'frequency' | 'lastSeen' | 'memoryStrength'> = useCallback((value) => {
+    setSortBy(value);
+  }, []);
+
+  const handleTabChange: ChangeHandler<'all' | 'user' | 'ai'> = useCallback((value) => {
+    setActiveTab(value);
+  }, []);
 
   // Filter and sort vocabulary data based on user preferences
   const filteredVocabularyData = (vocabularyData as VocabularyTrackerEntry[])
@@ -95,7 +115,7 @@ export default function VocabTracker() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${className || ''}`}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -289,4 +309,8 @@ export default function VocabTracker() {
       </Card>
     </div>
   );
-}
+});
+
+VocabTracker.displayName = 'VocabTracker';
+
+export default VocabTracker;
