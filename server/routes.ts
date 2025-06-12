@@ -181,6 +181,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/conversations/:id', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const conversationId = parseInt(req.params.id);
+      if (isNaN(conversationId)) {
+        return res.status(400).json({ message: 'Invalid conversation ID' });
+      }
       const conversation = await storage.getConversation(conversationId);
       
       if (!conversation || conversation.userId !== req.userId) {
@@ -223,6 +226,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/conversations/:id', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const conversationId = parseInt(req.params.id);
+      if (isNaN(conversationId)) {
+        return res.status(400).json({ message: 'Invalid conversation ID' });
+      }
       const updates = req.body;
       
       // Convert ISO string to Date object for timestamp fields

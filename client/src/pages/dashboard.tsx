@@ -2,10 +2,13 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Settings, LogOut, MessageCircle, User, Calendar } from "lucide-react";
+import { Settings, LogOut, MessageCircle, User, Calendar, BookOpen, History, TrendingUp, Award, Target } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import harukiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
 import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
@@ -14,6 +17,8 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [displayName, setDisplayName] = useState((user as any)?.displayName || "");
 
   // Fetch conversations
   const { data: conversations, isLoading: conversationsLoading } = useQuery({
@@ -33,6 +38,16 @@ export default function Dashboard() {
   // Fetch progress
   const { data: progress, isLoading: progressLoading } = useQuery({
     queryKey: ["/api/progress"],
+  });
+
+  // Fetch vocabulary tracker data
+  const { data: vocabData = [] } = useQuery({
+    queryKey: ['/api/vocab-tracker'],
+  });
+
+  // Fetch completed conversations for history
+  const { data: completedConversations = [] } = useQuery({
+    queryKey: ['/api/conversations/completed'],
   });
 
   const logoutMutation = useMutation({
@@ -65,6 +80,32 @@ export default function Dashboard() {
     };
     return scenarios[title] || title;
   };
+
+  const getProgressionLabel = () => {
+    const vocabCount = (vocabData as any[]).length;
+    const completedCount = (completedConversations as any[]).length;
+    const totalInteractions = vocabCount + completedCount;
+
+    if (totalInteractions >= 100) return "🌸 Sakura Scholar";
+    if (totalInteractions >= 75) return "🗾 Island Explorer";
+    if (totalInteractions >= 50) return "🏮 Lantern Bearer";
+    if (totalInteractions >= 25) return "🌱 Bamboo Sprout";
+    if (totalInteractions >= 10) return "📚 Study Starter";
+    return "🌟 Rising Sun";
+  };
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (updates: { displayName: string }) => {
+      return apiRequest(`/api/users/${(user as any)?.id}`, {
+        method: 'PATCH',
+        body: updates
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
+      setSettingsOpen(false);
+    }
+  });
 
   if (
     conversationsLoading ||
