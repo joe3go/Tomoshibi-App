@@ -8,11 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Upload, User, BookOpen, Settings as SettingsIcon } from 'lucide-react';
+import { ArrowLeft, Upload, User as UserIcon, BookOpen, Settings as SettingsIcon } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/useAuth';
 import { removeAuthToken } from '@/lib/auth';
+import type { User, UserProgress } from "@shared/schema";
 
 interface UserAccountSettings {
   id: number;
@@ -180,9 +181,9 @@ export default function Settings() {
                 {/* Avatar Upload */}
                 <div className="flex items-center gap-4">
                   <Avatar className="w-16 h-16">
-                    <AvatarImage src={userSettings?.profileImageUrl} />
+                    <AvatarImage src={userAccountSettings?.profileImageUrl} />
                     <AvatarFallback>
-                      {userSettings?.displayName?.charAt(0)?.toUpperCase() || 'U'}
+                      {userAccountSettings?.displayName?.charAt(0)?.toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <div>
@@ -219,7 +220,7 @@ export default function Settings() {
                   <Label htmlFor="displayName">Display Name</Label>
                   <Input
                     id="displayName"
-                    defaultValue={userSettings?.displayName}
+                    defaultValue={userAccountSettings?.displayName}
                     onBlur={(e) => handleProfileUpdate('displayName', e.target.value)}
                     placeholder="Enter your display name"
                   />
@@ -230,7 +231,7 @@ export default function Settings() {
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
-                    value={userSettings?.email}
+                    value={userAccountSettings?.email}
                     disabled
                     className="bg-muted"
                   />
@@ -257,7 +258,7 @@ export default function Settings() {
                 <div className="space-y-2">
                   <Label>Current JLPT Level</Label>
                   <Select
-                    defaultValue={progress?.jlptLevel || 'N5'}
+                    defaultValue={userLearningProgress?.jlptLevel || 'N5'}
                     onValueChange={(value) => handleProfileUpdate('jlptLevel', value)}
                   >
                     <SelectTrigger>
@@ -277,7 +278,7 @@ export default function Settings() {
                 <div className="space-y-2">
                   <Label>Study Goal</Label>
                   <Select
-                    defaultValue={userSettings?.studyGoal || 'conversation'}
+                    defaultValue={userAccountSettings?.studyGoal || 'conversation'}
                     onValueChange={(value) => handleProfileUpdate('studyGoal', value)}
                   >
                     <SelectTrigger>
