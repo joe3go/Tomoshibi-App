@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,383 +13,525 @@ import {
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
 import EnhancedFuriganaText from "@/components/enhanced-furigana-text";
-import type { 
-  ChatConversation, 
-  ChatMessage, 
-  TeachingPersona, 
-  LearningScenario,
-  BaseComponentProps 
-} from '@/types';
-import { STORAGE_KEYS, API_ENDPOINTS } from '@/utils/constants';
 import harukiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
 import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
 import * as wanakana from 'wanakana';
 
-interface ChatPageProps extends BaseComponentProps {}
-
-const Chat: React.FC<ChatPageProps> = React.memo(() => {
+export default function Chat() {
   const [, params] = useRoute("/chat/:conversationId");
   const [, setLocation] = useLocation();
   const [currentUserMessage, setCurrentUserMessage] = useState("");
-  const [isFuriganaVisible, setIsFuriganaVisible] = useLocalStorage(STORAGE_KEYS.FURIGANA_VISIBLE, true);
+  const [isFuriganaVisible, setIsFuriganaVisible] = useState(() => {
+    const savedPreference = localStorage.getItem("furigana-visible");
+    return savedPreference !== null ? savedPreference === "true" : true;
+  });
 
   const conversationMessagesEndReference = useRef<HTMLDivElement>(null);
   const messageInputTextareaReference = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
 
-  // Memoized conversation ID parsing
-  const activeConversationId = useMemo(() => {
-    return params?.conversationId ? parseInt(params.conversationId, 10) : 0;
-  }, [params?.conversationId]);
+  const activeConversationId = params?.conversationId
+    ? parseInt(params.conversationId)
+    : 0;
 
-  // Optimized queries with proper typing and caching
-  const { data: conversationDetails, isLoading: isLoadingConversation } = useQuery<ChatConversation>({
-    queryKey: [`${API_ENDPOINTS.CONVERSATIONS}/${activeConversationId}`],
+  const { data: conversationDetails, isLoading: isLoadingConversation } = useQuery({
+    queryKey: [`/api/conversations/${activeConversationId}`],
     enabled: !!activeConversationId,
-    staleTime: 30 * 1000, // 30 seconds
-    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const { data: availableTeachingPersonas = [] } = useQuery<TeachingPersona[]>({
-    queryKey: [API_ENDPOINTS.PERSONAS],
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
+  const { data: availableTeachingPersonas = [] } = useQuery({
+    queryKey: ["/api/personas"],
   });
 
-  const { data: availableLearningScenarios = [] } = useQuery<LearningScenario[]>({
-    queryKey: [API_ENDPOINTS.SCENARIOS],
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
+  const { data: availableLearningScenarios = [] } = useQuery({
+    queryKey: ["/api/scenarios"],
   });
 
-  // Memoized persona and scenario lookups
-  const currentPersona = useMemo(() => {
-    return availableTeachingPersonas.find(p => p.id === conversationDetails?.personaId);
-  }, [availableTeachingPersonas, conversationDetails?.personaId]);
-
-  const currentScenario = useMemo(() => {
-    return availableLearningScenarios.find(s => s.id === conversationDetails?.scenarioId);
-  }, [availableLearningScenarios, conversationDetails?.scenarioId]);
-
-  // Optimized mutations with proper error handling
-  const sendMessageMutation = useMutation({
-    mutationFn: async (messageData: { content: string; conversationId: number }) => {
-      return apiRequest(
-        'POST',
-        `${API_ENDPOINTS.CONVERSATIONS}/${messageData.conversationId}/messages`,
-        { content: messageData.content }
-      );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ 
-        queryKey: [`${API_ENDPOINTS.CONVERSATIONS}/${activeConversationId}`] 
+  // WanaKana integration for real-time romaji to kana conversion
+  useEffect(() => {
+    if (messageInputTextareaReference.current) {
+      // Bind WanaKana to the textarea with IME mode enabled
+      wanakana.bind(messageInputTextareaReference.current, {
+        IMEMode: true
       });
+
+      return () => {
+        if (messageInputTextareaReference.current) {
+          wanakana.unbind(messageInputTextareaReference.current);
+        }
+      };
+    }
+  }, []);
+
+  // Handle input changes - WanaKana will automatically convert romaji to hiragana
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    // The value will already be converted by WanaKana's IME mode
+    setCurrentUserMessage(e.target.value);
+  };
+
+  const sendMessageMutation = useMutation({
+    mutationFn: async (content: string) => {
+      // Immediately add user message to UI
+      const userMessage = {
+        id: Date.now(), // Temporary ID
+        content,
+        sender: 'user',
+        createdAt: new Date().toISOString(),
+        vocabUsed: [],
+        grammarUsed: []
+      };
+
+      queryClient.setQueryData(
+        [`/api/conversations/${activeConversationId}`],
+        (previousConversationData: any) => ({
+          ...previousConversationData,
+          messages: [...(previousConversationData?.messages || []), userMessage],
+        }),
+      );
+
+      // Send content to server
+      const response = await apiRequest(
+        "POST",
+        `/api/conversations/${activeConversationId}/messages`,
+        {
+          content: content,
+        },
+      );
+      return await response.json();
+    },
+    onSuccess: (responseData) => {
+      queryClient.setQueryData(
+        [`/api/conversations/${activeConversationId}`],
+        (previousConversationData: any) => ({
+          ...previousConversationData,
+          messages: responseData.messages || responseData,
+        }),
+      );
+
       setCurrentUserMessage("");
-      scrollToBottom();
     },
     onError: (error) => {
+      // Remove the optimistic user message on error
+      queryClient.setQueryData(
+        [`/api/conversations/${activeConversationId}`],
+        (previousConversationData: any) => ({
+          ...previousConversationData,
+          messages: previousConversationData?.messages?.slice(0, -1) || [],
+        }),
+      );
+
       toast({
         title: "Failed to send message",
-        description: error instanceof Error ? error.message : "Please try again",
+        description: error.message,
         variant: "destructive",
       });
     },
   });
 
-  const endConversationMutation = useMutation({
-    mutationFn: async (conversationId: number) => {
-      return apiRequest('POST', `${API_ENDPOINTS.CONVERSATIONS}/${conversationId}/end`);
+  const completeConversationMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest(
+        "PATCH",
+        `/api/conversations/${activeConversationId}`,
+        {
+          status: "completed",
+          completedAt: new Date().toISOString(),
+        },
+      );
+      return await response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.CONVERSATIONS] });
-      setLocation("/dashboard");
+      // Invalidate multiple query keys to refresh all conversation lists
+      queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/conversations/completed"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/conversations/${activeConversationId}`] });
+
       toast({
-        title: "Conversation ended",
-        description: "Great job! Your progress has been saved.",
+        title: "Conversation completed!",
+        description:
+          "Great job! This conversation has been moved to your transcripts.",
       });
+      setLocation("/dashboard");
     },
     onError: (error) => {
       toast({
-        title: "Failed to end conversation",
-        description: error instanceof Error ? error.message : "Please try again",
+        title: "Failed to complete conversation",
+        description: error.message,
         variant: "destructive",
       });
     },
   });
 
-  // Optimized event handlers with useCallback
-  const handleSendMessage = useCallback(async () => {
-    if (!currentUserMessage.trim() || !activeConversationId || sendMessageMutation.isPending) {
-      return;
-    }
+  useEffect(() => {
+    conversationMessagesEndReference.current?.scrollIntoView({ behavior: "smooth" });
+  }, [(conversationDetails as any)?.messages]);
 
-    try {
-      await sendMessageMutation.mutateAsync({
-        content: currentUserMessage.trim(),
-        conversationId: activeConversationId,
-      });
-    } catch (error) {
-      console.error("Failed to send message:", error);
+  const handleSendMessage = () => {
+    if (currentUserMessage.trim() && !sendMessageMutation.isPending) {
+      sendMessageMutation.mutate(currentUserMessage.trim());
     }
-  }, [currentUserMessage, activeConversationId, sendMessageMutation]);
+  };
 
-  const handleEndConversation = useCallback(async () => {
-    if (!activeConversationId || endConversationMutation.isPending) {
-      return;
-    }
-
-    try {
-      await endConversationMutation.mutateAsync(activeConversationId);
-    } catch (error) {
-      console.error("Failed to end conversation:", error);
-    }
-  }, [activeConversationId, endConversationMutation]);
-
-  const handleKeyPress = useCallback((event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
       handleSendMessage();
     }
-  }, [handleSendMessage]);
+  };
 
-  const handleBackToDashboard = useCallback(() => {
-    setLocation("/dashboard");
-  }, [setLocation]);
+  const insertSuggestionIntoMessage = (suggestionText: string) => {
+    setCurrentUserMessage((previousMessage) => previousMessage + suggestionText);
+  };
 
-  const toggleFurigana = useCallback(() => {
-    setIsFuriganaVisible(prev => !prev);
-  }, [setIsFuriganaVisible]);
+  const handleFuriganaVisibilityToggle = () => {
+    const newVisibilityState = !isFuriganaVisible;
+    setIsFuriganaVisible(newVisibilityState);
+    localStorage.setItem("furigana-visible", newVisibilityState.toString());
+  };
 
-  const scrollToBottom = useCallback(() => {
-    conversationMessagesEndReference.current?.scrollIntoView({ 
-      behavior: "smooth",
-      block: "end"
-    });
-  }, []);
+  const getPersonaAvatarImage = (teachingPersona: any) => {
+    if (teachingPersona?.type === "teacher") return aoiAvatar; // Aoi is the female teacher
+    if (teachingPersona?.type === "friend") return harukiAvatar; // Haruki is the male friend
+    return aoiAvatar; // Default fallback
+  };
 
-  // Auto-scroll effect with proper cleanup
-  useEffect(() => {
-    if (conversationDetails?.messages) {
-      const timeoutId = setTimeout(scrollToBottom, 100);
-      return () => clearTimeout(timeoutId);
-    }
-  }, [conversationDetails?.messages, scrollToBottom]);
-
-  // Auto-focus message input
-  useEffect(() => {
-    messageInputTextareaReference.current?.focus();
-  }, []);
-
-  // Memoized avatar selection
-  const getPersonaAvatar = useCallback((personaName?: string) => {
-    if (!personaName) return aoiAvatar;
-    return personaName.toLowerCase() === 'haruki' ? harukiAvatar : aoiAvatar;
-  }, []);
-
-  // Loading state
   if (isLoadingConversation) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
-          <p className="text-muted-foreground">Loading conversation...</p>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="content-card p-8">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 border-4 border-primary border-l-transparent rounded-full animate-spin"></div>
+            <span className="text-foreground">Loading conversation...</span>
+          </div>
         </div>
       </div>
     );
   }
 
-  // Error state - conversation not found
-  if (!conversationDetails && !isLoadingConversation) {
+  if (!conversationDetails) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center space-y-4">
-          <h2 className="text-2xl font-bold">Conversation not found</h2>
-          <p className="text-muted-foreground">The conversation you're looking for doesn't exist.</p>
-          <Button onClick={handleBackToDashboard}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </Button>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Card className="content-card">
+          <CardContent className="p-8 text-center">
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              Conversation Not Found
+            </h2>
+            <p className="text-muted-foreground mb-4">
+              This conversation doesn't exist or you don't have access to it.
+            </p>
+            <Button
+              onClick={() => setLocation("/dashboard")}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              Return to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
+
+  const conversation = (conversationDetails as any)?.conversation;
+  const messages = (conversationDetails as any)?.messages || [];
+
+  // Handle case where conversation doesn't exist
+  if (!conversation) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Card className="content-card p-8 text-center">
+          <h2 className="text-xl font-semibold text-foreground mb-4">
+            Conversation Not Found
+          </h2>
+          <p className="text-muted-foreground mb-6">
+            This conversation doesn't exist or you don't have access to it.
+          </p>
+          <Button
+            onClick={() => setLocation("/dashboard")}
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            Return to Dashboard
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  const conversationPersona = Array.isArray(availableTeachingPersonas)
+    ? availableTeachingPersonas.find((persona: any) => persona.id === conversation?.personaId)
+    : null;
+  const conversationScenario = Array.isArray(availableLearningScenarios)
+    ? availableLearningScenarios.find((scenario: any) => scenario.id === conversation?.scenarioId)
+    : null;
 
   return (
-    <div className="flex flex-col h-screen bg-background">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-card">
-        <div className="flex items-center gap-4">
+    <div className="min-h-screen flex flex-col bg-background">
+      {/* Chat Header */}
+      <header className="content-card rounded-b-2xl p-4 flex items-center justify-between border-b border-border">
+        <div className="flex items-center space-x-3">
           <Button
             variant="ghost"
-            size="icon"
-            onClick={handleBackToDashboard}
-            className="hover:bg-muted"
+            size="sm"
+            onClick={() => setLocation("/dashboard")}
+            className="p-2 text-foreground hover:bg-muted"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-muted">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/30">
               <img
-                src={getPersonaAvatar(currentPersona?.name)}
-                alt={currentPersona?.name || "AI Tutor"}
+                src={getPersonaAvatarImage(conversationPersona)}
+                alt={conversationPersona?.name || "Persona"}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback to text avatar if image fails
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = "none";
+                  target.parentElement!.innerHTML = `
+                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br ${
+                      conversationPersona?.type === "teacher"
+                        ? "from-primary to-primary/60"
+                        : "from-accent to-accent/60"
+                    }">
+                      <span class="text-lg text-foreground">
+                        ${conversationPersona?.type === "teacher" ? "👩‍🏫" : "🧑‍🎤"}
+                      </span>
+                    </div>
+                  `;
+                }}
               />
             </div>
             <div>
-              <h2 className="font-semibold text-lg">
-                {currentPersona?.name || "AI Tutor"}
-              </h2>
+              <h3 className="font-semibold text-foreground">
+                {conversationPersona?.name || "AI"}
+              </h3>
               <p className="text-sm text-muted-foreground">
-                {currentScenario?.title || "Conversation"}
+                {conversationScenario?.title || "Conversation"}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleFurigana}
-            className="hidden sm:flex"
-          >
-            Furigana {isFuriganaVisible ? "ON" : "OFF"}
-          </Button>
-          
+        <div className="flex items-center space-x-2">
           <Button
             variant="ghost"
-            size="icon"
-            className="hover:bg-muted"
+            size="sm"
+            onClick={handleFuriganaVisibilityToggle}
+            className="px-3 py-1 text-xs hover:bg-primary/20 transition-colors text-foreground"
+          >
+            {isFuriganaVisible ? "Hide Furigana" : "Show Furigana"}
+          </Button>
+          {/* Debug info - remove this later */}
+          <span className="text-xs text-muted-foreground">
+            Furigana: {isFuriganaVisible ? "ON" : "OFF"}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => completeConversationMutation.mutate()}
+            disabled={completeConversationMutation.isPending}
+            className="px-3 py-1 text-xs hover:bg-green-500/20 transition-colors text-foreground flex items-center space-x-1"
+          >
+            <CheckCircle className="w-4 h-4" />
+            <span>Complete</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="p-2 text-foreground hover:bg-muted"
           >
             <Settings className="w-5 h-5" />
           </Button>
-          
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hover:bg-muted"
-          >
-            <MoreHorizontal className="w-5 h-5" />
-          </Button>
+        </div>
+      </header>
+
+      {/* Chat Messages */}
+      <div className="flex-1 p-4 overflow-y-auto">
+        <div className="max-w-4xl mx-auto space-y-4">
+          {messages.map((msg: any) => (
+            <div
+              key={msg.id}
+              className={`flex items-start space-x-3 ${
+                msg.sender === "user" ? "justify-end" : ""
+              }`}
+            >
+              {msg.sender === "ai" && (
+                <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
+                  <img
+                    src={getPersonaAvatarImage(conversationPersona)}
+                    alt={conversationPersona?.name || "AI"}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback to text avatar if image fails
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = "none";
+                      target.parentElement!.innerHTML = `
+                        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br ${
+                          conversationPersona?.type === "teacher"
+                            ? "from-primary to-primary/60"
+                            : "from-accent to-accent/60"
+                        }">
+                          <span class="text-sm font-japanese text-foreground">
+                            ${conversationPersona?.type === "teacher" ? "先" : "友"}
+                          </span>
+                        </div>
+                      `;
+                    }}
+                  />
+                </div>
+              )}
+
+              <div
+                className={`message-bubble ${msg.sender === "user" ? "user" : "ai"}`}
+              >
+                {msg.feedback && (
+                  <div className="mb-2 p-2 rounded-lg bg-green-50 border border-green-200">
+                    <p className="text-sm text-green-700">✨ {msg.feedback}</p>
+                  </div>
+                )}
+
+                <div
+                  className={`font-japanese mb-2 ${msg.sender === "user" ? "text-primary-foreground" : "text-foreground"}`}
+                >
+                  <EnhancedFuriganaText
+                    text={msg.content}
+                    showFurigana={isFuriganaVisible}
+                    showToggleButton={false}
+                    enableWordHover={msg.sender === "ai"}
+                    className="text-inherit"
+                  />
+                </div>
+
+                {msg.sender === "ai" && (
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    💡 Keep practicing! You're doing great!
+                  </div>
+                )}
+              </div>
+
+              {msg.sender === "user" && (
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                  <span className="text-sm text-primary-foreground font-medium">
+                    You
+                  </span>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Enhanced Typing Indicator */}
+          {sendMessageMutation.isPending && (
+            <div className="flex items-start space-x-3">
+              <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
+                <img
+                  src={getPersonaAvatarImage(conversationPersona)}
+                  alt={conversationPersona?.name || "AI"}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Fallback to emoji if image fails
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = "none";
+                    target.parentElement!.innerHTML = `
+                      <div class="w-full h-full flex items-center justify-center bg-gradient-to-br ${
+                        conversationPersona?.type === "teacher"
+                          ? "from-primary to-primary/60"
+                          : "from-accent to-accent/60"
+                      }">
+                        <span class="text-sm text-foreground">
+                          ${conversationPersona?.type === "teacher" ? "👩‍🏫" : "🧑‍🎤"}
+                        </span>
+                      </div>
+                    `;
+                  }}
+                />
+              </div>
+              <div className="message-bubble ai">
+                <div className="flex items-center space-x-2">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"></div>
+                    <div
+                      className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.1s" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.2s" }}
+                    ></div>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    Thinking...
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={conversationMessagesEndReference} />
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {conversationDetails?.messages?.map((message: ChatMessage) => (
-          <div
-            key={message.id}
-            className={`flex gap-4 ${
-              message.sender === "user" ? "justify-end" : "justify-start"
-            }`}
-          >
-            {message.sender === "ai" && (
-              <div className="w-10 h-10 rounded-full overflow-hidden bg-muted flex-shrink-0">
-                <img
-                  src={getPersonaAvatar(currentPersona?.name)}
-                  alt={currentPersona?.name || "AI"}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-            
-            <Card className={`max-w-[80%] ${
-              message.sender === "user" 
-                ? "bg-primary text-primary-foreground" 
-                : "bg-card border"
-            }`}>
-              <CardContent className="p-4">
-                {message.sender === "ai" && message.content.includes("japanese:") ? (
-                  <EnhancedFuriganaText
-                    text={message.content}
-                    showFurigana={isFuriganaVisible}
-                    className="text-sm leading-relaxed"
-                  />
-                ) : (
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                    {message.content}
-                  </p>
-                )}
-                
-                <div className="flex items-center justify-between mt-3 pt-2 border-t border-border/20">
-                  <span className="text-xs opacity-70">
-                    {new Date(message.timestamp).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </span>
-                  
-                  {message.sender === "user" && (
-                    <CheckCircle className="w-4 h-4 opacity-70" />
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {message.sender === "user" && (
-              <div className="w-10 h-10 rounded-full bg-primary flex-shrink-0 flex items-center justify-center">
-                <span className="text-primary-foreground text-sm font-medium">
-                  You
-                </span>
-              </div>
-            )}
-          </div>
-        ))}
-        
-        <div ref={conversationMessagesEndReference} />
-      </div>
-
-      {/* Message Input */}
-      <div className="p-4 border-t bg-card">
-        <div className="flex gap-3 items-end">
-          <div className="flex-1">
-            <Textarea
-              ref={messageInputTextareaReference}
-              value={currentUserMessage}
-              onChange={(e) => setCurrentUserMessage(e.target.value)}
-              onKeyDown={handleKeyPress}
-              placeholder="Type your message in Japanese or English..."
-              className="min-h-[60px] max-h-[120px] resize-none"
-              disabled={sendMessageMutation.isPending}
-            />
-          </div>
-          
-          <div className="flex flex-col gap-2">
+      {/* Chat Input */}
+      <div className="content-card rounded-t-2xl p-4 border-t border-border">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-end space-x-3">
+            <div className="flex-1 relative">
+              <Textarea
+                ref={messageInputTextareaReference}
+                value={currentUserMessage}
+                onChange={handleInputChange}
+                onKeyPress={handleKeyPress}
+                placeholder="Type in romaji for automatic conversion to hiragana..."
+                className="bg-input border-border text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary/20 resize-none font-japanese"
+                rows={1}
+                style={{ maxHeight: "120px" }}
+              />
+            </div>
             <Button
               onClick={handleSendMessage}
               disabled={!currentUserMessage.trim() || sendMessageMutation.isPending}
-              size="icon"
-              className="h-[60px] w-[60px]"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center space-x-2"
             >
-              <Send className="w-5 h-5" />
+              <span>Send</span>
+              <Send className="w-4 h-4" />
             </Button>
-            
+          </div>
+
+          {/* Input Suggestions */}
+          <div className="mt-3 flex flex-wrap gap-2">
             <Button
-              onClick={handleEndConversation}
-              disabled={endConversationMutation.isPending}
-              variant="outline"
+              variant="ghost"
               size="sm"
-              className="text-xs whitespace-nowrap"
+              onClick={() => insertSuggestionIntoMessage("watashi wa ")}
+              className="px-3 py-1 text-sm hover:bg-primary/20 text-foreground"
             >
-              End Chat
+              watashi wa (私は)
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => insertSuggestionIntoMessage("desu ")}
+              className="px-3 py-1 text-sm hover:bg-primary/20 text-foreground"
+            >
+              desu (です)
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => insertSuggestionIntoMessage("kara kimashita ")}
+              className="px-3 py-1 text-sm hover:bg-primary/20 text-foreground"
+            >
+              kara kimashita (から来ました)
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => insertSuggestionIntoMessage("yoroshiku onegaishimasu ")}
+              className="px-3 py-1 text-sm hover:bg-primary/20 text-foreground"
+            >
+              yoroshiku (よろしく)
             </Button>
           </div>
         </div>
-
-        {sendMessageMutation.isPending && (
-          <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
-            <span>Sending message...</span>
-          </div>
-        )}
       </div>
     </div>
   );
-});
-
-Chat.displayName = 'Chat';
-
-export default Chat;
+}

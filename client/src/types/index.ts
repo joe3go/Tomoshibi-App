@@ -51,12 +51,12 @@ export interface LearningScenario {
 // Vocabulary tracking types
 export interface VocabularyWord {
   id: number;
-  kanji?: string | null;
+  kanji?: string;
   hiragana: string;
   romaji?: string;
   englishMeaning: string;
   jlptLevel: string;
-  wordType?: string | null;
+  wordType?: string;
 }
 
 export interface VocabularyTrackingEntry {
@@ -66,9 +66,9 @@ export interface VocabularyTrackingEntry {
   frequency: number;
   userUsageCount: number;
   aiEncounterCount: number;
-  lastSeenAt?: string | null;
+  lastSeenAt?: string;
   memoryStrength: number;
-  nextReviewAt?: string | null;
+  nextReviewAt?: string;
   source: string;
   word: VocabularyWord;
 }
