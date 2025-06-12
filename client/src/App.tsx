@@ -16,6 +16,7 @@ import FuriganaDemo from "@/pages/furigana-demo";
 import Transcripts from "@/pages/transcripts";
 import Vocabulary from "@/pages/vocabulary";
 import History from "@/pages/history";
+import Settings from "@/pages/settings";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -51,6 +52,7 @@ function Router() {
           <Route path="/transcripts" component={Transcripts} />
           <Route path="/history" component={History} />
           <Route path="/vocabulary" component={Vocabulary} />
+          <Route path="/settings" component={Settings} />
         </>
       )}
       <Route component={NotFound} />

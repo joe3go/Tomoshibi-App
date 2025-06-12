@@ -53,11 +53,23 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: (failureCount, error: any) => {
+        // Don't retry on auth errors
+        if (error?.message?.includes('403') || error?.message?.includes('401')) {
+          return false;
+        }
+        return failureCount < 2;
+      },
     },
     mutations: {
-      retry: false,
+      retry: (failureCount, error: any) => {
+        // Don't retry auth errors
+        if (error?.message?.includes('403') || error?.message?.includes('401')) {
+          return false;
+        }
+        return failureCount < 1;
+      },
     },
   },
 });
