@@ -296,7 +296,7 @@ export default function VocabTracker() {
                       <span className="text-green-600">👤 {entry.userUsageCount || 0}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="text-blue-600">🤖 {entry.aiEncounterCount || 0}</span>
+                      <span className="text-blue-600">👨‍🏫 {entry.aiEncounterCount || 0}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />

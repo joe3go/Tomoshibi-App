@@ -162,6 +162,32 @@ export default function Dashboard() {
     window.open(emailUrl, '_blank');
   };
 
+  const endSessionDashboardMutation = useMutation({
+    mutationFn: async (conversationId: number) => {
+      const response = await fetch(`/api/conversations/${conversationId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ 
+          status: 'completed',
+          completedAt: new Date().toISOString()
+        })
+      });
+      
+      if (!response.ok) throw new Error('Failed to end session');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
+    }
+  });
+
+  const handleEndSessionDashboard = (conversationId: number) => {
+    endSessionDashboardMutation.mutate(conversationId);
+  };
+
   if (
     conversationsLoading ||
     scenariosLoading ||
@@ -453,22 +479,35 @@ export default function Dashboard() {
                   ? scenarios.find((s: any) => s.id === conversation.scenarioId)
                   : null;
 
+                const formatDate = (dateString: string) => {
+                  try {
+                    return new Date(dateString).toLocaleDateString();
+                  } catch {
+                    return "Recent";
+                  }
+                };
+
                 return (
                   <div
                     key={conversation.id}
-                    onClick={() => setLocation(`/chat/${conversation.id}`)}
-                    className="content-card cursor-pointer group"
+                    className="content-card group"
                   >
                     <div className="flex items-start space-x-3 mb-3">
-                      <div
-                        className={`avatar ${persona?.type === "teacher" ? "sensei" : "yuki"} flex-shrink-0`}
-                      >
-                        <span className="font-japanese">
-                          {persona?.type === "teacher" ? "先" : "友"}
-                        </span>
+                      <div className="avatar flex-shrink-0">
+                        {persona?.avatarUrl ? (
+                          <img 
+                            src={persona.avatarUrl} 
+                            alt={persona.name} 
+                            className="w-full h-full object-cover rounded-full"
+                          />
+                        ) : (
+                          <span className="font-japanese">
+                            {persona?.type === "teacher" ? "先" : "友"}
+                          </span>
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-primary group-hover:text-blue-600 transition-colors">
+                        <h4 className="font-medium text-primary">
                           {persona?.name || "Unknown"}
                         </h4>
                         <p className="text-sm text-foreground">
@@ -477,11 +516,47 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="status-tag in-progress">In Progress</div>
-                      <div className="text-xs text-mutedForeground">
-                        {new Date(conversation.createdAt).toLocaleDateString()}
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="status-tag in-progress">
+                        {conversation.status === 'completed' ? 'Completed' : 'In Progress'}
                       </div>
+                      <div className="text-xs text-muted-foreground">
+                        {formatDate(conversation.startedAt || conversation.createdAt)}
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      {conversation.status === 'active' ? (
+                        <>
+                          <Button
+                            size="sm"
+                            onClick={() => setLocation(`/chat/${conversation.id}`)}
+                            className="flex-1"
+                          >
+                            Continue
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEndSessionDashboard(conversation.id);
+                            }}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            End
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setLocation(`/chat/${conversation.id}`)}
+                          className="flex-1"
+                        >
+                          View
+                        </Button>
+                      )}
                     </div>
                   </div>
                 );
@@ -528,7 +603,7 @@ export default function Dashboard() {
                       <span className="text-green-600 font-semibold">{vocabStats.userUsage}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">🤖 AI Encounters</span>
+                      <span className="text-sm text-muted-foreground">👨‍🏫 Tutor Encounters</span>
                       <span className="text-blue-600 font-semibold">{vocabStats.aiEncounter}</span>
                     </div>
                     <div className="grid grid-cols-5 gap-1 mt-3">

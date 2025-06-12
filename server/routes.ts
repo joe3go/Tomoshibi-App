@@ -12,6 +12,21 @@ import { insertUserSchema, insertConversationSchema, insertMessageSchema } from 
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
+// Configure multer for file uploads
+const storage_multer = multer.memoryStorage();
+const upload = multer({ 
+  storage: storage_multer,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only images are allowed.') as any, false);
+    }
+  }
+});
+
 interface AuthRequest extends Request {
   userId?: number;
 }
@@ -136,11 +151,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const updates = req.body;
+      
+      // If password is being updated, hash it
+      if (updates.password) {
+        updates.passwordHash = await bcrypt.hash(updates.password, 10);
+        delete updates.password;
+      }
+      
       const updatedUser = await storage.updateUser(userId, updates);
       res.json(updatedUser);
     } catch (error) {
       console.error('Update user error:', error);
       res.status(500).json({ message: 'Failed to update user' });
+    }
+  });
+
+  // Avatar upload endpoint
+  app.post('/api/upload/avatar', authenticateToken, upload.single('avatar'), async (req: AuthRequest, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+
+      // Convert buffer to base64 data URL
+      const base64Data = req.file.buffer.toString('base64');
+      const mimeType = req.file.mimetype;
+      const profileImageUrl = `data:${mimeType};base64,${base64Data}`;
+
+      // Update user with new profile image
+      await storage.updateUser(req.userId!, { profileImageUrl });
+
+      res.json({ profileImageUrl });
+    } catch (error) {
+      console.error('Avatar upload error:', error);
+      res.status(500).json({ message: 'Failed to upload avatar' });
     }
   });
 
