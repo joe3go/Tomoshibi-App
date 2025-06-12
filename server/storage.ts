@@ -201,32 +201,32 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Vocabulary operations
-  async getAllVocab(): Promise<JlptVocab[]> {
-    return await db.select().from(jlptVocab);
+  async getAllVocabularyWords(): Promise<JlptVocabularyWord[]> {
+    return await db.select().from(jlptVocabulary);
   }
 
-  async getVocabByIds(ids: number[]): Promise<JlptVocab[]> {
+  async getVocabularyWordsByIds(ids: number[]): Promise<JlptVocabularyWord[]> {
     if (ids.length === 0) return [];
-    return await db.select().from(jlptVocab).where(
+    return await db.select().from(jlptVocabulary).where(
       // Use proper SQL IN operator
-      eq(jlptVocab.id, ids[0]) // Simplified for now, would need proper IN implementation
+      eq(jlptVocabulary.id, ids[0]) // Simplified for now, would need proper IN implementation
     );
   }
 
-  async searchVocab(query: string): Promise<JlptVocab[]> {
+  async searchVocabularyWords(query: string): Promise<JlptVocabularyWord[]> {
     // Simplified search - in real implementation would use proper text search
-    return await db.select().from(jlptVocab);
+    return await db.select().from(jlptVocabulary);
   }
 
   // Grammar operations
-  async getAllGrammar(): Promise<JlptGrammar[]> {
-    return await db.select().from(jlptGrammar);
+  async getAllGrammarPatterns(): Promise<JlptGrammarPattern[]> {
+    return await db.select().from(jlptGrammarPatterns);
   }
 
-  async getGrammarByIds(ids: number[]): Promise<JlptGrammar[]> {
+  async getGrammarPatternsByIds(ids: number[]): Promise<JlptGrammarPattern[]> {
     if (ids.length === 0) return [];
-    return await db.select().from(jlptGrammar).where(
-      eq(jlptGrammar.id, ids[0]) // Simplified for now
+    return await db.select().from(jlptGrammarPatterns).where(
+      eq(jlptGrammarPatterns.id, ids[0]) // Simplified for now
     );
   }
 
@@ -290,7 +290,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getUserVocabTracker(userId: number): Promise<(VocabTracker & { word: JlptVocab })[]> {
+  async getUserVocabTracker(userId: number): Promise<(VocabTracker & { word: JlptVocabularyWord })[]> {
     const result = await db
       .select({
         id: vocabTracker.id,
@@ -303,10 +303,10 @@ export class DatabaseStorage implements IStorage {
         memoryStrength: vocabTracker.memoryStrength,
         nextReviewAt: vocabTracker.nextReviewAt,
         source: vocabTracker.source,
-        word: jlptVocab,
+        word: jlptVocabulary,
       })
       .from(vocabTracker)
-      .innerJoin(jlptVocab, eq(vocabTracker.wordId, jlptVocab.id))
+      .innerJoin(jlptVocabulary, eq(vocabTracker.wordId, jlptVocabulary.id))
       .where(eq(vocabTracker.userId, userId))
       .orderBy(desc(vocabTracker.frequency));
     return result;

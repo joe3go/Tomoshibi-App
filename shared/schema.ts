@@ -39,7 +39,7 @@ export const personas = pgTable("personas", {
 });
 
 // JLPT vocabulary reference table
-export const jlptVocabulary = pgTable("jlpt_vocab", {
+export const jlptVocab = pgTable("jlpt_vocab", {
   id: serial("id").primaryKey(),
   kanji: varchar("kanji", { length: 50 }),
   hiragana: varchar("hiragana", { length: 100 }).notNull(),
@@ -51,7 +51,7 @@ export const jlptVocabulary = pgTable("jlpt_vocab", {
 });
 
 // JLPT grammar patterns reference table
-export const jlptGrammarPatterns = pgTable("jlpt_grammar", {
+export const jlptGrammar = pgTable("jlpt_grammar", {
   id: serial("id").primaryKey(),
   pattern: varchar("pattern", { length: 100 }).notNull(),
   englishExplanation: text("english_explanation").notNull(),
@@ -116,7 +116,7 @@ export const userProgress = pgTable("user_progress", {
 export const vocabTracker = pgTable("vocab_tracker", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
-  wordId: integer("word_id").references(() => jlptVocabulary.id).notNull(),
+  wordId: integer("word_id").references(() => jlptVocab.id).notNull(),
   frequency: integer("frequency").default(0),
   userUsageCount: integer("user_usage_count").default(0),
   aiEncounterCount: integer("ai_encounter_count").default(0),
@@ -160,12 +160,12 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
   timestamp: true,
 });
 
-export const insertVocabularySchema = createInsertSchema(jlptVocabulary).omit({
+export const insertVocabSchema = createInsertSchema(jlptVocab).omit({
   id: true,
   createdAt: true,
 });
 
-export const insertGrammarPatternSchema = createInsertSchema(jlptGrammarPatterns).omit({
+export const insertGrammarSchema = createInsertSchema(jlptGrammar).omit({
   id: true,
   createdAt: true,
 });
@@ -190,10 +190,10 @@ export type Conversation = typeof conversations.$inferSelect;
 export type InsertConversation = z.infer<typeof insertConversationSchema>;
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
-export type JlptVocabularyWord = typeof jlptVocabulary.$inferSelect;
-export type InsertJlptVocabulary = z.infer<typeof insertVocabularySchema>;
-export type JlptGrammarPattern = typeof jlptGrammarPatterns.$inferSelect;
-export type InsertJlptGrammarPattern = z.infer<typeof insertGrammarPatternSchema>;
+export type JlptVocab = typeof jlptVocab.$inferSelect;
+export type InsertJlptVocab = z.infer<typeof insertVocabSchema>;
+export type JlptGrammar = typeof jlptGrammar.$inferSelect;
+export type InsertJlptGrammar = z.infer<typeof insertGrammarSchema>;
 export type UserProgress = typeof userProgress.$inferSelect;
 export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;
 export type VocabTracker = typeof vocabTracker.$inferSelect;
