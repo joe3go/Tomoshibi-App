@@ -298,7 +298,7 @@ export default function Settings() {
                 <div className="space-y-2">
                   <Label>Preferred Difficulty</Label>
                   <Select
-                    defaultValue={userAccountSettings?.preferredDifficulty || 'adaptive'}
+                    defaultValue={userSettings?.preferredDifficulty || 'adaptive'}
                     onValueChange={(value) => handleProfileUpdate('preferredDifficulty', value)}
                   >
                     <SelectTrigger>
@@ -324,19 +324,19 @@ export default function Settings() {
               <CardContent className="space-y-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-primary">
-                    {userLearningProgress?.totalConversations || 0}
+                    {progress?.totalConversations || 0}
                   </div>
                   <p className="text-sm text-muted-foreground">Conversations</p>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">
-                    {userLearningProgress?.vocabEncountered?.length || 0}
+                    {progress?.vocabEncountered?.length || 0}
                   </div>
                   <p className="text-sm text-muted-foreground">Vocabulary Encountered</p>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-blue-600">
-                    {userLearningProgress?.vocabMastered?.length || 0}
+                    {progress?.vocabMastered?.length || 0}
                   </div>
                   <p className="text-sm text-muted-foreground">Words Mastered</p>
                 </div>
