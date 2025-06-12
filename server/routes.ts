@@ -125,6 +125,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch('/api/users/:id', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId) || userId !== req.userId) {
+        return res.status(403).json({ message: 'Unauthorized' });
+      }
+      
+      const updates = req.body;
+      const updatedUser = await storage.updateUser(userId, updates);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error('Update user error:', error);
+      res.status(500).json({ message: 'Failed to update user' });
+    }
+  });
+
   // Persona routes
   app.get('/api/personas', authenticateToken, async (req, res) => {
     try {
@@ -199,18 +215,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/conversations', authenticateToken, async (req: AuthRequest, res) => {
-    try {
-      const conversations = await storage.getUserConversations(req.userId!);
-      // Filter out completed conversations for the main dashboard
-      const activeConversations = conversations.filter(c => c.status !== 'completed');
-      res.json(activeConversations);
-    } catch (error) {
-      console.error('Get user conversations error:', error);
-      res.status(500).json({ message: 'Failed to get conversations' });
-    }
-  });
-
   app.get('/api/conversations/completed', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const conversations = await storage.getUserConversations(req.userId!);
@@ -220,6 +224,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Get completed conversations error:', error);
       res.status(500).json({ message: 'Failed to get completed conversations' });
+    }
+  });
+
+  app.get('/api/conversations', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const conversations = await storage.getUserConversations(req.userId!);
+      // Filter out completed conversations for the main dashboard
+      const activeConversations = conversations.filter(c => c.status !== 'completed');
+      res.json(activeConversations);
+    } catch (error) {
+      console.error('Get user conversations error:', error);
+      res.status(500).json({ message: 'Failed to get conversations' });
     }
   });
 

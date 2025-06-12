@@ -96,10 +96,17 @@ export default function Dashboard() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (updates: { displayName: string }) => {
-      return apiRequest(`/api/users/${(user as any)?.id}`, {
+      const response = await fetch(`/api/users/${(user as any)?.id}`, {
         method: 'PATCH',
-        body: updates
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(updates)
       });
+      
+      if (!response.ok) throw new Error('Failed to update profile');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
@@ -138,7 +145,7 @@ export default function Dashboard() {
               <h2 className="font-semibold text-primary">
                 {(user as any)?.displayName || "User"}
               </h2>
-              <p className="text-sm text-foreground">JLPT N5 Learner</p>
+              <p className="text-sm text-foreground">{getProgressionLabel()}</p>
             </div>
           </div>
 
@@ -146,18 +153,73 @@ export default function Dashboard() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setLocation("/transcripts")}
-              className="text-foreground hover:text-primary"
+              onClick={() => setLocation("/vocabulary")}
+              className="text-foreground hover:text-primary flex items-center gap-2"
             >
-              View Transcripts
+              <BookOpen className="w-4 h-4" />
+              Vocabulary
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="p-2 text-foreground hover:text-primary"
+              onClick={() => setLocation("/history")}
+              className="text-foreground hover:text-primary flex items-center gap-2"
             >
-              <Settings className="w-5 h-5" />
+              <History className="w-4 h-4" />
+              History
             </Button>
+            <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="p-2 text-foreground hover:text-primary"
+                >
+                  <Settings className="w-5 h-5" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Account Settings</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="displayName" className="text-right">
+                      Display Name
+                    </Label>
+                    <Input
+                      id="displayName"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      className="col-span-3"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">Email</Label>
+                    <div className="col-span-3 text-sm text-muted-foreground">
+                      {(user as any)?.email}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">Progress</Label>
+                    <div className="col-span-3 text-sm text-muted-foreground">
+                      {getProgressionLabel()}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setSettingsOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={() => updateProfileMutation.mutate({ displayName })}
+                    disabled={updateProfileMutation.isPending}
+                  >
+                    {updateProfileMutation.isPending ? "Saving..." : "Save"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
             <Button
               variant="ghost"
               size="sm"
