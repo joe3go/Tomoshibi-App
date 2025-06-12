@@ -11,7 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import harukiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
 import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
 
-interface VocabTrackerEntry {
+interface VocabularyTrackerEntry {
   id: number;
   userId: number;
   wordId: number;
@@ -32,9 +32,9 @@ interface VocabTrackerEntry {
   };
 }
 
-interface VocabStats {
-  total: number;
-  byLevel: Record<string, number>;
+interface VocabularyStatistics {
+  totalWords: number;
+  wordsByLevel: Record<string, number>;
 }
 
 const JLPT_LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'];
@@ -51,11 +51,11 @@ export default function VocabTracker() {
   const [sortBy, setSortBy] = useState<string>('frequency');
   const [activeTab, setActiveTab] = useState<string>('all');
 
-  const { data: vocabData = [], isLoading } = useQuery<VocabTrackerEntry[]>({
+  const { data: vocabularyData = [], isLoading } = useQuery<VocabularyTrackerEntry[]>({
     queryKey: ['/api/vocab-tracker'],
   });
 
-  const { data: allVocab = [] } = useQuery({
+  const { data: allVocabularyWords = [] } = useQuery({
     queryKey: ['/api/vocab'],
   });
 
@@ -70,43 +70,43 @@ export default function VocabTracker() {
     );
   }
 
-  // Calculate statistics
-  const stats: VocabStats = (vocabData as VocabTrackerEntry[]).reduce((acc: VocabStats, entry: VocabTrackerEntry) => {
-    acc.total += 1;
-    const level = entry.word.jlptLevel;
-    acc.byLevel[level] = (acc.byLevel[level] || 0) + 1;
-    return acc;
-  }, { total: 0, byLevel: {} });
+  // Calculate comprehensive vocabulary statistics
+  const vocabularyStatistics: VocabularyStatistics = (vocabularyData as VocabularyTrackerEntry[]).reduce((accumulator: VocabularyStatistics, vocabularyEntry: VocabularyTrackerEntry) => {
+    accumulator.totalWords += 1;
+    const jlptLevel = vocabularyEntry.word.jlptLevel;
+    accumulator.wordsByLevel[jlptLevel] = (accumulator.wordsByLevel[jlptLevel] || 0) + 1;
+    return accumulator;
+  }, { totalWords: 0, wordsByLevel: {} });
 
-  // Filter and sort data
-  const filteredData = (vocabData as VocabTrackerEntry[])
-    .filter((entry: VocabTrackerEntry) => {
-      const levelMatch = selectedLevel === 'all' || entry.word.jlptLevel === selectedLevel;
-      const tabMatch = activeTab === 'all' || 
-        (activeTab === 'user' && (entry.userUsageCount || 0) > 0) ||
-        (activeTab === 'ai' && (entry.aiEncounterCount || 0) > 0);
-      return levelMatch && tabMatch;
+  // Filter and sort vocabulary data based on user preferences
+  const filteredVocabularyData = (vocabularyData as VocabularyTrackerEntry[])
+    .filter((vocabularyEntry: VocabularyTrackerEntry) => {
+      const isLevelMatch = selectedLevel === 'all' || vocabularyEntry.word.jlptLevel === selectedLevel;
+      const isTabMatch = activeTab === 'all' || 
+        (activeTab === 'user' && (vocabularyEntry.userUsageCount || 0) > 0) ||
+        (activeTab === 'ai' && (vocabularyEntry.aiEncounterCount || 0) > 0);
+      return isLevelMatch && isTabMatch;
     })
-    .sort((a: VocabTrackerEntry, b: VocabTrackerEntry) => {
+    .sort((firstEntry: VocabularyTrackerEntry, secondEntry: VocabularyTrackerEntry) => {
       switch (sortBy) {
         case 'frequency':
-          return (b.frequency || 0) - (a.frequency || 0);
+          return (secondEntry.frequency || 0) - (firstEntry.frequency || 0);
         case 'user-usage':
-          return (b.userUsageCount || 0) - (a.userUsageCount || 0);
+          return (secondEntry.userUsageCount || 0) - (firstEntry.userUsageCount || 0);
         case 'ai-encounters':
-          return (b.aiEncounterCount || 0) - (a.aiEncounterCount || 0);
+          return (secondEntry.aiEncounterCount || 0) - (firstEntry.aiEncounterCount || 0);
         case 'recent':
-          return new Date(b.lastSeenAt || 0).getTime() - new Date(a.lastSeenAt || 0).getTime();
+          return new Date(secondEntry.lastSeenAt || 0).getTime() - new Date(firstEntry.lastSeenAt || 0).getTime();
         case 'alphabetical':
-          return (a.word.hiragana || '').localeCompare(b.word.hiragana || '');
+          return (firstEntry.word.hiragana || '').localeCompare(secondEntry.word.hiragana || '');
         default:
           return 0;
       }
     });
 
-  // Calculate split statistics
-  const userVocabCount = vocabData.filter(entry => (entry.userUsageCount || 0) > 0).length;
-  const aiVocabCount = vocabData.filter(entry => (entry.aiEncounterCount || 0) > 0).length;
+  // Calculate user and AI interaction statistics
+  const userVocabularyCount = vocabularyData.filter((vocabularyEntry: VocabularyTrackerEntry) => (vocabularyEntry.userUsageCount || 0) > 0).length;
+  const aiVocabularyCount = vocabularyData.filter((vocabularyEntry: VocabularyTrackerEntry) => (vocabularyEntry.aiEncounterCount || 0) > 0).length;
 
   const formatLastSeen = (dateString: string | null) => {
     if (!dateString) return 'Never';
@@ -160,7 +160,7 @@ export default function VocabTracker() {
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {JLPT_LEVELS.map(level => {
-          const encountered = stats.byLevel[level] || 0;
+          const encountered = vocabularyStatistics.wordsByLevel[level] || 0;
           const target = JLPT_TARGETS[level as keyof typeof JLPT_TARGETS];
           const percentage = Math.min((encountered / target) * 100, 100);
           
@@ -193,15 +193,15 @@ export default function VocabTracker() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm">Words You've Used</span>
-                <Badge variant="default">{userVocabCount} words</Badge>
+                <Badge variant="default">{userVocabularyCount} words</Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm">Words Encountered in Conversations</span>
-                <Badge variant="secondary">{aiVocabCount} words</Badge>
+                <Badge variant="secondary">{aiVocabularyCount} words</Badge>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">Total Unique Vocabulary</span>
-                <Badge variant="outline">{stats.total} words</Badge>
+                <Badge variant="outline">{vocabularyStatistics.totalWords} words</Badge>
               </div>
             </div>
           </CardContent>
@@ -214,7 +214,7 @@ export default function VocabTracker() {
           <CardContent>
             <div className="space-y-3">
               {JLPT_LEVELS.map((level, index) => {
-                const levelWords = stats.byLevel[level] || 0;
+                const levelWords = vocabularyStatistics.wordsByLevel[level] || 0;
                 return (
                   <div key={`level-${level}-${index}`} className="flex justify-between items-center">
                     <span className="text-sm font-medium">{level}:</span>
@@ -225,7 +225,7 @@ export default function VocabTracker() {
               <div className="pt-2 border-t">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-semibold">Total:</span>
-                  <Badge variant="default">{stats.total} unique words</Badge>
+                  <Badge variant="default">{vocabularyStatistics.totalWords} unique words</Badge>
                 </div>
               </div>
             </div>
