@@ -239,7 +239,7 @@ export default function VocabTracker() {
           <CardTitle className="flex items-center gap-2">
             <BookOpen className="w-5 h-5" />
             Vocabulary Tracker
-            <Badge variant="secondary">{filteredData.length} words</Badge>
+            <Badge variant="secondary">{filteredVocabularyData.length} words</Badge>
           </CardTitle>
           <CardDescription>
             Track your Japanese vocabulary progress and usage patterns
@@ -248,12 +248,12 @@ export default function VocabTracker() {
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-6">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="all">All Words ({stats.total})</TabsTrigger>
-              <TabsTrigger value="user">Words You Used ({userVocabCount})</TabsTrigger>
-              <TabsTrigger value="ai">Words from Conversations ({aiVocabCount})</TabsTrigger>
+              <TabsTrigger value="all">All Words ({vocabularyStatistics.totalWords})</TabsTrigger>
+              <TabsTrigger value="user">Words You Used ({userVocabularyCount})</TabsTrigger>
+              <TabsTrigger value="ai">Words from Conversations ({aiVocabularyCount})</TabsTrigger>
             </TabsList>
           </Tabs>
-          {filteredData.length === 0 ? (
+          {filteredVocabularyData.length === 0 ? (
             <div className="text-center py-8">
               <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">
@@ -265,7 +265,7 @@ export default function VocabTracker() {
             </div>
           ) : (
             <div className="space-y-2">
-              {filteredData.map((entry: VocabTrackerEntry) => (
+              {filteredVocabularyData.map((entry: VocabularyTrackerEntry) => (
                 <div 
                   key={entry.id} 
                   className="flex items-center justify-between p-3 rounded-lg border bg-card/50 hover:bg-card transition-colors"

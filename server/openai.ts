@@ -246,8 +246,8 @@ export async function detectAndTranslateEnglish(message: string): Promise<{ orig
   // Create enhanced message with Japanese translations inline
   let enhancedMessage = message;
   translations.forEach(trans => {
-    const regex = new RegExp(`\\b${trans.english}\\b`, 'gi');
-    enhancedMessage = enhancedMessage.replace(regex, `${trans.english} (${trans.japanese})`);
+    const regex = new RegExp(`\\b${trans.translation}\\b`, 'gi');
+    enhancedMessage = enhancedMessage.replace(regex, `${trans.translation} (${trans.japanese})`);
   });
 
   return {
