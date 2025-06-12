@@ -10,6 +10,7 @@ const themeVariables = {
     primary: "hsl(350, 65%, 45%)", // 🎨 EDIT: Primary button/accent color
     secondary: "hsl(0, 0%, 100%)", // 🎨 EDIT: Secondary color (White)
     muted: "hsl(35, 20%, 90%)", // 🎨 EDIT: Muted backgrounds
+    mutedForeground: "hsl(25, 15%, 55%)", // 🎨 EDIT: Muted text color
     accent: "hsl(15, 25%, 85%)", // 🎨 EDIT: Accent color
     destructive: "hsl(0, 75%, 55%)", // 🎨 EDIT: Error/destructive color
     border: "hsl(25, 15%, 75%)", // 🎨 EDIT: Border color
@@ -86,7 +87,7 @@ export default {
         },
         muted: {
           DEFAULT: themeVariables.colors.muted,
-          foreground: themeVariables.colors.muted,
+          foreground: themeVariables.colors.mutedForeground,
         },
         destructive: {
           DEFAULT: themeVariables.colors.destructive,
