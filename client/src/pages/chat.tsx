@@ -289,12 +289,12 @@ export default function Chat() {
                   target.style.display = "none";
                   target.parentElement!.innerHTML = `
                     <div class="w-full h-full flex items-center justify-center bg-gradient-to-br ${
-                      persona?.type === "teacher"
+                      conversationPersona?.type === "teacher"
                         ? "from-primary to-primary/60"
                         : "from-accent to-accent/60"
                     }">
                       <span class="text-lg text-foreground">
-                        ${persona?.type === "teacher" ? "👩‍🏫" : "🧑‍🎤"}
+                        ${conversationPersona?.type === "teacher" ? "👩‍🏫" : "🧑‍🎤"}
                       </span>
                     </div>
                   `;
@@ -303,10 +303,10 @@ export default function Chat() {
             </div>
             <div>
               <h3 className="font-semibold text-foreground">
-                {persona?.name || "AI"}
+                {conversationPersona?.name || "AI"}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {scenario?.title || "Conversation"}
+                {conversationScenario?.title || "Conversation"}
               </p>
             </div>
           </div>
@@ -358,8 +358,8 @@ export default function Chat() {
               {msg.sender === "ai" && (
                 <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
                   <img
-                    src={getAvatarImage(persona)}
-                    alt={persona?.name || "AI"}
+                    src={getPersonaAvatarImage(conversationPersona)}
+                    alt={conversationPersona?.name || "AI"}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       // Fallback to text avatar if image fails
@@ -367,12 +367,12 @@ export default function Chat() {
                       target.style.display = "none";
                       target.parentElement!.innerHTML = `
                         <div class="w-full h-full flex items-center justify-center bg-gradient-to-br ${
-                          persona?.type === "teacher"
+                          conversationPersona?.type === "teacher"
                             ? "from-primary to-primary/60"
                             : "from-accent to-accent/60"
                         }">
                           <span class="text-sm font-japanese text-foreground">
-                            ${persona?.type === "teacher" ? "先" : "友"}
+                            ${conversationPersona?.type === "teacher" ? "先" : "友"}
                           </span>
                         </div>
                       `;
@@ -395,7 +395,7 @@ export default function Chat() {
                 >
                   <EnhancedFuriganaText
                     text={msg.content}
-                    showFurigana={showFurigana}
+                    showFurigana={isFuriganaVisible}
                     showToggleButton={false}
                     enableWordHover={msg.sender === "ai"}
                     className="text-inherit"
@@ -424,8 +424,8 @@ export default function Chat() {
             <div className="flex items-start space-x-3">
               <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
                 <img
-                  src={getAvatarImage(persona)}
-                  alt={persona?.name || "AI"}
+                  src={getPersonaAvatarImage(conversationPersona)}
+                  alt={conversationPersona?.name || "AI"}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     // Fallback to emoji if image fails
@@ -433,12 +433,12 @@ export default function Chat() {
                     target.style.display = "none";
                     target.parentElement!.innerHTML = `
                       <div class="w-full h-full flex items-center justify-center bg-gradient-to-br ${
-                        persona?.type === "teacher"
+                        conversationPersona?.type === "teacher"
                           ? "from-primary to-primary/60"
                           : "from-accent to-accent/60"
                       }">
                         <span class="text-sm text-foreground">
-                          ${persona?.type === "teacher" ? "👩‍🏫" : "🧑‍🎤"}
+                          ${conversationPersona?.type === "teacher" ? "👩‍🏫" : "🧑‍🎤"}
                         </span>
                       </div>
                     `;
@@ -465,7 +465,7 @@ export default function Chat() {
               </div>
             </div>
           )}
-          <div ref={messagesEndRef} />
+          <div ref={conversationMessagesEndReference} />
         </div>
       </div>
 

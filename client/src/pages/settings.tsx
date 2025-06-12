@@ -48,17 +48,17 @@ export default function Settings() {
     window.location.href = '/login';
   };
 
-  const { data: userSettings, isLoading } = useQuery<UserSettings>({
+  const { data: userAccountSettings, isLoading: isLoadingUserSettings } = useQuery<User>({
     queryKey: ['/api/auth/me'],
   });
 
-  const { data: progress } = useQuery<UserProgress>({
+  const { data: userLearningProgress } = useQuery<UserProgress>({
     queryKey: ['/api/progress'],
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: async (updates: Partial<UserSettings>) => {
-      const response = await apiRequest('PATCH', `/api/users/${userSettings?.id}`, updates);
+    mutationFn: async (updates: Partial<User>) => {
+      const response = await apiRequest('PATCH', `/api/users/${userAccountSettings?.id}`, updates);
       return response.json();
     },
     onSuccess: () => {
@@ -120,11 +120,11 @@ export default function Settings() {
     }
   };
 
-  const handleProfileUpdate = (field: keyof UserSettings, value: string) => {
+  const handleProfileUpdate = (field: keyof User, value: string) => {
     updateProfileMutation.mutate({ [field]: value });
   };
 
-  if (isLoading) {
+  if (isLoadingUserSettings) {
     return (
       <div className="min-h-screen bg-background p-6">
         <div className="max-w-4xl mx-auto">
