@@ -17,6 +17,14 @@ import EnhancedFuriganaText from "@/components/enhanced-furigana-text";
 import harukiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
 import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
 
+// Placeholder translation function (replace with actual API call)
+async function translateEnglishToJapanese(text: string): Promise<string> {
+  // Simulate an API call with a delay
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  // Basic translation logic (replace with real translation)
+  return `(Translated) ${text}`;
+}
+
 export default function Chat() {
   const [, params] = useRoute("/chat/:conversationId");
   const [, setLocation] = useLocation();
@@ -66,12 +74,18 @@ export default function Chat() {
         }),
       );
 
+      // Check if the message contains English, if so, translate it
+      let translatedContent = content;
+      if (/[a-zA-Z]/.test(content)) {
+        translatedContent = await translateEnglishToJapanese(content);
+      }
+
       // Send to server
       const response = await apiRequest(
         "POST",
         `/api/conversations/${conversationId}/messages`,
         {
-          content,
+          content: translatedContent, // Send translated content for processing
         },
       );
       return await response.json();
@@ -96,7 +110,7 @@ export default function Chat() {
           messages: oldData?.messages?.slice(0, -1) || [],
         }),
       );
-      
+
       toast({
         title: "Failed to send message",
         description: error.message,
@@ -122,7 +136,7 @@ export default function Chat() {
       queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
       queryClient.invalidateQueries({ queryKey: ["/api/conversations/completed"] });
       queryClient.invalidateQueries({ queryKey: [`/api/conversations/${conversationId}`] });
-      
+
       toast({
         title: "Conversation completed!",
         description:
