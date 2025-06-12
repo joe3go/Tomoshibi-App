@@ -45,10 +45,10 @@ export default function Dashboard() {
     queryKey: ['/api/vocab-tracker'],
   });
 
-  // Fetch completed conversations for history
-  const { data: completedConversations = [] } = useQuery({
-    queryKey: ['/api/conversations/completed'],
-  });
+  // Calculate completion data from existing conversations
+  const completedConversations = Array.isArray(conversations) 
+    ? conversations.filter((c: any) => c.status === 'completed')
+    : [];
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
@@ -232,62 +232,47 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {/* Start New Conversation */}
-        <div className="mb-8 text-center">
-          <div className="content-card max-w-md mx-auto">
-            <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-2xl flex items-center justify-center">
-              <MessageCircle className="w-8 h-8 text-blue-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-primary mb-2">
-              Ready to Practice?
-            </h3>
-            <p className="text-foreground mb-6">
-              Choose your tutor and start a new conversation to improve your
-              Japanese skills.
-            </p>
-
-            <div className="space-y-3">
+        {/* Compact Practice Section */}
+        <div className="mb-6">
+          <div className="content-card">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                  <MessageCircle className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-primary">Ready to Practice?</h3>
+                  <p className="text-sm text-muted-foreground">Start a new conversation</p>
+                </div>
+              </div>
               <Button
                 onClick={() => setLocation("/tutor-selection")}
-                className="btn-primary w-full"
+                className="btn-primary"
               >
-                Start New Conversation
+                Start Learning
               </Button>
-              <div className="grid grid-cols-3 gap-2">
-                <Button
-                  onClick={() => setLocation("/vocabulary")}
-                  variant="outline"
-                  className="w-full text-xs"
-                >
-                  Vocabulary
-                </Button>
-                <Button
-                  onClick={() => setLocation("/history")}
-                  variant="outline"
-                  className="w-full text-xs"
-                >
-                  History
-                </Button>
-                <Button
-                  onClick={() => setLocation("/furigana-demo")}
-                  variant="outline"
-                  className="w-full text-xs"
-                >
-                  Demo
-                </Button>
-              </div>
             </div>
           </div>
         </div>
 
         {/* Continue Conversations Section */}
         {Array.isArray(conversations) && conversations.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold mb-4 text-primary">
-              Continue Learning
-            </h3>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {conversations.slice(0, 6).map((conversation: any) => {
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-primary">
+                Continue Learning
+              </h3>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setLocation("/history")}
+                className="text-muted-foreground hover:text-primary"
+              >
+                See more
+              </Button>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              {conversations.slice(0, 3).map((conversation: any) => {
                 const persona = Array.isArray(personas)
                   ? personas.find((p: any) => p.id === conversation.personaId)
                   : null;
@@ -332,74 +317,110 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Progress Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Analytics Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {/* Comprehensive Vocabulary Analytics */}
           <div className="content-card">
-            <div className="flex items-center space-x-3 mb-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <MessageCircle className="w-5 h-5 text-blue-600" />
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <BookOpen className="w-5 h-5 text-orange-600" />
+                </div>
+                <h3 className="font-semibold text-primary">Vocabulary Progress</h3>
               </div>
-              <h3 className="font-semibold text-primary">Conversations</h3>
+              <Button variant="ghost" size="sm" onClick={() => setLocation("/vocabulary")}>
+                <TrendingUp className="w-4 h-4" />
+              </Button>
             </div>
-            <div className="text-2xl font-bold text-primary mb-1">
-              {Array.isArray(conversations) ? conversations.length : 0}
-            </div>
-            <p className="text-sm text-foreground mb-3">Total completed</p>
+            
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Total Words</span>
+                <span className="font-semibold">{(vocabData as any[]).length}</span>
+              </div>
+              
+              {(() => {
+                const vocabStats = (vocabData as any[]).reduce((acc: any, entry: any) => {
+                  const level = entry.word?.jlptLevel || 'N5';
+                  acc[level] = (acc[level] || 0) + 1;
+                  acc.userUsage += entry.userUsageCount || 0;
+                  acc.aiEncounter += entry.aiEncounterCount || 0;
+                  return acc;
+                }, { N5: 0, N4: 0, N3: 0, N2: 0, N1: 0, userUsage: 0, aiEncounter: 0 });
 
-            <div className="progress-bar">
-              <div
-                className="progress-fill"
-                style={{
-                  width: `${Math.min(100, (Array.isArray(conversations) ? conversations.length : 0) * 10)}%`,
-                }}
-              ></div>
+                return (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">👤 Your Usage</span>
+                      <span className="text-green-600 font-semibold">{vocabStats.userUsage}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">🤖 AI Encounters</span>
+                      <span className="text-blue-600 font-semibold">{vocabStats.aiEncounter}</span>
+                    </div>
+                    <div className="grid grid-cols-5 gap-1 mt-3">
+                      {['N5', 'N4', 'N3', 'N2', 'N1'].map(level => (
+                        <div key={level} className="text-center">
+                          <div className="text-xs text-muted-foreground">{level}</div>
+                          <div className="text-sm font-semibold">{vocabStats[level]}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
 
+          {/* Growth & Development Tracker */}
           <div className="content-card">
-            <div className="flex items-center space-x-3 mb-3">
-              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                <span className="text-orange-600 font-japanese text-lg">
-                  語
-                </span>
-              </div>
-              <h3 className="font-semibold text-primary">Vocabulary</h3>
-            </div>
-            <div className="text-2xl font-bold text-primary mb-1">
-              {(progress as any)?.vocabEncountered?.length || 0}
-            </div>
-            <p className="text-sm text-foreground mb-3">Words learned</p>
-
-            <div className="progress-bar">
-              <div
-                className="progress-fill orange"
-                style={{
-                  width: `${Math.min(100, ((progress as any)?.vocabEncountered?.length || 0) * 2)}%`,
-                }}
-              ></div>
-            </div>
-          </div>
-
-          <div className="content-card">
-            <div className="flex items-center space-x-3 mb-3">
+            <div className="flex items-center space-x-3 mb-4">
               <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-green-600" />
+                <Award className="w-5 h-5 text-green-600" />
               </div>
-              <h3 className="font-semibold text-primary">Scenarios</h3>
+              <h3 className="font-semibold text-primary">Learning Journey</h3>
             </div>
-            <div className="text-2xl font-bold text-primary mb-1">
-              {Array.isArray(scenarios) ? scenarios.length : 0}/10
-            </div>
-            <p className="text-sm text-foreground mb-3">Available</p>
-
-            <div className="progress-bar">
-              <div
-                className="progress-fill"
-                style={{
-                  width: `${Math.min(100, (Array.isArray(scenarios) ? scenarios.length : 0) * 10)}%`,
-                  backgroundColor: "#10B981",
-                }}
-              ></div>
+            
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Current Level</span>
+                <Badge variant="secondary">{getProgressionLabel()}</Badge>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Active Sessions</span>
+                <span className="font-semibold">{Array.isArray(conversations) ? conversations.length : 0}</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Study Streak</span>
+                <span className="font-semibold">🔥 7 days</span>
+              </div>
+              
+              {(() => {
+                const totalInteractions = (vocabData as any[]).length + (Array.isArray(conversations) ? conversations.length : 0);
+                const nextMilestone = totalInteractions >= 100 ? 150 : 
+                                    totalInteractions >= 75 ? 100 :
+                                    totalInteractions >= 50 ? 75 :
+                                    totalInteractions >= 25 ? 50 :
+                                    totalInteractions >= 10 ? 25 : 10;
+                const progress = (totalInteractions / nextMilestone) * 100;
+                
+                return (
+                  <div className="mt-3">
+                    <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                      <span>Progress to next level</span>
+                      <span>{totalInteractions}/{nextMilestone}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-green-600 h-2 rounded-full" 
+                        style={{ width: `${Math.min(100, progress)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>

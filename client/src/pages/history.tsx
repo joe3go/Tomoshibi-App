@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -310,20 +310,32 @@ export default function History() {
 
                               <div className="flex gap-2 ml-4">
                                 {conversation.status === 'active' && (
+                                  <>
+                                    <Button
+                                      onClick={() => setLocation(`/chat/${conversation.id}`)}
+                                      size="sm"
+                                    >
+                                      Continue
+                                    </Button>
+                                    <Button
+                                      onClick={() => handleEndSession(conversation.id)}
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-red-600 hover:text-red-700"
+                                    >
+                                      End Session
+                                    </Button>
+                                  </>
+                                )}
+                                {conversation.status === 'completed' && (
                                   <Button
                                     onClick={() => setLocation(`/chat/${conversation.id}`)}
+                                    variant="outline"
                                     size="sm"
                                   >
-                                    Continue
+                                    View
                                   </Button>
                                 )}
-                                <Button
-                                  onClick={() => setLocation(`/chat/${conversation.id}`)}
-                                  variant="outline"
-                                  size="sm"
-                                >
-                                  View
-                                </Button>
                               </div>
                             </div>
                           </CardContent>
