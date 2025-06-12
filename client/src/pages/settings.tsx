@@ -221,7 +221,7 @@ export default function Settings() {
             <div>
               <Label className="text-off-white/90">Email</Label>
               <Input
-                value={user?.email || ""}
+                value={(user as any)?.email || ""}
                 disabled
                 className="bg-muted/30 border-border text-muted-foreground"
               />

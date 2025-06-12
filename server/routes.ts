@@ -40,13 +40,14 @@ const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) 
     return res.status(401).json({ message: 'Access token required' });
   }
 
-  jwt.verify(token, JWT_SECRET, (err: any, decoded: any) => {
-    if (err) {
-      return res.status(403).json({ message: 'Invalid or expired token' });
-    }
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
     req.userId = decoded.userId;
     next();
-  });
+  } catch (err) {
+    console.error('JWT verification error:', err);
+    return res.status(403).json({ message: 'Invalid or expired token' });
+  }
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {

@@ -18,7 +18,7 @@ export const users = pgTable("users", {
   email: varchar("email", { length: 255 }).unique().notNull(),
   passwordHash: varchar("password_hash", { length: 255 }).notNull(),
   displayName: varchar("display_name", { length: 100 }),
-  profileImageUrl: varchar("profile_image_url", { length: 500 }),
+  profileImageUrl: text("profile_image_url"),
   preferredKanjiDisplay: varchar("preferred_kanji_display", { length: 20 }).default("furigana"),
   soundNotifications: boolean("sound_notifications").default(true),
   desktopNotifications: boolean("desktop_notifications").default(true),
