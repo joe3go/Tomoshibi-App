@@ -20,14 +20,14 @@ interface ParsedText {
 
 let hoverTimeout: NodeJS.Timeout | null = null;
 
-const EnhancedFuriganaText: React.FC<FuriganaTextProps> = React.memo(({
+export default function EnhancedFuriganaText({
   text,
   className = "",
   showToggleButton = true,
   showFurigana: externalShowFurigana,
   onToggleFurigana,
   enableWordHover = true,
-}) => {
+}: FuriganaTextProps) {
   const [internalShowFurigana, setInternalShowFurigana] = useState(true);
   const [hoveredWord, setHoveredWord] = useState<string | null>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
