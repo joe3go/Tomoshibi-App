@@ -26,7 +26,7 @@
 
     /* Muted Colors */
     --muted: hsl(35, 20%, 90%);
-    --muted-foreground: hsl(0, 0%, 35%);
+    --muted-foreground: hsl(0, 28%, 25%);
 
     /* Accent Colors */
     --accent: hsl(15, 25%, 85%);
