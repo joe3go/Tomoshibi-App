@@ -1,0 +1,28 @@
+1. User Authentication & Routing (High Priority)
+1.1. Logout Leads to 404 Page:
+Problem: When a user attempts to log out of the application, they are redirected to a "404 Page Not Found" error.
+Action Required:
+Routing Fix: Investigate and correct the logout routing logic.
+Expected Behavior: Upon successful logout, the user should be redirected to the application's login page, home page, or a dedicated logout success page, not a 404 error.
+2. Chat Session Management & Display (High Priority)
+2.1. Session Completion Status & History Accuracy:
+Problem: While sessions may now be appearing correctly in their respective "Active" or "Completed" lists, the counts displayed for "Active" and "Completed" conversations are inaccurate (e.g., showing "4 active" when only 1 is active).
+Action Required:
+Backend/Frontend Logic: Review and fix the logic responsible for calculating and displaying the total counts for "Active" and "Completed" sessions. Ensure these numbers accurately reflect the actual number of conversations in each status.
+Related Note: Re-verify that sessions correctly transition from "Active" to "Completed" status in the backend upon ending, and that the UI reflects this change by removing them from the active list and adding them to the completed list. (This was a previous issue; confirm its full resolution in conjunction with the count fix).
+3. Vocabulary Tracking & Data Sync (High Priority)
+3.1. Vocabulary Progress Data Inconsistency:
+Problem: The vocabulary learned/introduced within chat conversations does not seem to be accurately syncing or appearing in the "Vocabulary Progress" section.
+Action Required:
+Transcript Parsing / Data Extraction: Investigate the current mechanism (or lack thereof) for extracting vocabulary words from completed chat transcripts. It is highly probable that a transcript parsing capability needs to be developed or configured to effectively pull out and register these vocabulary words.
+Data Flow: Ensure a robust data pipeline exists to store and link vocabulary from conversations to the user's overall vocabulary progress.
+3.2. Comprehensive Vocabulary Display:
+Problem: The "Vocabulary Page" (and likely "Words from your Conversations" section within it) currently only displays words introduced by tutors.
+Action Required: Expand the vocabulary display to also include words unique to the user's input and learned vocabulary, in addition to the tutor-introduced words.
+3.3. Image Compression on Vocabulary Components:
+Problem: The images for Tutors and the User within the "Vocabulary Progress" component on the dashboard and the "Words from your Conversations" section on the Vocabulary page appear to be compressed or of low quality.
+Action Required: Ensure that these images are displayed in their original quality or with appropriate optimization that does not result in a noticeable loss of detail or excessive compression. Avoid applying aggressive compression algorithms to these specific image assets.
+4. UI & Styling Fixes
+4.1. Dashboard UI Cleanup:
+Problem: The "Quick Practice" card is present on the Dashboard.
+Action Required: Remove the "Quick Practice" card entirely from the Dashboard UI.

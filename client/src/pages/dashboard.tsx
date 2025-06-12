@@ -50,9 +50,9 @@ export default function Dashboard() {
     queryKey: ['/api/vocab-tracker'],
   });
 
-  // Filter conversations for different sections
+  // Filter conversations for different sections with proper status checking
   const activeConversations = Array.isArray(conversations) 
-    ? conversations.filter((c: any) => c.status !== 'completed')
+    ? conversations.filter((c: any) => c.status === 'active' || !c.status)
     : [];
   
   const completedConversations = Array.isArray(conversations) 
@@ -307,28 +307,7 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {/* Compact Practice Section */}
-        <div className="mb-6">
-          <div className="content-card">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <MessageCircle className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-primary">Ready to Practice?</h3>
-                  <p className="text-sm text-muted-foreground">Start a new conversation</p>
-                </div>
-              </div>
-              <Button
-                onClick={() => setLocation("/tutor-selection")}
-                className="btn-primary"
-              >
-                Start Learning
-              </Button>
-            </div>
-          </div>
-        </div>
+
 
         {/* Continue Conversations Section */}
         {activeConversations.length > 0 && (

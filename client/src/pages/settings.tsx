@@ -12,6 +12,7 @@ import { ArrowLeft, Upload, User, BookOpen, Settings as SettingsIcon } from 'luc
 import { useLocation } from 'wouter';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/useAuth';
+import { removeAuthToken } from '@/lib/auth';
 
 interface UserSettings {
   id: number;
@@ -40,6 +41,12 @@ export default function Settings() {
   const { toast } = useToast();
   const { user } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
+
+  const handleLogout = () => {
+    removeAuthToken();
+    queryClient.clear();
+    window.location.href = '/login';
+  };
 
   const { data: userSettings, isLoading } = useQuery<UserSettings>({
     queryKey: ['/api/auth/me'],
@@ -346,11 +353,15 @@ export default function Settings() {
                 <Button variant="outline" className="w-full" disabled>
                   Reset Progress
                 </Button>
-                <Button variant="destructive" className="w-full" disabled>
-                  Delete Account
+                <Button 
+                  variant="destructive" 
+                  className="w-full" 
+                  onClick={handleLogout}
+                >
+                  Logout
                 </Button>
                 <p className="text-xs text-muted-foreground text-center">
-                  Contact support for account management
+                  Sign out of your account
                 </p>
               </CardContent>
             </Card>

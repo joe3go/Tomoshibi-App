@@ -10,7 +10,7 @@ export default function Landing() {
       <nav className="navbar">
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
           <div className="flex items-center space-x-3">
-            <h1 className="text-2xl font-bold text-primary">Tomoshibi</h1>
+            <h1 className="text-2xl font-bold text-foreground">Tomoshibi</h1>
             <span className="text-lg font-japanese text-muted-foreground">灯火</span>
           </div>
           <Button
@@ -30,7 +30,7 @@ export default function Landing() {
             <div className="space-y-8 text-center lg:text-left">
               <div className="space-y-6">
                 <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-medium">
-                  JLPT N5 Focused Learning
+                  An Output Focused Platform
                 </div>
                 
                 <h1 className="text-4xl lg:text-6xl font-bold text-primary leading-tight">
@@ -38,7 +38,7 @@ export default function Landing() {
                   <span className="block text-primary font-japanese">会話を学ぼう</span>
                 </h1>
                 
-                <p className="text-xl text-secondary max-w-2xl leading-relaxed">
+                <p className="text-xl text-primary max-w-2xl leading-relaxed">
                   Practice authentic Japanese conversations with AI-powered tutors. 
                   Build confidence through interactive scenarios designed for JLPT N5 learners.
                 </p>
@@ -64,15 +64,15 @@ export default function Landing() {
 
               {/* Feature Highlights */}
               <div className="flex flex-wrap gap-6 justify-center lg:justify-start pt-4">
-                <div className="flex items-center space-x-2 text-secondary">
+                <div className="flex items-center space-x-2 text-foreground">
                   <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                   <span className="text-sm">AI-Powered Conversations</span>
                 </div>
-                <div className="flex items-center space-x-2 text-secondary">
+                <div className="flex items-center space-x-2 text-foreground">
                   <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
                   <span className="text-sm">Real-World Scenarios</span>
                 </div>
-                <div className="flex items-center space-x-2 text-secondary">
+                <div className="flex items-center space-x-2 text-foreground">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   <span className="text-sm">Progress Tracking</span>
                 </div>
@@ -151,7 +151,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-primary mb-4">Why Choose Tomoshibi?</h2>
-            <p className="text-xl text-secondary">Effective Japanese learning through interactive conversations</p>
+            <p className="text-xl text-foreground">Effective Japanese learning through interactive conversations</p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
@@ -160,7 +160,7 @@ export default function Landing() {
                 <span className="text-2xl">🎭</span>
               </div>
               <h3 className="text-xl font-semibold text-primary mb-3">AI Tutors</h3>
-              <p className="text-secondary">Learn with Haruki-sensei and Aoi-chan, each offering unique teaching approaches tailored to your learning style.</p>
+              <p className="text-foreground">Learn with Haruki-sensei and Aoi-chan, each offering unique teaching approaches tailored to your learning style.</p>
             </div>
             
             <div className="content-card text-center">
@@ -168,7 +168,7 @@ export default function Landing() {
                 <span className="text-2xl">💬</span>
               </div>
               <h3 className="text-xl font-semibold text-primary mb-3">Real Scenarios</h3>
-              <p className="text-secondary">Practice conversations for everyday situations like shopping, dining, and social interactions.</p>
+              <p className="text-foreground">Practice conversations for everyday situations like shopping, dining, and social interactions.</p>
             </div>
             
             <div className="content-card text-center">
@@ -176,7 +176,7 @@ export default function Landing() {
                 <span className="text-2xl">📊</span>
               </div>
               <h3 className="text-xl font-semibold text-primary mb-3">Track Progress</h3>
-              <p className="text-secondary">Monitor your vocabulary growth, conversation skills, and JLPT N5 preparation progress.</p>
+              <p className="text-foreground">Monitor your vocabulary growth, conversation skills, and JLPT N5 preparation progress.</p>
             </div>
           </div>
         </div>
@@ -188,19 +188,19 @@ export default function Landing() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div>
               <div className="text-3xl font-bold text-primary mb-2">1,000+</div>
-              <div className="text-secondary">Active Learners</div>
+              <div className="text-foreground">Active Learners</div>
             </div>
             <div>
               <div className="text-3xl font-bold text-primary mb-2">50+</div>
-              <div className="text-secondary">Scenarios</div>
+              <div className="text-foreground">Scenarios</div>
             </div>
             <div>
               <div className="text-3xl font-bold text-primary mb-2">500+</div>
-              <div className="text-secondary">Vocabulary Words</div>
+              <div className="text-foreground">Vocabulary Words</div>
             </div>
             <div>
               <div className="text-3xl font-bold text-primary mb-2">95%</div>
-              <div className="text-secondary">Success Rate</div>
+              <div className="text-foreground">Success Rate</div>
             </div>
           </div>
         </div>
@@ -210,7 +210,7 @@ export default function Landing() {
       <section className="section-padding bg-blue-50">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <h2 className="text-3xl font-bold text-primary mb-4">Ready to Start Your Japanese Journey?</h2>
-          <p className="text-xl text-secondary mb-8">
+          <p className="text-xl text-foreground mb-8">
             Join thousands of learners building confidence in Japanese conversation
           </p>
           <Button 
