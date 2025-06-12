@@ -19,6 +19,9 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [displayName, setDisplayName] = useState((user as any)?.displayName || "");
+  const [newPassword, setNewPassword] = useState("");
+  const [soundNotifications, setSoundNotifications] = useState((user as any)?.soundNotifications ?? true);
+  const [desktopNotifications, setDesktopNotifications] = useState((user as any)?.desktopNotifications ?? true);
 
   // Fetch conversations
   const { data: conversations, isLoading: conversationsLoading } = useQuery({
@@ -95,7 +98,7 @@ export default function Dashboard() {
   };
 
   const updateProfileMutation = useMutation({
-    mutationFn: async (updates: { displayName: string }) => {
+    mutationFn: async (updates: any) => {
       const response = await fetch(`/api/users/${(user as any)?.id}`, {
         method: 'PATCH',
         headers: {
@@ -113,6 +116,51 @@ export default function Dashboard() {
       setSettingsOpen(false);
     }
   });
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Create FormData for file upload
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    try {
+      const response = await fetch('/api/upload/avatar', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: formData
+      });
+
+      if (response.ok) {
+        const { profileImageUrl } = await response.json();
+        updateProfileMutation.mutate({ profileImageUrl });
+      }
+    } catch (error) {
+      console.error('Upload failed:', error);
+    }
+  };
+
+  const handleSaveSettings = () => {
+    const updates: any = {
+      displayName,
+      soundNotifications,
+      desktopNotifications
+    };
+
+    if (newPassword.trim()) {
+      updates.password = newPassword;
+    }
+
+    updateProfileMutation.mutate(updates);
+  };
+
+  const handleSendFeedback = () => {
+    const emailUrl = `mailto:feedback@tomoshibiapp.com?subject=Tomoshibi App Feedback&body=Hi team,%0A%0AI'd like to share some feedback about the app:%0A%0A`;
+    window.open(emailUrl, '_blank');
+  };
 
   if (
     conversationsLoading ||
@@ -135,19 +183,144 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <header className="content-card mb-6 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="avatar student">
-              <span className="font-medium">
-                {(user as any)?.displayName?.[0]?.toUpperCase() || "U"}
-              </span>
-            </div>
-            <div>
-              <h2 className="font-semibold text-primary">
-                {(user as any)?.displayName || "User"}
-              </h2>
-              <p className="text-sm text-foreground">{getProgressionLabel()}</p>
-            </div>
-          </div>
+          <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+            <DialogTrigger asChild>
+              <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
+                <div className="avatar student">
+                  {(user as any)?.profileImageUrl ? (
+                    <img 
+                      src={(user as any).profileImageUrl} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  ) : (
+                    <span className="font-medium">
+                      {(user as any)?.displayName?.[0]?.toUpperCase() || "U"}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <h2 className="font-semibold text-primary">
+                    {(user as any)?.displayName || "User"}
+                  </h2>
+                  <p className="text-sm text-foreground">{getProgressionLabel()}</p>
+                </div>
+              </div>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Profile & Settings</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-6 py-4">
+                {/* Profile Image Upload */}
+                <div className="flex items-center space-x-4">
+                  <div className="avatar student w-16 h-16">
+                    {(user as any)?.profileImageUrl ? (
+                      <img 
+                        src={(user as any).profileImageUrl} 
+                        alt="Profile" 
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    ) : (
+                      <span className="font-medium text-xl">
+                        {(user as any)?.displayName?.[0]?.toUpperCase() || "U"}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="mb-2"
+                    />
+                    <p className="text-xs text-muted-foreground">Upload a profile picture</p>
+                  </div>
+                </div>
+                
+                {/* Account Settings */}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="displayName" className="text-right">
+                      Display Name
+                    </Label>
+                    <Input
+                      id="displayName"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      className="col-span-3"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">Email</Label>
+                    <div className="col-span-3 text-sm text-muted-foreground">
+                      {(user as any)?.email}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="password" className="text-right">
+                      New Password
+                    </Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Leave blank to keep current"
+                      className="col-span-3"
+                    />
+                  </div>
+                </div>
+                
+                {/* Chat Settings */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Chat Settings</h3>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">Sound Notifications</Label>
+                    <div className="col-span-3">
+                      <input
+                        type="checkbox"
+                        checked={soundNotifications}
+                        onChange={(e) => setSoundNotifications(e.target.checked)}
+                        className="rounded"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">Desktop Notifications</Label>
+                    <div className="col-span-3">
+                      <input
+                        type="checkbox"
+                        checked={desktopNotifications}
+                        onChange={(e) => setDesktopNotifications(e.target.checked)}
+                        className="rounded"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-between">
+                <Button 
+                  variant="outline" 
+                  onClick={handleSendFeedback}
+                  className="flex items-center gap-2"
+                >
+                  Send Feedback
+                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setSettingsOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleSaveSettings}
+                    disabled={updateProfileMutation.isPending}
+                  >
+                    {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           <div className="flex items-center space-x-3">
             <Button
