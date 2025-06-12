@@ -4,8 +4,8 @@ import {
   scenarios,
   conversations,
   messages,
-  jlptVocab,
-  jlptGrammar,
+  jlptVocabulary,
+  jlptGrammarPatterns,
   userProgress,
   vocabTracker,
   type User,
@@ -16,8 +16,8 @@ import {
   type InsertConversation,
   type Message,
   type InsertMessage,
-  type JlptVocab,
-  type JlptGrammar,
+  type JlptVocabularyWord,
+  type JlptGrammarPattern,
   type UserProgress,
   type InsertUserProgress,
   type VocabTracker,
@@ -53,13 +53,13 @@ export interface IStorage {
   getConversationMessages(conversationId: number): Promise<Message[]>;
 
   // Vocabulary operations
-  getAllVocab(): Promise<JlptVocab[]>;
-  getVocabByIds(ids: number[]): Promise<JlptVocab[]>;
-  searchVocab(query: string): Promise<JlptVocab[]>;
+  getAllVocabularyWords(): Promise<JlptVocabularyWord[]>;
+  getVocabularyWordsByIds(ids: number[]): Promise<JlptVocabularyWord[]>;
+  searchVocabularyWords(query: string): Promise<JlptVocabularyWord[]>;
 
   // Grammar operations
-  getAllGrammar(): Promise<JlptGrammar[]>;
-  getGrammarByIds(ids: number[]): Promise<JlptGrammar[]>;
+  getAllGrammarPatterns(): Promise<JlptGrammarPattern[]>;
+  getGrammarPatternsByIds(ids: number[]): Promise<JlptGrammarPattern[]>;
 
   // Progress operations
   getUserProgress(userId: number): Promise<UserProgress | undefined>;
@@ -69,7 +69,7 @@ export interface IStorage {
   getVocabTracker(userId: number, wordId: number): Promise<VocabTracker | undefined>;
   createVocabTracker(tracker: InsertVocabTracker): Promise<VocabTracker>;
   updateVocabTracker(userId: number, wordId: number, updates: Partial<VocabTracker>): Promise<VocabTracker>;
-  getUserVocabTracker(userId: number): Promise<(VocabTracker & { word: JlptVocab })[]>;
+  getUserVocabTracker(userId: number): Promise<(VocabTracker & { word: JlptVocabularyWord })[]>;
   incrementWordFrequency(userId: number, wordId: number, source?: 'user' | 'ai' | 'hover'): Promise<VocabTracker>;
 }
 
