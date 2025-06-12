@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
@@ -10,7 +11,6 @@ import { useToast } from "@/hooks/use-toast";
 import FuriganaText from "@/components/furigana-text";
 import harukiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
 import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
-
 
 export default function Chat() {
   const [, params] = useRoute("/chat/:conversationId");
@@ -108,21 +108,25 @@ export default function Chat() {
     setMessage(prev => prev + text);
   };
 
+  const handleFuriganaToggle = () => {
+    const newState = !showFurigana;
+    setShowFurigana(newState);
+    localStorage.setItem('furigana-visible', newState.toString());
+  };
+
   const getAvatarImage = (persona: any) => {
     if (persona?.type === 'teacher') return aoiAvatar; // Aoi is the female teacher
     if (persona?.type === 'friend') return harukiAvatar; // Haruki is the male friend
     return aoiAvatar; // Default fallback
   };
 
-
-
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-deep-navy">
-        <div className="glass-card rounded-3xl p-8">
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="content-card p-8">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 border-4 border-lantern-orange border-l-transparent rounded-full animate-spin"></div>
-            <span className="text-off-white">Loading conversation...</span>
+            <div className="w-8 h-8 border-4 border-primary border-l-transparent rounded-full animate-spin"></div>
+            <span className="text-foreground">Loading conversation...</span>
           </div>
         </div>
       </div>
@@ -131,12 +135,12 @@ export default function Chat() {
 
   if (!conversationData) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-deep-navy">
-        <Card className="glass-card border-glass-border">
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Card className="content-card">
           <CardContent className="p-8 text-center">
-            <h2 className="text-xl font-semibold text-off-white mb-2">Conversation Not Found</h2>
-            <p className="text-off-white/70 mb-4">This conversation doesn't exist or you don't have access to it.</p>
-            <Button onClick={() => setLocation("/")} className="gradient-button">
+            <h2 className="text-xl font-semibold text-foreground mb-2">Conversation Not Found</h2>
+            <p className="text-muted-foreground mb-4">This conversation doesn't exist or you don't have access to it.</p>
+            <Button onClick={() => setLocation("/dashboard")} className="bg-primary text-primary-foreground hover:bg-primary/90">
               Return to Dashboard
             </Button>
           </CardContent>
@@ -152,10 +156,10 @@ export default function Chat() {
   if (!conversation) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="glass-card p-8 text-center">
+        <Card className="content-card p-8 text-center">
           <h2 className="text-xl font-semibold text-foreground mb-4">Conversation Not Found</h2>
           <p className="text-muted-foreground mb-6">This conversation doesn't exist or you don't have access to it.</p>
-          <Button onClick={() => setLocation("/")} className="bg-primary text-primary-foreground hover:bg-primary/90">
+          <Button onClick={() => setLocation("/dashboard")} className="bg-primary text-primary-foreground hover:bg-primary/90">
             Return to Dashboard
           </Button>
         </Card>
@@ -169,12 +173,12 @@ export default function Chat() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Chat Header */}
-      <header className="glass-card rounded-b-2xl p-4 flex items-center justify-between">
+      <header className="content-card rounded-b-2xl p-4 flex items-center justify-between border-b border-border">
         <div className="flex items-center space-x-3">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setLocation("/")}
+            onClick={() => setLocation("/dashboard")}
             className="p-2 text-foreground hover:bg-muted"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -192,10 +196,10 @@ export default function Chat() {
                   target.parentElement!.innerHTML = `
                     <div class="w-full h-full flex items-center justify-center bg-gradient-to-br ${
                       persona?.type === 'teacher' 
-                        ? 'from-lantern-orange to-lantern-orange/60' 
-                        : 'from-sakura-blue to-sakura-blue/60'
+                        ? 'from-primary to-primary/60' 
+                        : 'from-accent to-accent/60'
                     }">
-                      <span class="text-lg">
+                      <span class="text-lg text-foreground">
                         ${persona?.type === 'teacher' ? '👩‍🏫' : '🧑‍🎤'}
                       </span>
                     </div>
@@ -204,8 +208,8 @@ export default function Chat() {
               />
             </div>
             <div>
-              <h3 className="font-semibold text-off-white">{persona?.name || 'AI'}</h3>
-              <p className="text-sm text-off-white/60">{scenario?.title || 'Conversation'}</p>
+              <h3 className="font-semibold text-foreground">{persona?.name || 'AI'}</h3>
+              <p className="text-sm text-muted-foreground">{scenario?.title || 'Conversation'}</p>
             </div>
           </div>
         </div>
@@ -214,12 +218,8 @@ export default function Chat() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => {
-              const newState = !showFurigana;
-              setShowFurigana(newState);
-              localStorage.setItem('furigana-visible', newState.toString());
-            }}
-            className="px-3 py-1 text-xs hover:bg-lantern-orange/20 transition-colors text-off-white"
+            onClick={handleFuriganaToggle}
+            className="px-3 py-1 text-xs hover:bg-primary/20 transition-colors text-foreground"
           >
             {showFurigana ? 'Hide Furigana' : 'Show Furigana'}
           </Button>
@@ -228,12 +228,12 @@ export default function Chat() {
             size="sm"
             onClick={() => completeConversationMutation.mutate()}
             disabled={completeConversationMutation.isPending}
-            className="px-3 py-1 text-xs hover:bg-green-500/20 transition-colors text-off-white flex items-center space-x-1"
+            className="px-3 py-1 text-xs hover:bg-green-500/20 transition-colors text-foreground flex items-center space-x-1"
           >
             <CheckCircle className="w-4 h-4" />
             <span>Complete</span>
           </Button>
-          <Button variant="ghost" size="sm" className="p-2 text-off-white hover:bg-kanji-glow">
+          <Button variant="ghost" size="sm" className="p-2 text-foreground hover:bg-muted">
             <Settings className="w-5 h-5" />
           </Button>
         </div>
@@ -257,8 +257,12 @@ export default function Chat() {
                       const target = e.target as HTMLImageElement;
                       target.style.display = 'none';
                       target.parentElement!.innerHTML = `
-                        <div class="avatar ${persona?.type === 'teacher' ? 'sensei' : 'yuki'} w-full h-full flex items-center justify-center">
-                          <span class="text-sm font-japanese">
+                        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br ${
+                          persona?.type === 'teacher' 
+                            ? 'from-primary to-primary/60' 
+                            : 'from-accent to-accent/60'
+                        }">
+                          <span class="text-sm font-japanese text-foreground">
                             ${persona?.type === 'teacher' ? '先' : '友'}
                           </span>
                         </div>
@@ -275,62 +279,65 @@ export default function Chat() {
                   </div>
                 )}
                 
-                <div className={`font-japanese mb-2 ${msg.sender === 'user' ? 'text-white' : 'text-primary'}`}>
+                <div className={`font-japanese mb-2 ${msg.sender === 'user' ? 'text-primary-foreground' : 'text-foreground'}`}>
                   <FuriganaText 
                     text={msg.content} 
                     showFurigana={showFurigana}
-                    onToggleFurigana={(show) => setShowFurigana(show)}
+                    onToggleFurigana={handleFuriganaToggle}
                     showToggleButton={false}
                     className="text-inherit"
                   />
                 </div>
                 
                 {msg.sender === 'ai' && (
-                  <div className="mt-2 text-xs text-secondary">
+                  <div className="mt-2 text-xs text-muted-foreground">
                     💡 Keep practicing! You're doing great!
                   </div>
                 )}
               </div>
               
               {msg.sender === 'user' && (
-                <div className="avatar student flex-shrink-0">
-                  <span className="text-sm">You</span>
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                  <span className="text-sm text-primary-foreground font-medium">You</span>
                 </div>
               )}
             </div>
           ))}
           
-          {/* Typing Indicator */}
+          {/* Enhanced Typing Indicator */}
           {sendMessageMutation.isPending && (
             <div className="flex items-start space-x-3">
               <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
-              <img 
-                src={getAvatarImage(persona)} 
-                alt={persona?.name || 'AI'}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  // Fallback to emoji if image fails
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  target.parentElement!.innerHTML = `
-                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br ${
-                      persona?.type === 'teacher' 
-                        ? 'from-lantern-orange to-lantern-orange/60' 
-                        : 'from-sakura-blue to-sakura-blue/60'
-                    }">
-                      <span class="text-sm">
-                        ${persona?.type === 'teacher' ? '👩‍🏫' : '🧑‍🎤'}
-                      </span>
-                    </div>
-                  `;
-                }}
-              />
-            </div>
-              <div className="chat-bubble-ai rounded-2xl rounded-tl-sm p-4">
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-lantern-orange/50 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-lantern-orange/50 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                  <div className="w-2 h-2 bg-lantern-orange/50 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                <img 
+                  src={getAvatarImage(persona)} 
+                  alt={persona?.name || 'AI'}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Fallback to emoji if image fails
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    target.parentElement!.innerHTML = `
+                      <div class="w-full h-full flex items-center justify-center bg-gradient-to-br ${
+                        persona?.type === 'teacher' 
+                          ? 'from-primary to-primary/60' 
+                          : 'from-accent to-accent/60'
+                      }">
+                        <span class="text-sm text-foreground">
+                          ${persona?.type === 'teacher' ? '👩‍🏫' : '🧑‍🎤'}
+                        </span>
+                      </div>
+                    `;
+                  }}
+                />
+              </div>
+              <div className="message-bubble ai">
+                <div className="flex items-center space-x-2">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  </div>
+                  <span className="text-xs text-muted-foreground">Thinking...</span>
                 </div>
               </div>
             </div>
@@ -340,7 +347,7 @@ export default function Chat() {
       </div>
 
       {/* Chat Input */}
-      <div className="glass-card rounded-t-2xl p-4">
+      <div className="content-card rounded-t-2xl p-4 border-t border-border">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-end space-x-3">
             <div className="flex-1">
@@ -349,7 +356,7 @@ export default function Chat() {
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Type your response in Japanese... (English is ok too!)"
-                className="bg-kanji-glow border-glass-border text-off-white placeholder-off-white/50 focus:border-lantern-orange focus:ring-lantern-orange/20 resize-none"
+                className="bg-input border-border text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary/20 resize-none"
                 rows={1}
                 style={{ maxHeight: '120px' }}
               />
@@ -357,7 +364,7 @@ export default function Chat() {
             <Button
               onClick={handleSendMessage}
               disabled={!message.trim() || sendMessageMutation.isPending}
-              className="gradient-button hover-glow flex items-center space-x-2"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center space-x-2"
             >
               <span>Send</span>
               <Send className="w-4 h-4" />
@@ -370,7 +377,7 @@ export default function Chat() {
               variant="ghost"
               size="sm"
               onClick={() => insertSuggestion('私は')}
-              className="px-3 py-1 text-sm hover:bg-lantern-orange/20 font-japanese text-off-white"
+              className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
             >
               私は
             </Button>
@@ -378,7 +385,7 @@ export default function Chat() {
               variant="ghost"
               size="sm"
               onClick={() => insertSuggestion('です')}
-              className="px-3 py-1 text-sm hover:bg-lantern-orange/20 font-japanese text-off-white"
+              className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
             >
               です
             </Button>
@@ -386,15 +393,15 @@ export default function Chat() {
               variant="ghost"
               size="sm"
               onClick={() => insertSuggestion('から来ました')}
-              className="px-3 py-1 text-sm hover:bg-lantern-orange/20 font-japanese text-off-white"
+              className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
             >
               から来ました
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => insertSuggestion('よろしくお願いします')}
-              className="px-3 py-1 text-sm hover:bg-lantern-orange/20 font-japanese text-off-white"
+              onClick={() => insertSuggulation('よろしくお願いします')}
+              className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
             >
               よろしくお願いします
             </Button>
