@@ -448,16 +448,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // If not found locally, try external API
+      // If not found locally, try Jisho.org API (reliable external source)
       try {
-        const response = await fetch(`https://www.japandict.com/api/lookup?word=${encodeURIComponent(word)}`);
+        console.log(`Fetching definition for word: ${word}`);
+        const response = await fetch(`https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(word)}`);
+        
         if (response.ok) {
           const data = await response.json();
-          res.json({ ...data, source: 'external' });
-        } else {
-          res.status(404).json({ message: 'Definition not found' });
+          console.log(`Jisho API response:`, JSON.stringify(data, null, 2));
+          
+          if (data.data && data.data.length > 0) {
+            const entry = data.data[0];
+            const japanese = entry.japanese[0];
+            const sense = entry.senses[0];
+            
+            return res.json({
+              word: japanese.word || japanese.reading,
+              reading: japanese.reading,
+              meaning: sense.english_definitions.join(', '),
+              wordType: sense.parts_of_speech.join(', '),
+              source: 'external'
+            });
+          }
         }
+        
+        console.log(`No definition found for word: ${word}`);
+        res.status(404).json({ message: 'Definition not found' });
       } catch (apiError) {
+        console.error('External API error:', apiError);
         res.status(404).json({ message: 'Definition not found' });
       }
     } catch (error) {

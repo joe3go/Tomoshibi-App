@@ -7,6 +7,9 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookOpen, TrendingUp, Clock, Filter } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import harukiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
+import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
 
 interface VocabTrackerEntry {
   id: number;
@@ -123,8 +126,8 @@ export default function VocabTracker() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Vocabulary Tracker</h1>
-          <p className="text-muted-foreground">Track your Japanese vocabulary progress by JLPT level</p>
+          <h1 className="text-3xl font-bold">JLPT Vocabulary Journey</h1>
+          <p className="text-muted-foreground">Track your Japanese vocabulary progress with your tutors</p>
         </div>
         <div className="flex items-center gap-4">
           <Select value={selectedLevel} onValueChange={setSelectedLevel}>
