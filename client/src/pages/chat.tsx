@@ -82,6 +82,20 @@ export default function Chat() {
       // Handle both messages and translations from server
       const { messages, translations } = responseData;
       
+      // Update the user message content to show Japanese translation if available
+      if (messages && translations && translations.length > 0) {
+        const userMessageIndex = messages.findIndex((msg: any) => msg.sender === 'user');
+        if (userMessageIndex !== -1) {
+          // Replace English words with Japanese translations in the user message
+          let translatedContent = messages[userMessageIndex].content;
+          translations.forEach((trans: any) => {
+            const regex = new RegExp(`\\b${trans.english}\\b`, 'gi');
+            translatedContent = translatedContent.replace(regex, trans.japanese);
+          });
+          messages[userMessageIndex].content = translatedContent;
+        }
+      }
+      
       queryClient.setQueryData(
         [`/api/conversations/${conversationId}`],
         (oldData: any) => ({
