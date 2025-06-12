@@ -1,121 +1,168 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Upload, User as UserIcon, BookOpen, Settings as SettingsIcon, LogOut } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { ArrowLeft, Upload, User as UserIcon, BookOpen, Settings as SettingsIcon } from 'lucide-react';
 import { useLocation } from 'wouter';
-import { queryClient } from '@/lib/queryClient';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/useAuth';
-import { useApiMutation } from '@/hooks/useApiMutation';
 import { removeAuthToken } from '@/lib/auth';
-import { ApiService } from '@/services/api';
-import PageHeader from '@/components/layout/PageHeader';
-import LoadingSpinner from '@/components/common/LoadingSpinner';
-import FormField from '@/components/forms/FormField';
-import { JLPT_LEVELS, STUDY_GOALS, DIFFICULTY_LEVELS } from '@/constants/jlpt';
 import type { User, UserProgress } from "@shared/schema";
-import type { BaseComponentProps } from '@/types';
 
-interface SettingsProps extends BaseComponentProps {}
+interface UserAccountSettings {
+  id: number;
+  email: string;
+  displayName: string;
+  profileImageUrl?: string;
+  jlptLevel: string;
+  studyGoal: string;
+  preferredDifficulty: string;
+}
 
-const Settings: React.FC<SettingsProps> = React.memo(() => {
+interface UserLearningProgress {
+  id: number;
+  userId: number;
+  jlptLevel: string;
+  vocabularyWordsEncountered: number[];
+  vocabularyWordsMastered: number[];
+  grammarPatternsEncountered: number[];
+  grammarPatternsMastered: number[];
+  totalConversationSessions: number;
+  totalMessagesSentCount: number;
+}
+
+export default function Settings() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const { user } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
-  const [profileForm, setProfileForm] = useState({
-    displayName: '',
-    jlptLevel: 'N5',
-    studyGoal: 'conversation',
-    preferredDifficulty: 'adaptive'
-  });
+
+  const handleLogout = () => {
+    removeAuthToken();
+    queryClient.clear();
+    window.location.href = '/login';
+  };
 
   const { data: userAccountSettings, isLoading: isLoadingUserSettings } = useQuery<User>({
-    queryKey: ['/api/auth/me']
+    queryKey: ['/api/auth/me'],
   });
-
-  useEffect(() => {
-    if (userAccountSettings) {
-      setProfileForm({
-        displayName: userAccountSettings.displayName || '',
-        jlptLevel: 'N5', // Default since User schema doesn't have jlptLevel
-        studyGoal: 'conversation', // Default since User schema doesn't have studyGoal
-        preferredDifficulty: 'adaptive' // Default since User schema doesn't have preferredDifficulty
-      });
-    }
-  }, [userAccountSettings]);
 
   const { data: userLearningProgress } = useQuery<UserProgress>({
     queryKey: ['/api/progress'],
   });
 
-  const updateProfileMutation = useApiMutation({
-    endpoint: `/api/users/profile`,
-    method: 'PATCH',
-    successMessage: 'Profile updated successfully',
-    errorMessage: 'Failed to update profile',
-    invalidateQueries: ['/api/auth/me']
-  });
-
-  const logoutMutation = useApiMutation({
-    endpoint: '/api/auth/logout',
-    method: 'POST',
-    successMessage: 'Logged out successfully',
+  const updateProfileMutation = useMutation({
+    mutationFn: async (updates: Partial<User>) => {
+      const response = await apiRequest('PATCH', `/api/users/${userAccountSettings?.id}`, updates);
+      return response.json();
+    },
     onSuccess: () => {
-      removeAuthToken();
-      queryClient.clear();
-      setLocation('/login');
-    }
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been successfully updated.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
-  const handleAvatarUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File Too Large",
+        description: "Please select an image smaller than 5MB.",
+        variant: "destructive",
+      });
       return;
     }
 
     setIsUploading(true);
     try {
-      const data = await ApiService.uploadAvatar(file);
-      updateProfileMutation.mutate({ profileImageUrl: data.url });
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const response = await fetch('/api/upload/avatar', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        updateProfileMutation.mutate({ profileImageUrl: data.url });
+      } else {
+        throw new Error('Upload failed');
+      }
     } catch (error) {
-      console.error('Avatar upload failed:', error);
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload avatar. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsUploading(false);
     }
-  }, [updateProfileMutation]);
+  };
 
-  const handleFormFieldChange = useCallback((field: string, value: string) => {
-    setProfileForm(prev => ({ ...prev, [field]: value }));
-  }, []);
-
-  const handleSaveProfile = useCallback(() => {
-    updateProfileMutation.mutate(profileForm);
-  }, [profileForm, updateProfileMutation]);
-
-  const handleLogout = useCallback(() => {
-    logoutMutation.mutate({});
-  }, [logoutMutation]);
+  const handleProfileUpdate = (field: keyof User, value: string) => {
+    updateProfileMutation.mutate({ [field]: value });
+  };
 
   if (isLoadingUserSettings) {
-    return <LoadingSpinner fullScreen message="Loading settings..." />;
+    return (
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+              <p className="text-muted-foreground">Loading settings...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto">
-        <PageHeader
-          title="Settings"
-          description="Manage your account and learning preferences"
-          showBackButton
-          backPath="/dashboard"
-          icon={<SettingsIcon className="w-5 h-5 text-primary" />}
-        />
+        {/* Header */}
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => setLocation('/')}
+            className="flex items-center gap-2 text-muted-foreground hover:text-primary mb-4"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Dashboard
+          </Button>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <SettingsIcon className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold">Settings</h1>
+              <p className="text-muted-foreground">Manage your account and learning preferences</p>
+            </div>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Profile Settings */}
@@ -168,24 +215,30 @@ const Settings: React.FC<SettingsProps> = React.memo(() => {
 
                 <Separator />
 
-                <FormField
-                  type="text"
-                  id="displayName"
-                  label="Display Name"
-                  value={profileForm.displayName}
-                  onChange={(value) => handleFormFieldChange('displayName', value)}
-                  placeholder="Enter your display name"
-                />
+                {/* Display Name */}
+                <div className="space-y-2">
+                  <Label htmlFor="displayName">Display Name</Label>
+                  <Input
+                    id="displayName"
+                    defaultValue={userAccountSettings?.displayName}
+                    onBlur={(e) => handleProfileUpdate('displayName', e.target.value)}
+                    placeholder="Enter your display name"
+                  />
+                </div>
 
-                <FormField
-                  type="text"
-                  id="email"
-                  label="Email"
-                  value={userAccountSettings?.email || ''}
-                  onChange={() => {}}
-                  disabled
-                  description="Contact support to change your email address"
-                />
+                {/* Email (readonly) */}
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    value={userAccountSettings?.email}
+                    disabled
+                    className="bg-muted"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Contact support to change your email address
+                  </p>
+                </div>
               </CardContent>
             </Card>
 
@@ -201,44 +254,62 @@ const Settings: React.FC<SettingsProps> = React.memo(() => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <FormField
-                  type="select"
-                  id="jlptLevel"
-                  label="Current JLPT Level"
-                  value={profileForm.jlptLevel}
-                  onChange={(value) => handleFormFieldChange('jlptLevel', value)}
-                  options={JLPT_LEVELS.map(level => ({
-                    value: level,
-                    label: `${level} (${level === 'N5' ? 'Beginner' : level === 'N4' ? 'Elementary' : level === 'N3' ? 'Intermediate' : level === 'N2' ? 'Upper Intermediate' : 'Advanced'})`
-                  }))}
-                />
-
-                <FormField
-                  type="select"
-                  id="studyGoal"
-                  label="Study Goal"
-                  value={profileForm.studyGoal}
-                  onChange={(value) => handleFormFieldChange('studyGoal', value)}
-                  options={STUDY_GOALS.map(goal => ({ value: goal.value, label: goal.label }))}
-                />
-
-                <FormField
-                  type="select"
-                  id="preferredDifficulty"
-                  label="Preferred Difficulty"
-                  value={profileForm.preferredDifficulty}
-                  onChange={(value) => handleFormFieldChange('preferredDifficulty', value)}
-                  options={DIFFICULTY_LEVELS.map(level => ({ value: level.value, label: level.label }))}
-                />
-
-                <div className="pt-4">
-                  <Button 
-                    onClick={handleSaveProfile} 
-                    disabled={updateProfileMutation.isPending}
-                    className="w-full"
+                {/* JLPT Level */}
+                <div className="space-y-2">
+                  <Label>Current JLPT Level</Label>
+                  <Select
+                    defaultValue={userLearningProgress?.jlptLevel || 'N5'}
+                    onValueChange={(value) => handleProfileUpdate('jlptLevel', value)}
                   >
-                    {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
-                  </Button>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="N5">N5 (Beginner)</SelectItem>
+                      <SelectItem value="N4">N4 (Elementary)</SelectItem>
+                      <SelectItem value="N3">N3 (Intermediate)</SelectItem>
+                      <SelectItem value="N2">N2 (Upper Intermediate)</SelectItem>
+                      <SelectItem value="N1">N1 (Advanced)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Study Goal */}
+                <div className="space-y-2">
+                  <Label>Study Goal</Label>
+                  <Select
+                    defaultValue={userAccountSettings?.studyGoal || 'conversation'}
+                    onValueChange={(value) => handleProfileUpdate('studyGoal', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="conversation">Improve Conversation</SelectItem>
+                      <SelectItem value="jlpt">Pass JLPT Exam</SelectItem>
+                      <SelectItem value="business">Business Japanese</SelectItem>
+                      <SelectItem value="travel">Travel Japanese</SelectItem>
+                      <SelectItem value="general">General Proficiency</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Preferred Difficulty */}
+                <div className="space-y-2">
+                  <Label>Preferred Difficulty</Label>
+                  <Select
+                    defaultValue={userSettings?.preferredDifficulty || 'adaptive'}
+                    onValueChange={(value) => handleProfileUpdate('preferredDifficulty', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="easy">Easy</SelectItem>
+                      <SelectItem value="adaptive">Adaptive</SelectItem>
+                      <SelectItem value="challenging">Challenging</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </CardContent>
             </Card>
@@ -253,19 +324,19 @@ const Settings: React.FC<SettingsProps> = React.memo(() => {
               <CardContent className="space-y-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-primary">
-                    {userLearningProgress?.totalConversations || 0}
+                    {progress?.totalConversations || 0}
                   </div>
                   <p className="text-sm text-muted-foreground">Conversations</p>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">
-                    {userLearningProgress?.vocabEncountered?.length || 0}
+                    {progress?.vocabEncountered?.length || 0}
                   </div>
                   <p className="text-sm text-muted-foreground">Vocabulary Encountered</p>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-blue-600">
-                    {userLearningProgress?.vocabMastered?.length || 0}
+                    {progress?.vocabMastered?.length || 0}
                   </div>
                   <p className="text-sm text-muted-foreground">Words Mastered</p>
                 </div>
@@ -287,10 +358,8 @@ const Settings: React.FC<SettingsProps> = React.memo(() => {
                   variant="destructive" 
                   className="w-full" 
                   onClick={handleLogout}
-                  disabled={logoutMutation.isPending}
                 >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  {logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+                  Logout
                 </Button>
                 <p className="text-xs text-muted-foreground text-center">
                   Sign out of your account
@@ -302,8 +371,4 @@ const Settings: React.FC<SettingsProps> = React.memo(() => {
       </div>
     </div>
   );
-});
-
-Settings.displayName = 'Settings';
-
-export default Settings;
+}
