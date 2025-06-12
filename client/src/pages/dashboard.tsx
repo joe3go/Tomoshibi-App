@@ -143,22 +143,51 @@ export default function Dashboard() {
     }
   };
 
-  // End conversation mutation that works from dashboard
+  // End conversation mutation with enhanced JWT authentication
   const endConversationMutation = useMutation({
     mutationFn: async (conversationId: number) => {
-      const response = await apiRequest(
-        "PATCH",
-        `/api/conversations/${conversationId}`,
-        {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch(`/api/conversations/${conversationId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
           status: "completed",
           completedAt: new Date().toISOString(),
+        })
+      });
+
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          localStorage.removeItem('token');
+          setLocation('/');
+          throw new Error('Session expired. Please log in again.');
         }
-      );
+        throw new Error(`Failed to end session: ${response.statusText}`);
+      }
+
       return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
       queryClient.invalidateQueries({ queryKey: ["/api/conversations/completed"] });
+      toast({
+        title: "Session Ended",
+        description: "Your conversation has been successfully completed.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to End Session",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 

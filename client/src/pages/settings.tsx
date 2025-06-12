@@ -23,6 +23,18 @@ interface UserSettings {
   preferredDifficulty: string;
 }
 
+interface UserProgress {
+  id: number;
+  userId: number;
+  jlptLevel: string;
+  vocabEncountered: number[];
+  vocabMastered: number[];
+  grammarEncountered: number[];
+  grammarMastered: number[];
+  totalConversations: number;
+  totalMessagesSent: number;
+}
+
 export default function Settings() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -33,7 +45,7 @@ export default function Settings() {
     queryKey: ['/api/auth/me'],
   });
 
-  const { data: progress } = useQuery({
+  const { data: progress } = useQuery<UserProgress>({
     queryKey: ['/api/progress'],
   });
 
