@@ -160,6 +160,14 @@
     border: 1px solid var(--border);
     color: var(--foreground);
     border-radius: 18px 18px 18px 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .message-bubble.user {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border-radius: 18px 18px 6px 18px;
+    margin-left: auto;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   }
 

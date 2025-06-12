@@ -264,6 +264,10 @@ export default function Chat() {
           >
             {showFurigana ? "Hide Furigana" : "Show Furigana"}
           </Button>
+          {/* Debug info - remove this later */}
+          <span className="text-xs text-muted-foreground">
+            Furigana: {showFurigana ? "ON" : "OFF"}
+          </span>
           <Button
             variant="ghost"
             size="sm"
@@ -335,7 +339,6 @@ export default function Chat() {
                   <FuriganaText
                     text={msg.content}
                     showFurigana={showFurigana}
-                    onToggleFurigana={handleFuriganaToggle}
                     showToggleButton={false}
                     className="text-inherit"
                   />
