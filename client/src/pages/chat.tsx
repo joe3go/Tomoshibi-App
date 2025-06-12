@@ -527,23 +527,8 @@ export default function Chat() {
       {/* Chat Input */}
       <div className="content-card rounded-t-2xl p-4 border-t border-border">
         <div className="max-w-4xl mx-auto">
-          {/* Translation Preview */}
-          {(translatedMessage || isTranslating) && (
-            <div className="mb-3 p-3 bg-muted/50 rounded-lg border border-border/50">
-              <div className="flex items-center space-x-2 mb-2">
-                <span className="text-xs font-medium text-muted-foreground">Translation Preview:</span>
-                {isTranslating && (
-                  <div className="w-3 h-3 border-2 border-primary border-l-transparent rounded-full animate-spin"></div>
-                )}
-              </div>
-              <div className="font-japanese text-sm text-foreground">
-                {isTranslating ? "Translating..." : translatedMessage}
-              </div>
-            </div>
-          )}
-          
           <div className="flex items-end space-x-3">
-            <div className="flex-1">
+            <div className="flex-1 relative">
               <Textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
@@ -553,6 +538,20 @@ export default function Chat() {
                 rows={1}
                 style={{ maxHeight: "120px" }}
               />
+              {/* Inline Translation Overlay */}
+              {translatedMessage && translatedMessage !== message && (
+                <div className="absolute inset-0 pointer-events-none p-3 text-transparent">
+                  <span className="relative">
+                    {message}
+                    <div className="absolute left-0 top-6 bg-primary/90 text-primary-foreground text-xs px-2 py-1 rounded shadow-lg font-japanese whitespace-nowrap z-10">
+                      {translatedMessage}
+                      {isTranslating && (
+                        <div className="inline-block w-2 h-2 border border-primary-foreground border-l-transparent rounded-full animate-spin ml-1"></div>
+                      )}
+                    </div>
+                  </span>
+                </div>
+              )}
             </div>
             <Button
               onClick={handleSendMessage}
