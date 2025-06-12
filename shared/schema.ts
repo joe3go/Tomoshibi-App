@@ -38,7 +38,7 @@ export const personas = pgTable("personas", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// JLPT vocabulary reference table
+// JLPT N5 vocabulary reference
 export const jlptVocab = pgTable("jlpt_vocab", {
   id: serial("id").primaryKey(),
   kanji: varchar("kanji", { length: 50 }),
@@ -50,7 +50,7 @@ export const jlptVocab = pgTable("jlpt_vocab", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// JLPT grammar patterns reference table
+// JLPT N5 grammar patterns
 export const jlptGrammar = pgTable("jlpt_grammar", {
   id: serial("id").primaryKey(),
   pattern: varchar("pattern", { length: 100 }).notNull(),
@@ -124,10 +124,6 @@ export const vocabTracker = pgTable("vocab_tracker", {
   memoryStrength: integer("memory_strength").default(0),
   nextReviewAt: timestamp("next_review_at"),
   source: varchar("source", { length: 20 }).default("conversation"), // 'conversation', 'manual', 'hover'
-}, (table) => {
-  return {
-    userWordUnique: unique().on(table.userId, table.wordId),
-  };
 });
 
 // Insert schemas

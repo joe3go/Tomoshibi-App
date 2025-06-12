@@ -16,59 +16,35 @@ import { useToast } from "@/hooks/use-toast";
 import EnhancedFuriganaText from "@/components/enhanced-furigana-text";
 import harukiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
 import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
-import * as wanakana from 'wanakana';
 
 export default function Chat() {
   const [, params] = useRoute("/chat/:conversationId");
   const [, setLocation] = useLocation();
-  const [currentUserMessage, setCurrentUserMessage] = useState("");
-  const [isFuriganaVisible, setIsFuriganaVisible] = useState(() => {
-    const savedPreference = localStorage.getItem("furigana-visible");
-    return savedPreference !== null ? savedPreference === "true" : true;
+  const [message, setMessage] = useState("");
+  const [showFurigana, setShowFurigana] = useState(() => {
+    const saved = localStorage.getItem("furigana-visible");
+    return saved !== null ? saved === "true" : true;
   });
 
-  const conversationMessagesEndReference = useRef<HTMLDivElement>(null);
-  const messageInputTextareaReference = useRef<HTMLTextAreaElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  const activeConversationId = params?.conversationId
+  const conversationId = params?.conversationId
     ? parseInt(params.conversationId)
     : 0;
 
-  const { data: conversationDetails, isLoading: isLoadingConversation } = useQuery({
-    queryKey: [`/api/conversations/${activeConversationId}`],
-    enabled: !!activeConversationId,
+  const { data: conversationData, isLoading } = useQuery({
+    queryKey: [`/api/conversations/${conversationId}`],
+    enabled: !!conversationId,
   });
 
-  const { data: availableTeachingPersonas = [] } = useQuery({
+  const { data: personas = [] } = useQuery({
     queryKey: ["/api/personas"],
   });
 
-  const { data: availableLearningScenarios = [] } = useQuery({
+  const { data: scenarios = [] } = useQuery({
     queryKey: ["/api/scenarios"],
   });
-
-  // WanaKana integration for real-time romaji to kana conversion
-  useEffect(() => {
-    if (messageInputTextareaReference.current) {
-      // Bind WanaKana to the textarea with IME mode enabled
-      wanakana.bind(messageInputTextareaReference.current, {
-        IMEMode: true
-      });
-
-      return () => {
-        if (messageInputTextareaReference.current) {
-          wanakana.unbind(messageInputTextareaReference.current);
-        }
-      };
-    }
-  }, []);
-
-  // Handle input changes - WanaKana will automatically convert romaji to hiragana
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    // The value will already be converted by WanaKana's IME mode
-    setCurrentUserMessage(e.target.value);
-  };
 
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
@@ -76,51 +52,51 @@ export default function Chat() {
       const userMessage = {
         id: Date.now(), // Temporary ID
         content,
-        sender: 'user',
+        sender: 'user', // Fixed: changed from 'role' to 'sender' for proper rendering
         createdAt: new Date().toISOString(),
         vocabUsed: [],
         grammarUsed: []
       };
 
       queryClient.setQueryData(
-        [`/api/conversations/${activeConversationId}`],
-        (previousConversationData: any) => ({
-          ...previousConversationData,
-          messages: [...(previousConversationData?.messages || []), userMessage],
+        [`/api/conversations/${conversationId}`],
+        (oldData: any) => ({
+          ...oldData,
+          messages: [...(oldData?.messages || []), userMessage],
         }),
       );
 
-      // Send content to server
+      // Send to server
       const response = await apiRequest(
         "POST",
-        `/api/conversations/${activeConversationId}/messages`,
+        `/api/conversations/${conversationId}/messages`,
         {
-          content: content,
+          content,
         },
       );
       return await response.json();
     },
-    onSuccess: (responseData) => {
+    onSuccess: (messages) => {
+      // Replace with actual messages from server
       queryClient.setQueryData(
-        [`/api/conversations/${activeConversationId}`],
-        (previousConversationData: any) => ({
-          ...previousConversationData,
-          messages: responseData.messages || responseData,
+        [`/api/conversations/${conversationId}`],
+        (oldData: any) => ({
+          ...oldData,
+          messages,
         }),
       );
-
-      setCurrentUserMessage("");
+      setMessage("");
     },
     onError: (error) => {
       // Remove the optimistic user message on error
       queryClient.setQueryData(
-        [`/api/conversations/${activeConversationId}`],
-        (previousConversationData: any) => ({
-          ...previousConversationData,
-          messages: previousConversationData?.messages?.slice(0, -1) || [],
+        [`/api/conversations/${conversationId}`],
+        (oldData: any) => ({
+          ...oldData,
+          messages: oldData?.messages?.slice(0, -1) || [],
         }),
       );
-
+      
       toast({
         title: "Failed to send message",
         description: error.message,
@@ -133,7 +109,7 @@ export default function Chat() {
     mutationFn: async () => {
       const response = await apiRequest(
         "PATCH",
-        `/api/conversations/${activeConversationId}`,
+        `/api/conversations/${conversationId}`,
         {
           status: "completed",
           completedAt: new Date().toISOString(),
@@ -145,8 +121,8 @@ export default function Chat() {
       // Invalidate multiple query keys to refresh all conversation lists
       queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
       queryClient.invalidateQueries({ queryKey: ["/api/conversations/completed"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/conversations/${activeConversationId}`] });
-
+      queryClient.invalidateQueries({ queryKey: [`/api/conversations/${conversationId}`] });
+      
       toast({
         title: "Conversation completed!",
         description:
@@ -164,12 +140,12 @@ export default function Chat() {
   });
 
   useEffect(() => {
-    conversationMessagesEndReference.current?.scrollIntoView({ behavior: "smooth" });
-  }, [(conversationDetails as any)?.messages]);
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [(conversationData as any)?.messages]);
 
   const handleSendMessage = () => {
-    if (currentUserMessage.trim() && !sendMessageMutation.isPending) {
-      sendMessageMutation.mutate(currentUserMessage.trim());
+    if (message.trim() && !sendMessageMutation.isPending) {
+      sendMessageMutation.mutate(message.trim());
     }
   };
 
@@ -180,23 +156,23 @@ export default function Chat() {
     }
   };
 
-  const insertSuggestionIntoMessage = (suggestionText: string) => {
-    setCurrentUserMessage((previousMessage) => previousMessage + suggestionText);
+  const insertSuggestion = (text: string) => {
+    setMessage((prev) => prev + text);
   };
 
-  const handleFuriganaVisibilityToggle = () => {
-    const newVisibilityState = !isFuriganaVisible;
-    setIsFuriganaVisible(newVisibilityState);
-    localStorage.setItem("furigana-visible", newVisibilityState.toString());
+  const handleFuriganaToggle = () => {
+    const newState = !showFurigana;
+    setShowFurigana(newState);
+    localStorage.setItem("furigana-visible", newState.toString());
   };
 
-  const getPersonaAvatarImage = (teachingPersona: any) => {
-    if (teachingPersona?.type === "teacher") return aoiAvatar; // Aoi is the female teacher
-    if (teachingPersona?.type === "friend") return harukiAvatar; // Haruki is the male friend
+  const getAvatarImage = (persona: any) => {
+    if (persona?.type === "teacher") return aoiAvatar; // Aoi is the female teacher
+    if (persona?.type === "friend") return harukiAvatar; // Haruki is the male friend
     return aoiAvatar; // Default fallback
   };
 
-  if (isLoadingConversation) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="content-card p-8">
@@ -209,7 +185,7 @@ export default function Chat() {
     );
   }
 
-  if (!conversationDetails) {
+  if (!conversationData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Card className="content-card">
@@ -232,8 +208,8 @@ export default function Chat() {
     );
   }
 
-  const conversation = (conversationDetails as any)?.conversation;
-  const messages = (conversationDetails as any)?.messages || [];
+  const conversation = (conversationData as any)?.conversation;
+  const messages = (conversationData as any)?.messages || [];
 
   // Handle case where conversation doesn't exist
   if (!conversation) {
@@ -257,11 +233,11 @@ export default function Chat() {
     );
   }
 
-  const conversationPersona = Array.isArray(availableTeachingPersonas)
-    ? availableTeachingPersonas.find((persona: any) => persona.id === conversation?.personaId)
+  const persona = Array.isArray(personas)
+    ? personas.find((p: any) => p.id === conversation?.personaId)
     : null;
-  const conversationScenario = Array.isArray(availableLearningScenarios)
-    ? availableLearningScenarios.find((scenario: any) => scenario.id === conversation?.scenarioId)
+  const scenario = Array.isArray(scenarios)
+    ? scenarios.find((s: any) => s.id === conversation?.scenarioId)
     : null;
 
   return (
@@ -280,8 +256,8 @@ export default function Chat() {
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/30">
               <img
-                src={getPersonaAvatarImage(conversationPersona)}
-                alt={conversationPersona?.name || "Persona"}
+                src={getAvatarImage(persona)}
+                alt={persona?.name || "Persona"}
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   // Fallback to text avatar if image fails
@@ -289,12 +265,12 @@ export default function Chat() {
                   target.style.display = "none";
                   target.parentElement!.innerHTML = `
                     <div class="w-full h-full flex items-center justify-center bg-gradient-to-br ${
-                      conversationPersona?.type === "teacher"
+                      persona?.type === "teacher"
                         ? "from-primary to-primary/60"
                         : "from-accent to-accent/60"
                     }">
                       <span class="text-lg text-foreground">
-                        ${conversationPersona?.type === "teacher" ? "👩‍🏫" : "🧑‍🎤"}
+                        ${persona?.type === "teacher" ? "👩‍🏫" : "🧑‍🎤"}
                       </span>
                     </div>
                   `;
@@ -303,10 +279,10 @@ export default function Chat() {
             </div>
             <div>
               <h3 className="font-semibold text-foreground">
-                {conversationPersona?.name || "AI"}
+                {persona?.name || "AI"}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {conversationScenario?.title || "Conversation"}
+                {scenario?.title || "Conversation"}
               </p>
             </div>
           </div>
@@ -316,14 +292,14 @@ export default function Chat() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleFuriganaVisibilityToggle}
+            onClick={handleFuriganaToggle}
             className="px-3 py-1 text-xs hover:bg-primary/20 transition-colors text-foreground"
           >
-            {isFuriganaVisible ? "Hide Furigana" : "Show Furigana"}
+            {showFurigana ? "Hide Furigana" : "Show Furigana"}
           </Button>
           {/* Debug info - remove this later */}
           <span className="text-xs text-muted-foreground">
-            Furigana: {isFuriganaVisible ? "ON" : "OFF"}
+            Furigana: {showFurigana ? "ON" : "OFF"}
           </span>
           <Button
             variant="ghost"
@@ -358,8 +334,8 @@ export default function Chat() {
               {msg.sender === "ai" && (
                 <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
                   <img
-                    src={getPersonaAvatarImage(conversationPersona)}
-                    alt={conversationPersona?.name || "AI"}
+                    src={getAvatarImage(persona)}
+                    alt={persona?.name || "AI"}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       // Fallback to text avatar if image fails
@@ -367,12 +343,12 @@ export default function Chat() {
                       target.style.display = "none";
                       target.parentElement!.innerHTML = `
                         <div class="w-full h-full flex items-center justify-center bg-gradient-to-br ${
-                          conversationPersona?.type === "teacher"
+                          persona?.type === "teacher"
                             ? "from-primary to-primary/60"
                             : "from-accent to-accent/60"
                         }">
                           <span class="text-sm font-japanese text-foreground">
-                            ${conversationPersona?.type === "teacher" ? "先" : "友"}
+                            ${persona?.type === "teacher" ? "先" : "友"}
                           </span>
                         </div>
                       `;
@@ -395,7 +371,7 @@ export default function Chat() {
                 >
                   <EnhancedFuriganaText
                     text={msg.content}
-                    showFurigana={isFuriganaVisible}
+                    showFurigana={showFurigana}
                     showToggleButton={false}
                     enableWordHover={msg.sender === "ai"}
                     className="text-inherit"
@@ -424,8 +400,8 @@ export default function Chat() {
             <div className="flex items-start space-x-3">
               <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
                 <img
-                  src={getPersonaAvatarImage(conversationPersona)}
-                  alt={conversationPersona?.name || "AI"}
+                  src={getAvatarImage(persona)}
+                  alt={persona?.name || "AI"}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     // Fallback to emoji if image fails
@@ -433,12 +409,12 @@ export default function Chat() {
                     target.style.display = "none";
                     target.parentElement!.innerHTML = `
                       <div class="w-full h-full flex items-center justify-center bg-gradient-to-br ${
-                        conversationPersona?.type === "teacher"
+                        persona?.type === "teacher"
                           ? "from-primary to-primary/60"
                           : "from-accent to-accent/60"
                       }">
                         <span class="text-sm text-foreground">
-                          ${conversationPersona?.type === "teacher" ? "👩‍🏫" : "🧑‍🎤"}
+                          ${persona?.type === "teacher" ? "👩‍🏫" : "🧑‍🎤"}
                         </span>
                       </div>
                     `;
@@ -465,7 +441,7 @@ export default function Chat() {
               </div>
             </div>
           )}
-          <div ref={conversationMessagesEndReference} />
+          <div ref={messagesEndRef} />
         </div>
       </div>
 
@@ -473,21 +449,20 @@ export default function Chat() {
       <div className="content-card rounded-t-2xl p-4 border-t border-border">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-end space-x-3">
-            <div className="flex-1 relative">
+            <div className="flex-1">
               <Textarea
-                ref={messageInputTextareaReference}
-                value={currentUserMessage}
-                onChange={handleInputChange}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Type in romaji for automatic conversion to hiragana..."
-                className="bg-input border-border text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary/20 resize-none font-japanese"
+                placeholder="Type your response in Japanese... (English is ok too!)"
+                className="bg-input border-border text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary/20 resize-none"
                 rows={1}
                 style={{ maxHeight: "120px" }}
               />
             </div>
             <Button
               onClick={handleSendMessage}
-              disabled={!currentUserMessage.trim() || sendMessageMutation.isPending}
+              disabled={!message.trim() || sendMessageMutation.isPending}
               className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center space-x-2"
             >
               <span>Send</span>
@@ -500,34 +475,34 @@ export default function Chat() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => insertSuggestionIntoMessage("watashi wa ")}
-              className="px-3 py-1 text-sm hover:bg-primary/20 text-foreground"
+              onClick={() => insertSuggestion("私は")}
+              className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
             >
-              watashi wa (私は)
+              私は
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => insertSuggestionIntoMessage("desu ")}
-              className="px-3 py-1 text-sm hover:bg-primary/20 text-foreground"
+              onClick={() => insertSuggestion("です")}
+              className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
             >
-              desu (です)
+              です
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => insertSuggestionIntoMessage("kara kimashita ")}
-              className="px-3 py-1 text-sm hover:bg-primary/20 text-foreground"
+              onClick={() => insertSuggestion("から来ました")}
+              className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
             >
-              kara kimashita (から来ました)
+              から来ました
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => insertSuggestionIntoMessage("yoroshiku onegaishimasu ")}
-              className="px-3 py-1 text-sm hover:bg-primary/20 text-foreground"
+              onClick={() => insertSuggestion("よろしくお願いします")}
+              className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
             >
-              yoroshiku (よろしく)
+              よろしくお願いします
             </Button>
           </div>
         </div>

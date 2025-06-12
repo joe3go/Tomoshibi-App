@@ -13,15 +13,15 @@ import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1
 export default function ScenarioBrowse() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [selectedLearningScenario, setSelectedLearningScenario] = useState<any>(null);
-  const [isTutorSelectionVisible, setIsTutorSelectionVisible] = useState(false);
-  const [isCreatingConversation, setIsCreatingConversation] = useState(false);
+  const [selectedScenario, setSelectedScenario] = useState<any>(null);
+  const [showTutorSelection, setShowTutorSelection] = useState(false);
+  const [loadingConversation, setLoadingConversation] = useState(false);
 
-  const { data: availableLearningScenarios = [], isLoading: isLoadingScenarios } = useQuery({
+  const { data: scenarios = [], isLoading } = useQuery({
     queryKey: ["/api/scenarios"],
   });
 
-  const { data: availableTeachingPersonas = [] } = useQuery({
+  const { data: personas = [] } = useQuery({
     queryKey: ["/api/personas"],
   });
 

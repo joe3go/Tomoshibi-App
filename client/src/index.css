@@ -8,53 +8,32 @@
      🎎 Japanese-Inspired UI Theme Variables
      ============================== */
   :root {
-    /* Core Background Colors */
-    --application-background: hsl(35, 25%, 95%);
-    --text-primary: hsl(0, 0%, 5%);
-    --card-surface: hsl(35, 25%, 98%);
-    --card-text: hsl(0, 0%, 5%);
-    --popover-surface: hsl(35, 35%, 96%);
-    --popover-text: hsl(0, 0%, 15%);
+    /* Background Colors */
+    --background: hsl(35, 25%, 95%);
+    --foreground: hsl(0, 0%, 5%);
+    --card: hsl(35, 25%, 98%);
+    --card-foreground: hsl(0, 0%, 5%);
+    --popover: hsl(35, 35%, 96%);
+    --popover-foreground: hsl(0, 0%, 15%);
 
-    /* Legacy compatibility variables */
-    --background: var(--application-background);
-    --foreground: var(--text-primary);
-    --card: var(--card-surface);
-    --card-foreground: var(--card-text);
-    --popover: var(--popover-surface);
-    --popover-foreground: var(--popover-text);
+    /* Primary Colors */
+    --primary: hsl(350, 65%, 45%);
+    --primary-foreground: hsl(0, 0%, 95%);
 
-    /* Brand Primary Colors */
-    --brand-primary: hsl(350, 65%, 45%);
-    --brand-primary-text: hsl(0, 0%, 95%);
+    /* Secondary Colors */
+    --secondary: hsl(0, 0%, 100%);
+    --secondary-foreground: hsl(0, 0%, 5%);
 
-    /* Secondary Interface Colors */
-    --interface-secondary: hsl(0, 0%, 100%);
-    --interface-secondary-text: hsl(0, 0%, 5%);
+    /* Muted Colors */
+    --muted: hsl(35, 20%, 90%);
+    --muted-foreground: hsl(0, 28%, 25%);
 
-    /* Muted Interface Elements */
-    --interface-muted: hsl(35, 20%, 90%);
-    --interface-muted-text: hsl(0, 28%, 25%);
-
-    /* Decorative Accent Colors */
-    --decorative-accent: hsl(15, 25%, 85%);
-    --decorative-accent-text: hsl(0, 0%, 15%);
-    --decorative-gold: hsl(47, 85%, 60%);
-    --decorative-red: hsl(350, 65%, 45%);
-    --decorative-pink: hsl(345, 45%, 75%);
-
-    /* Legacy compatibility variables */
-    --primary: var(--brand-primary);
-    --primary-foreground: var(--brand-primary-text);
-    --secondary: var(--interface-secondary);
-    --secondary-foreground: var(--interface-secondary-text);
-    --muted: var(--interface-muted);
-    --muted-foreground: var(--interface-muted-text);
-    --accent: var(--decorative-accent);
-    --accent-foreground: var(--decorative-accent-text);
-    --accent-gold: var(--decorative-gold);
-    --accent-red: var(--decorative-red);
-    --accent-pink: var(--decorative-pink);
+    /* Accent Colors */
+    --accent: hsl(15, 25%, 85%);
+    --accent-foreground: hsl(0, 0%, 15%);
+    --accent-gold: hsl(47, 85%, 60%);
+    --accent-red: hsl(350, 65%, 45%);
+    --accent-pink: hsl(345, 45%, 75%);
 
     /* Destructive Colors */
     --destructive: hsl(0, 75%, 55%);
@@ -84,13 +63,7 @@
      ============================== */
   body {
     @apply bg-background text-foreground;
-    background: 
-      linear-gradient(rgba(250, 247, 242, 0.85), rgba(250, 247, 242, 0.85)),
-      url('/src/assets/cherry-blossom-background.jpg');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
+    background: var(--background);
     font-family: "Noto Sans JP", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
       "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -151,60 +124,6 @@
   }
 
   /* ==============================
-     🌸 Decorative Background Components
-     ============================== */
-  .japanese-decorative-overlay {
-    position: relative;
-  }
-
-  .japanese-decorative-overlay::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-      linear-gradient(rgba(250, 247, 242, 0.75), rgba(250, 247, 242, 0.75)),
-      url('/src/assets/cherry-blossom-background.jpg');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    opacity: 0.3;
-    pointer-events: none;
-    z-index: -1;
-  }
-
-  .translucent-interface-card {
-    @apply bg-card/90 backdrop-blur-sm border border-border/50;
-    box-shadow: 
-      0 8px 32px rgba(0, 0, 0, 0.1),
-      0 0 0 1px rgba(255, 255, 255, 0.2);
-  }
-
-  .interface-elevation-subtle {
-    box-shadow: 
-      0 4px 16px rgba(0, 0, 0, 0.08),
-      0 1px 4px rgba(0, 0, 0, 0.05);
-  }
-
-  .brand-interactive-glow {
-    transition: all 0.3s ease;
-  }
-
-  .brand-interactive-glow:hover {
-    box-shadow: 
-      0 8px 25px rgba(220, 38, 38, 0.15),
-      0 0 20px rgba(220, 38, 38, 0.1);
-  }
-
-  /* Legacy compatibility classes */
-  .cherry-blossom-overlay { @apply japanese-decorative-overlay; }
-  .glass-card { @apply translucent-interface-card; }
-  .subtle-depth { @apply interface-elevation-subtle; }
-  .tomoshibi-glow { @apply brand-interactive-glow; }
-
-  /* ==============================
      🧩 Components
      ============================== */
 
@@ -237,15 +156,11 @@
   }
 
   .message-bubble.ai {
-    background: rgba(250, 247, 242, 0.95);
-    border: 1px solid rgba(209, 196, 175, 0.5);
+    background: var(--card);
+    border: 1px solid var(--border);
     color: var(--foreground);
     border-radius: 18px 18px 18px 6px;
-    box-shadow: 
-      0 4px 12px rgba(0, 0, 0, 0.1),
-      0 1px 3px rgba(0, 0, 0, 0.05),
-      inset 0 1px 0 rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 
   .message-bubble.user {
@@ -270,12 +185,11 @@
 
   /* Content Card */
   .content-card {
-    @apply bg-card/90 border border-border/50 rounded-xl p-4 backdrop-blur-sm;
+    @apply bg-card border border-border rounded-xl p-4;
     box-shadow:
-      0 8px 25px rgba(0, 0, 0, 0.1),
-      0 2px 8px rgba(0, 0, 0, 0.05),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    background: rgba(250, 247, 242, 0.9);
+      0 4px 6px -1px rgba(0, 0, 0, 0.05),
+      0 1px 2px rgba(0, 0, 0, 0.05);
+    background: var(--card);
   }
 
   /* Cherry Blossom Decoration */
@@ -379,18 +293,6 @@
     @apply border-b border-border py-4;
     background: var(--primary);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  }
-
-  /* Page Background */
-  .page-background {
-    min-height: 100vh;
-    background: 
-      linear-gradient(rgba(250, 247, 242, 0.85), rgba(250, 247, 242, 0.85)),
-      url('/src/assets/cherry-blossom-background.jpg');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
   }
 
   /* Section Padding */

@@ -8,14 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Upload, User as UserIcon, BookOpen, Settings as SettingsIcon } from 'lucide-react';
+import { ArrowLeft, Upload, User, BookOpen, Settings as SettingsIcon } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/useAuth';
 import { removeAuthToken } from '@/lib/auth';
-import type { User, UserProgress } from "@shared/schema";
 
-interface UserAccountSettings {
+interface UserSettings {
   id: number;
   email: string;
   displayName: string;
@@ -25,16 +24,16 @@ interface UserAccountSettings {
   preferredDifficulty: string;
 }
 
-interface UserLearningProgress {
+interface UserProgress {
   id: number;
   userId: number;
   jlptLevel: string;
-  vocabularyWordsEncountered: number[];
-  vocabularyWordsMastered: number[];
-  grammarPatternsEncountered: number[];
-  grammarPatternsMastered: number[];
-  totalConversationSessions: number;
-  totalMessagesSentCount: number;
+  vocabEncountered: number[];
+  vocabMastered: number[];
+  grammarEncountered: number[];
+  grammarMastered: number[];
+  totalConversations: number;
+  totalMessagesSent: number;
 }
 
 export default function Settings() {
@@ -49,17 +48,17 @@ export default function Settings() {
     window.location.href = '/login';
   };
 
-  const { data: userAccountSettings, isLoading: isLoadingUserSettings } = useQuery<User>({
+  const { data: userSettings, isLoading } = useQuery<UserSettings>({
     queryKey: ['/api/auth/me'],
   });
 
-  const { data: userLearningProgress } = useQuery<UserProgress>({
+  const { data: progress } = useQuery<UserProgress>({
     queryKey: ['/api/progress'],
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: async (updates: Partial<User>) => {
-      const response = await apiRequest('PATCH', `/api/users/${userAccountSettings?.id}`, updates);
+    mutationFn: async (updates: Partial<UserSettings>) => {
+      const response = await apiRequest('PATCH', `/api/users/${userSettings?.id}`, updates);
       return response.json();
     },
     onSuccess: () => {
@@ -121,11 +120,11 @@ export default function Settings() {
     }
   };
 
-  const handleProfileUpdate = (field: keyof User, value: string) => {
+  const handleProfileUpdate = (field: keyof UserSettings, value: string) => {
     updateProfileMutation.mutate({ [field]: value });
   };
 
-  if (isLoadingUserSettings) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background p-6">
         <div className="max-w-4xl mx-auto">
@@ -181,9 +180,9 @@ export default function Settings() {
                 {/* Avatar Upload */}
                 <div className="flex items-center gap-4">
                   <Avatar className="w-16 h-16">
-                    <AvatarImage src={userAccountSettings?.profileImageUrl} />
+                    <AvatarImage src={userSettings?.profileImageUrl} />
                     <AvatarFallback>
-                      {userAccountSettings?.displayName?.charAt(0)?.toUpperCase() || 'U'}
+                      {userSettings?.displayName?.charAt(0)?.toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <div>
@@ -220,7 +219,7 @@ export default function Settings() {
                   <Label htmlFor="displayName">Display Name</Label>
                   <Input
                     id="displayName"
-                    defaultValue={userAccountSettings?.displayName}
+                    defaultValue={userSettings?.displayName}
                     onBlur={(e) => handleProfileUpdate('displayName', e.target.value)}
                     placeholder="Enter your display name"
                   />
@@ -231,7 +230,7 @@ export default function Settings() {
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
-                    value={userAccountSettings?.email}
+                    value={userSettings?.email}
                     disabled
                     className="bg-muted"
                   />
@@ -258,7 +257,7 @@ export default function Settings() {
                 <div className="space-y-2">
                   <Label>Current JLPT Level</Label>
                   <Select
-                    defaultValue={userLearningProgress?.jlptLevel || 'N5'}
+                    defaultValue={progress?.jlptLevel || 'N5'}
                     onValueChange={(value) => handleProfileUpdate('jlptLevel', value)}
                   >
                     <SelectTrigger>
@@ -278,7 +277,7 @@ export default function Settings() {
                 <div className="space-y-2">
                   <Label>Study Goal</Label>
                   <Select
-                    defaultValue={userAccountSettings?.studyGoal || 'conversation'}
+                    defaultValue={userSettings?.studyGoal || 'conversation'}
                     onValueChange={(value) => handleProfileUpdate('studyGoal', value)}
                   >
                     <SelectTrigger>

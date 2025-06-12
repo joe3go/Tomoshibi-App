@@ -1,29 +1,13 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import {
-  Calendar,
-  MessageCircle,
-  User,
-  Clock,
-  BookOpen,
-  TrendingUp,
-  BarChart3,
-  Play,
-  CheckCircle,
-} from "lucide-react";
-import { useLocation } from "wouter";
-import EnhancedFuriganaText from "@/components/enhanced-furigana-text";
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
+import { Calendar, MessageCircle, User, Clock, BookOpen, TrendingUp, BarChart3, Play, CheckCircle } from 'lucide-react';
+import { useLocation } from 'wouter';
+import EnhancedFuriganaText from '@/components/enhanced-furigana-text';
 
 interface ConversationWithDetails {
   id: number;
@@ -31,12 +15,12 @@ interface ConversationWithDetails {
   personaId: number;
   scenarioId: number;
   phase: string;
-  status: "active" | "completed" | "paused";
+  status: 'active' | 'completed' | 'paused';
   startedAt: string;
   completedAt?: string;
   messages: Array<{
     id: number;
-    sender: "user" | "ai";
+    sender: 'user' | 'ai';
     content: string;
     vocabUsed: number[];
     grammarUsed: number[];
@@ -58,32 +42,30 @@ interface ConversationWithDetails {
 
 export default function History() {
   const [, setLocation] = useLocation();
-  const [selectedTab, setSelectedTab] = useState("all");
+  const [selectedTab, setSelectedTab] = useState('all');
   const queryClient = useQueryClient();
 
   const endSessionMutation = useMutation({
     mutationFn: async (conversationId: number) => {
       const response = await fetch(`/api/conversations/${conversationId}`, {
-        method: "PATCH",
+        method: 'PATCH',
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({
-          status: "completed",
-          completedAt: new Date().toISOString(),
-        }),
+        body: JSON.stringify({ 
+          status: 'completed',
+          completedAt: new Date().toISOString()
+        })
       });
-
-      if (!response.ok) throw new Error("Failed to end session");
+      
+      if (!response.ok) throw new Error('Failed to end session');
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
-      queryClient.invalidateQueries({
-        queryKey: ["/api/conversations/completed"],
-      });
-    },
+      queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/conversations/completed'] });
+    }
   });
 
   const handleEndSession = (conversationId: number) => {
@@ -91,33 +73,27 @@ export default function History() {
   };
 
   // Fetch all conversations (both active and completed)
-  const { data: activeConversations = [], isLoading: loadingActive } = useQuery(
-    {
-      queryKey: ["/api/conversations"],
-    },
-  );
+  const { data: activeConversations = [], isLoading: loadingActive } = useQuery({
+    queryKey: ['/api/conversations'],
+  });
 
-  const { data: completedConversations = [], isLoading: loadingCompleted } =
-    useQuery({
-      queryKey: ["/api/conversations/completed"],
-    });
+  const { data: completedConversations = [], isLoading: loadingCompleted } = useQuery({
+    queryKey: ['/api/conversations/completed'],
+  });
 
   const { data: personas = [] } = useQuery({
-    queryKey: ["/api/personas"],
+    queryKey: ['/api/personas'],
   });
 
   const { data: scenarios = [] } = useQuery({
-    queryKey: ["/api/scenarios"],
+    queryKey: ['/api/scenarios'],
   });
 
   const { data: vocabTracker = [] } = useQuery({
-    queryKey: ["/api/vocab-tracker"],
+    queryKey: ['/api/vocab-tracker'],
   });
 
-  const allConversations = [
-    ...(activeConversations as any[]),
-    ...(completedConversations as any[]),
-  ];
+  const allConversations = [...(activeConversations as any[]), ...(completedConversations as any[])];
 
   // Calculate analytics
   const analytics = {
@@ -125,51 +101,44 @@ export default function History() {
     completedConversations: (completedConversations as any[]).length,
     activeConversations: (activeConversations as any[]).length,
     totalMessages: allConversations.reduce((sum: number, conv: any) => {
-      return sum + (conv.messageCount || 0);
+      return sum + (conv.messages?.length || 0);
     }, 0),
-    uniqueVocabWords: allConversations.reduce((sum: number, conv: any) => {
-      return sum + (conv.vocabWordsUsed || 0);
-    }, 0),
-    averageMessagesPerConversation:
-      allConversations.length > 0
-        ? Math.round(
-            allConversations.reduce((sum: number, conv: any) => {
-              return sum + (conv.messageCount || 0);
-            }, 0) / allConversations.length,
-          )
-        : 0,
+    uniqueVocabWords: new Set(
+      allConversations.flatMap((conv: any) => 
+        conv.messages?.flatMap((msg: any) => msg.vocabUsed || []) || []
+      )
+    ).size,
+    averageMessagesPerConversation: allConversations.length > 0 
+      ? Math.round(allConversations.reduce((sum: number, conv: any) => {
+          return sum + (conv.messages?.length || 0);
+        }, 0) / allConversations.length)
+      : 0,
   };
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case "completed":
-        return "default";
-      case "active":
-        return "secondary";
-      case "paused":
-        return "outline";
-      default:
-        return "outline";
+      case 'completed': return 'default';
+      case 'active': return 'secondary';
+      case 'paused': return 'outline';
+      default: return 'outline';
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
   const getConversationDuration = (startedAt: string, completedAt?: string) => {
     const start = new Date(startedAt);
     const end = completedAt ? new Date(completedAt) : new Date();
-    const diffMinutes = Math.round(
-      (end.getTime() - start.getTime()) / (1000 * 60),
-    );
-
+    const diffMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
+    
     if (diffMinutes < 60) return `${diffMinutes}m`;
     const hours = Math.floor(diffMinutes / 60);
     const minutes = diffMinutes % 60;
@@ -177,9 +146,9 @@ export default function History() {
   };
 
   const filteredConversations = allConversations.filter((conv: any) => {
-    if (selectedTab === "all") return true;
-    if (selectedTab === "completed") return conv.status === "completed";
-    if (selectedTab === "active") return conv.status === "active";
+    if (selectedTab === 'all') return true;
+    if (selectedTab === 'completed') return conv.status === 'completed';
+    if (selectedTab === 'active') return conv.status === 'active';
     return true;
   });
 
@@ -190,9 +159,7 @@ export default function History() {
           <div className="flex items-center justify-center min-h-[200px]">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-              <p className="text-muted-foreground">
-                Loading conversation history...
-              </p>
+              <p className="text-muted-foreground">Loading conversation history...</p>
             </div>
           </div>
         </div>
@@ -207,11 +174,9 @@ export default function History() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Conversation History</h1>
-            <p className="text-muted-foreground">
-              Your Japanese learning journey and progress
-            </p>
+            <p className="text-muted-foreground">Your Japanese learning journey and progress</p>
           </div>
-          <Button onClick={() => setLocation("/dashboard")} variant="outline">
+          <Button onClick={() => setLocation('/dashboard')} variant="outline">
             Back to Dashboard
           </Button>
         </div>
@@ -226,9 +191,7 @@ export default function History() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {analytics.totalConversations}
-              </div>
+              <div className="text-2xl font-bold">{analytics.totalConversations}</div>
               <p className="text-xs text-muted-foreground">
                 {analytics.completedConversations} completed
               </p>
@@ -243,9 +206,7 @@ export default function History() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {analytics.totalMessages}
-              </div>
+              <div className="text-2xl font-bold">{analytics.totalMessages}</div>
               <p className="text-xs text-muted-foreground">
                 ~{analytics.averageMessagesPerConversation} per conversation
               </p>
@@ -260,12 +221,8 @@ export default function History() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {analytics.uniqueVocabWords}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                unique words encountered
-              </p>
+              <div className="text-2xl font-bold">{analytics.uniqueVocabWords}</div>
+              <p className="text-xs text-muted-foreground">unique words encountered</p>
             </CardContent>
           </Card>
 
@@ -278,14 +235,9 @@ export default function History() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {analytics.totalConversations > 0
-                  ? Math.round(
-                      (analytics.completedConversations /
-                        analytics.totalConversations) *
-                        100,
-                    )
-                  : 0}
-                %
+                {analytics.totalConversations > 0 
+                  ? Math.round((analytics.completedConversations / analytics.totalConversations) * 100)
+                  : 0}%
               </div>
               <p className="text-xs text-muted-foreground">completion rate</p>
             </CardContent>
@@ -296,26 +248,14 @@ export default function History() {
         <Card>
           <CardHeader>
             <CardTitle>Conversations</CardTitle>
-            <CardDescription>
-              Browse your conversation history and analytics
-            </CardDescription>
+            <CardDescription>Browse your conversation history and analytics</CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs
-              value={selectedTab}
-              onValueChange={setSelectedTab}
-              className="w-full"
-            >
+            <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="all">
-                  All ({allConversations.length})
-                </TabsTrigger>
-                <TabsTrigger value="active">
-                  Active ({(activeConversations as any[]).length})
-                </TabsTrigger>
-                <TabsTrigger value="completed">
-                  Completed ({(completedConversations as any[]).length})
-                </TabsTrigger>
+                <TabsTrigger value="all">All ({allConversations.length})</TabsTrigger>
+                <TabsTrigger value="active">Active ({(activeConversations as any[]).length})</TabsTrigger>
+                <TabsTrigger value="completed">Completed ({(completedConversations as any[]).length})</TabsTrigger>
               </TabsList>
 
               <TabsContent value={selectedTab} className="space-y-4 mt-6">
@@ -323,75 +263,52 @@ export default function History() {
                   <div className="text-center py-8">
                     <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                     <p className="text-muted-foreground">
-                      {selectedTab === "completed"
-                        ? "No completed conversations yet"
-                        : selectedTab === "active"
-                          ? "No active conversations"
-                          : "No conversations found"}
+                      {selectedTab === 'completed' 
+                        ? "No completed conversations yet" 
+                        : selectedTab === 'active'
+                        ? "No active conversations"
+                        : "No conversations found"}
                     </p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {filteredConversations.map((conversation: any) => {
-                      const persona = (personas as any[]).find(
-                        (p: any) => p.id === conversation.personaId,
-                      );
-                      const scenario = (scenarios as any[]).find(
-                        (s: any) => s.id === conversation.scenarioId,
-                      );
-                      const messageCount = conversation.messageCount || 0;
-                      const vocabWordsUsed = conversation.vocabWordsUsed || 0;
+                      const persona = (personas as any[]).find((p: any) => p.id === conversation.personaId);
+                      const scenario = (scenarios as any[]).find((s: any) => s.id === conversation.scenarioId);
+                      const messageCount = conversation.messages?.length || 0;
+                      const vocabWordsUsed = new Set(
+                        conversation.messages?.flatMap((msg: any) => msg.vocabUsed || []) || []
+                      ).size;
 
                       return (
-                        <Card
-                          key={conversation.id}
-                          className="hover:shadow-md transition-shadow"
-                        >
+                        <Card key={conversation.id} className="hover:shadow-md transition-shadow">
                           <CardContent className="p-6">
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-2">
                                   <h3 className="font-semibold text-lg">
-                                    {scenario?.title || "Unknown Scenario"}
+                                    {scenario?.title || 'Unknown Scenario'}
                                   </h3>
-                                  <Badge
-                                    variant={getStatusBadgeVariant(
-                                      conversation.status,
-                                    )}
-                                  >
-                                    {conversation.status === "active" && (
-                                      <Play className="w-3 h-3 mr-1" />
-                                    )}
-                                    {conversation.status === "completed" && (
-                                      <CheckCircle className="w-3 h-3 mr-1" />
-                                    )}
+                                  <Badge variant={getStatusBadgeVariant(conversation.status)}>
+                                    {conversation.status === 'active' && <Play className="w-3 h-3 mr-1" />}
+                                    {conversation.status === 'completed' && <CheckCircle className="w-3 h-3 mr-1" />}
                                     {conversation.status}
                                   </Badge>
-                                  <Badge variant="outline">
-                                    {scenario?.jlptLevel || "N5"}
-                                  </Badge>
+                                  <Badge variant="outline">{scenario?.jlptLevel || 'N5'}</Badge>
                                 </div>
 
                                 <p className="text-sm text-muted-foreground mb-3">
-                                  with {persona?.name || "Unknown"} •{" "}
-                                  {persona?.type || "tutor"}
+                                  with {persona?.name || 'Unknown'} • {persona?.type || 'tutor'}
                                 </p>
 
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                                   <div className="flex items-center gap-2">
                                     <Calendar className="w-4 h-4 text-muted-foreground" />
-                                    <span>
-                                      {formatDate(conversation.startedAt)}
-                                    </span>
+                                    <span>{formatDate(conversation.startedAt)}</span>
                                   </div>
                                   <div className="flex items-center gap-2">
                                     <Clock className="w-4 h-4 text-muted-foreground" />
-                                    <span>
-                                      {getConversationDuration(
-                                        conversation.startedAt,
-                                        conversation.completedAt,
-                                      )}
-                                    </span>
+                                    <span>{getConversationDuration(conversation.startedAt, conversation.completedAt)}</span>
                                   </div>
                                   <div className="flex items-center gap-2">
                                     <MessageCircle className="w-4 h-4 text-muted-foreground" />
@@ -403,24 +320,33 @@ export default function History() {
                                   </div>
                                 </div>
 
-                                {/* Note: Last message preview removed as messages are not loaded in list view */}
+                                {/* Last message preview */}
+                                {conversation.messages && conversation.messages.length > 0 && (
+                                  <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                                    <p className="text-xs text-muted-foreground mb-1">Last message:</p>
+                                    <div className="text-sm">
+                                      <EnhancedFuriganaText
+                                        text={conversation.messages[conversation.messages.length - 1].content}
+                                        showToggleButton={false}
+                                        enableWordHover={false}
+                                        className="line-clamp-2"
+                                      />
+                                    </div>
+                                  </div>
+                                )}
                               </div>
 
                               <div className="flex gap-2 ml-4">
-                                {conversation.status === "active" && (
+                                {conversation.status === 'active' && (
                                   <>
                                     <Button
-                                      onClick={() =>
-                                        setLocation(`/chat/${conversation.id}`)
-                                      }
+                                      onClick={() => setLocation(`/chat/${conversation.id}`)}
                                       size="sm"
                                     >
                                       Continue
                                     </Button>
                                     <Button
-                                      onClick={() =>
-                                        handleEndSession(conversation.id)
-                                      }
+                                      onClick={() => handleEndSession(conversation.id)}
                                       variant="outline"
                                       size="sm"
                                       className="text-red-600 hover:text-red-700"
@@ -429,11 +355,9 @@ export default function History() {
                                     </Button>
                                   </>
                                 )}
-                                {conversation.status === "completed" && (
+                                {conversation.status === 'completed' && (
                                   <Button
-                                    onClick={() =>
-                                      setLocation(`/chat/${conversation.id}`)
-                                    }
+                                    onClick={() => setLocation(`/chat/${conversation.id}`)}
                                     variant="outline"
                                     size="sm"
                                   >

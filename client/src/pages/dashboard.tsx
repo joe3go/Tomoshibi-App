@@ -25,38 +25,38 @@ export default function Dashboard() {
   const [soundNotifications, setSoundNotifications] = useState((user as any)?.soundNotifications ?? true);
   const [desktopNotifications, setDesktopNotifications] = useState((user as any)?.desktopNotifications ?? true);
 
-  // Fetch user conversation history
-  const { data: userConversations, isLoading: isLoadingConversations } = useQuery({
+  // Fetch conversations
+  const { data: conversations, isLoading: conversationsLoading } = useQuery({
     queryKey: ["/api/conversations"],
   });
 
-  // Fetch available learning scenarios
-  const { data: learningScenarios, isLoading: isLoadingScenarios } = useQuery({
+  // Fetch scenarios
+  const { data: scenarios, isLoading: scenariosLoading } = useQuery({
     queryKey: ["/api/scenarios"],
   });
 
-  // Fetch AI teaching personas
-  const { data: teachingPersonas, isLoading: isLoadingPersonas } = useQuery({
+  // Fetch personas
+  const { data: personas, isLoading: personasLoading } = useQuery({
     queryKey: ["/api/personas"],
   });
 
-  // Fetch user learning progress
-  const { data: learningProgress, isLoading: isLoadingProgress } = useQuery({
+  // Fetch progress
+  const { data: progress, isLoading: progressLoading } = useQuery({
     queryKey: ["/api/progress"],
   });
 
-  // Fetch vocabulary tracking data
-  const { data: vocabularyTrackingData = [] } = useQuery({
+  // Fetch vocabulary tracker data
+  const { data: vocabData = [] } = useQuery({
     queryKey: ['/api/vocab-tracker'],
   });
 
   // Filter conversations for different sections with proper status checking
-  const activeConversations = Array.isArray(userConversations) 
-    ? userConversations.filter((conversation: any) => conversation.status === 'active' || !conversation.status)
+  const activeConversations = Array.isArray(conversations) 
+    ? conversations.filter((c: any) => c.status === 'active' || !c.status)
     : [];
   
-  const completedConversations = Array.isArray(userConversations) 
-    ? userConversations.filter((conversation: any) => conversation.status === 'completed')
+  const completedConversations = Array.isArray(conversations) 
+    ? conversations.filter((c: any) => c.status === 'completed')
     : [];
 
   const logoutMutation = useMutation({
@@ -93,9 +93,9 @@ export default function Dashboard() {
   };
 
   const getProgressionLabel = () => {
-    const vocabularyCount = (vocabularyTrackingData as any[]).length;
+    const vocabCount = (vocabData as any[]).length;
     const completedCount = (completedConversations as any[]).length;
-    const totalInteractions = vocabularyCount + completedCount;
+    const totalInteractions = vocabCount + completedCount;
 
     if (totalInteractions >= 100) return "🌸 Sakura Scholar";
     if (totalInteractions >= 75) return "🗾 Island Explorer";
@@ -223,10 +223,10 @@ export default function Dashboard() {
   };
 
   if (
-    isLoadingConversations ||
-    isLoadingScenarios ||
-    isLoadingPersonas ||
-    isLoadingProgress
+    conversationsLoading ||
+    scenariosLoading ||
+    personasLoading ||
+    progressLoading
   ) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -327,11 +327,11 @@ export default function Dashboard() {
             </div>
             <div className="grid gap-3 md:grid-cols-3">
               {activeConversations.slice(0, 3).map((conversation: any) => {
-                const conversationPersona = Array.isArray(teachingPersonas)
-                  ? teachingPersonas.find((persona: any) => persona.id === conversation.personaId)
+                const persona = Array.isArray(personas)
+                  ? personas.find((p: any) => p.id === conversation.personaId)
                   : null;
-                const conversationScenario = Array.isArray(learningScenarios)
-                  ? learningScenarios.find((scenario: any) => scenario.id === conversation.scenarioId)
+                const scenario = Array.isArray(scenarios)
+                  ? scenarios.find((s: any) => s.id === conversation.scenarioId)
                   : null;
 
                 const formatDate = (dateString: string) => {
@@ -352,13 +352,13 @@ export default function Dashboard() {
                   >
                     <div className="flex items-start space-x-3 mb-3">
                       <div className="avatar flex-shrink-0">
-                        {conversationPersona?.name === 'Aoi' ? (
+                        {persona?.name === 'Aoi' ? (
                           <img 
                             src={aoiAvatar} 
                             alt="Aoi" 
                             className="w-full h-full object-cover rounded-full"
                           />
-                        ) : conversationPersona?.name === 'Haruki' ? (
+                        ) : persona?.name === 'Haruki' ? (
                           <img 
                             src={harukiAvatar} 
                             alt="Haruki" 
@@ -366,16 +366,16 @@ export default function Dashboard() {
                           />
                         ) : (
                           <span className="font-japanese">
-                            {conversationPersona?.type === "teacher" ? "先" : "友"}
+                            {persona?.type === "teacher" ? "先" : "友"}
                           </span>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-primary">
-                          {conversationPersona?.name || "Unknown"}
+                          {persona?.name || "Unknown"}
                         </h4>
                         <p className="text-sm text-foreground">
-                          {conversationScenario?.title || "Practice Session"}
+                          {scenario?.title || "Practice Session"}
                         </p>
                       </div>
                     </div>
@@ -448,16 +448,16 @@ export default function Dashboard() {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Total Words</span>
-                <span className="font-semibold">{(vocabularyTrackingData as any[]).length}</span>
+                <span className="font-semibold">{(vocabData as any[]).length}</span>
               </div>
               
               {(() => {
-                const vocabularyStatistics = (vocabularyTrackingData as any[]).reduce((statisticsAccumulator: any, vocabularyEntry: any) => {
-                  const jlptLevel = vocabularyEntry.word?.jlptLevel || 'N5';
-                  statisticsAccumulator[jlptLevel] = (statisticsAccumulator[jlptLevel] || 0) + 1;
-                  statisticsAccumulator.userUsage += vocabularyEntry.userUsageCount || 0;
-                  statisticsAccumulator.aiEncounter += vocabularyEntry.aiEncounterCount || 0;
-                  return statisticsAccumulator;
+                const vocabStats = (vocabData as any[]).reduce((acc: any, entry: any) => {
+                  const level = entry.word?.jlptLevel || 'N5';
+                  acc[level] = (acc[level] || 0) + 1;
+                  acc.userUsage += entry.userUsageCount || 0;
+                  acc.aiEncounter += entry.aiEncounterCount || 0;
+                  return acc;
                 }, { N5: 0, N4: 0, N3: 0, N2: 0, N1: 0, userUsage: 0, aiEncounter: 0 });
 
                 return (
@@ -469,7 +469,7 @@ export default function Dashboard() {
                         </div>
                         <span className="text-sm text-muted-foreground">Your Words</span>
                       </div>
-                      <span className="text-green-600 font-semibold">{vocabularyStatistics.userUsage}</span>
+                      <span className="text-green-600 font-semibold">{vocabStats.userUsage}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -480,7 +480,7 @@ export default function Dashboard() {
                         />
                         <span className="text-sm text-muted-foreground">Aoi's Words</span>
                       </div>
-                      <span className="text-blue-600 font-semibold">{Math.floor(vocabularyStatistics.aiEncounter * 0.6)}</span>
+                      <span className="text-blue-600 font-semibold">{Math.floor(vocabStats.aiEncounter * 0.6)}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -491,13 +491,13 @@ export default function Dashboard() {
                         />
                         <span className="text-sm text-muted-foreground">Haruki's Words</span>
                       </div>
-                      <span className="text-purple-600 font-semibold">{Math.floor(vocabularyStatistics.aiEncounter * 0.4)}</span>
+                      <span className="text-purple-600 font-semibold">{Math.floor(vocabStats.aiEncounter * 0.4)}</span>
                     </div>
                     <div className="grid grid-cols-5 gap-1 mt-3">
                       {['N5', 'N4', 'N3', 'N2', 'N1'].map(level => (
                         <div key={level} className="text-center">
                           <div className="text-xs text-muted-foreground">{level}</div>
-                          <div className="text-sm font-semibold">{vocabularyStatistics[level]}</div>
+                          <div className="text-sm font-semibold">{vocabStats[level]}</div>
                         </div>
                       ))}
                     </div>
@@ -534,16 +534,16 @@ export default function Dashboard() {
               
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Words Learned</span>
-                <span className="font-semibold">{(vocabularyTrackingData as any[]).length}</span>
+                <span className="font-semibold">{(vocabData as any[]).length}</span>
               </div>
               
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Messages Sent</span>
-                <span className="font-semibold">{(learningProgress as any)?.totalMessagesSent || 0}</span>
+                <span className="font-semibold">{(progress as any)?.totalMessagesSent || 0}</span>
               </div>
               
               {(() => {
-                const totalInteractions = (vocabularyTrackingData as any[]).length + (Array.isArray(userConversations) ? userConversations.length : 0);
+                const totalInteractions = (vocabData as any[]).length + (Array.isArray(conversations) ? conversations.length : 0);
                 const nextMilestone = totalInteractions >= 100 ? 150 : 
                                     totalInteractions >= 75 ? 100 :
                                     totalInteractions >= 50 ? 75 :
@@ -576,9 +576,9 @@ export default function Dashboard() {
             Meet Your Tutors
           </h3>
           <div className="grid md:grid-cols-2 gap-6">
-            {Array.isArray(teachingPersonas) && teachingPersonas.length > 0 ? (
+            {Array.isArray(personas) && personas.length > 0 ? (
               // Remove duplicates by filtering unique personas by id
-              teachingPersonas
+              personas
                 .filter(
                   (persona: any, index: number, self: any[]) =>
                     index === self.findIndex((p: any) => p.id === persona.id),
