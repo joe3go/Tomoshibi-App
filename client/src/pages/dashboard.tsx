@@ -61,12 +61,14 @@ export default function Dashboard() {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      // Simple logout - just clear local storage
+      // Clear all authentication data
       localStorage.removeItem("token");
+      localStorage.removeItem("auth_token");
+      localStorage.clear();
     },
     onSuccess: () => {
       queryClient.clear();
-      setLocation("/");
+      setLocation("/login");
     },
   });
 
@@ -371,10 +373,16 @@ export default function Dashboard() {
                   >
                     <div className="flex items-start space-x-3 mb-3">
                       <div className="avatar flex-shrink-0">
-                        {persona?.avatarUrl ? (
+                        {persona?.name === 'Aoi' ? (
                           <img 
-                            src={persona.avatarUrl} 
-                            alt={persona.name} 
+                            src={aoiAvatar} 
+                            alt="Aoi" 
+                            className="w-full h-full object-cover rounded-full"
+                          />
+                        ) : persona?.name === 'Haruki' ? (
+                          <img 
+                            src={harukiAvatar} 
+                            alt="Haruki" 
                             className="w-full h-full object-cover rounded-full"
                           />
                         ) : (

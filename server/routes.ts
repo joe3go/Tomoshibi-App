@@ -245,6 +245,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/conversations/completed', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const conversations = await storage.getUserConversations(req.userId!);
+      // Only return completed conversations for transcripts
+      const completedConversations = conversations.filter(c => c.status === 'completed');
+      res.json(completedConversations);
+    } catch (error) {
+      console.error('Get completed conversations error:', error);
+      res.status(500).json({ message: 'Failed to get completed conversations' });
+    }
+  });
+
   app.get('/api/conversations/:id', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const conversationId = parseInt(req.params.id);
@@ -263,18 +275,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Get conversation error:', error);
       res.status(500).json({ message: 'Failed to get conversation' });
-    }
-  });
-
-  app.get('/api/conversations/completed', authenticateToken, async (req: AuthRequest, res) => {
-    try {
-      const conversations = await storage.getUserConversations(req.userId!);
-      // Only return completed conversations for transcripts
-      const completedConversations = conversations.filter(c => c.status === 'completed');
-      res.json(completedConversations);
-    } catch (error) {
-      console.error('Get completed conversations error:', error);
-      res.status(500).json({ message: 'Failed to get completed conversations' });
     }
   });
 
