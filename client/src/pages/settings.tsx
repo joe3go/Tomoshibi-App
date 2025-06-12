@@ -1,7 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Upload, User as UserIcon, BookOpen, Settings as SettingsIcon, LogOut } from 'lucide-react';
@@ -32,23 +34,26 @@ const Settings: React.FC<SettingsProps> = React.memo(() => {
   });
 
   const { data: userAccountSettings, isLoading: isLoadingUserSettings } = useQuery<User>({
-    queryKey: ['/api/auth/me'],
-    onSuccess: (data) => {
+    queryKey: ['/api/auth/me']
+  });
+
+  useEffect(() => {
+    if (userAccountSettings) {
       setProfileForm({
-        displayName: data.displayName || '',
-        jlptLevel: data.jlptLevel || 'N5',
-        studyGoal: data.studyGoal || 'conversation',
-        preferredDifficulty: data.preferredDifficulty || 'adaptive'
+        displayName: userAccountSettings.displayName || '',
+        jlptLevel: 'N5', // Default since User schema doesn't have jlptLevel
+        studyGoal: 'conversation', // Default since User schema doesn't have studyGoal
+        preferredDifficulty: 'adaptive' // Default since User schema doesn't have preferredDifficulty
       });
     }
-  });
+  }, [userAccountSettings]);
 
   const { data: userLearningProgress } = useQuery<UserProgress>({
     queryKey: ['/api/progress'],
   });
 
   const updateProfileMutation = useApiMutation({
-    endpoint: `/api/users/${userAccountSettings?.id}`,
+    endpoint: `/api/users/profile`,
     method: 'PATCH',
     successMessage: 'Profile updated successfully',
     errorMessage: 'Failed to update profile',
@@ -94,7 +99,7 @@ const Settings: React.FC<SettingsProps> = React.memo(() => {
   }, [profileForm, updateProfileMutation]);
 
   const handleLogout = useCallback(() => {
-    logoutMutation.mutate();
+    logoutMutation.mutate({});
   }, [logoutMutation]);
 
   if (isLoadingUserSettings) {
@@ -214,7 +219,7 @@ const Settings: React.FC<SettingsProps> = React.memo(() => {
                   label="Study Goal"
                   value={profileForm.studyGoal}
                   onChange={(value) => handleFormFieldChange('studyGoal', value)}
-                  options={STUDY_GOALS}
+                  options={STUDY_GOALS.map(goal => ({ value: goal.value, label: goal.label }))}
                 />
 
                 <FormField
@@ -223,7 +228,7 @@ const Settings: React.FC<SettingsProps> = React.memo(() => {
                   label="Preferred Difficulty"
                   value={profileForm.preferredDifficulty}
                   onChange={(value) => handleFormFieldChange('preferredDifficulty', value)}
-                  options={DIFFICULTY_LEVELS}
+                  options={DIFFICULTY_LEVELS.map(level => ({ value: level.value, label: level.label }))}
                 />
 
                 <div className="pt-4">
