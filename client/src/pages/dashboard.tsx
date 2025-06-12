@@ -514,7 +514,12 @@ export default function Dashboard() {
               
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Active Sessions</span>
-                <span className="font-semibold">{Array.isArray(conversations) ? conversations.length : 0}</span>
+                <span className="font-semibold">{activeConversations.length}</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Completed Sessions</span>
+                <span className="font-semibold">{completedConversations.length}</span>
               </div>
               
               <div className="flex justify-between items-center">
