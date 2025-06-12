@@ -130,13 +130,14 @@ ADAPTIVE RESPONSE GUIDELINES:
 4. Naturally incorporate target vocabulary/grammar at appropriate difficulty level
 5. Keep responses conversational but adjust complexity dynamically based on user performance
 6. Respond primarily in Japanese with explanations when helpful for learning
+7. IMPORTANT: Always format kanji with furigana readings using parentheses: 漢字(かんじ). This helps users learn pronunciation and reading.
 
 CONVERSATION HISTORY FOR CONTEXT:
 ${conversationHistory.slice(-6).map(msg => `${msg.role}: ${msg.content}`).join('\n')}
 
 RESPONSE FORMAT (JSON):
 {
-  "response": "Your adaptive Japanese response with furigana when helpful",
+  "response": "Your adaptive Japanese response with furigana notation for kanji. Format kanji with readings as: 漢字(かんじ) using parentheses immediately after each kanji. Always include furigana for N5 level kanji to help learning.",
   "english": "English translation",
   "feedback": "Persona-appropriate feedback based on user's demonstrated level",
   "vocabUsed": [array of vocab IDs used],
@@ -155,6 +156,7 @@ Provide a warm, encouraging introduction in Japanese (with English translation) 
 2. Introduces the scenario topic
 3. Gives the first prompt to get the conversation started
 4. Uses JLPT N5 level Japanese only
+5. IMPORTANT: Include furigana for all kanji using parentheses format: 漢字(かんじ)
 
 Keep it natural and encouraging. Response should be in plain text, not JSON.`;
 
