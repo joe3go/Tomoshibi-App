@@ -1,0 +1,97 @@
+Implement the following features on top of my current Japanese learning app (which includes Furigana rendering). Do not break or alter existing Furigana features.
+
+🧠 Part 1: Vocabulary Tracker by JLPT Level
+Database Changes (non-destructive):
+
+Create a new vocabulary table:
+
+sql
+Copy
+Edit
+CREATE TABLE vocabulary (
+  id SERIAL PRIMARY KEY,
+  word VARCHAR(100),
+  reading VARCHAR(100),
+  meaning TEXT,
+  jlpt_level VARCHAR(10)
+);
+Create a new vocab_tracker table:
+
+sql
+Copy
+Edit
+CREATE TABLE vocab_tracker (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  word_id INTEGER REFERENCES vocabulary(id),
+  frequency INTEGER DEFAULT 0,
+  last_seen_at TIMESTAMP,
+  memory_strength INTEGER DEFAULT 0,
+  next_review_at TIMESTAMP
+);
+Tracking Usage Logic:
+
+When a user interacts with a word (sends a message or hovers in exercises), increment its frequency and update last_seen_at.
+
+If the word is new to the user, create a vocab_tracker entry linked to the vocabulary table.
+
+Frontend:
+
+Create a <VocabTracker /> component that:
+
+Displays vocabulary grouped by jlpt_level
+
+Shows frequency count next to each word
+
+Displays progress per level (e.g., "230/800 N5 words encountered")
+
+Optional filters for "most frequent", "least encountered", or "review due"
+
+💬 Part 2: Word Definition Pop-Up
+Behavior:
+
+On mouseover of any word (in FuriganaText or similar), show a pop-up with:
+
+Kanji
+
+Reading
+
+Meaning
+
+Optional pitch accent (if available)
+
+Button to “Add to My Vocabulary” (which creates or updates vocab_tracker)
+
+APIs:
+
+Use https://www.japandict.com/api/lookup?word={word} (or mock one for now)
+
+Handle API errors with a fallback like “Definition not found”
+
+Debounce:
+
+Add a 200ms debounce to the hover logic to prevent excessive API calls
+
+Popup UX:
+
+Popup should appear just above or below the hovered word
+
+Allow click to “lock” the popup open
+
+Auto-close on mouseleave with a slight delay
+
+🔐 DO NOT:
+Modify or break existing Furigana features or text rendering
+
+Change existing learning workflows unless explicitly part of this plan
+
+✅ Deliverables:
+Safe integration with existing frontend and backend
+
+Fully styled <VocabTracker /> component using TailwindCSS
+
+Definition pop-up component with add-to-vocab button
+
+SQL migrations or schema additions separate from destructive changes
+
+Let me know if any data needs to be pre-filled (e.g., initial JLPT vocabulary), and please isolate your implementation so current functionality continues to work seamlessly.

@@ -1,0 +1,119 @@
+🔠 1. Vocabulary Tracker by JLPT Levels
+What’s Good:
+
+The schema is lean and targeted (good use of frequency and jlpt_level).
+
+Grouping vocab per user by JLPT level + frequency makes for meaningful stats.
+
+Modular frontend component idea (<VocabTracker />) is perfect for extensibility.
+
+Suggestions:
+
+Add timestamps (last_seen_at) to track recency — this helps with spaced repetition later.
+
+Consider a word_id FK to a separate vocab table so you can normalize and track kanji, kana, etc., per word:
+
+sql
+Copy
+Edit
+CREATE TABLE vocabulary (
+    id SERIAL PRIMARY KEY,
+    word VARCHAR(100),
+    reading VARCHAR(100),
+    meaning TEXT,
+    jlpt_level VARCHAR(10)
+);
+
+CREATE TABLE vocab_tracker (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    word_id INTEGER REFERENCES vocabulary(id),
+    frequency INTEGER DEFAULT 0,
+    last_seen_at TIMESTAMP
+);
+In the frontend, consider showing:
+
+“Most used N5 words”
+
+“Least encountered N4 words”
+
+A JLPT progress bar (e.g. “You've encountered 230/800 N5 words”)
+
+💬 2. Word Definition Pop-Up via JapanDict
+What’s Good:
+
+Great use of async fetch on hover.
+
+Smart UX choice — don’t overwhelm users with full dictionary cards unless requested.
+
+Using FuriganaText as the integration point keeps it clean.
+
+Suggestions:
+
+Debounce hover fetches so you don’t hammer the API:
+
+ts
+Copy
+Edit
+const debounce = (fn, delay) => {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+};
+const debouncedHover = debounce(handleWordHover, 200);
+Fallback if API fails (e.g., offline or limit hit):
+
+ts
+Copy
+Edit
+try {
+  const res = await fetch(...);
+  if (!res.ok) throw new Error();
+  const data = await res.json();
+  setPopupContent(data.definition);
+} catch {
+  setPopupContent("Definition not found.");
+}
+Add option to save word to vocab tracker from the popup itself:
+
+ts
+Copy
+Edit
+<button onClick={() => addWordToTracker(word)}>Add to My Vocab</button>
+✨ Bonus Ideas
+Popup Enhancements:
+
+Show kana + pitch accent if possible.
+
+Let user “star” a word (like Anki) for focused review.
+
+Option to show example sentence on click.
+
+Progress Dashboard:
+
+A visual chart of JLPT level progression over time.
+
+"You learned 12 new words this week!"
+
+✅ Conclusion
+You're 90% there. This plan creates a responsive, learner-driven environment that brings together:
+
+JLPT-structured tracking
+
+Dynamic dictionary interaction
+
+Beautiful UI potential (based on your previous screenshots)
+
+Let me know if you'd like:
+
+The complete VocabTracker component stub
+
+Styled popup with Tailwind
+
+DB migration scripts
+
+Or a visual mock for your dashboard
+
+You're building something really strong here.
