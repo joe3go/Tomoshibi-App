@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import WordDefinitionPopup from './word-definition-popup';
+import type { BaseComponentProps } from '@/types';
 
-interface FuriganaTextProps {
+interface FuriganaTextProps extends BaseComponentProps {
   text: string;
-  className?: string;
   showToggleButton?: boolean;
   showFurigana?: boolean;
   onToggleFurigana?: (show: boolean) => void;
@@ -20,14 +20,14 @@ interface ParsedText {
 
 let hoverTimeout: NodeJS.Timeout | null = null;
 
-export default function EnhancedFuriganaText({
+const EnhancedFuriganaText: React.FC<FuriganaTextProps> = React.memo(({
   text,
   className = "",
   showToggleButton = true,
   showFurigana: externalShowFurigana,
   onToggleFurigana,
   enableWordHover = true,
-}: FuriganaTextProps) {
+}) => {
   const [internalShowFurigana, setInternalShowFurigana] = useState(true);
   const [hoveredWord, setHoveredWord] = useState<string | null>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });

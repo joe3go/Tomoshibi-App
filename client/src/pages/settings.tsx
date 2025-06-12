@@ -181,7 +181,7 @@ const Settings: React.FC<SettingsProps> = React.memo(() => {
                   type="text"
                   id="email"
                   label="Email"
-                  value={userAccountSettings?.email || ''}
+                  value={userAccountSettings?.email ?? ''}
                   onChange={() => {}}
                   disabled
                   description="Contact support to change your email address"
