@@ -1,10 +1,14 @@
+import React from "react";
 import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { queryClient } from "./lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
-import { useState } from "react";
+import ErrorBoundary from "@/components/common/ErrorBoundary";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
+
+// Import pages directly for now to avoid routing conflicts
 import Landing from "@/pages/landing";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
@@ -19,20 +23,11 @@ import History from "@/pages/history";
 import Settings from "@/pages/settings";
 import ScenarioBrowse from "@/pages/scenario-browse";
 
-function Router() {
+const Router: React.FC = React.memo(() => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="glass-card rounded-3xl p-8">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 border-4 border-primary border-l-transparent rounded-full animate-spin"></div>
-            <span className="text-foreground">Loading...</span>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner fullScreen message="Initializing application..." />;
   }
 
   return (
@@ -60,19 +55,25 @@ function Router() {
       <Route component={NotFound} />
     </Switch>
   );
-}
+});
 
-function App() {
+Router.displayName = 'Router';
+
+const App: React.FC = React.memo(() => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <div className="dark min-h-screen bg-background">
-          <Toaster />
-          <Router />
-        </div>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <div className="dark min-h-screen bg-background">
+            <Toaster />
+            <Router />
+          </div>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
-}
+});
+
+App.displayName = 'App';
 
 export default App;
