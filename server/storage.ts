@@ -70,7 +70,7 @@ export interface IStorage {
   createVocabTracker(tracker: InsertVocabTracker): Promise<VocabTracker>;
   updateVocabTracker(userId: number, wordId: number, updates: Partial<VocabTracker>): Promise<VocabTracker>;
   getUserVocabTracker(userId: number): Promise<(VocabTracker & { word: JlptVocab })[]>;
-  incrementWordFrequency(userId: number, wordId: number): Promise<VocabTracker>;
+  incrementWordFrequency(userId: number, wordId: number, source?: 'user' | 'ai' | 'hover'): Promise<VocabTracker>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -259,9 +259,12 @@ export class DatabaseStorage implements IStorage {
         userId: vocabTracker.userId,
         wordId: vocabTracker.wordId,
         frequency: vocabTracker.frequency,
+        userUsageCount: vocabTracker.userUsageCount,
+        aiEncounterCount: vocabTracker.aiEncounterCount,
         lastSeenAt: vocabTracker.lastSeenAt,
         memoryStrength: vocabTracker.memoryStrength,
         nextReviewAt: vocabTracker.nextReviewAt,
+        source: vocabTracker.source,
         word: jlptVocab,
       })
       .from(vocabTracker)

@@ -13,9 +13,12 @@ interface VocabTrackerEntry {
   userId: number;
   wordId: number;
   frequency: number;
+  userUsageCount: number;
+  aiEncounterCount: number;
   lastSeenAt: string | null;
   memoryStrength: number;
   nextReviewAt: string | null;
+  source: string;
   word: {
     id: number;
     kanji: string | null;
@@ -43,6 +46,7 @@ const JLPT_TARGETS = {
 export default function VocabTracker() {
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('frequency');
+  const [activeTab, setActiveTab] = useState<string>('all');
 
   const { data: vocabData = [], isLoading } = useQuery<VocabTrackerEntry[]>({
     queryKey: ['/api/vocab-tracker'],
@@ -73,13 +77,21 @@ export default function VocabTracker() {
 
   // Filter and sort data
   const filteredData = (vocabData as VocabTrackerEntry[])
-    .filter((entry: VocabTrackerEntry) => 
-      selectedLevel === 'all' || entry.word.jlptLevel === selectedLevel
-    )
+    .filter((entry: VocabTrackerEntry) => {
+      const levelMatch = selectedLevel === 'all' || entry.word.jlptLevel === selectedLevel;
+      const tabMatch = activeTab === 'all' || 
+        (activeTab === 'user' && (entry.userUsageCount || 0) > 0) ||
+        (activeTab === 'ai' && (entry.aiEncounterCount || 0) > 0);
+      return levelMatch && tabMatch;
+    })
     .sort((a: VocabTrackerEntry, b: VocabTrackerEntry) => {
       switch (sortBy) {
         case 'frequency':
           return (b.frequency || 0) - (a.frequency || 0);
+        case 'user-usage':
+          return (b.userUsageCount || 0) - (a.userUsageCount || 0);
+        case 'ai-encounters':
+          return (b.aiEncounterCount || 0) - (a.aiEncounterCount || 0);
         case 'recent':
           return new Date(b.lastSeenAt || 0).getTime() - new Date(a.lastSeenAt || 0).getTime();
         case 'alphabetical':
@@ -88,6 +100,10 @@ export default function VocabTracker() {
           return 0;
       }
     });
+
+  // Calculate split statistics
+  const userVocabCount = vocabData.filter(entry => (entry.userUsageCount || 0) > 0).length;
+  const aiVocabCount = vocabData.filter(entry => (entry.aiEncounterCount || 0) > 0).length;
 
   const formatLastSeen = (dateString: string | null) => {
     if (!dateString) return 'Never';
@@ -129,6 +145,8 @@ export default function VocabTracker() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="frequency">Most Frequent</SelectItem>
+              <SelectItem value="user-usage">Your Usage</SelectItem>
+              <SelectItem value="ai-encounters">AI Encounters</SelectItem>
               <SelectItem value="recent">Recently Seen</SelectItem>
               <SelectItem value="alphabetical">Alphabetical</SelectItem>
             </SelectContent>
@@ -162,19 +180,74 @@ export default function VocabTracker() {
         })}
       </div>
 
+      {/* Additional Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Vocabulary Sources</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Your Usage</span>
+                <Badge variant="default">{userVocabCount} words</Badge>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">AI Encounters</span>
+                <Badge variant="secondary">{aiVocabCount} words</Badge>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Total Unique</span>
+                <Badge variant="outline">{stats.total} words</Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Learning Progress</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Active Learning</span>
+                <span className="text-sm font-medium">
+                  {Math.round((userVocabCount / Math.max(stats.total, 1)) * 100)}%
+                </span>
+              </div>
+              <Progress 
+                value={(userVocabCount / Math.max(stats.total, 1)) * 100} 
+                className="h-2" 
+              />
+              <p className="text-xs text-muted-foreground">
+                Words you've actively used vs encountered
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Vocabulary List */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BookOpen className="w-5 h-5" />
-            Encountered Vocabulary
+            Vocabulary Tracker
             <Badge variant="secondary">{filteredData.length} words</Badge>
           </CardTitle>
           <CardDescription>
-            Words you've encountered during conversations and practice
+            Track your Japanese vocabulary progress and usage patterns
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="all">All Words ({stats.total})</TabsTrigger>
+              <TabsTrigger value="user">Your Usage ({userVocabCount})</TabsTrigger>
+              <TabsTrigger value="ai">AI Encounters ({aiVocabCount})</TabsTrigger>
+            </TabsList>
+          </Tabs>
           {filteredData.length === 0 ? (
             <div className="text-center py-8">
               <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
