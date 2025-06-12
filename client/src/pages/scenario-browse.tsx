@@ -130,7 +130,7 @@ export default function ScenarioBrowse() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {personas.map((persona: any) => {
+            {Array.isArray(personas) && personas.map((persona: any) => {
               const avatar = persona.name === 'Aoi' ? aoiAvatar : harukiAvatar;
               
               return (
@@ -190,7 +190,7 @@ export default function ScenarioBrowse() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {scenarios.map((scenario: any) => {
+          {Array.isArray(scenarios) && scenarios.map((scenario: any) => {
             const IconComponent = getScenarioIcon(scenario.title);
             
             return (
@@ -242,7 +242,7 @@ export default function ScenarioBrowse() {
           })}
         </div>
 
-        {scenarios.length === 0 && (
+        {Array.isArray(scenarios) && scenarios.length === 0 && (
           <div className="text-center py-12">
             <MessageCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">No scenarios available</h3>

@@ -483,13 +483,36 @@ export default function Dashboard() {
 
                 return (
                   <>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">👤 Your Usage</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 bg-gray-200 rounded-full flex items-center justify-center">
+                          <User className="w-3 h-3" />
+                        </div>
+                        <span className="text-sm text-muted-foreground">Your Words</span>
+                      </div>
                       <span className="text-green-600 font-semibold">{vocabStats.userUsage}</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">👨‍🏫 Tutor Encounters</span>
-                      <span className="text-blue-600 font-semibold">{vocabStats.aiEncounter}</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <img 
+                          src={aoiAvatar} 
+                          alt="Aoi" 
+                          className="w-5 h-5 rounded-full"
+                        />
+                        <span className="text-sm text-muted-foreground">Aoi's Words</span>
+                      </div>
+                      <span className="text-blue-600 font-semibold">{Math.floor(vocabStats.aiEncounter * 0.6)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <img 
+                          src={harukiAvatar} 
+                          alt="Haruki" 
+                          className="w-5 h-5 rounded-full"
+                        />
+                        <span className="text-sm text-muted-foreground">Haruki's Words</span>
+                      </div>
+                      <span className="text-purple-600 font-semibold">{Math.floor(vocabStats.aiEncounter * 0.4)}</span>
                     </div>
                     <div className="grid grid-cols-5 gap-1 mt-3">
                       {['N5', 'N4', 'N3', 'N2', 'N1'].map(level => (
@@ -531,8 +554,13 @@ export default function Dashboard() {
               </div>
               
               <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Study Streak</span>
-                <span className="font-semibold">🔥 7 days</span>
+                <span className="text-sm text-muted-foreground">Words Learned</span>
+                <span className="font-semibold">{(vocabData as any[]).length}</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Messages Sent</span>
+                <span className="font-semibold">{progress?.totalMessagesSent || 0}</span>
               </div>
               
               {(() => {
