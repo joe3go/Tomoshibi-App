@@ -17,13 +17,7 @@ import EnhancedFuriganaText from "@/components/enhanced-furigana-text";
 import harukiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
 import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
 
-// Placeholder translation function (replace with actual API call)
-async function translateEnglishToJapanese(text: string): Promise<string> {
-  // Simulate an API call with a delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  // Basic translation logic (replace with real translation)
-  return `(Translated) ${text}`;
-}
+// Translation is now handled server-side
 
 export default function Chat() {
   const [, params] = useRoute("/chat/:conversationId");
@@ -60,7 +54,7 @@ export default function Chat() {
       const userMessage = {
         id: Date.now(), // Temporary ID
         content,
-        sender: 'user', // Fixed: changed from 'role' to 'sender' for proper rendering
+        sender: 'user',
         createdAt: new Date().toISOString(),
         vocabUsed: [],
         grammarUsed: []
@@ -74,31 +68,41 @@ export default function Chat() {
         }),
       );
 
-      // Check if the message contains English, if so, translate it
-      let translatedContent = content;
-      if (/[a-zA-Z]/.test(content)) {
-        translatedContent = await translateEnglishToJapanese(content);
-      }
-
-      // Send to server
+      // Send original content to server - server handles translation
       const response = await apiRequest(
         "POST",
         `/api/conversations/${conversationId}/messages`,
         {
-          content: translatedContent, // Send translated content for processing
+          content: content, // Send original content
         },
       );
       return await response.json();
     },
-    onSuccess: (messages) => {
-      // Replace with actual messages from server
+    onSuccess: (responseData) => {
+      // Handle both messages and translations from server
+      const { messages, translations } = responseData;
+      
       queryClient.setQueryData(
         [`/api/conversations/${conversationId}`],
         (oldData: any) => ({
           ...oldData,
-          messages,
+          messages: messages || responseData, // Fallback for backward compatibility
         }),
       );
+
+      // Show translation notification if translations were provided
+      if (translations && translations.length > 0) {
+        const translationText = translations.map((t: any) => 
+          `${t.english} → ${t.japanese} (${t.hiragana})`
+        ).join(', ');
+        
+        toast({
+          title: "Translation applied",
+          description: `English words translated: ${translationText}`,
+          duration: 4000,
+        });
+      }
+
       setMessage("");
     },
     onError: (error) => {
