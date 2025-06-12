@@ -12,7 +12,7 @@
     --background: hsl(35, 25%, 95%);
     --foreground: hsl(0, 0%, 5%);
     --card: hsl(35, 25%, 98%);
-    --card-foreground: hsl(0, 0%, 100%);
+    --card-foreground: hsl(0, 0%, 5%);
     --popover: hsl(35, 35%, 96%);
     --popover-foreground: hsl(0, 0%, 15%);
 
@@ -165,16 +165,9 @@
 
   .message-bubble.user {
     background: var(--primary);
-    color: var(--primary-foreground);
+    color: white !important;
     border-radius: 18px 18px 6px 18px;
     margin-left: auto;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  }
-
-  .message-bubble.user {
-    background: var(--primary);
-    color: var(--primary-foreground);
-    border-radius: 18px 6px 18px 18px;
     box-shadow: 0 2px 4px rgba(220, 38, 38, 0.15);
   }
 
@@ -264,7 +257,7 @@
   .btn-japanese {
     @apply px-6 py-3 rounded-xl font-medium transition-all duration-200;
     background: linear-gradient(135deg, var(--primary) 0%, hsl(350, 70%, 40%) 100%);
-    color: var(--primary-foreground);
+    color: white !important;
     box-shadow:
       0 2px 4px rgba(220, 38, 38, 0.2),
       inset 0 1px 0 rgba(255, 255, 255, 0.2);
@@ -338,6 +331,32 @@
   .progress-bar .progress-fill {
     @apply h-full rounded-full;
     background: linear-gradient(90deg, var(--primary) 0%, hsl(350, 70%, 50%) 100%);
+  }
+
+  /* Red Background Text Fix - Ensure all red backgrounds have white text */
+  [class*="bg-red"], 
+  [style*="background-color: red"], 
+  [style*="background: red"],
+  [class*="bg-primary"],
+  .gradient-button,
+  .message-bubble.user,
+  .btn-japanese,
+  [style*="background: var(--primary)"],
+  [class*="bg-destructive"] {
+    color: white !important;
+  }
+
+  /* Specific overrides for red background components */
+  .gradient-button * {
+    color: white !important;
+  }
+
+  .message-bubble.user * {
+    color: white !important;
+  }
+
+  .btn-japanese * {
+    color: white !important;
   }
 
   /* ==============================
