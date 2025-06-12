@@ -1,0 +1,342 @@
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
+import { Calendar, MessageCircle, User, Clock, BookOpen, TrendingUp, BarChart3, Play, CheckCircle } from 'lucide-react';
+import { useLocation } from 'wouter';
+import EnhancedFuriganaText from '@/components/enhanced-furigana-text';
+
+interface ConversationWithDetails {
+  id: number;
+  userId: number;
+  personaId: number;
+  scenarioId: number;
+  phase: string;
+  status: 'active' | 'completed' | 'paused';
+  startedAt: string;
+  completedAt?: string;
+  messages: Array<{
+    id: number;
+    sender: 'user' | 'ai';
+    content: string;
+    vocabUsed: number[];
+    grammarUsed: number[];
+    timestamp: string;
+  }>;
+  persona: {
+    id: number;
+    name: string;
+    type: string;
+    jlptLevel: string;
+  };
+  scenario: {
+    id: number;
+    title: string;
+    description: string;
+    jlptLevel: string;
+  };
+}
+
+export default function History() {
+  const [, setLocation] = useLocation();
+  const [selectedTab, setSelectedTab] = useState('all');
+
+  // Fetch all conversations (both active and completed)
+  const { data: activeConversations = [], isLoading: loadingActive } = useQuery({
+    queryKey: ['/api/conversations'],
+  });
+
+  const { data: completedConversations = [], isLoading: loadingCompleted } = useQuery({
+    queryKey: ['/api/conversations/completed'],
+  });
+
+  const { data: personas = [] } = useQuery({
+    queryKey: ['/api/personas'],
+  });
+
+  const { data: scenarios = [] } = useQuery({
+    queryKey: ['/api/scenarios'],
+  });
+
+  const { data: vocabTracker = [] } = useQuery({
+    queryKey: ['/api/vocab-tracker'],
+  });
+
+  const allConversations = [...activeConversations, ...completedConversations];
+
+  // Calculate analytics
+  const analytics = {
+    totalConversations: allConversations.length,
+    completedConversations: completedConversations.length,
+    activeConversations: activeConversations.length,
+    totalMessages: allConversations.reduce((sum: number, conv: any) => {
+      return sum + (conv.messages?.length || 0);
+    }, 0),
+    uniqueVocabWords: new Set(
+      allConversations.flatMap((conv: any) => 
+        conv.messages?.flatMap((msg: any) => msg.vocabUsed || []) || []
+      )
+    ).size,
+    averageMessagesPerConversation: allConversations.length > 0 
+      ? Math.round(allConversations.reduce((sum: number, conv: any) => {
+          return sum + (conv.messages?.length || 0);
+        }, 0) / allConversations.length)
+      : 0,
+  };
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'completed': return 'default';
+      case 'active': return 'secondary';
+      case 'paused': return 'outline';
+      default: return 'outline';
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getConversationDuration = (startedAt: string, completedAt?: string) => {
+    const start = new Date(startedAt);
+    const end = completedAt ? new Date(completedAt) : new Date();
+    const diffMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
+    
+    if (diffMinutes < 60) return `${diffMinutes}m`;
+    const hours = Math.floor(diffMinutes / 60);
+    const minutes = diffMinutes % 60;
+    return `${hours}h ${minutes}m`;
+  };
+
+  const filteredConversations = allConversations.filter((conv: any) => {
+    if (selectedTab === 'all') return true;
+    if (selectedTab === 'completed') return conv.status === 'completed';
+    if (selectedTab === 'active') return conv.status === 'active';
+    return true;
+  });
+
+  if (loadingActive || loadingCompleted) {
+    return (
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-center min-h-[200px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+              <p className="text-muted-foreground">Loading conversation history...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-6xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Conversation History</h1>
+            <p className="text-muted-foreground">Your Japanese learning journey and progress</p>
+          </div>
+          <Button onClick={() => setLocation('/dashboard')} variant="outline">
+            Back to Dashboard
+          </Button>
+        </div>
+
+        {/* Analytics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" />
+                Total Conversations
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{analytics.totalConversations}</div>
+              <p className="text-xs text-muted-foreground">
+                {analytics.completedConversations} completed
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <MessageCircle className="w-4 h-4" />
+                Messages Sent
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{analytics.totalMessages}</div>
+              <p className="text-xs text-muted-foreground">
+                ~{analytics.averageMessagesPerConversation} per conversation
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <BookOpen className="w-4 h-4" />
+                Vocabulary Used
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{analytics.uniqueVocabWords}</div>
+              <p className="text-xs text-muted-foreground">unique words encountered</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <TrendingUp className="w-4 h-4" />
+                Progress Rate
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {analytics.totalConversations > 0 
+                  ? Math.round((analytics.completedConversations / analytics.totalConversations) * 100)
+                  : 0}%
+              </div>
+              <p className="text-xs text-muted-foreground">completion rate</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Conversation List */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Conversations</CardTitle>
+            <CardDescription>Browse your conversation history and analytics</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="all">All ({allConversations.length})</TabsTrigger>
+                <TabsTrigger value="active">Active ({activeConversations.length})</TabsTrigger>
+                <TabsTrigger value="completed">Completed ({completedConversations.length})</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value={selectedTab} className="space-y-4 mt-6">
+                {filteredConversations.length === 0 ? (
+                  <div className="text-center py-8">
+                    <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">
+                      {selectedTab === 'completed' 
+                        ? "No completed conversations yet" 
+                        : selectedTab === 'active'
+                        ? "No active conversations"
+                        : "No conversations found"}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {filteredConversations.map((conversation: any) => {
+                      const persona = personas.find((p: any) => p.id === conversation.personaId);
+                      const scenario = scenarios.find((s: any) => s.id === conversation.scenarioId);
+                      const messageCount = conversation.messages?.length || 0;
+                      const vocabWordsUsed = new Set(
+                        conversation.messages?.flatMap((msg: any) => msg.vocabUsed || []) || []
+                      ).size;
+
+                      return (
+                        <Card key={conversation.id} className="hover:shadow-md transition-shadow">
+                          <CardContent className="p-6">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h3 className="font-semibold text-lg">
+                                    {scenario?.title || 'Unknown Scenario'}
+                                  </h3>
+                                  <Badge variant={getStatusBadgeVariant(conversation.status)}>
+                                    {conversation.status === 'active' && <Play className="w-3 h-3 mr-1" />}
+                                    {conversation.status === 'completed' && <CheckCircle className="w-3 h-3 mr-1" />}
+                                    {conversation.status}
+                                  </Badge>
+                                  <Badge variant="outline">{scenario?.jlptLevel || 'N5'}</Badge>
+                                </div>
+
+                                <p className="text-sm text-muted-foreground mb-3">
+                                  with {persona?.name || 'Unknown'} • {persona?.type || 'tutor'}
+                                </p>
+
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                  <div className="flex items-center gap-2">
+                                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                                    <span>{formatDate(conversation.startedAt)}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="w-4 h-4 text-muted-foreground" />
+                                    <span>{getConversationDuration(conversation.startedAt, conversation.completedAt)}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <MessageCircle className="w-4 h-4 text-muted-foreground" />
+                                    <span>{messageCount} messages</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <BookOpen className="w-4 h-4 text-muted-foreground" />
+                                    <span>{vocabWordsUsed} vocab words</span>
+                                  </div>
+                                </div>
+
+                                {/* Last message preview */}
+                                {conversation.messages && conversation.messages.length > 0 && (
+                                  <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                                    <p className="text-xs text-muted-foreground mb-1">Last message:</p>
+                                    <div className="text-sm">
+                                      <EnhancedFuriganaText
+                                        text={conversation.messages[conversation.messages.length - 1].content}
+                                        showToggleButton={false}
+                                        enableWordHover={false}
+                                        className="line-clamp-2"
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="flex gap-2 ml-4">
+                                {conversation.status === 'active' && (
+                                  <Button
+                                    onClick={() => setLocation(`/chat/${conversation.id}`)}
+                                    size="sm"
+                                  >
+                                    Continue
+                                  </Button>
+                                )}
+                                <Button
+                                  onClick={() => setLocation(`/chat/${conversation.id}`)}
+                                  variant="outline"
+                                  size="sm"
+                                >
+                                  View
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

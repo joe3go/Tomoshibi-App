@@ -271,22 +271,35 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
-  async incrementWordFrequency(userId: number, wordId: number): Promise<VocabTracker> {
+  async incrementWordFrequency(userId: number, wordId: number, source: 'user' | 'ai' | 'hover' = 'hover'): Promise<VocabTracker> {
     const existing = await this.getVocabTracker(userId, wordId);
     
     if (existing) {
-      return await this.updateVocabTracker(userId, wordId, {
+      const updates: Partial<VocabTracker> = {
         frequency: (existing.frequency || 0) + 1,
         lastSeenAt: new Date(),
-      });
+      };
+      
+      if (source === 'user') {
+        updates.userUsageCount = (existing.userUsageCount || 0) + 1;
+      } else if (source === 'ai') {
+        updates.aiEncounterCount = (existing.aiEncounterCount || 0) + 1;
+      }
+      
+      return await this.updateVocabTracker(userId, wordId, updates);
     } else {
-      return await this.createVocabTracker({
+      const newTracker: InsertVocabTracker = {
         userId,
         wordId,
         frequency: 1,
+        userUsageCount: source === 'user' ? 1 : 0,
+        aiEncounterCount: source === 'ai' ? 1 : 0,
         lastSeenAt: new Date(),
         memoryStrength: 0,
-      });
+        source: source === 'hover' ? 'manual' : 'conversation',
+      };
+      
+      return await this.createVocabTracker(newTracker);
     }
   }
 }

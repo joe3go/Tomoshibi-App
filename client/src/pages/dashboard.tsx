@@ -211,7 +211,7 @@ export default function Dashboard() {
 
                     <div className="flex items-center justify-between">
                       <div className="status-tag in-progress">In Progress</div>
-                      <div className="text-xs text-muted">
+                      <div className="text-xs text-mutedForeground">
                         {new Date(conversation.createdAt).toLocaleDateString()}
                       </div>
                     </div>
@@ -302,59 +302,63 @@ export default function Dashboard() {
           <div className="grid md:grid-cols-2 gap-6">
             {Array.isArray(personas) && personas.length > 0 ? (
               // Remove duplicates by filtering unique personas by id
-              personas.filter((persona: any, index: number, self: any[]) => 
-                index === self.findIndex((p: any) => p.id === persona.id)
-              ).map((persona: any) => {
-                const getAvatarImage = (persona: any) => {
-                  if (persona.type === 'teacher') return aoiAvatar; // Aoi is the female teacher
-                  if (persona.type === 'friend') return harukiAvatar; // Haruki is the male friend
-                  return aoiAvatar; // Default fallback
-                };
+              personas
+                .filter(
+                  (persona: any, index: number, self: any[]) =>
+                    index === self.findIndex((p: any) => p.id === persona.id),
+                )
+                .map((persona: any) => {
+                  const getAvatarImage = (persona: any) => {
+                    if (persona.type === "teacher") return aoiAvatar; // Aoi is the female teacher
+                    if (persona.type === "friend") return harukiAvatar; // Haruki is the male friend
+                    return aoiAvatar; // Default fallback
+                  };
 
-                return (
-                  <div
-                    key={persona.id}
-                    className="content-card cursor-pointer group hover:shadow-lg transition-shadow"
-                    onClick={() => setLocation("/tutor-selection")}
-                  >
-                    <div className="flex items-start space-x-4">
-                      <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
-                        <img 
-                          src={getAvatarImage(persona)} 
-                          alt={persona.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            // Fallback to text avatar if image fails
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            target.parentElement!.innerHTML = `
-                              <div class="avatar ${persona.type === 'teacher' ? 'sensei' : 'student'} w-full h-full flex items-center justify-center">
+                  return (
+                    <div
+                      key={persona.id}
+                      className="content-card cursor-pointer group hover:shadow-lg transition-shadow"
+                      onClick={() => setLocation("/tutor-selection")}
+                    >
+                      <div className="flex items-start space-x-4">
+                        <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
+                          <img
+                            src={getAvatarImage(persona)}
+                            alt={persona.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // Fallback to text avatar if image fails
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = "none";
+                              target.parentElement!.innerHTML = `
+                              <div class="avatar ${persona.type === "teacher" ? "sensei" : "student"} w-full h-full flex items-center justify-center">
                                 <span class="font-japanese text-foreground">
-                                  ${persona.type === 'teacher' ? '先' : '友'}
+                                  ${persona.type === "teacher" ? "先" : "友"}
                                 </span>
                               </div>
                             `;
-                          }}
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors mb-1">
-                          {persona.name}
-                        </h4>
-                        <div className="status-tag n5 mb-2">
-                          {persona.jlptLevel || "N5"} Level • {persona.type === "teacher" ? "Teacher" : "Friend"}
+                            }}
+                          />
                         </div>
-                        <p className="text-sm text-foreground opacity-80">
-                          {persona.description ||
-                            (persona.type === "teacher"
-                              ? "Formal teaching style with cultural context"
-                              : "Friendly conversational approach")}
-                        </p>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors mb-1">
+                            {persona.name}
+                          </h4>
+                          <div className="status-tag n5 mb-2">
+                            {persona.jlptLevel || "N5"} Level •{" "}
+                            {persona.type === "teacher" ? "Teacher" : "Friend"}
+                          </div>
+                          <p className="text-sm text-foreground opacity-80">
+                            {persona.description ||
+                              (persona.type === "teacher"
+                                ? "Formal teaching style with cultural context"
+                                : "Friendly conversational approach")}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })
+                  );
+                })
             ) : (
               <div className="col-span-2 content-card text-center py-8">
                 <p className="text-foreground mb-4">

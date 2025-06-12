@@ -101,9 +101,60 @@ export default function EnhancedFuriganaText({
 
   // Extract individual words from text for hover functionality
   const extractWords = (content: string): string[] => {
-    // Simple word extraction - split by common delimiters but keep Japanese characters together
-    const words = content.match(/[一-龯々ぁ-んァ-ヶー]+|[A-Za-z]+|\d+/g) || [];
-    return words.filter(word => word.length > 0);
+    // More sophisticated Japanese text segmentation
+    const words: string[] = [];
+    let currentWord = '';
+    
+    for (let i = 0; i < content.length; i++) {
+      const char = content[i];
+      
+      // Check character type
+      const isKanji = /[一-龯々]/.test(char);
+      const isHiragana = /[ぁ-ん]/.test(char);
+      const isKatakana = /[ァ-ヶー]/.test(char);
+      const isAlphabetic = /[A-Za-z]/.test(char);
+      const isNumber = /\d/.test(char);
+      const isPunctuation = /[。、！？「」（）\s]/.test(char);
+      
+      if (isPunctuation) {
+        if (currentWord.length > 0) {
+          words.push(currentWord);
+          currentWord = '';
+        }
+      } else if (isKanji || isHiragana || isKatakana || isAlphabetic || isNumber) {
+        currentWord += char;
+        
+        // Break on character type changes (except kanji to hiragana)
+        const nextChar = content[i + 1];
+        if (nextChar) {
+          const nextIsKanji = /[一-龯々]/.test(nextChar);
+          const nextIsHiragana = /[ぁ-ん]/.test(nextChar);
+          const nextIsKatakana = /[ァ-ヶー]/.test(nextChar);
+          const nextIsAlphabetic = /[A-Za-z]/.test(nextChar);
+          const nextIsNumber = /\d/.test(nextChar);
+          const nextIsPunctuation = /[。、！？「」（）\s]/.test(nextChar);
+          
+          // Break conditions
+          if (nextIsPunctuation || 
+              (isKatakana && !nextIsKatakana) ||
+              (isAlphabetic && !nextIsAlphabetic) ||
+              (isNumber && !nextIsNumber) ||
+              (isHiragana && (nextIsKanji || nextIsKatakana)) ||
+              (isKanji && nextIsKatakana)) {
+            if (currentWord.length > 0) {
+              words.push(currentWord);
+              currentWord = '';
+            }
+          }
+        }
+      }
+    }
+    
+    if (currentWord.length > 0) {
+      words.push(currentWord);
+    }
+    
+    return words.filter(word => word.length > 0 && /[一-龯々ぁ-んァ-ヶー]/.test(word));
   };
 
   const handleWordHover = useCallback((word: string, event: React.MouseEvent) => {

@@ -31,8 +31,8 @@ export default function TutorSelection() {
   }
 
   const getAvatarImage = (persona: any) => {
-    if (persona.type === 'teacher') return aoiAvatar; // Aoi is the female teacher
-    if (persona.type === 'friend') return harukiAvatar; // Haruki is the male friend
+    if (persona.type === "teacher") return aoiAvatar; // Aoi is the female teacher
+    if (persona.type === "friend") return harukiAvatar; // Haruki is the male friend
     return aoiAvatar; // Default fallback
   };
 
@@ -49,91 +49,111 @@ export default function TutorSelection() {
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-xl font-semibold text-foreground">Choose Your Tutor</h1>
+          <h1 className="text-xl font-semibold text-foreground">
+            Choose Your Tutor
+          </h1>
         </div>
       </header>
 
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8 ma-spacing">
-          <h2 className="text-2xl font-bold text-foreground mb-2">Who would you like to practice with?</h2>
-          <p className="text-muted-foreground">Each tutor has a unique teaching style to match your learning preferences.</p>
+          <h2 className="text-2xl font-bold text-foreground mb-2">
+            Who would you like to practice with?
+          </h2>
+          <p className="text-muted-foreground">
+            Each tutor has a unique teaching style to match your learning
+            preferences.
+          </p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
-          {Array.isArray(personas) && personas.map((persona: any) => (
-            <Card key={persona.id} className="glass-card subtle-depth hover:scale-105 transition-all duration-300 group cursor-pointer tomoshibi-glow" onClick={() => handleTutorSelect(persona.id)}>
-              <CardContent className="p-8 text-center space-y-6">
-                {/* Avatar */}
-                <div className="w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-primary/30 group-hover:border-primary/60 transition-all duration-300 shadow-xl">
-                  <img 
-                    src={getAvatarImage(persona)} 
-                    alt={persona.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+          {Array.isArray(personas) &&
+            personas.map((persona: any) => (
+              <Card
+                key={persona.id}
+                className="glass-card subtle-depth hover:scale-105 transition-all duration-300 group cursor-pointer tomoshibi-glow"
+                onClick={() => handleTutorSelect(persona.id)}
+              >
+                <CardContent className="p-8 text-center space-y-6">
+                  {/* Avatar */}
+                  <div className="w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-primary/30 group-hover:border-primary/60 transition-all duration-300 shadow-xl">
+                    <img
+                      src={getAvatarImage(persona)}
+                      alt={persona.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
 
-                {/* Name & Title */}
-                <div className="space-y-3">
-                  <h3 className="text-2xl font-bold text-foreground">
-                    {persona.type === 'teacher' ? 'Aoi (葵) - Teacher' : 'Haruki (陽輝) - Friend'}
-                  </h3>
-                  
-                  <span className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${
-                    persona.type === 'teacher' 
-                      ? 'bg-primary/20 text-primary border border-primary/30' 
-                      : 'bg-secondary/20 text-secondary border border-secondary/30'
-                  }`}>
-                    {persona.type === 'teacher' ? 'Formal Teacher' : 'Friendly Tutor'}
-                  </span>
-                </div>
+                  {/* Name & Title */}
+                  <div className="space-y-3">
+                    <h3 className="text-2xl font-bold text-foreground">
+                      {persona.type === "teacher"
+                        ? "Aoi (葵) - Teacher"
+                        : "Haruki (陽輝) - Friend"}
+                    </h3>
 
-                {/* Description */}
-                <p className="text-muted-foreground leading-relaxed">
-                  {persona.description}
-                </p>
+                    <span
+                      className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${
+                        persona.type === "teacher"
+                          ? "bg-primary/20 text-primary border border-primary/30"
+                          : "bg-secondary/20 text-secondary border border-secondary/30"
+                      }`}
+                    >
+                      {persona.type === "teacher"
+                        ? "Formal Teacher"
+                        : "Friendly Tutor"}
+                    </span>
+                  </div>
 
-                {/* Teaching Style */}
-                <div className="bg-card/50 rounded-lg p-4 border border-border/30">
-                  <h4 className="text-sm font-semibold text-primary mb-2">Teaching Style:</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {persona.type === 'teacher' 
-                      ? 'Focuses on proper grammar, cultural context, and formal expressions. Perfect for building strong foundations.'
-                      : 'Emphasizes natural conversation flow, casual expressions, and practical communication. Great for building confidence.'
-                    }
+                  {/* Description */}
+                  <p className="text-muted-foreground leading-relaxed">
+                    {persona.description}
                   </p>
-                </div>
 
-                {/* Select Button */}
-                <Button 
-                  className={`w-full tomoshibi-glow group-hover:scale-105 transition-transform duration-300 ${
-                    persona.type === 'teacher' 
-                      ? 'bg-primary hover:bg-primary/90 text-white' 
-                      : 'bg-secondary hover:bg-secondary/90 text-foreground border border-border'
-                  }`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleTutorSelect(persona.id);
-                  }}
-                >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  Start Learning with {persona.type === 'teacher' ? 'Aoi' : 'Haruki'}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+                  {/* Teaching Style */}
+                  <div className="bg-card/50 rounded-lg p-4 border border-border/30">
+                    <h4 className="text-sm font-semibold text-primary mb-2">
+                      Teaching Style:
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      {persona.type === "teacher"
+                        ? "Focuses on proper grammar, cultural context, and formal expressions. Perfect for building strong foundations."
+                        : "Emphasizes natural conversation flow, casual expressions, and practical communication. Great for building confidence."}
+                    </p>
+                  </div>
+
+                  {/* Select Button */}
+
+                  <Button
+                    className="w-full tomoshibi-glow group-hover:scale-105 transition-transform duration-300 bg-primary hover:bg-primary/90 text-white"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleTutorSelect(persona.id);
+                    }}
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Start Learning with{" "}
+                    {persona.type === "teacher" ? "Aoi" : "Haruki"}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
         </div>
 
         {/* Free Chat Option */}
         <Card className="glass-card border-glass-border hover:border-off-white/30 transition-all duration-300 mt-8">
           <CardContent className="p-6 text-center">
-            <h3 className="text-xl font-semibold text-off-white mb-2">Free Chat Mode</h3>
+            <h3 className="text-xl font-semibold text-off-white mb-2">
+              Free Chat Mode
+            </h3>
             <p className="text-off-white/70 mb-4">
-              Practice open-ended conversations without specific scenarios. Great for exploring topics that interest you.
+              Practice open-ended conversations without specific scenarios.
+              Great for exploring topics that interest you.
             </p>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="border-off-white/30 text-off-white hover:bg-off-white/10"
-              onClick={() => setLocation('/free-chat')}
+              onClick={() => setLocation("/free-chat")}
             >
               Start Free Chat
             </Button>

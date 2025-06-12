@@ -115,9 +115,12 @@ export const vocabTracker = pgTable("vocab_tracker", {
   userId: integer("user_id").references(() => users.id).notNull(),
   wordId: integer("word_id").references(() => jlptVocab.id).notNull(),
   frequency: integer("frequency").default(0),
+  userUsageCount: integer("user_usage_count").default(0),
+  aiEncounterCount: integer("ai_encounter_count").default(0),
   lastSeenAt: timestamp("last_seen_at"),
   memoryStrength: integer("memory_strength").default(0),
   nextReviewAt: timestamp("next_review_at"),
+  source: varchar("source", { length: 20 }).default("conversation"), // 'conversation', 'manual', 'hover'
 });
 
 // Insert schemas

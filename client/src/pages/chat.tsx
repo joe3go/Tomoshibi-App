@@ -89,7 +89,11 @@ export default function Chat() {
       return await response.json();
     },
     onSuccess: () => {
+      // Invalidate multiple query keys to refresh all conversation lists
       queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/conversations/completed"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/conversations/${conversationId}`] });
+      
       toast({
         title: "Conversation completed!",
         description:
