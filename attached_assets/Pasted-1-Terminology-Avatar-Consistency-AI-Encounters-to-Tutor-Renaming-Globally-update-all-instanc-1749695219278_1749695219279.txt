@@ -1,0 +1,71 @@
+1. Terminology & Avatar Consistency
+"AI Encounters" to "Tutor" Renaming: Globally update all instances and references of the term "AI Encounters" to "Tutor" across the entire application.
+Continue Learning Cards - Tutor Avatar Display: In the "Continue Learning" cards, ensure that the tutor's actual avatar image is displayed. Currently, this section shows placeholder kanji text; this must be replaced with the corresponding tutor's avatar, mirroring the display behavior seen in the "Meet Your Tutors" section.
+2. Chat Session Management & Display
+Comprehensive Chat Session Ending & History Display Fix (Critical & Persistent):
+
+Issue 1 (Persistent): The "End Session" functionality works only when initiated from within an active chat session. It does not work when the 'End Session' button is pressed from the Dashboard or Conversation History sections.
+Issue 2 (New): Even when a chat session is successfully ended from within the chat (as per Issue 1), it does not appear in the 'Completed' section of the Conversation History.
+Requirement: Thoroughly debug and fix the 'End Session' functionality across the entire platform. Regardless of where the 'End Session' button is pressed (within chat, Dashboard, or Conversation History), the session must reliably terminate and its status must accurately update to 'Completed' in the backend. Ensure that once a session's status is 'Completed', it is correctly displayed and accessible within the 'Completed' section of the Conversation History. This implies correct querying and filtering of sessions on the backend and proper rendering on the frontend for the 'Completed' view.
+Dashboard Session Display - Remove "Invalid Date": On the Dashboard, remove the "Invalid Date" text from sessions.
+
+Dashboard Quick Actions: Implement a concise 'Continue Session' or 'End Session' option directly on the Dashboard for quick access, specifically for active or resumable chat sessions.
+
+3. Real-time Chat Experience & Styling
+Text Color for Red Background Elements: For any UI element that currently has a red background (this includes, but is not limited to, buttons and chat bubbles), change the text color displayed on top of that red background to white. This must be achieved without breaking or negatively impacting any existing CSS or Tailwind styles.
+
+User Chat Message Display Logic & Styling Fix (Critical & Persistent):
+
+Issue: When a user sends a message in a chat:
+
+It currently appears on the left side of the chat interface, in the same color/style as the AI's response.
+Only after the AI's response is received does the user's message then shift to the right side and display with a red background (as intended).
+Requirement: Correct this behavior to provide an instant and visually distinct user experience:
+
+The user's message must appear instantly upon sending.
+It should immediately be displayed on the right side of the chat interface.
+It must immediately have a red background (or the designated background color for user messages) from the moment it appears. It should never initially display with the AI's styling or position. The text on this red background must be white for optimal visibility, as per the instruction above.
+"Start a Chat" Button Behavior: Fix the "Start a Chat" button behavior so that only the specific button pressed shows 'Starting...', not all buttons.
+
+4. Vocabulary Tracker & Progress Display
+Back to Dashboard Button: Ensure the 'Back to Dashboard' button is available and visible on the Vocabulary Tracker page.
+
+Vocabulary Progress Display Enhancements:
+
+Update Vocab progress: Ensure that the vocabulary progress is updated in real time as the user interacts with the application.
+Tutor Images: In the "Vocab Progress" section, replace generic or placeholder images with the specific avatar images for the tutors, Haruki and Aoi, as they appear elsewhere on the platform (e.g., in chat or "Meet Your Tutors").
+Tutor Segmentation: Explicitly split the "Tutor" references or progress displays within the Vocab Progress section to show progress specifically for 'Aoi' and 'Haruki' individually, rather than a single aggregated "Tutor" category.
+User Profile Picture: For the user's own vocabulary progress display, ensure that the user's uploaded profile picture is correctly utilized and displayed. If no profile picture is uploaded, a suitable default avatar should be used.
+Recommended Wording for Vocab Tracker Sections:
+
+For the main title or section heading, use: "Your JLPT Vocabulary Journey".
+For sub-sections related to the user's unique vocabulary by JLPT level, use: "Your Unique Words by JLPT Level" (e.g., "N5: [X unique words]").
+For sub-sections related to tutor contributions, use: "Tutor-Introduced Vocabulary" or "Words from Your Conversations".
+Within tutor sections, explicitly label: "Aoi's Contribution: [X unique words]" and "Haruki's Contribution: [Y unique words]".
+5. Application Settings
+Chat Settings with Notifications:
+
+Add Chat Settings including notification controls. Please specify the access point (e.g., accessible from within an active chat session or the main settings panel).
+
+Within these Chat Settings, provide controls for:
+
+Sound Notifications: A toggle switch to enable/disable sound notifications for incoming chat messages.
+Desktop/Browser Notifications: A toggle switch to enable/disable desktop or browser-level notifications for new messages.
+Main Dashboard Settings Updates: Update the Main Dashboard Settings to include:
+
+Change Password functionality.
+Update Display Name functionality.
+Send Feedback option that emails feedback directly to feedback@tomoshibiapp.com. (Please clarify if this should open the user's default email client with the address pre-filled, or if it should be an in-app form that dispatches the email.)
+6. Reliable Online Word Definition Lookup (Crucial Fix)
+Goal: Ensure that the word definition lookup feature reliably retrieves definitions from an external source via your backend, as the client does not store dictionary data locally.
+
+Issue: The current backend logic, attempting to fetch from https://www.japandict.com/api/lookup, consistently fails to find definitions.
+
+Requirement: Investigate and fix the backend's ability to fetch word definitions. This will likely involve:
+
+Verification: Confirm that your backend server can successfully connect to the https://www.japandict.com/api/lookup endpoint. Check for network issues, firewall restrictions, or IP blocking.
+API Compatibility: Verify that https://www.japandict.com/api/lookup is still an active, public, and reliable API endpoint for fetching Japanese word definitions.
+Parameter Accuracy: Ensure the word parameter being sent to the external API is correctly formatted and encoded for the specific API's expectations (e.g., proper Japanese characters, no unexpected symbols).
+Response Handling: Improve the error logging in your backend to capture and display the exact status code and response body received from japandict.com when a definition isn't found. This will help diagnose if it's a "word not found" error from the API itself, a rate limit, or a server-side issue.
+Alternative API (If necessary): If japandict.com proves unreliable or is not intended for public programmatic access, the builder should propose and integrate an alternative, reliable external Japanese dictionary API (e.g., Jisho.org's API) to ensure definitions can be consistently retrieved.
+Expected Behavior: When a user requests a word definition, the popup should consistently display the correct definition (or a clear "not found" message if the word truly doesn't exist in the dictionary) by successfully querying the chosen external API via your backend. The "Source" badge should accurately reflect 'External'.

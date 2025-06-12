@@ -12,5 +12,8 @@ export function removeAuthToken(): void {
 
 export function getAuthHeaders(): Record<string, string> {
   const token = getAuthToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  if (!token || token.trim() === '' || token === 'undefined' || token === 'null') {
+    return {};
+  }
+  return { Authorization: `Bearer ${token}` };
 }

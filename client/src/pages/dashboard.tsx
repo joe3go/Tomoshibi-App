@@ -143,6 +143,29 @@ export default function Dashboard() {
     }
   };
 
+  // End conversation mutation that works from dashboard
+  const endConversationMutation = useMutation({
+    mutationFn: async (conversationId: number) => {
+      const response = await apiRequest(
+        "PATCH",
+        `/api/conversations/${conversationId}`,
+        {
+          status: "completed",
+          completedAt: new Date().toISOString(),
+        }
+      );
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/conversations/completed"] });
+    },
+  });
+
+  const handleEndSessionDashboard = (conversationId: number) => {
+    endConversationMutation.mutate(conversationId);
+  };
+
   const handleSaveSettings = () => {
     const updates: any = {
       displayName,
@@ -160,32 +183,6 @@ export default function Dashboard() {
   const handleSendFeedback = () => {
     const emailUrl = `mailto:feedback@tomoshibiapp.com?subject=Tomoshibi App Feedback&body=Hi team,%0A%0AI'd like to share some feedback about the app:%0A%0A`;
     window.open(emailUrl, '_blank');
-  };
-
-  const endSessionDashboardMutation = useMutation({
-    mutationFn: async (conversationId: number) => {
-      const response = await fetch(`/api/conversations/${conversationId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ 
-          status: 'completed',
-          completedAt: new Date().toISOString()
-        })
-      });
-      
-      if (!response.ok) throw new Error('Failed to end session');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
-    }
-  });
-
-  const handleEndSessionDashboard = (conversationId: number) => {
-    endSessionDashboardMutation.mutate(conversationId);
   };
 
   if (
