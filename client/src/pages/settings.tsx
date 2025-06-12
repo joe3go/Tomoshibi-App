@@ -14,7 +14,7 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/useAuth';
 import { removeAuthToken } from '@/lib/auth';
 
-interface UserSettings {
+interface UserAccountSettings {
   id: number;
   email: string;
   displayName: string;
@@ -24,16 +24,16 @@ interface UserSettings {
   preferredDifficulty: string;
 }
 
-interface UserProgress {
+interface UserLearningProgress {
   id: number;
   userId: number;
   jlptLevel: string;
-  vocabEncountered: number[];
-  vocabMastered: number[];
-  grammarEncountered: number[];
-  grammarMastered: number[];
-  totalConversations: number;
-  totalMessagesSent: number;
+  vocabularyWordsEncountered: number[];
+  vocabularyWordsMastered: number[];
+  grammarPatternsEncountered: number[];
+  grammarPatternsMastered: number[];
+  totalConversationSessions: number;
+  totalMessagesSentCount: number;
 }
 
 export default function Settings() {

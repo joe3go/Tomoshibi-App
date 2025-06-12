@@ -21,44 +21,44 @@ import * as wanakana from 'wanakana';
 export default function Chat() {
   const [, params] = useRoute("/chat/:conversationId");
   const [, setLocation] = useLocation();
-  const [message, setMessage] = useState("");
-  const [showFurigana, setShowFurigana] = useState(() => {
-    const saved = localStorage.getItem("furigana-visible");
-    return saved !== null ? saved === "true" : true;
+  const [currentUserMessage, setCurrentUserMessage] = useState("");
+  const [isFuriganaVisible, setIsFuriganaVisible] = useState(() => {
+    const savedPreference = localStorage.getItem("furigana-visible");
+    return savedPreference !== null ? savedPreference === "true" : true;
   });
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const conversationMessagesEndReference = useRef<HTMLDivElement>(null);
+  const messageInputTextareaReference = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
 
-  const conversationId = params?.conversationId
+  const activeConversationId = params?.conversationId
     ? parseInt(params.conversationId)
     : 0;
 
-  const { data: conversationData, isLoading } = useQuery({
-    queryKey: [`/api/conversations/${conversationId}`],
-    enabled: !!conversationId,
+  const { data: conversationDetails, isLoading: isLoadingConversation } = useQuery({
+    queryKey: [`/api/conversations/${activeConversationId}`],
+    enabled: !!activeConversationId,
   });
 
-  const { data: personas = [] } = useQuery({
+  const { data: availableTeachingPersonas = [] } = useQuery({
     queryKey: ["/api/personas"],
   });
 
-  const { data: scenarios = [] } = useQuery({
+  const { data: availableLearningScenarios = [] } = useQuery({
     queryKey: ["/api/scenarios"],
   });
 
   // WanaKana integration for real-time romaji to kana conversion
   useEffect(() => {
-    if (textareaRef.current) {
+    if (messageInputTextareaReference.current) {
       // Bind WanaKana to the textarea with IME mode enabled
-      wanakana.bind(textareaRef.current, {
+      wanakana.bind(messageInputTextareaReference.current, {
         IMEMode: true
       });
 
       return () => {
-        if (textareaRef.current) {
-          wanakana.unbind(textareaRef.current);
+        if (messageInputTextareaReference.current) {
+          wanakana.unbind(messageInputTextareaReference.current);
         }
       };
     }
@@ -67,7 +67,7 @@ export default function Chat() {
   // Handle input changes - WanaKana will automatically convert romaji to hiragana
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     // The value will already be converted by WanaKana's IME mode
-    setMessage(e.target.value);
+    setCurrentUserMessage(e.target.value);
   };
 
   const sendMessageMutation = useMutation({
