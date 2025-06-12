@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import WordDefinitionPopup from './word-definition-popup';
-import type { BaseComponentProps } from '@/types';
 
-interface FuriganaTextProps extends BaseComponentProps {
+interface FuriganaTextProps {
   text: string;
+  className?: string;
   showToggleButton?: boolean;
   showFurigana?: boolean;
   onToggleFurigana?: (show: boolean) => void;
