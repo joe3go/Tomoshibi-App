@@ -108,6 +108,17 @@ export const userProgress = pgTable("user_progress", {
   lastActivity: timestamp("last_activity").defaultNow(),
 });
 
+// Vocabulary tracker for individual user-word relationships
+export const vocabTracker = pgTable("vocab_tracker", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  wordId: integer("word_id").references(() => jlptVocab.id).notNull(),
+  frequency: integer("frequency").default(0),
+  lastSeenAt: timestamp("last_seen_at"),
+  memoryStrength: integer("memory_strength").default(0),
+  nextReviewAt: timestamp("next_review_at"),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -153,6 +164,10 @@ export const insertUserProgressSchema = createInsertSchema(userProgress).omit({
   lastActivity: true,
 });
 
+export const insertVocabTrackerSchema = createInsertSchema(vocabTracker).omit({
+  id: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -170,3 +185,5 @@ export type JlptGrammar = typeof jlptGrammar.$inferSelect;
 export type InsertJlptGrammar = z.infer<typeof insertGrammarSchema>;
 export type UserProgress = typeof userProgress.$inferSelect;
 export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;
+export type VocabTracker = typeof vocabTracker.$inferSelect;
+export type InsertVocabTracker = z.infer<typeof insertVocabTrackerSchema>;

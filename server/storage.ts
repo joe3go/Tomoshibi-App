@@ -7,6 +7,7 @@ import {
   jlptVocab,
   jlptGrammar,
   userProgress,
+  vocabTracker,
   type User,
   type InsertUser,
   type Persona,
@@ -19,6 +20,8 @@ import {
   type JlptGrammar,
   type UserProgress,
   type InsertUserProgress,
+  type VocabTracker,
+  type InsertVocabTracker,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
@@ -61,6 +64,13 @@ export interface IStorage {
   // Progress operations
   getUserProgress(userId: number): Promise<UserProgress | undefined>;
   updateUserProgress(userId: number, progress: InsertUserProgress): Promise<UserProgress>;
+
+  // Vocabulary tracker operations
+  getVocabTracker(userId: number, wordId: number): Promise<VocabTracker | undefined>;
+  createVocabTracker(tracker: InsertVocabTracker): Promise<VocabTracker>;
+  updateVocabTracker(userId: number, wordId: number, updates: Partial<VocabTracker>): Promise<VocabTracker>;
+  getUserVocabTracker(userId: number): Promise<(VocabTracker & { word: JlptVocab })[]>;
+  incrementWordFrequency(userId: number, wordId: number): Promise<VocabTracker>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -211,6 +221,70 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return updated;
+  }
+
+  // Vocabulary tracker operations
+  async getVocabTracker(userId: number, wordId: number): Promise<VocabTracker | undefined> {
+    const [tracker] = await db
+      .select()
+      .from(vocabTracker)
+      .where(and(eq(vocabTracker.userId, userId), eq(vocabTracker.wordId, wordId)));
+    return tracker;
+  }
+
+  async createVocabTracker(tracker: InsertVocabTracker): Promise<VocabTracker> {
+    const [created] = await db
+      .insert(vocabTracker)
+      .values(tracker)
+      .returning();
+    return created;
+  }
+
+  async updateVocabTracker(userId: number, wordId: number, updates: Partial<VocabTracker>): Promise<VocabTracker> {
+    const [updated] = await db
+      .update(vocabTracker)
+      .where(and(eq(vocabTracker.userId, userId), eq(vocabTracker.wordId, wordId)))
+      .set(updates)
+      .returning();
+    return updated;
+  }
+
+  async getUserVocabTracker(userId: number): Promise<(VocabTracker & { word: JlptVocab })[]> {
+    const result = await db
+      .select({
+        id: vocabTracker.id,
+        userId: vocabTracker.userId,
+        wordId: vocabTracker.wordId,
+        frequency: vocabTracker.frequency,
+        lastSeenAt: vocabTracker.lastSeenAt,
+        memoryStrength: vocabTracker.memoryStrength,
+        nextReviewAt: vocabTracker.nextReviewAt,
+        word: jlptVocab,
+      })
+      .from(vocabTracker)
+      .innerJoin(jlptVocab, eq(vocabTracker.wordId, jlptVocab.id))
+      .where(eq(vocabTracker.userId, userId))
+      .orderBy(desc(vocabTracker.frequency));
+    return result;
+  }
+
+  async incrementWordFrequency(userId: number, wordId: number): Promise<VocabTracker> {
+    const existing = await this.getVocabTracker(userId, wordId);
+    
+    if (existing) {
+      return await this.updateVocabTracker(userId, wordId, {
+        frequency: (existing.frequency || 0) + 1,
+        lastSeenAt: new Date(),
+      });
+    } else {
+      return await this.createVocabTracker({
+        userId,
+        wordId,
+        frequency: 1,
+        lastSeenAt: new Date(),
+        memoryStrength: 0,
+      });
+    }
   }
 }
 
