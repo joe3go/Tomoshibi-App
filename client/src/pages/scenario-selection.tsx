@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ export default function ScenarioSelection() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const personaId = parseInt(params?.personaId || "0");
+  const [loadingScenario, setLoadingScenario] = useState<number | null>(null);
 
   const { data: personas = [] } = useQuery({
     queryKey: ["/api/personas"],
@@ -29,9 +31,11 @@ export default function ScenarioSelection() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
+      setLoadingScenario(null);
       setLocation(`/chat/${data.id}`);
     },
     onError: (error) => {
+      setLoadingScenario(null);
       toast({
         title: "Error",
         description: "Failed to start conversation. Please try again.",
@@ -51,10 +55,12 @@ export default function ScenarioSelection() {
   };
 
   const handleScenarioSelect = (scenarioId: number) => {
+    setLoadingScenario(scenarioId);
     createConversationMutation.mutate({ personaId, scenarioId });
   };
 
   const handleFreeChat = () => {
+    setLoadingScenario(0); // Use 0 for free chat
     createConversationMutation.mutate({ personaId });
   };
 
@@ -136,13 +142,13 @@ export default function ScenarioSelection() {
             <Button 
               variant="outline" 
               className="border-sakura-blue/50 text-sakura-blue hover:bg-sakura-blue/10"
-              disabled={createConversationMutation.isPending}
+              disabled={loadingScenario === 0}
               onClick={(e) => {
                 e.stopPropagation();
                 handleFreeChat();
               }}
             >
-              {createConversationMutation.isPending ? "Starting..." : "Start Free Chat"}
+              {loadingScenario === 0 ? "Starting..." : "Start Free Chat"}
             </Button>
           </CardContent>
         </Card>
@@ -170,13 +176,13 @@ export default function ScenarioSelection() {
                   <Button 
                     size="sm"
                     className="gradient-button w-full group-hover:scale-105 transition-transform duration-300"
-                    disabled={createConversationMutation.isPending}
+                    disabled={loadingScenario === scenario.id}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleScenarioSelect(scenario.id);
                     }}
                   >
-                    {createConversationMutation.isPending ? "Starting..." : "Start Practice"}
+                    {loadingScenario === scenario.id ? "Starting..." : "Start Practice"}
                   </Button>
                 </CardContent>
               </Card>

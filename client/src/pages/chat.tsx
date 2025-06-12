@@ -48,6 +48,25 @@ export default function Chat() {
 
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
+      // Immediately add user message to UI
+      const userMessage = {
+        id: Date.now(), // Temporary ID
+        content,
+        role: 'user',
+        createdAt: new Date().toISOString(),
+        vocabUsed: [],
+        grammarUsed: []
+      };
+
+      queryClient.setQueryData(
+        [`/api/conversations/${conversationId}`],
+        (oldData: any) => ({
+          ...oldData,
+          messages: [...(oldData?.messages || []), userMessage],
+        }),
+      );
+
+      // Send to server
       const response = await apiRequest(
         "POST",
         `/api/conversations/${conversationId}/messages`,
@@ -58,6 +77,7 @@ export default function Chat() {
       return await response.json();
     },
     onSuccess: (messages) => {
+      // Replace with actual messages from server
       queryClient.setQueryData(
         [`/api/conversations/${conversationId}`],
         (oldData: any) => ({
@@ -68,6 +88,15 @@ export default function Chat() {
       setMessage("");
     },
     onError: (error) => {
+      // Remove the optimistic user message on error
+      queryClient.setQueryData(
+        [`/api/conversations/${conversationId}`],
+        (oldData: any) => ({
+          ...oldData,
+          messages: oldData?.messages?.slice(0, -1) || [],
+        }),
+      );
+      
       toast({
         title: "Failed to send message",
         description: error.message,
