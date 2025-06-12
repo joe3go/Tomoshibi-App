@@ -65,13 +65,13 @@ export default function History() {
     queryKey: ['/api/vocab-tracker'],
   });
 
-  const allConversations = [...activeConversations, ...completedConversations];
+  const allConversations = [...(activeConversations as any[]), ...(completedConversations as any[])];
 
   // Calculate analytics
   const analytics = {
     totalConversations: allConversations.length,
-    completedConversations: completedConversations.length,
-    activeConversations: activeConversations.length,
+    completedConversations: (completedConversations as any[]).length,
+    activeConversations: (activeConversations as any[]).length,
     totalMessages: allConversations.reduce((sum: number, conv: any) => {
       return sum + (conv.messages?.length || 0);
     }, 0),
@@ -226,8 +226,8 @@ export default function History() {
             <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="all">All ({allConversations.length})</TabsTrigger>
-                <TabsTrigger value="active">Active ({activeConversations.length})</TabsTrigger>
-                <TabsTrigger value="completed">Completed ({completedConversations.length})</TabsTrigger>
+                <TabsTrigger value="active">Active ({(activeConversations as any[]).length})</TabsTrigger>
+                <TabsTrigger value="completed">Completed ({(completedConversations as any[]).length})</TabsTrigger>
               </TabsList>
 
               <TabsContent value={selectedTab} className="space-y-4 mt-6">
@@ -245,8 +245,8 @@ export default function History() {
                 ) : (
                   <div className="space-y-4">
                     {filteredConversations.map((conversation: any) => {
-                      const persona = personas.find((p: any) => p.id === conversation.personaId);
-                      const scenario = scenarios.find((s: any) => s.id === conversation.scenarioId);
+                      const persona = (personas as any[]).find((p: any) => p.id === conversation.personaId);
+                      const scenario = (scenarios as any[]).find((s: any) => s.id === conversation.scenarioId);
                       const messageCount = conversation.messages?.length || 0;
                       const vocabWordsUsed = new Set(
                         conversation.messages?.flatMap((msg: any) => msg.vocabUsed || []) || []

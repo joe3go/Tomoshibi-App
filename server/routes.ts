@@ -344,12 +344,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/vocab-tracker/increment', authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const { wordId } = req.body;
+      const { wordId, source = 'hover' } = req.body;
       if (!wordId) {
         return res.status(400).json({ message: 'Word ID is required' });
       }
       
-      const tracker = await storage.incrementWordFrequency(req.userId!, wordId);
+      const tracker = await storage.incrementWordFrequency(req.userId!, wordId, source);
       res.json(tracker);
     } catch (error) {
       console.error('Increment word frequency error:', error);
