@@ -83,17 +83,17 @@ export default function Chat() {
       };
 
       queryClient.setQueryData(
-        [`/api/conversations/${conversationId}`],
-        (oldData: any) => ({
-          ...oldData,
-          messages: [...(oldData?.messages || []), userMessage],
+        [`/api/conversations/${activeConversationId}`],
+        (previousConversationData: any) => ({
+          ...previousConversationData,
+          messages: [...(previousConversationData?.messages || []), userMessage],
         }),
       );
 
       // Send content to server
       const response = await apiRequest(
         "POST",
-        `/api/conversations/${conversationId}/messages`,
+        `/api/conversations/${activeConversationId}/messages`,
         {
           content: content,
         },
@@ -102,22 +102,22 @@ export default function Chat() {
     },
     onSuccess: (responseData) => {
       queryClient.setQueryData(
-        [`/api/conversations/${conversationId}`],
-        (oldData: any) => ({
-          ...oldData,
+        [`/api/conversations/${activeConversationId}`],
+        (previousConversationData: any) => ({
+          ...previousConversationData,
           messages: responseData.messages || responseData,
         }),
       );
 
-      setMessage("");
+      setCurrentUserMessage("");
     },
     onError: (error) => {
       // Remove the optimistic user message on error
       queryClient.setQueryData(
-        [`/api/conversations/${conversationId}`],
-        (oldData: any) => ({
-          ...oldData,
-          messages: oldData?.messages?.slice(0, -1) || [],
+        [`/api/conversations/${activeConversationId}`],
+        (previousConversationData: any) => ({
+          ...previousConversationData,
+          messages: previousConversationData?.messages?.slice(0, -1) || [],
         }),
       );
 
@@ -133,7 +133,7 @@ export default function Chat() {
     mutationFn: async () => {
       const response = await apiRequest(
         "PATCH",
-        `/api/conversations/${conversationId}`,
+        `/api/conversations/${activeConversationId}`,
         {
           status: "completed",
           completedAt: new Date().toISOString(),
@@ -145,7 +145,7 @@ export default function Chat() {
       // Invalidate multiple query keys to refresh all conversation lists
       queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
       queryClient.invalidateQueries({ queryKey: ["/api/conversations/completed"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/conversations/${conversationId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/conversations/${activeConversationId}`] });
 
       toast({
         title: "Conversation completed!",
@@ -164,12 +164,12 @@ export default function Chat() {
   });
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [(conversationData as any)?.messages]);
+    conversationMessagesEndReference.current?.scrollIntoView({ behavior: "smooth" });
+  }, [(conversationDetails as any)?.messages]);
 
   const handleSendMessage = () => {
-    if (message.trim() && !sendMessageMutation.isPending) {
-      sendMessageMutation.mutate(message.trim());
+    if (currentUserMessage.trim() && !sendMessageMutation.isPending) {
+      sendMessageMutation.mutate(currentUserMessage.trim());
     }
   };
 
@@ -180,23 +180,23 @@ export default function Chat() {
     }
   };
 
-  const insertSuggestion = (text: string) => {
-    setMessage((prev) => prev + text);
+  const insertSuggestionIntoMessage = (suggestionText: string) => {
+    setCurrentUserMessage((previousMessage) => previousMessage + suggestionText);
   };
 
-  const handleFuriganaToggle = () => {
-    const newState = !showFurigana;
-    setShowFurigana(newState);
-    localStorage.setItem("furigana-visible", newState.toString());
+  const handleFuriganaVisibilityToggle = () => {
+    const newVisibilityState = !isFuriganaVisible;
+    setIsFuriganaVisible(newVisibilityState);
+    localStorage.setItem("furigana-visible", newVisibilityState.toString());
   };
 
-  const getAvatarImage = (persona: any) => {
-    if (persona?.type === "teacher") return aoiAvatar; // Aoi is the female teacher
-    if (persona?.type === "friend") return harukiAvatar; // Haruki is the male friend
+  const getPersonaAvatarImage = (teachingPersona: any) => {
+    if (teachingPersona?.type === "teacher") return aoiAvatar; // Aoi is the female teacher
+    if (teachingPersona?.type === "friend") return harukiAvatar; // Haruki is the male friend
     return aoiAvatar; // Default fallback
   };
 
-  if (isLoading) {
+  if (isLoadingConversation) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="content-card p-8">
@@ -209,7 +209,7 @@ export default function Chat() {
     );
   }
 
-  if (!conversationData) {
+  if (!conversationDetails) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Card className="content-card">
@@ -232,8 +232,8 @@ export default function Chat() {
     );
   }
 
-  const conversation = (conversationData as any)?.conversation;
-  const messages = (conversationData as any)?.messages || [];
+  const conversation = (conversationDetails as any)?.conversation;
+  const messages = (conversationDetails as any)?.messages || [];
 
   // Handle case where conversation doesn't exist
   if (!conversation) {
@@ -257,11 +257,11 @@ export default function Chat() {
     );
   }
 
-  const persona = Array.isArray(personas)
-    ? personas.find((p: any) => p.id === conversation?.personaId)
+  const conversationPersona = Array.isArray(availableTeachingPersonas)
+    ? availableTeachingPersonas.find((persona: any) => persona.id === conversation?.personaId)
     : null;
-  const scenario = Array.isArray(scenarios)
-    ? scenarios.find((s: any) => s.id === conversation?.scenarioId)
+  const conversationScenario = Array.isArray(availableLearningScenarios)
+    ? availableLearningScenarios.find((scenario: any) => scenario.id === conversation?.scenarioId)
     : null;
 
   return (
@@ -280,8 +280,8 @@ export default function Chat() {
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/30">
               <img
-                src={getAvatarImage(persona)}
-                alt={persona?.name || "Persona"}
+                src={getPersonaAvatarImage(conversationPersona)}
+                alt={conversationPersona?.name || "Persona"}
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   // Fallback to text avatar if image fails
@@ -316,14 +316,14 @@ export default function Chat() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleFuriganaToggle}
+            onClick={handleFuriganaVisibilityToggle}
             className="px-3 py-1 text-xs hover:bg-primary/20 transition-colors text-foreground"
           >
-            {showFurigana ? "Hide Furigana" : "Show Furigana"}
+            {isFuriganaVisible ? "Hide Furigana" : "Show Furigana"}
           </Button>
           {/* Debug info - remove this later */}
           <span className="text-xs text-muted-foreground">
-            Furigana: {showFurigana ? "ON" : "OFF"}
+            Furigana: {isFuriganaVisible ? "ON" : "OFF"}
           </span>
           <Button
             variant="ghost"
@@ -475,8 +475,8 @@ export default function Chat() {
           <div className="flex items-end space-x-3">
             <div className="flex-1 relative">
               <Textarea
-                ref={textareaRef}
-                value={message}
+                ref={messageInputTextareaReference}
+                value={currentUserMessage}
                 onChange={handleInputChange}
                 onKeyPress={handleKeyPress}
                 placeholder="Type in romaji for automatic conversion to hiragana..."
@@ -487,7 +487,7 @@ export default function Chat() {
             </div>
             <Button
               onClick={handleSendMessage}
-              disabled={!message.trim() || sendMessageMutation.isPending}
+              disabled={!currentUserMessage.trim() || sendMessageMutation.isPending}
               className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center space-x-2"
             >
               <span>Send</span>
@@ -500,7 +500,7 @@ export default function Chat() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => insertSuggestion("watashi wa ")}
+              onClick={() => insertSuggestionIntoMessage("watashi wa ")}
               className="px-3 py-1 text-sm hover:bg-primary/20 text-foreground"
             >
               watashi wa (私は)
@@ -508,7 +508,7 @@ export default function Chat() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => insertSuggestion("desu ")}
+              onClick={() => insertSuggestionIntoMessage("desu ")}
               className="px-3 py-1 text-sm hover:bg-primary/20 text-foreground"
             >
               desu (です)
@@ -516,7 +516,7 @@ export default function Chat() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => insertSuggestion("kara kimashita ")}
+              onClick={() => insertSuggestionIntoMessage("kara kimashita ")}
               className="px-3 py-1 text-sm hover:bg-primary/20 text-foreground"
             >
               kara kimashita (から来ました)
@@ -524,7 +524,7 @@ export default function Chat() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => insertSuggestion("yoroshiku onegaishimasu ")}
+              onClick={() => insertSuggestionIntoMessage("yoroshiku onegaishimasu ")}
               className="px-3 py-1 text-sm hover:bg-primary/20 text-foreground"
             >
               yoroshiku (よろしく)
