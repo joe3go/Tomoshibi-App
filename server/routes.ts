@@ -302,8 +302,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/conversations', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const conversations = await storage.getUserConversations(req.userId!);
-      // Return all conversations - let frontend filter as needed
-      res.json(conversations);
+      // Filter for active conversations only (not completed)
+      const activeConversations = conversations.filter(c => c.status !== 'completed');
+      res.json(activeConversations);
     } catch (error) {
       console.error('Get user conversations error:', error);
       res.status(500).json({ message: 'Failed to get conversations' });

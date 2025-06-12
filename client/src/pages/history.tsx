@@ -125,19 +125,16 @@ export default function History() {
     completedConversations: (completedConversations as any[]).length,
     activeConversations: (activeConversations as any[]).length,
     totalMessages: allConversations.reduce((sum: number, conv: any) => {
-      return sum + (conv.messages?.length || 0);
+      return sum + (conv.messageCount || 0);
     }, 0),
-    uniqueVocabWords: new Set(
-      allConversations.flatMap(
-        (conv: any) =>
-          conv.messages?.flatMap((msg: any) => msg.vocabUsed || []) || [],
-      ),
-    ).size,
+    uniqueVocabWords: allConversations.reduce((sum: number, conv: any) => {
+      return sum + (conv.vocabWordsUsed || 0);
+    }, 0),
     averageMessagesPerConversation:
       allConversations.length > 0
         ? Math.round(
             allConversations.reduce((sum: number, conv: any) => {
-              return sum + (conv.messages?.length || 0);
+              return sum + (conv.messageCount || 0);
             }, 0) / allConversations.length,
           )
         : 0,
@@ -342,12 +339,8 @@ export default function History() {
                       const scenario = (scenarios as any[]).find(
                         (s: any) => s.id === conversation.scenarioId,
                       );
-                      const messageCount = conversation.messages?.length || 0;
-                      const vocabWordsUsed = new Set(
-                        conversation.messages?.flatMap(
-                          (msg: any) => msg.vocabUsed || [],
-                        ) || [],
-                      ).size;
+                      const messageCount = conversation.messageCount || 0;
+                      const vocabWordsUsed = conversation.vocabWordsUsed || 0;
 
                       return (
                         <Card
@@ -410,27 +403,7 @@ export default function History() {
                                   </div>
                                 </div>
 
-                                {/* Last message preview */}
-                                {conversation.messages &&
-                                  conversation.messages.length > 0 && (
-                                    <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                                      <p className="text-xs text-muted-foreground mb-1">
-                                        Last message:
-                                      </p>
-                                      <div className="text-sm">
-                                        <EnhancedFuriganaText
-                                          text={
-                                            conversation.messages[
-                                              conversation.messages.length - 1
-                                            ].content
-                                          }
-                                          showToggleButton={false}
-                                          enableWordHover={false}
-                                          className="line-clamp-2"
-                                        />
-                                      </div>
-                                    </div>
-                                  )}
+                                {/* Note: Last message preview removed as messages are not loaded in list view */}
                               </div>
 
                               <div className="flex gap-2 ml-4">
