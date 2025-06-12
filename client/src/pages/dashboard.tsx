@@ -539,7 +539,7 @@ export default function Dashboard() {
               
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Messages Sent</span>
-                <span className="font-semibold">{progress?.totalMessagesSent || 0}</span>
+                <span className="font-semibold">{(progress as any)?.totalMessagesSent || 0}</span>
               </div>
               
               {(() => {

@@ -50,6 +50,27 @@ const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) 
   }
 };
 
+// Vocabulary tracking function
+async function trackVocabularyFromMessage(userId: number, content: string, source: 'user' | 'ai'): Promise<void> {
+  try {
+    // Extract Japanese words (hiragana, katakana, kanji)
+    const japaneseWords = content.match(/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+/g) || [];
+    
+    for (const word of japaneseWords) {
+      if (word.length >= 2) { // Only track words of 2+ characters
+        // Try to find the word in our vocabulary database
+        const vocabMatches = await storage.searchVocab(word);
+        if (vocabMatches.length > 0) {
+          const vocabWord = vocabMatches[0];
+          await storage.incrementWordFrequency(userId, vocabWord.id, source);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Vocabulary tracking error:', error);
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.post('/api/auth/register', async (req, res) => {
@@ -370,6 +391,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           vocabUsed: aiResponse.vocabUsed || [],
           grammarUsed: aiResponse.grammarUsed || [],
         });
+
+        // Track vocabulary from both user and AI messages
+        await trackVocabularyFromMessage(req.userId!, content, 'user');
+        await trackVocabularyFromMessage(req.userId!, aiResponse.content, 'ai');
       }
       
       // Return updated messages
