@@ -14,6 +14,7 @@ import TutorSelection from "@/pages/tutor-selection";
 import ScenarioSelection from "@/pages/scenario-selection";
 import FuriganaDemo from "@/pages/furigana-demo";
 import Transcripts from "@/pages/transcripts";
+import Vocabulary from "@/pages/vocabulary";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -47,6 +48,7 @@ function Router() {
           <Route path="/chat/:conversationId" component={Chat} />
           <Route path="/furigana-demo" component={FuriganaDemo} />
           <Route path="/transcripts" component={Transcripts} />
+          <Route path="/vocabulary" component={Vocabulary} />
         </>
       )}
       <Route component={NotFound} />

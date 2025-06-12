@@ -150,13 +150,22 @@ export default function Dashboard() {
               >
                 Start New Conversation
               </Button>
-              <Button
-                onClick={() => setLocation("/furigana-demo")}
-                variant="outline"
-                className="w-full"
-              >
-                View Furigana Demo
-              </Button>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  onClick={() => setLocation("/vocabulary")}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Vocabulary Tracker
+                </Button>
+                <Button
+                  onClick={() => setLocation("/furigana-demo")}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Furigana Demo
+                </Button>
+              </div>
             </div>
           </div>
         </div>
