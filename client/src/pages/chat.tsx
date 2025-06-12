@@ -52,7 +52,7 @@ export default function Chat() {
       const userMessage = {
         id: Date.now(), // Temporary ID
         content,
-        role: 'user',
+        sender: 'user', // Fixed: changed from 'role' to 'sender' for proper rendering
         createdAt: new Date().toISOString(),
         vocabUsed: [],
         grammarUsed: []

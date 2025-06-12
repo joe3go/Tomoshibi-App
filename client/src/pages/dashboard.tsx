@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -16,6 +17,7 @@ import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [displayName, setDisplayName] = useState((user as any)?.displayName || "");
@@ -348,8 +350,11 @@ export default function Dashboard() {
                   : null;
 
                 const formatDate = (dateString: string) => {
+                  if (!dateString) return "Recent";
                   try {
-                    return new Date(dateString).toLocaleDateString();
+                    const date = new Date(dateString);
+                    if (isNaN(date.getTime())) return "Recent";
+                    return date.toLocaleDateString();
                   } catch {
                     return "Recent";
                   }

@@ -1,13 +1,13 @@
 export function getAuthToken(): string | null {
-  return localStorage.getItem('auth_token');
+  return localStorage.getItem('token');
 }
 
 export function setAuthToken(token: string): void {
-  localStorage.setItem('auth_token', token);
+  localStorage.setItem('token', token);
 }
 
 export function removeAuthToken(): void {
-  localStorage.removeItem('auth_token');
+  localStorage.removeItem('token');
 }
 
 export function getAuthHeaders(): Record<string, string> {

@@ -1,0 +1,68 @@
+Please prioritize and address the following issues. The "End Chat" functionality and the real-time chat message display require immediate attention.
+
+1. Chat Session Management & Display (Critical)
+Comprehensive "End Session" Functionality & History Display Fix:
+Issue:
+When a chat session is ended within the chat view, the session successfully terminates, but it then disappears entirely from the Conversation History and does not appear in the 'Completed' section (which should show a count of 0). This suggests a mismatch between the conversation's actual status and how it's being filtered or displayed in the history.
+The "End Session" buttons located on the Dashboard and within the Conversation History views are currently non-functional; clicking them does nothing.
+Requirement:
+Backend Fix: Ensure that when an "End Session" action is triggered (from any location: within chat, Dashboard, or Conversation History), the conversation's status in the backend database is reliably and correctly updated to "completed".
+Frontend Fix (Display): Once a conversation is marked as "completed" in the backend, it must correctly appear in the 'Completed' section of the Conversation History, and the count for completed sessions should reflect this accurately.
+Frontend Fix (Buttons): The "End Session" buttons on the Dashboard and in Conversation History must be made fully functional, triggering the same successful completion logic as the button within the chat view.
+Dashboard Session Display - Remove "Invalid Date": On the Dashboard, remove any instances of "Invalid Date" text from session displays.
+Dashboard Quick Actions: Implement a concise 'Continue Session' or 'End Session' option directly on the Dashboard for quick access, specifically for active or resumable chat sessions.
+2. Real-time Chat Experience & Styling (Critical)
+User Chat Message Display Logic & Styling Fix:
+Issue Description: When a user sends a message in a chat, it initially appears on the left side of the chat interface, styled like an AI message. Only after the AI's response is received does the user's message then shift to the right side and adopt its correct styling (e.g., red background).
+Technical Analysis from Code Review: This behavior stems from a discrepancy between the optimistic update in sendMessageMutation and the message rendering logic.
+Optimistic Update: In sendMessageMutation, the userMessage object is created with role: 'user'.
+Rendering Logic: The JSX rendering relies on msg.sender === "user" to determine message alignment (justify-end) and apply the correct message-bubble user class.
+Problem: The msg.sender property is likely only present and correctly set after the server's response is received in onSuccess. When the userMessage is optimistically added, msg.sender is either missing or incorrectly evaluated by the rendering logic, causing the message to default to the left (AI) side.
+Requirement & Solution: Correct this behavior to provide an instant and visually distinct user experience.
+Fix: In the sendMessageMutation's mutationFn, when creating the userMessage for the optimistic update, ensure it has the sender: 'user' property, aligning it with the existing rendering logic.
+JavaScript
+
+// Inside sendMessageMutation's mutationFn:
+const userMessage = {
+  id: Date.now(), // Temporary ID
+  content,
+  sender: 'user', // <-- CHANGE THIS FROM 'role' TO 'sender'
+  createdAt: new Date().toISOString(),
+  vocabUsed: [],
+  grammarUsed: []
+};
+Verification: Ensure that your backend's response for messages also consistently includes a sender field ('user' or 'ai') for all messages, so that the data returned in onSuccess maintains the correct rendering.
+Desired Behavior: The user's message must appear instantly upon sending, immediately displayed on the right side of the chat interface, and with its correct styling (background, text color) from the moment it appears. It should never initially display with the AI's styling or position.
+"Start a Chat" Button Behavior: Fix the "Start a Chat" button behavior so that only the specific button pressed shows 'Starting...', not all buttons.
+3. Vocabulary Tracker & Progress Display
+Back to Dashboard Button: Ensure the 'Back to Dashboard' button is consistently available and clearly visible on the 'Vocabulary Tracker' page, allowing for easy navigation back to the main dashboard.
+Vocabulary Progress Display Enhancements:
+Update Vocab Progress: Ensure that the vocabulary progress is updated in real time as the user interacts with the application.
+Tutor Images: In the "Vocab Progress" section, replace generic or placeholder images with the specific avatar images for the tutors, Haruki and Aoi, as they appear elsewhere on the platform (e.g., in chat or "Meet Your Tutors").
+Tutor Segmentation: Explicitly split the "Tutor" references or progress displays within the Vocab Progress section to show progress specifically for 'Aoi' and 'Haruki' individually, rather than a single aggregated "Tutor" category.
+User Profile Picture: For the user's own vocabulary progress display, ensure that the user's uploaded profile picture is correctly utilized and displayed. If no profile picture is uploaded, a suitable default avatar should be used.
+Recommended Wording for Vocab Tracker Sections:
+For the main title or section heading, use: "Your JLPT Vocabulary Journey".
+For sub-sections related to the user's unique vocabulary by JLPT level, use: "Your Unique Words by JLPT Level" (e.g., "N5: [X unique words]").
+For sub-sections related to tutor contributions, use: "Tutor-Introduced Vocabulary" or "Words from Your Conversations".
+Within tutor sections, explicitly label: "Aoi's Contribution: [X unique words]" and "Haruki's Contribution: [Y unique words]".
+4. Application Settings
+Chat Settings with Notifications:
+Add Chat Settings including notification controls. Please specify the access point (e.g., accessible from within an active chat session or the main settings panel).
+Within these Chat Settings, provide controls for:
+Sound Notifications: A toggle switch to enable/disable sound notifications for incoming chat messages.
+Desktop/Browser Notifications: A toggle switch to enable/disable desktop or browser-level notifications for new messages.
+Main Dashboard Settings Updates: Update the Main Dashboard Settings to include:
+Change Password functionality.
+Update Display Name functionality.
+Send Feedback option that emails feedback directly to feedback@tomoshibiapp.com. (Please clarify if this should open the user's default email client with the address pre-filled, or if it should be an in-app form that dispatches the email.)
+5. Reliable Online Word Definition Lookup (Crucial Fix)
+Goal: Ensure that the word definition lookup feature reliably retrieves definitions from an external source via your backend, as the client does not store dictionary data locally.
+Issue: The current backend logic, attempting to fetch from https://www.japandict.com/api/lookup, consistently fails to find definitions.
+Requirement: Investigate and fix the backend's ability to fetch word definitions. This will likely involve:
+Verification: Confirm that your backend server can successfully connect to the https://www.japandict.com/api/lookup endpoint. Check for network issues, firewall restrictions, or IP blocking.
+API Compatibility: Verify that https://www.japandict.com/api/lookup is still an active, public, and reliable API endpoint for fetching Japanese word definitions.
+Parameter Accuracy: Ensure the word parameter being sent to the external API is correctly formatted and encoded for the specific API's expectations (e.g., proper Japanese characters, no unexpected symbols).
+Response Handling: Improve the error logging in your backend to capture and display the exact status code and response body received from japandict.com when a definition isn't found. This will help diagnose if it's a "word not found" error from the API itself, a rate limit, or a server-side issue.
+Alternative API (If necessary): If japandict.com proves unreliable or is not intended for public programmatic access, the builder should propose and integrate an alternative, reliable external Japanese dictionary API (e.g., Jisho.org's API) to ensure definitions can be consistently retrieved.
+Expected Behavior: When a user requests a word definition, the popup should consistently display the correct definition (or a clear "not found" message if the word truly doesn't exist in the dictionary) by successfully querying the chosen external API via your backend. The "Source" badge should accurately reflect 'External'.
