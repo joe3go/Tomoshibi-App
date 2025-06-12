@@ -135,7 +135,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: user.id,
         email: user.email,
         displayName: user.displayName,
+        profileImageUrl: user.profileImageUrl,
         preferredKanjiDisplay: user.preferredKanjiDisplay,
+        soundNotifications: user.soundNotifications,
+        desktopNotifications: user.desktopNotifications,
       });
     } catch (error) {
       console.error('Auth me error:', error);
