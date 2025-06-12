@@ -253,58 +253,14 @@ export default function Dashboard() {
               <History className="w-4 h-4" />
               History
             </Button>
-            <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-              <DialogTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="p-2 text-foreground hover:text-primary"
-                >
-                  <Settings className="w-5 h-5" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Account Settings</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="displayName" className="text-right">
-                      Display Name
-                    </Label>
-                    <Input
-                      id="displayName"
-                      value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right">Email</Label>
-                    <div className="col-span-3 text-sm text-muted-foreground">
-                      {(user as any)?.email}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right">Progress</Label>
-                    <div className="col-span-3 text-sm text-muted-foreground">
-                      {getProgressionLabel()}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setSettingsOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button 
-                    onClick={() => updateProfileMutation.mutate({ displayName })}
-                    disabled={updateProfileMutation.isPending}
-                  >
-                    {updateProfileMutation.isPending ? "Saving..." : "Save"}
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocation("/settings")}
+              className="p-2 text-foreground hover:text-primary"
+            >
+              <Settings className="w-5 h-5" />
+            </Button>
             <Button
               variant="ghost"
               size="sm"

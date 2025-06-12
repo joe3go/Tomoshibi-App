@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -24,17 +24,21 @@ export default function Settings() {
   // Fetch user data
   const { data: user, isLoading } = useQuery({
     queryKey: ["/api/auth/me"],
-    onSuccess: (userData: any) => {
-      setDisplayName(userData.displayName || "");
-      setSoundNotifications(userData.soundNotifications ?? true);
-      setDesktopNotifications(userData.desktopNotifications ?? true);
-    },
   });
+
+  // Update state when user data changes
+  useEffect(() => {
+    if (user) {
+      setDisplayName((user as any).displayName || "");
+      setSoundNotifications((user as any).soundNotifications ?? true);
+      setDesktopNotifications((user as any).desktopNotifications ?? true);
+    }
+  }, [user]);
 
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("PATCH", `/api/users/${user?.id}`, data);
+      const response = await apiRequest("PATCH", `/api/users/${(user as any)?.id}`, data);
       return await response.json();
     },
     onSuccess: () => {
@@ -161,15 +165,15 @@ export default function Settings() {
             {/* Avatar Upload */}
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center overflow-hidden">
-                {user?.profileImageUrl ? (
+                {(user as any)?.profileImageUrl ? (
                   <img
-                    src={user.profileImageUrl}
+                    src={(user as any).profileImageUrl}
                     alt="Profile"
                     className="w-full h-full object-cover"
                   />
                 ) : (
                   <span className="text-primary-foreground font-medium">
-                    {user?.displayName?.charAt(0)?.toUpperCase() || "U"}
+                    {(user as any)?.displayName?.charAt(0)?.toUpperCase() || "U"}
                   </span>
                 )}
               </div>
