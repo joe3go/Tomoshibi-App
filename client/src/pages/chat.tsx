@@ -67,15 +67,24 @@ export default function Chat() {
     }
   }, []);
 
-  // Update kana preview when message changes
-  useEffect(() => {
+  // Handle inline kana conversion
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setMessage(value);
+    
+    // Clear preview when typing
+    setKanaPreview("");
+  };
+
+  const insertKanaConversion = () => {
     if (message.trim()) {
       const converted = wanakana.toKana(message);
-      setKanaPreview(converted !== message ? converted : "");
-    } else {
-      setKanaPreview("");
+      if (converted !== message) {
+        setMessage(converted);
+        setKanaPreview("");
+      }
     }
-  }, [message]);
+  };
 
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
@@ -480,27 +489,27 @@ export default function Chat() {
       {/* Chat Input */}
       <div className="content-card rounded-t-2xl p-4 border-t border-border">
         <div className="max-w-4xl mx-auto">
-          {/* Kana Preview */}
-          {kanaPreview && (
-            <div className="mb-2 p-2 bg-primary/10 border border-primary/20 rounded text-sm font-japanese text-primary">
-              <span className="text-muted-foreground">Preview: </span>
-              {kanaPreview}
-            </div>
-          )}
-          
           <div className="flex items-end space-x-3">
             <div className="flex-1 relative">
               <Textarea
                 ref={textareaRef}
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                onChange={handleInputChange}
                 onKeyPress={handleKeyPress}
-                placeholder="Type in romaji for automatic kana conversion, or type directly in Japanese..."
+                placeholder="Type in romaji and click 'Convert to Kana', or type directly in Japanese..."
                 className="bg-input border-border text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary/20 resize-none font-japanese"
                 rows={1}
                 style={{ maxHeight: "120px" }}
               />
             </div>
+            <Button
+              onClick={insertKanaConversion}
+              disabled={!message.trim()}
+              variant="outline"
+              className="border-primary/30 text-primary hover:bg-primary/10 flex items-center space-x-2"
+            >
+              <span>Convert to Kana</span>
+            </Button>
             <Button
               onClick={handleSendMessage}
               disabled={!message.trim() || sendMessageMutation.isPending}
