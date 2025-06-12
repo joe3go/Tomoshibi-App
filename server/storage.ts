@@ -242,9 +242,12 @@ export class DatabaseStorage implements IStorage {
 
   async updateVocabTracker(userId: number, wordId: number, updates: Partial<VocabTracker>): Promise<VocabTracker> {
     const [updated] = await db
-      .update(vocabTracker)
-      .where(and(eq(vocabTracker.userId, userId), eq(vocabTracker.wordId, wordId)))
-      .set(updates)
+      .insert(vocabTracker)
+      .values({ userId, wordId, ...updates })
+      .onConflictDoUpdate({
+        target: [vocabTracker.userId, vocabTracker.wordId],
+        set: updates,
+      })
       .returning();
     return updated;
   }

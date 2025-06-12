@@ -331,6 +331,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Vocabulary tracker routes
+  app.get('/api/vocab-tracker', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const trackerData = await storage.getUserVocabTracker(req.userId!);
+      res.json(trackerData);
+    } catch (error) {
+      console.error('Get vocab tracker error:', error);
+      res.status(500).json({ message: 'Failed to get vocabulary tracker' });
+    }
+  });
+
+  app.post('/api/vocab-tracker/increment', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { wordId } = req.body;
+      if (!wordId) {
+        return res.status(400).json({ message: 'Word ID is required' });
+      }
+      
+      const tracker = await storage.incrementWordFrequency(req.userId!, wordId);
+      res.json(tracker);
+    } catch (error) {
+      console.error('Increment word frequency error:', error);
+      res.status(500).json({ message: 'Failed to increment word frequency' });
+    }
+  });
+
+  app.get('/api/word-definition/:word', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { word } = req.params;
+      
+      // First check our local vocabulary database
+      const localVocab = await storage.searchVocab(word);
+      if (localVocab.length > 0) {
+        const vocabItem = localVocab[0];
+        return res.json({
+          word: vocabItem.kanji || vocabItem.hiragana,
+          reading: vocabItem.hiragana,
+          meaning: vocabItem.englishMeaning,
+          jlptLevel: vocabItem.jlptLevel,
+          wordType: vocabItem.wordType,
+          source: 'local'
+        });
+      }
+
+      // If not found locally, try external API
+      try {
+        const response = await fetch(`https://www.japandict.com/api/lookup?word=${encodeURIComponent(word)}`);
+        if (response.ok) {
+          const data = await response.json();
+          res.json({ ...data, source: 'external' });
+        } else {
+          res.status(404).json({ message: 'Definition not found' });
+        }
+      } catch (apiError) {
+        res.status(404).json({ message: 'Definition not found' });
+      }
+    } catch (error) {
+      console.error('Get word definition error:', error);
+      res.status(500).json({ message: 'Failed to get word definition' });
+    }
+  });
+
   // Progress routes
   app.get('/api/progress', authenticateToken, async (req: AuthRequest, res) => {
     try {
