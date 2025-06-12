@@ -336,10 +336,11 @@ export default function Chat() {
                 <div
                   className={`font-japanese mb-2 ${msg.sender === "user" ? "text-primary-foreground" : "text-foreground"}`}
                 >
-                  <FuriganaText
+                  <EnhancedFuriganaText
                     text={msg.content}
                     showFurigana={showFurigana}
                     showToggleButton={false}
+                    enableWordHover={msg.sender === "ai"}
                     className="text-inherit"
                   />
                 </div>
