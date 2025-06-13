@@ -26,10 +26,19 @@ export default function Dashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [displayName, setDisplayName] = useState((user as any)?.displayName || "");
+  const [displayName, setDisplayName] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [soundNotifications, setSoundNotifications] = useState((user as any)?.soundNotifications ?? true);
-  const [desktopNotifications, setDesktopNotifications] = useState((user as any)?.desktopNotifications ?? true);
+  const [soundNotifications, setSoundNotifications] = useState(true);
+  const [desktopNotifications, setDesktopNotifications] = useState(true);
+
+  // Initialize form values when user data is available
+  useEffect(() => {
+    if (user) {
+      setDisplayName((user as any)?.displayName || "");
+      setSoundNotifications((user as any)?.soundNotifications ?? true);
+      setDesktopNotifications((user as any)?.desktopNotifications ?? true);
+    }
+  }, [user]); // Only depend on user object to avoid infinite loops
 
   // Fetch conversations
   const { data: conversations, isLoading: conversationsLoading } = useQuery({
