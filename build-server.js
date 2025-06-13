@@ -10,7 +10,7 @@ async function buildServer() {
     console.log('Building server for production...');
     
     await build({
-      entryPoints: [resolve(__dirname, 'server/index.ts')],
+      entryPoints: [resolve(__dirname, 'server/production-index.ts')],
       bundle: true,
       platform: 'node',
       target: 'node18',
@@ -77,6 +77,11 @@ async function buildServer() {
         'autoprefixer',
         'tailwindcss',
         'postcss',
+        // Vite plugins (ES modules that cause issues in CJS)
+        '@replit/vite-plugin-runtime-error-modal',
+        '@replit/vite-plugin-cartographer',
+        '@vitejs/plugin-react',
+        '@tailwindcss/vite',
         // Additional common externals that might cause issues
         'fsevents',
         'canvas',

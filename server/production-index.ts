@@ -1,12 +1,12 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { log } from "./vite";
-import { serveStatic } from "./production";
+import { serveStatic } from "./static";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Simple logging middleware for production
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -30,7 +30,7 @@ app.use((req, res, next) => {
         logLine = logLine.slice(0, 79) + "…";
       }
 
-      log(logLine);
+      console.log(`[express] ${logLine}`);
     }
   });
 
@@ -41,41 +41,17 @@ app.use((req, res, next) => {
   try {
     const server = await registerRoutes(app);
 
-    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      const status = err.status || err.statusCode || 500;
-      const message = err.message || "Internal Server Error";
-
-      console.error(`[ERROR] ${status}: ${message}`, err);
-      res.status(status).json({ message });
-    });
-
-    // In production, only serve static files
+    // Production: serve static files from dist/public
     serveStatic(app);
 
-    // ALWAYS serve the app on port 5000
-    // this serves both the API and the client.
-    // It is the only port that is not firewalled.
-    const port = Number(process.env.PORT) || 5000;
-    server.listen({
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    }, () => {
-      log(`Tomoshibi production server started on port ${port}`);
-      log(`Environment: ${process.env.NODE_ENV || 'production'}`);
-      log(`Health check available at: http://0.0.0.0:${port}/health`);
+    const PORT = parseInt(process.env.PORT || "5000");
+    server.listen(PORT, "0.0.0.0", () => {
+      console.log(`[express] Tomoshibi server started successfully on port ${PORT}`);
+      console.log(`[express] Environment: ${process.env.NODE_ENV || 'production'}`);
+      console.log(`[express] Health check available at: http://0.0.0.0:${PORT}/health`);
     });
-
-    server.on('error', (error: any) => {
-      console.error('[SERVER ERROR]', error);
-      if (error.code === 'EADDRINUSE') {
-        console.error(`Port ${port} is already in use`);
-      }
-      process.exit(1);
-    });
-
   } catch (error) {
-    console.error('[PRODUCTION STARTUP ERROR]', error);
+    console.error("[express] Failed to start server:", error);
     process.exit(1);
   }
 })();
