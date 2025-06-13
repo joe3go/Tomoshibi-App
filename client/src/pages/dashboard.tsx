@@ -83,8 +83,8 @@ export default function Dashboard() {
   };
 
   const progressionLabel = dashboardUtils.getProgressionLabel(
-    (vocabData as any[]).length,
-    (completedConversations as any[]).length
+    Array.isArray(vocabData) ? vocabData.length : 0,
+    Array.isArray(completedConversations) ? completedConversations.length : 0
   );
 
   const updateProfileMutation = useMutation({

@@ -5,28 +5,31 @@ echo "Building Tomoshibi for production..."
 
 # Clean previous build
 rm -rf dist
+mkdir -p dist
 
-# Build client
+# Build client assets
 echo "Building client..."
-npx vite build --outDir dist/public
+npm run build:client
 
-# Build server with TypeScript project
+# Build server files
 echo "Building server..."
-npx tsc -p tsconfig.production.json
+npm run build:server
 
-# Move the built production entry point to the correct location
-echo "Setting up production entry point..."
+# Create the main entry point at dist/index.js
+echo "Creating production entry point..."
 if [ -f "dist/server/production-index.js" ]; then
-  mv dist/server/production-index.js dist/index.js
-  echo "Production entry point moved to dist/index.js"
+  cp dist/server/production-index.js dist/index.js
+  echo "✓ Entry point created: dist/index.js"
 else
-  echo "Warning: dist/server/production-index.js not found"
-  # Fallback: build it directly
-  npx tsc server/production-index.ts --target es2022 --module esnext --moduleResolution node --outDir . --skipLibCheck --esModuleInterop
-  mv production-index.js dist/index.js
+  echo "Building production entry directly..."
+  npx esbuild server/production-index.ts --bundle --platform=node --target=es2022 --format=esm --outfile=dist/index.js --external:express --external:@neondatabase/serverless --external:drizzle-orm --external:ws --external:bcrypt --external:jsonwebtoken --external:passport --external:express-session --external:connect-pg-simple --external:multer --external:openai
+  echo "✓ Entry point built: dist/index.js"
 fi
 
-# Create production package.json
+# Ensure the entry point is executable
+chmod +x dist/index.js
+
+# Create minimal production package.json
 echo "Creating production package.json..."
 cat > dist/package.json << 'EOF'
 {
@@ -36,14 +39,18 @@ cat > dist/package.json << 'EOF'
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
 EOF
 
-# Copy package.json dependencies info for production
-echo "Copying node_modules..."
-cp -r node_modules dist/
+# Copy production dependencies
+echo "Setting up dependencies..."
+cp -r node_modules dist/ 2>/dev/null || echo "Note: node_modules will be installed by deployment"
 
-echo "Build completed successfully!"
-echo "Entry point: dist/index.js"
+echo "✓ Build completed successfully!"
+echo "📁 Build structure:"
 ls -la dist/
+echo "🚀 Ready for deployment: dist/index.js"

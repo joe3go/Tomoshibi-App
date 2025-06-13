@@ -1,5 +1,5 @@
 [deployment]
-build = ["npm", "run", "build"]
+build = ["bash", "scripts/build.sh"]
 run = ["npm", "start"]
 deploymentTarget = "cloudrun"
 
