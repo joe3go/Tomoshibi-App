@@ -63,16 +63,27 @@ app.use((req, res, next) => {
       });
     });
 
+    // Register API routes
     const server = await registerRoutes(app);
 
-    // Production: serve static files from dist/public
+    // Production: serve static files from dist/public (this must come AFTER health checks)
     serveStatic(app);
 
     const PORT = parseInt(process.env.PORT || "5000");
+    
+    server.on('error', (error: any) => {
+      console.error('[EXPRESS ERROR]', error);
+      if (error.code === 'EADDRINUSE') {
+        console.error(`Port ${PORT} is already in use`);
+      }
+      process.exit(1);
+    });
+
     server.listen(PORT, "0.0.0.0", () => {
       console.log(`[express] Tomoshibi server started successfully on port ${PORT}`);
       console.log(`[express] Environment: ${process.env.NODE_ENV || 'production'}`);
-      console.log(`[express] Health check available at: http://0.0.0.0:${PORT}/health`);
+      console.log(`[express] Health check available at: http://0.0.0.0:${PORT}/`);
+      console.log(`[express] Detailed health check at: http://0.0.0.0:${PORT}/health`);
     });
   } catch (error) {
     console.error("[express] Failed to start server:", error);
