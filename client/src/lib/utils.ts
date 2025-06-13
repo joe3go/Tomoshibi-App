@@ -258,3 +258,64 @@ export const objectUtils = {
     return false;
   },
 };
+
+// Dashboard-specific utilities
+export const dashboardUtils = {
+  getScenarioJapanese: (title: string): string => {
+    const scenarios: Record<string, string> = {
+      'Self-Introduction': '自己紹介',
+      'Shopping': '買い物',
+      'Restaurant': 'レストラン',
+      'Directions': '道案内',
+      'Weather': '天気',
+      'Family': '家族',
+      'Hobbies': '趣味',
+      'Work': '仕事',  
+      'Travel': '旅行',
+      'Health': '健康'
+    };
+    return scenarios[title] || title;
+  },
+
+  getProgressionLabel: (vocabCount: number, completedCount: number): string => {
+    const totalInteractions = vocabCount + completedCount;
+    if (totalInteractions >= 100) return "🌸 Sakura Scholar";
+    if (totalInteractions >= 75) return "🗾 Island Explorer";
+    if (totalInteractions >= 50) return "🏮 Lantern Bearer";
+    if (totalInteractions >= 25) return "🌱 Bamboo Sprout";
+    if (totalInteractions >= 10) return "📚 Study Starter";
+    return "🌟 Rising Sun";
+  },
+
+  filterConversationsByStatus: <T extends { status?: string }>(
+    conversations: readonly T[],
+    status: 'active' | 'completed' | 'paused'
+  ): readonly T[] => {
+    if (!Array.isArray(conversations)) return [];
+    return conversations.filter((c) => (c.status || 'active') === status);
+  },
+
+  sanitizeInput: (input: string): string => {
+    return input.replace(/[<>]/g, '').trim().substring(0, 1000);
+  },
+
+  safeArrayAccess: <T>(
+    array: readonly T[] | null | undefined,
+    defaultValue: readonly T[] = []
+  ): readonly T[] => {
+    return Array.isArray(array) ? array : defaultValue;
+  },
+
+  formatJapaneseDate: (date: Date | string): string => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(dateObj.getTime())) return '';
+    
+    return new Intl.DateTimeFormat('ja-JP', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(dateObj);
+  }
+};

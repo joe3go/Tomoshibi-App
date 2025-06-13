@@ -1,45 +1,47 @@
 
 export * from '@shared/types';
+export * from './dashboard';
+export * from './utilities';
 
 // Client-specific types
 export interface RouteConfig {
-  path: string;
-  component: React.ComponentType;
-  requiresAuth?: boolean;
-  title?: string;
+  readonly path: string;
+  readonly component: React.ComponentType;
+  readonly requiresAuth?: boolean;
+  readonly title?: string;
 }
 
 export interface ThemeConfig {
-  mode: 'light' | 'dark';
-  primaryColor: string;
-  fontFamily: string;
+  readonly mode: 'light' | 'dark';
+  readonly primaryColor: string;
+  readonly fontFamily: string;
 }
 
 export interface AppConfig {
-  apiUrl: string;
-  enableDevTools: boolean;
-  theme: ThemeConfig;
+  readonly apiUrl: string;
+  readonly enableDevTools: boolean;
+  readonly theme: ThemeConfig;
 }
 
 // Component prop types
 export interface BaseComponentProps {
-  className?: string;
-  children?: React.ReactNode;
-  testId?: string;
+  readonly className?: string;
+  readonly children?: React.ReactNode;
+  readonly testId?: string;
 }
 
 // Hook return types
 export interface UseApiReturn<T> {
-  data: T | null;
-  loading: boolean;
-  error: Error | null;
-  refetch: () => Promise<void>;
+  readonly data: T | null;
+  readonly loading: boolean;
+  readonly error: Error | null;
+  readonly refetch: () => Promise<void>;
 }
 
 // Performance monitoring types
 export interface PerformanceEntry {
-  name: string;
-  duration: number;
-  timestamp: number;
-  type: 'render' | 'api' | 'navigation';
+  readonly name: string;
+  readonly duration: number;
+  readonly timestamp: number;
+  readonly type: 'render' | 'api' | 'navigation';
 }
