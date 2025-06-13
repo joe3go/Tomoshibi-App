@@ -3,6 +3,9 @@ set -e
 
 echo "Starting build process..."
 
+# Change to project root directory
+cd "$(dirname "$0")/.."
+
 # Build client
 echo "Building client..."
 npm run build:client
