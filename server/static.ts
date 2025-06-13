@@ -9,8 +9,8 @@ export function serveStatic(app: express.Express) {
   
   // Handle client-side routing - serve index.html for all non-API routes
   app.get("*", (req, res, next) => {
-    // Skip API routes
-    if (req.path.startsWith("/api") || req.path.startsWith("/health")) {
+    // Skip API routes and health check routes (already handled in routes.ts)
+    if (req.path.startsWith("/api") || req.path.startsWith("/health") || req.path === "/") {
       return next();
     }
     

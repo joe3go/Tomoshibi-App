@@ -281,6 +281,65 @@ export const contentApi = {
 // Export the http client for advanced usage
 export { httpClient };
 
+// Export query client compatible functions
+export async function apiRequest(
+  method: string,
+  url: string,
+  data?: unknown
+): Promise<Response> {
+  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+  
+  const response = await fetch(fullUrl, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(httpClient['token'] && { Authorization: `Bearer ${httpClient['token']}` }),
+    },
+    body: data ? JSON.stringify(data) : undefined,
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new ApiError(
+      errorData.message || `HTTP ${response.status}`,
+      response.status,
+      errorData
+    );
+  }
+
+  return response;
+}
+
+export const getQueryFn = ({ on401 = 'throw' }: { on401?: 'returnNull' | 'throw' } = {}) =>
+  async ({ queryKey }: { queryKey: readonly unknown[] }) => {
+    const url = queryKey[0] as string;
+    const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+    
+    const response = await fetch(fullUrl, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(httpClient['token'] && { Authorization: `Bearer ${httpClient['token']}` }),
+      },
+      credentials: 'include',
+    });
+
+    if (on401 === 'returnNull' && response.status === 401) {
+      return null;
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return response.json();
+  };
+
 // Performance monitoring
 export const performanceApi = {
   trackMetric: (metric: string, value: number) => {
