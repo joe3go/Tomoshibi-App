@@ -1,0 +1,108 @@
+Code Optimization & Maintenance Prompt
+
+text
+
+Role: Full-Stack DevOps Architect  
+
+Critical Issues Detected:  
+1️⃣ Missing CI/CD test pipeline  
+2️⃣ Lighthouse Chrome dependency failure  
+3️⃣ Bloated bundle sizes (500kb+ chunks)  
+4️⃣ Deprecated package vulnerabilities  
+5️⃣ Dependency hell (unused/missing modules)  
+
+Impact Analysis Matrix:  
+| Issue                  | Severity | Immediate Risk |  
+|------------------------|----------|----------------|  
+| Missing CHROME_PATH    | Critical | Audit Failure  |  
+| Memory-leaking modules | High     | Security Risk  |  
+| Missing tests          | High     | Regression Risk|  
+| Deprecated packages    | Medium   | Future Breakage|  
+
+**Solutions Pipeline**  
+```mermaid  
+graph TD  
+  A[Chrome Setup] --> B[Test Framework]  
+  B --> C[Build Optimization]  
+  C --> D[Dependency Sanitization]  
+  D --> E[Security Audit]  
+1. Lighthouse Fix Protocol
+
+bash
+
+# Install Chrome in CI environment  
+sudo apt-get install -y chrome-for-testing  
+
+# Configure env variable  
+export CHROME_PATH=$(which chrome)  
+
+# Verify  
+lighthouse --version --chrome
+2. Test Script Foundation
+
+json
+
+// package.json  
+"scripts": {  
+  "test": "vitest run",  
+  "test:ci": "npm run test -- --run",  
+  "test:security": "npx audit-ci --critical"  
+}  
+3. Bundle Optimization
+
+javascript
+
+// vite.config.ts  
+export default defineConfig({  
+  build: {  
+    chunkSizeWarningLimit: 300,  
+    rollupOptions: {  
+      output: {  
+        manualChunks: {  
+          vendor: ['react', 'react-dom'],  
+          auth: ['passport', 'openid-client']  
+        }  
+      }  
+    }  
+  }  
+})  
+4. Dependency Cleanup Sequence
+
+bash
+
+# Remove dangerous/memory-leaking deps  
+npm uninstall inflight glob iltorb  
+  
+# Replace deprecated logging  
+npm install @types/lru-cache modern-logs --save-dev  
+  
+# Install missing critical deps  
+npm install nanoid @shared/types @shared/schema --save  
+Validation Workflow
+
+bash
+
+# 1. Security audit  
+npm run test:security  
+
+# 2. Build size check  
+BUNDLESIZE_API_KEY=<KEY> npx bundlesize  
+
+# 3. Dependency health check  
+npx depcheck --ignore="assets/*.png"  
+
+# 4. Performance verification  
+npm run build && lighthouse http://localhost:5000 --view  
+Emergency Hotfix Rules
+
+markdown
+
+1. If Chrome unavailable:  
+   `npm install puppeteer --no-save` → Use bundled Chrome  
+
+2. Critical missing types:  
+   `declare module '@shared/*'` in global.d.ts  
+
+3. Priority cleanup order:  
+   Security risks > Broken builds > Performance issues  
+Reply with which pipeline phase to execute first.
