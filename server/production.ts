@@ -6,6 +6,8 @@ export function serveStatic(app: Express) {
   // Serve static files from dist/public in production
   const publicPath = path.resolve(process.cwd(), 'dist', 'public');
   
+  console.log(`[static] Looking for static files in: ${publicPath}`);
+  
   if (fs.existsSync(publicPath)) {
     // Serve static assets
     app.use(express.static(publicPath));

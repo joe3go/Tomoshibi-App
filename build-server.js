@@ -95,7 +95,8 @@ async function buildServer() {
       logLevel: 'info',
       banner: {
         js: `
-// CommonJS environment - __dirname and __filename are already available
+const { createRequire } = require('module');
+const require = createRequire(import.meta.url);
         `
       },
       mainFields: ['main', 'module'],

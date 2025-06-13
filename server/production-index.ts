@@ -1,6 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
 app.use(express.json());
@@ -39,6 +41,26 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
+    // Health check endpoints (must be before other routes)
+    app.get('/', (req, res) => {
+      res.status(200).json({
+        status: 'healthy',
+        service: 'tomoshibi-app',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime()
+      });
+    });
+
+    app.get('/health', (req, res) => {
+      res.status(200).json({
+        status: 'healthy',
+        service: 'tomoshibi-app',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV || 'production'
+      });
+    });
+
     const server = await registerRoutes(app);
 
     // Production: serve static files from dist/public
