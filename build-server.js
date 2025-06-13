@@ -14,7 +14,7 @@ async function buildServer() {
       bundle: true,
       platform: 'node',
       target: 'node18',
-      format: 'cjs',
+      format: 'esm',
       outfile: resolve(__dirname, 'dist/index.js'),
       external: [
         // Node.js built-in modules - comprehensive list
@@ -93,14 +93,9 @@ async function buildServer() {
       minify: true,
       sourcemap: true,
       logLevel: 'info',
-      banner: {
-        js: `
-const { createRequire } = require('module');
-const require = createRequire(import.meta.url);
-        `
-      },
+      
       mainFields: ['main', 'module'],
-      conditions: ['require', 'node', 'default'],
+      conditions: ['import', 'node', 'default'],
       packages: 'external'
     });
     
