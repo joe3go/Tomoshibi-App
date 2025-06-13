@@ -23,7 +23,15 @@ async function buildServer() {
         'mysql2',
         'mysql',
         'oracledb',
-        'tedious'
+        'tedious',
+        'lightningcss',
+        '@babel/preset-typescript',
+        '@babel/core',
+        'esbuild',
+        'vite',
+        'autoprefixer',
+        'tailwindcss',
+        'postcss'
       ],
       define: {
         'process.env.NODE_ENV': '"production"'
