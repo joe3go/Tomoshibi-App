@@ -1,321 +1,703 @@
-
-import React from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BookOpen, Trophy, Award, Zap, Play, BarChart3, Settings } from 'lucide-react';
-import { Link } from 'wouter';
-import { useToast } from '@/hooks/use-toast';
-import { getQueryFn, apiRequest } from '@/lib/api';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { Settings, LogOut, MessageCircle, User, Calendar, BookOpen, History, TrendingUp, Award, Target } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import harukiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
+import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
 
 export default function Dashboard() {
+  const [, setLocation] = useLocation();
+  const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [displayName, setDisplayName] = useState((user as any)?.displayName || "");
+  const [newPassword, setNewPassword] = useState("");
+  const [soundNotifications, setSoundNotifications] = useState((user as any)?.soundNotifications ?? true);
+  const [desktopNotifications, setDesktopNotifications] = useState((user as any)?.desktopNotifications ?? true);
 
-  const { data: user, isLoading } = useQuery({
-    queryKey: ['/api/user'],
-    queryFn: getQueryFn({ on401: 'returnNull' }),
+  // Fetch conversations
+  const { data: conversations, isLoading: conversationsLoading } = useQuery({
+    queryKey: ["/api/conversations"],
   });
 
-  const { data: stats } = useQuery({
-    queryKey: ['/api/dashboard/stats'],
-    queryFn: getQueryFn({ on401: 'returnNull' }),
+  // Fetch scenarios
+  const { data: scenarios, isLoading: scenariosLoading } = useQuery({
+    queryKey: ["/api/scenarios"],
   });
 
-  const { data: recentSessions } = useQuery({
-    queryKey: ['/api/dashboard/recent-sessions'],
-    queryFn: getQueryFn({ on401: 'returnNull' }),
+  // Fetch personas
+  const { data: personas, isLoading: personasLoading } = useQuery({
+    queryKey: ["/api/personas"],
   });
 
-  const { data: achievements } = useQuery({
-    queryKey: ['/api/dashboard/achievements'],
-    queryFn: getQueryFn({ on401: 'returnNull' }),
+  // Fetch progress
+  const { data: progress, isLoading: progressLoading } = useQuery({
+    queryKey: ["/api/progress"],
   });
 
-  // JLPT Level Selection Mutation
-  const updateLevelMutation = useMutation({
-    mutationFn: async (level: string) => {
-      await apiRequest('PUT', '/api/user/jlpt-level', { jlptLevel: level });
+  // Fetch vocabulary tracker data
+  const { data: vocabData = [] } = useQuery({
+    queryKey: ['/api/vocab-tracker'],
+  });
+
+  // Filter conversations for different sections with proper status checking
+  const activeConversations = Array.isArray(conversations) 
+    ? conversations.filter((c: any) => c.status === 'active' || !c.status)
+    : [];
+  
+  const completedConversations = Array.isArray(conversations) 
+    ? conversations.filter((c: any) => c.status === 'completed')
+    : [];
+
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      // Clear all authentication data
+      localStorage.removeItem("token");
+      localStorage.removeItem("auth_token");
+      localStorage.clear();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      queryClient.clear();
+      setLocation("/login");
+    },
+  });
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
+
+  const getScenarioJapanese = (title: string): string => {
+    const scenarios: Record<string, string> = {
+      "Self-Introduction": "自己紹介",
+      Shopping: "買い物",
+      Restaurant: "レストラン",
+      Directions: "道案内",
+      Weather: "天気",
+      Family: "家族",
+      Hobbies: "趣味",
+      Work: "仕事",
+      Travel: "旅行",
+      Health: "健康",
+    };
+    return scenarios[title] || title;
+  };
+
+  const getProgressionLabel = () => {
+    const vocabCount = (vocabData as any[]).length;
+    const completedCount = (completedConversations as any[]).length;
+    const totalInteractions = vocabCount + completedCount;
+
+    if (totalInteractions >= 100) return "🌸 Sakura Scholar";
+    if (totalInteractions >= 75) return "🗾 Island Explorer";
+    if (totalInteractions >= 50) return "🏮 Lantern Bearer";
+    if (totalInteractions >= 25) return "🌱 Bamboo Sprout";
+    if (totalInteractions >= 10) return "📚 Study Starter";
+    return "🌟 Rising Sun";
+  };
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (updates: any) => {
+      const response = await fetch(`/api/users/${(user as any)?.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(updates)
+      });
+      
+      if (!response.ok) throw new Error('Failed to update profile');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
+      setSettingsOpen(false);
+    }
+  });
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Create FormData for file upload
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    try {
+      const response = await fetch('/api/upload/avatar', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: formData
+      });
+
+      if (response.ok) {
+        const { profileImageUrl } = await response.json();
+        updateProfileMutation.mutate({ profileImageUrl });
+      }
+    } catch (error) {
+      console.error('Upload failed:', error);
+    }
+  };
+
+  // End conversation mutation with enhanced JWT authentication
+  const endConversationMutation = useMutation({
+    mutationFn: async (conversationId: number) => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch(`/api/conversations/${conversationId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          status: "completed",
+          completedAt: new Date().toISOString(),
+        })
+      });
+
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          localStorage.removeItem('token');
+          setLocation('/');
+          throw new Error('Session expired. Please log in again.');
+        }
+        throw new Error(`Failed to end session: ${response.statusText}`);
+      }
+
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/conversations/completed"] });
       toast({
-        title: 'JLPT Level Updated',
-        description: 'Your study content will now focus on this level',
+        title: "Session Ended",
+        description: "Your conversation has been successfully completed.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to End Session",
+        description: error.message,
+        variant: "destructive",
       });
     },
   });
 
-  if (isLoading) {
+  const handleEndSessionDashboard = (conversationId: number) => {
+    endConversationMutation.mutate(conversationId);
+  };
+
+  const handleSaveSettings = () => {
+    const updates: any = {
+      displayName,
+      soundNotifications,
+      desktopNotifications
+    };
+
+    if (newPassword.trim()) {
+      updates.password = newPassword;
+    }
+
+    updateProfileMutation.mutate(updates);
+  };
+
+  const handleSendFeedback = () => {
+    const emailUrl = `mailto:feedback@tomoshibiapp.com?subject=Tomoshibi App Feedback&body=Hi team,%0A%0AI'd like to share some feedback about the app:%0A%0A`;
+    window.open(emailUrl, '_blank');
+  };
+
+  if (
+    conversationsLoading ||
+    scenariosLoading ||
+    personasLoading ||
+    progressLoading
+  ) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">Loading dashboard...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading your dashboard...</p>
+        </div>
       </div>
     );
   }
-
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">Loading dashboard...</div>
-      </div>
-    );
-  }
-
-  // Safe display name handling - only safety fix kept
-  const safeDisplayName = typeof user.displayName === 'string' && user.displayName.trim() 
-    ? user.displayName 
-    : (user.username || '学生');
 
   return (
-    <div className="p-4 space-y-6 max-w-4xl mx-auto">
-      {/* Welcome Header */}
-      <div className="text-center space-y-3">
-        <h1 className="text-3xl font-bold">Welcome back, {safeDisplayName}!</h1>
-        <p className="text-muted-foreground">Continue your Japanese learning journey</p>
-      </div>
-
-      {/* JLPT Level Selection */}
-      <Card className="p-6">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Your JLPT Level</h3>
-            <Badge variant="secondary" className="text-sm">
-              Current: {user.currentJLPTLevel || 'N5'}
-            </Badge>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <Select
-                value={user.currentJLPTLevel || 'N5'}
-                onValueChange={(value) => updateLevelMutation.mutate(value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your JLPT level" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="N5">N5 - Beginner</SelectItem>
-                  <SelectItem value="N4">N4 - Elementary</SelectItem>
-                  <SelectItem value="N3">N3 - Intermediate</SelectItem>
-                  <SelectItem value="N2">N2 - Upper Intermediate</SelectItem>
-                  <SelectItem value="N1">N1 - Advanced</SelectItem>
-                </SelectContent>
-              </Select>
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto p-6">
+        {/* Header */}
+        <header className="content-card mb-6 flex items-center justify-between">
+          <div 
+            className="flex items-center space-x-3 cursor-pointer hover:opacity-80"
+            onClick={() => setLocation("/settings")}
+          >
+            <div className="avatar student">
+              {(user as any)?.profileImageUrl ? (
+                <img 
+                  src={(user as any).profileImageUrl} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                <span className="font-medium">
+                  {(user as any)?.displayName?.[0]?.toUpperCase() || "U"}
+                </span>
+              )}
             </div>
-            <Button 
-              variant="outline" 
+            <div>
+              <h2 className="font-semibold text-primary">
+                {(user as any)?.displayName || "User"}
+              </h2>
+              <p className="text-sm text-foreground">{getProgressionLabel()}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <Button
+              variant="ghost"
               size="sm"
-              disabled={updateLevelMutation.isPending}
+              onClick={() => setLocation("/vocabulary")}
+              className="text-foreground hover:text-primary flex items-center gap-2"
             >
-              {updateLevelMutation.isPending ? 'Updating...' : 'Update Level'}
+              <BookOpen className="w-4 h-4" />
+              Vocabulary
             </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocation("/history")}
+              className="text-foreground hover:text-primary flex items-center gap-2"
+            >
+              <History className="w-4 h-4" />
+              History
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocation("/settings")}
+              className="p-2 text-foreground hover:text-primary"
+            >
+              <Settings className="w-5 h-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="text-foreground hover:text-primary"
+            >
+              <LogOut className="w-4 h-4 mr-1" />
+              Logout
+            </Button>
+          </div>
+        </header>
+
+
+
+        {/* Continue Conversations Section */}
+        {activeConversations.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-primary">
+                Continue Learning
+              </h3>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setLocation("/history")}
+                className="text-muted-foreground hover:text-primary"
+              >
+                See more
+              </Button>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              {activeConversations.slice(0, 3).map((conversation: any) => {
+                const persona = Array.isArray(personas)
+                  ? personas.find((p: any) => p.id === conversation.personaId)
+                  : null;
+                const scenario = Array.isArray(scenarios)
+                  ? scenarios.find((s: any) => s.id === conversation.scenarioId)
+                  : null;
+
+                const formatDate = (dateString: string) => {
+                  if (!dateString) return "Recent";
+                  try {
+                    const date = new Date(dateString);
+                    if (isNaN(date.getTime())) return "Recent";
+                    return date.toLocaleDateString();
+                  } catch {
+                    return "Recent";
+                  }
+                };
+
+                return (
+                  <div
+                    key={conversation.id}
+                    className="content-card group"
+                  >
+                    <div className="flex items-start space-x-3 mb-3">
+                      <div className="avatar flex-shrink-0">
+                        {persona?.name === 'Aoi' ? (
+                          <img 
+                            src={aoiAvatar} 
+                            alt="Aoi" 
+                            className="w-full h-full object-cover rounded-full"
+                          />
+                        ) : persona?.name === 'Haruki' ? (
+                          <img 
+                            src={harukiAvatar} 
+                            alt="Haruki" 
+                            className="w-full h-full object-cover rounded-full"
+                          />
+                        ) : (
+                          <span className="font-japanese">
+                            {persona?.type === "teacher" ? "先" : "友"}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-primary">
+                          {persona?.name || "Unknown"}
+                        </h4>
+                        <p className="text-sm text-foreground">
+                          {scenario?.title || "Practice Session"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="status-tag in-progress">
+                        {conversation.status === 'completed' ? 'Completed' : 'In Progress'}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {formatDate(conversation.startedAt || conversation.createdAt)}
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      {conversation.status === 'active' ? (
+                        <>
+                          <Button
+                            size="sm"
+                            onClick={() => setLocation(`/chat/${conversation.id}`)}
+                            className="flex-1"
+                          >
+                            Continue
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEndSessionDashboard(conversation.id);
+                            }}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            End
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setLocation(`/chat/${conversation.id}`)}
+                          className="flex-1"
+                        >
+                          View
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Analytics Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {/* Comprehensive Vocabulary Analytics */}
+          <div className="content-card">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <BookOpen className="w-5 h-5 text-orange-600" />
+                </div>
+                <h3 className="font-semibold text-primary">Vocabulary Progress</h3>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setLocation("/vocabulary")}>
+                <TrendingUp className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Total Words</span>
+                <span className="font-semibold">{(vocabData as any[]).length}</span>
+              </div>
+              
+              {(() => {
+                const vocabStats = (vocabData as any[]).reduce((acc: any, entry: any) => {
+                  const level = entry.word?.jlptLevel || 'N5';
+                  acc[level] = (acc[level] || 0) + 1;
+                  acc.userUsage += entry.userUsageCount || 0;
+                  acc.aiEncounter += entry.aiEncounterCount || 0;
+                  return acc;
+                }, { N5: 0, N4: 0, N3: 0, N2: 0, N1: 0, userUsage: 0, aiEncounter: 0 });
+
+                return (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 bg-gray-200 rounded-full flex items-center justify-center">
+                          <User className="w-3 h-3" />
+                        </div>
+                        <span className="text-sm text-muted-foreground">Your Words</span>
+                      </div>
+                      <span className="text-green-600 font-semibold">{vocabStats.userUsage}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <img 
+                          src={aoiAvatar} 
+                          alt="Aoi" 
+                          className="w-5 h-5 rounded-full"
+                        />
+                        <span className="text-sm text-muted-foreground">Aoi's Words</span>
+                      </div>
+                      <span className="text-blue-600 font-semibold">{Math.floor(vocabStats.aiEncounter * 0.6)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <img 
+                          src={harukiAvatar} 
+                          alt="Haruki" 
+                          className="w-5 h-5 rounded-full"
+                        />
+                        <span className="text-sm text-muted-foreground">Haruki's Words</span>
+                      </div>
+                      <span className="text-purple-600 font-semibold">{Math.floor(vocabStats.aiEncounter * 0.4)}</span>
+                    </div>
+                    <div className="grid grid-cols-5 gap-1 mt-3">
+                      {['N5', 'N4', 'N3', 'N2', 'N1'].map(level => (
+                        <div key={level} className="text-center">
+                          <div className="text-xs text-muted-foreground">{level}</div>
+                          <div className="text-sm font-semibold">{vocabStats[level]}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+
+          {/* Growth & Development Tracker */}
+          <div className="content-card">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <Award className="w-5 h-5 text-green-600" />
+              </div>
+              <h3 className="font-semibold text-primary">Learning Journey</h3>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Current Level</span>
+                <Badge variant="secondary">{getProgressionLabel()}</Badge>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Active Sessions</span>
+                <span className="font-semibold">{activeConversations.length}</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Completed Sessions</span>
+                <span className="font-semibold">{completedConversations.length}</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Words Learned</span>
+                <span className="font-semibold">{(vocabData as any[]).length}</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Messages Sent</span>
+                <span className="font-semibold">{(progress as any)?.totalMessagesSent || 0}</span>
+              </div>
+              
+              {(() => {
+                const totalInteractions = (vocabData as any[]).length + (Array.isArray(conversations) ? conversations.length : 0);
+                const nextMilestone = totalInteractions >= 100 ? 150 : 
+                                    totalInteractions >= 75 ? 100 :
+                                    totalInteractions >= 50 ? 75 :
+                                    totalInteractions >= 25 ? 50 :
+                                    totalInteractions >= 10 ? 25 : 10;
+                const progress = (totalInteractions / nextMilestone) * 100;
+                
+                return (
+                  <div className="mt-3">
+                    <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                      <span>Progress to next level</span>
+                      <span>{totalInteractions}/{nextMilestone}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-green-600 h-2 rounded-full" 
+                        style={{ width: `${Math.min(100, progress)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
           </div>
         </div>
-      </Card>
 
-      {/* Interactive Progress Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        {/* Kanji Progress */}
-        <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-red-200 dark:hover:border-red-800">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-red-100 dark:bg-red-900/20 rounded-xl">
-                  <span className="text-2xl font-bold text-red-600 dark:text-red-400">漢</span>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">Kanji</h3>
-                  <p className="text-sm text-muted-foreground">Characters</p>
-                </div>
-              </div>
-              <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                {stats?.kanji?.mastered || 0}/{stats?.kanji?.total || 100}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <Progress value={(stats?.kanji?.mastered || 0) / (stats?.kanji?.total || 100) * 100} className="mb-2" />
-            <p className="text-xs text-muted-foreground">
-              {Math.round((stats?.kanji?.mastered || 0) / (stats?.kanji?.total || 100) * 100)}% Complete
-            </p>
-          </CardContent>
-          <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        </Card>
+        {/* Tutors Section */}
+        <div className="mb-8">
+          <h3 className="text-xl font-semibold mb-4 text-foreground">
+            Meet Your Tutors
+          </h3>
+          <div className="grid md:grid-cols-2 gap-6">
+            {Array.isArray(personas) && personas.length > 0 ? (
+              // Remove duplicates by filtering unique personas by id
+              personas
+                .filter(
+                  (persona: any, index: number, self: any[]) =>
+                    index === self.findIndex((p: any) => p.id === persona.id),
+                )
+                .map((persona: any) => {
+                  const getAvatarImage = (persona: any) => {
+                    if (persona.type === "teacher") return aoiAvatar; // Aoi is the female teacher
+                    if (persona.type === "friend") return harukiAvatar; // Haruki is the male friend
+                    return aoiAvatar; // Default fallback
+                  };
 
-        {/* Vocabulary Progress */}
-        <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-blue-200 dark:hover:border-blue-800">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-xl">
-                  <BookOpen className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">Vocabulary</h3>
-                  <p className="text-sm text-muted-foreground">Words</p>
-                </div>
-              </div>
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                {stats?.vocabulary?.mastered || 0}/{stats?.vocabulary?.total || 300}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <Progress value={(stats?.vocabulary?.mastered || 0) / (stats?.vocabulary?.total || 300) * 100} className="mb-2" />
-            <p className="text-xs text-muted-foreground">
-              {Math.round((stats?.vocabulary?.mastered || 0) / (stats?.vocabulary?.total || 300) * 100)}% Complete
-            </p>
-          </CardContent>
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        </Card>
-
-        {/* Grammar Progress */}
-        <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-green-200 dark:hover:border-green-800">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-xl">
-                  <span className="text-2xl font-bold text-green-600 dark:text-green-400">文</span>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">Grammar</h3>
-                  <p className="text-sm text-muted-foreground">Patterns</p>
-                </div>
-              </div>
-              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                {stats?.grammar?.mastered || 0}/{stats?.grammar?.total || 50}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <Progress value={(stats?.grammar?.mastered || 0) / (stats?.grammar?.total || 50) * 100} className="mb-2" />
-            <p className="text-xs text-muted-foreground">
-              {Math.round((stats?.grammar?.mastered || 0) / (stats?.grammar?.total || 50) * 100)}% Complete
-            </p>
-          </CardContent>
-          <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        </Card>
-      </div>
-
-      {/* Study Actions */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Button asChild className="h-20 flex-col gap-2 bg-gradient-to-br from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700">
-          <Link href="/chat">
-            <Play className="w-6 h-6" />
-            <span className="text-sm font-medium">Continue Chat</span>
-          </Link>
-        </Button>
-
-        <Button asChild variant="outline" className="h-20 flex-col gap-2 border-2 hover:bg-orange-50 hover:border-orange-200">
-          <Link href="/vocabulary">
-            <BookOpen className="w-6 h-6 text-orange-600" />
-            <span className="text-sm font-medium text-orange-600">Vocabulary</span>
-          </Link>
-        </Button>
-
-        <Button asChild variant="outline" className="h-20 flex-col gap-2 border-2 hover:bg-emerald-50 hover:border-emerald-200">
-          <Link href="/study">
-            <Zap className="w-6 h-6 text-emerald-600" />
-            <span className="text-sm font-medium text-emerald-600">Study Mode</span>
-          </Link>
-        </Button>
-
-        <Button asChild variant="outline" className="h-20 flex-col gap-2 border-2 hover:bg-blue-50 hover:border-blue-200">
-          <Link href="/history">
-            <BarChart3 className="w-6 h-6 text-blue-600" />
-            <span className="text-sm font-medium text-blue-600">Progress</span>
-          </Link>
-        </Button>
-      </div>
-
-      {/* Recent Activity & Achievements */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Sessions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5" />
-              Recent Activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {recentSessions?.length > 0 ? (
-              recentSessions.map((session, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div>
-                    <p className="font-medium">{session.activity}</p>
-                    <p className="text-sm text-muted-foreground">{session.timeAgo}</p>
-                  </div>
-                  <Badge variant="secondary">{session.score}</Badge>
-                </div>
-              ))
+                  return (
+                    <div
+                      key={persona.id}
+                      className="content-card cursor-pointer group hover:shadow-lg transition-shadow"
+                      onClick={() => setLocation("/tutor-selection")}
+                    >
+                      <div className="flex items-start space-x-4">
+                        <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
+                          <img
+                            src={getAvatarImage(persona)}
+                            alt={persona.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // Fallback to text avatar if image fails
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = "none";
+                              target.parentElement!.innerHTML = `
+                              <div class="avatar ${persona.type === "teacher" ? "sensei" : "student"} w-full h-full flex items-center justify-center">
+                                <span class="font-japanese text-foreground">
+                                  ${persona.type === "teacher" ? "先" : "友"}
+                                </span>
+                              </div>
+                            `;
+                            }}
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors mb-1">
+                            {persona.name}
+                          </h4>
+                          <div className="status-tag n5 mb-2">
+                            {persona.jlptLevel || "N5"} Level •{" "}
+                            {persona.type === "teacher" ? "Teacher" : "Friend"}
+                          </div>
+                          <p className="text-sm text-foreground opacity-80">
+                            {persona.description ||
+                              (persona.type === "teacher"
+                                ? "Formal teaching style with cultural context"
+                                : "Friendly conversational approach")}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
             ) : (
-              <p className="text-muted-foreground text-center py-4">No recent activity</p>
+              <div className="col-span-2 content-card text-center py-8">
+                <p className="text-foreground mb-4">
+                  No tutors available at the moment.
+                </p>
+                <p className="text-sm text-foreground opacity-60">
+                  Click below to explore tutor selection anyway.
+                </p>
+              </div>
             )}
-          </CardContent>
-        </Card>
-
-        {/* Achievements */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="w-5 h-5" />
-              Recent Achievements
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {achievements?.length > 0 ? (
-              achievements.map((achievement, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                  <Award className="w-8 h-8 text-yellow-500" />
-                  <div>
-                    <p className="font-medium">{achievement.title}</p>
-                    <p className="text-sm text-muted-foreground">{achievement.description}</p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-muted-foreground text-center py-4">No achievements yet</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="w-5 h-5" />
-            Quick Settings
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button variant="outline" className="justify-start" asChild>
-              <Link href="/settings">
-                <Settings className="w-4 h-4 mr-2" />
-                Preferences
-              </Link>
-            </Button>
-            <Button variant="outline" className="justify-start" asChild>
-              <Link href="/furigana-demo">
-                <BookOpen className="w-4 h-4 mr-2" />
-                Furigana Demo
-              </Link>
-            </Button>
-            <Button variant="outline" className="justify-start" asChild>
-              <Link href="/transcripts">
-                <BarChart3 className="w-4 h-4 mr-2" />
-                View Transcripts
-              </Link>
-            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="content-card">
+            <h4 className="font-semibold text-primary mb-3">Quick Practice</h4>
+            <p className="text-foreground text-sm mb-4">
+              Jump into a conversation with your preferred tutor
+            </p>
+            <div className="space-y-2">
+              <Button
+                onClick={() => setLocation("/tutor-selection")}
+                className="btn-secondary w-full justify-start"
+              >
+                <User className="w-4 h-4 mr-2" />
+                Choose Tutor
+              </Button>
+              <Button
+                onClick={() => setLocation("/scenario-selection")}
+                className="btn-secondary w-full justify-start"
+              >
+                <Calendar className="w-4 h-4 mr-2" />
+                Browse Scenarios
+              </Button>
+            </div>
+          </div>
+
+          <div className="content-card">
+            <h4 className="font-semibold text-primary mb-3">Learning Tips</h4>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-start space-x-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                <span className="text-foreground">
+                  Practice speaking out loud to improve pronunciation
+                </span>
+              </div>
+              <div className="flex items-start space-x-2">
+                <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
+                <span className="text-foreground">
+                  Review vocabulary after each conversation
+                </span>
+              </div>
+              <div className="flex items-start space-x-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                <span className="text-foreground">
+                  Don't worry about mistakes - they help you learn!
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
