@@ -102,9 +102,9 @@ export const performance = {
   },
 
   measure: (name: string, startMark: string, endMark: string): number => {
-    if ('performance' in window && performance.measure) {
+    if ('performance' in window && performance.measure && 'getEntriesByName' in performance) {
       performance.measure(name, startMark, endMark);
-      const entries = performance.getEntriesByName(name);
+      const entries = (performance as any).getEntriesByName(name);
       return entries[entries.length - 1]?.duration || 0;
     }
     return 0;
@@ -200,7 +200,7 @@ export const asyncUtils = {
 
 // Array utilities
 export const arrayUtils = {
-  unique: <T>(array: T[]): T[] => [...new Set(array)],
+  unique: <T>(array: T[]): T[] => Array.from(new Set(array)),
 
   chunk: <T>(array: T[], size: number): T[][] => {
     const chunks: T[][] = [];
@@ -243,7 +243,7 @@ export const objectUtils = {
     return result;
   },
 
-  omit: <T, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> => {
+  omit: <T extends Record<string, any>, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> => {
     const result = { ...obj };
     for (const key of keys) {
       delete result[key];
@@ -254,7 +254,7 @@ export const objectUtils = {
   isEmpty: (obj: unknown): boolean => {
     if (obj === null || obj === undefined) return true;
     if (typeof obj === 'string' || Array.isArray(obj)) return obj.length === 0;
-    if (typeof obj === 'object') return Object.keys(obj).length === 0;
+    if (typeof obj === 'object' && obj !== null) return Object.keys(obj as Record<string, unknown>).length === 0;
     return false;
   },
 };
