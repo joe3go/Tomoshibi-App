@@ -37,26 +37,40 @@ export function useDashboardData() {
 
   // Memoized filtered conversations with proper dependencies
   const activeConversations = useMemo(() => {
-    if (!Array.isArray(conversations)) return [];
-    return conversations.filter(conv => conv && conv.status === 'active');
+    if (!conversations || !Array.isArray(conversations)) return [];
+    return conversations.filter(conv => conv && typeof conv === 'object' && conv.status === 'active');
   }, [conversations]);
 
   const recentConversations = useMemo(() => {
-    if (!Array.isArray(conversations)) return [];
-    const active = conversations.filter(conv => conv && conv.status === 'active');
+    if (!conversations || !Array.isArray(conversations)) return [];
+    const active = conversations.filter(conv => conv && typeof conv === 'object' && conv.status === 'active');
     return active
-      .filter(conv => conv && conv.startedAt)
+      .filter(conv => conv && conv.startedAt && typeof conv.startedAt === 'string')
       .sort((a, b) => {
-        const dateA = new Date(a.startedAt).getTime();
-        const dateB = new Date(b.startedAt).getTime();
-        return dateB - dateA;
+        try {
+          const dateA = new Date(a.startedAt).getTime();
+          const dateB = new Date(b.startedAt).getTime();
+          if (isNaN(dateA) || isNaN(dateB)) return 0;
+          return dateB - dateA;
+        } catch {
+          return 0;
+        }
       })
       .slice(0, 3);
   }, [conversations]);
 
   // Memoized progress calculations with null checks
   const progressMetrics = useMemo(() => {
-    if (!progress || typeof progress !== 'object') return null;
+    if (!progress || typeof progress !== 'object' || progress === null) {
+      return {
+        vocabulary: 0,
+        grammar: 0,
+        conversations: 0,
+        messages: 0,
+        streak: 0,
+        accuracy: 0,
+      };
+    }
     
     const vocabMastered = Array.isArray(progress.vocabMastered) ? progress.vocabMastered.length : 0;
     const vocabEncountered = Array.isArray(progress.vocabEncountered) ? progress.vocabEncountered.length : 0;
@@ -69,16 +83,18 @@ export function useDashboardData() {
     return {
       vocabulary: Math.round(vocabProgress),
       grammar: Math.round(grammarProgress),
-      conversations: progress.totalConversations || 0,
-      messages: progress.totalMessagesSent || 0,
-      streak: progress.metrics?.streak || 0,
-      accuracy: progress.metrics?.accuracy || 0,
+      conversations: typeof progress.totalConversations === 'number' ? progress.totalConversations : 0,
+      messages: typeof progress.totalMessagesSent === 'number' ? progress.totalMessagesSent : 0,
+      streak: progress.metrics && typeof progress.metrics.streak === 'number' ? progress.metrics.streak : 0,
+      accuracy: progress.metrics && typeof progress.metrics.accuracy === 'number' ? progress.metrics.accuracy : 0,
     };
   }, [progress]);
 
   // Japanese status calculation with proper null checks
   const japaneseStatus = useMemo(() => {
-    if (!progress || typeof progress !== 'object') return '新人 (Newcomer)';
+    if (!progress || typeof progress !== 'object' || progress === null) {
+      return '新人 (Newcomer)';
+    }
     
     const vocabMastered = Array.isArray(progress.vocabMastered) ? progress.vocabMastered.length : 0;
     const grammarMastered = Array.isArray(progress.grammarMastered) ? progress.grammarMastered.length : 0;
