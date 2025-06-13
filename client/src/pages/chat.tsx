@@ -50,19 +50,21 @@ export default function Chat() {
 
   // WanaKana integration for real-time romaji to kana conversion
   useEffect(() => {
-    if (textareaRef.current) {
+    const textarea = textareaRef.current;
+    if (textarea) {
       // Bind WanaKana to the textarea with IME mode enabled
-      wanakana.bind(textareaRef.current, {
-        IMEMode: true
+      wanakana.bind(textarea, {
+        IMEMode: true,
+        useObsoleteKana: false
       });
 
       return () => {
-        if (textareaRef.current) {
-          wanakana.unbind(textareaRef.current);
+        if (textarea) {
+          wanakana.unbind(textarea);
         }
       };
     }
-  }, []);
+  }, [textareaRef.current]);
 
   // Handle input changes - WanaKana will automatically convert romaji to hiragana
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {

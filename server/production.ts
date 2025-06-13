@@ -4,7 +4,7 @@ import fs from "fs";
 
 export function serveStatic(app: Express) {
   // Serve static files from dist/public in production
-  const publicPath = path.resolve(process.cwd(), 'public');
+  const publicPath = path.resolve(process.cwd(), 'dist', 'public');
   
   if (fs.existsSync(publicPath)) {
     // Serve static assets
