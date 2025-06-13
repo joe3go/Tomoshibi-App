@@ -1,7 +1,4 @@
-
 import React, { Suspense } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
-
 import { Container, Stack } from '@/components/atoms/Layout';
 import { Heading, Text } from '@/components/atoms/Typography';
 import { Button } from '@/components/ui/button';
@@ -67,30 +64,23 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           {header}
         </header>
       )}
-      
+
       <div className="flex">
         {sidebar && (
           <aside className="w-64 shrink-0 border-r bg-muted/20">
             {sidebar}
           </aside>
         )}
-        
+
         <main className="flex-1">
           <Container size={maxWidth} padding={padding}>
-            <ErrorBoundary
-              FallbackComponent={ErrorFallback}
-              onError={(error, errorInfo) => {
-                console.error('Layout Error:', error, errorInfo);
-              }}
-            >
-              <Suspense fallback={<LoadingFallback />}>
-                {children}
-              </Suspense>
-            </ErrorBoundary>
+            <Suspense fallback={<LoadingFallback />}>
+              {children}
+            </Suspense>
           </Container>
         </main>
       </div>
-      
+
       {footer && (
         <footer className="border-t bg-muted/20">
           {footer}
