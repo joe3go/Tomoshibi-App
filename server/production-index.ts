@@ -41,8 +41,9 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
-    // Health check endpoints (must be before other routes)
+    // Critical: Health check endpoints MUST be first, before any other middleware or routes
     app.get('/', (req, res) => {
+      console.log('[HEALTH] Root health check requested');
       res.status(200).json({
         status: 'healthy',
         service: 'tomoshibi-app',
@@ -52,6 +53,7 @@ app.use((req, res, next) => {
     });
 
     app.get('/health', (req, res) => {
+      console.log('[HEALTH] Health endpoint requested');
       res.status(200).json({
         status: 'healthy',
         service: 'tomoshibi-app',

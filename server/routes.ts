@@ -73,24 +73,7 @@ async function trackVocabularyFromMessage(userId: number, content: string, sourc
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Health check endpoints for deployment
-  app.get('/health', (req, res) => {
-    res.status(200).json({ 
-      status: 'healthy', 
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      service: 'tomoshibi-app'
-    });
-  });
-
-  // Simplified root health check endpoint for deployment health checks
-  app.get('/', (req, res) => {
-    // Always respond immediately with 200 for health checks
-    res.status(200).json({ 
-      status: 'healthy', 
-      service: 'tomoshibi-app'
-    });
-  });
+  // Note: Health check endpoints are handled in production-index.ts before this function
 
 
 
