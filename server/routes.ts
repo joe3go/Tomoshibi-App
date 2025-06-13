@@ -419,6 +419,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }));
 
       console.log(`[CHAT] Generating AI response for conversation ${conversationId}`);
+      
+      if (!persona) {
+        return res.status(404).json({ message: 'Persona not found' });
+      }
+      
+      if (!scenario) {
+        return res.status(404).json({ message: 'Scenario not found' });
+      }
+      
       const aiResponse = await generateAIResponse({
         persona,
         scenario,
