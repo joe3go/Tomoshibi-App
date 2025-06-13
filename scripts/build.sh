@@ -14,6 +14,10 @@ npx vite build --outDir dist/public
 echo "Building server..."
 npx tsc -p tsconfig.production.json
 
+# Build production entry point separately
+echo "Building production entry point..."
+npx tsc server/production-index.ts --target es2022 --module esnext --moduleResolution node --outDir dist --skipLibCheck --esModuleInterop
+
 # Create production package.json
 echo "Creating production package.json..."
 cat > dist/package.json << 'EOF'
@@ -22,7 +26,7 @@ cat > dist/package.json << 'EOF'
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node server/index.js"
+    "start": "node server/production-index.js"
   }
 }
 EOF

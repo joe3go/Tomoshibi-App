@@ -14,5 +14,5 @@
     }
   },
   "include": ["server/**/*", "shared/**/*"],
-  "exclude": ["node_modules", "client", "dist"]
+  "exclude": ["node_modules", "client", "dist", "server/vite.ts", "vite.config.ts"]
 }
