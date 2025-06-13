@@ -4,34 +4,18 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-console.log('🚀 Performance Audit Starting...\n');
+// Dynamic imports for ES modules
+let lighthouse, chromeLauncher;
 
-// Check Chrome installation
-function detectChrome() {
-  const chromePaths = [
-    '/usr/bin/google-chrome-stable',
-    '/usr/bin/google-chrome',
-    '/usr/bin/chromium-browser',
-    process.env.CHROME_PATH
-  ];
-
-  for (const chromePath of chromePaths) {
-    if (chromePath && fs.existsSync(chromePath)) {
-      console.log(`✅ Chrome found at: ${chromePath}`);
-      process.env.CHROME_PATH = chromePath;
-      return chromePath;
-    }
-  }
-
-  console.log('❌ Chrome not found. Installing...');
+async function loadModules() {
   try {
-    execSync('npm install puppeteer --no-save', { stdio: 'inherit' });
-    console.log('✅ Puppeteer installed with bundled Chrome');
-    return 'puppeteer';
+    lighthouse = (await import('lighthouse')).default;
+    chromeLauncher = await import('chrome-launcher');
   } catch (error) {
-    console.error('❌ Failed to install Chrome fallback');
-    process.exit(1);
+    console.log('❌ Lighthouse modules not available:', error.message);
+    return false;
   }
+  return true;
 }
 
 // Analyze bundle sizes
@@ -57,8 +41,28 @@ function analyzeBundles() {
 }
 
 // Main audit
-function runAudit() {
-  detectChrome();
+async function runAudit() {
+  console.log('🚀 Performance Audit Starting...\n');
+
+  // Load modules dynamically
+  const modulesLoaded = await loadModules();
+
+  // Check if Chrome is available
+  try {
+    const chromePath = process.env.CHROME_PATH || 
+      execSync('which google-chrome || which chromium-browser || which chromium', { encoding: 'utf8' }).trim();
+    console.log('✅ Chrome found at:', chromePath);
+  } catch (error) {
+    console.log('❌ Chrome not found. Installing...\n');
+    try {
+      execSync('npm install puppeteer --save-dev', { stdio: 'inherit' });
+      console.log('✅ Puppeteer installed with bundled Chrome\n');
+    } catch (installError) {
+      console.log('❌ Failed to install Chrome. Skipping Lighthouse audit.\n');
+      return;
+    }
+  }
+
   analyzeBundles();
 
   console.log('\n⚡ Performance recommendations:');

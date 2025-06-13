@@ -35,6 +35,8 @@ export default defineConfig({
           ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tabs'],
           auth: ['passport', 'openid-client', 'jsonwebtoken'],
           query: ['@tanstack/react-query'],
+          router: ['wouter'],
+          wanakana: ['wanakana'],
         },
       },
     },
