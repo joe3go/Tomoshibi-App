@@ -9,7 +9,7 @@ mkdir -p dist
 
 # Build client assets
 echo "Building client..."
-npm run build:client
+npx vite build --outDir dist/public --emptyOutDir
 
 # Build server files using esbuild for production
 echo "Building server..."
