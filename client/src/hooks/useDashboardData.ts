@@ -7,26 +7,32 @@ import type {
   UserProgress,
   DashboardUser 
 } from '@/types/dashboard';
+import { getQueryFn } from '@/lib/api';
 
 export function useDashboardData() {
   const { data: user, isLoading: userLoading } = useQuery<DashboardUser>({
     queryKey: ['/api/auth/me'],
+    queryFn: getQueryFn({ on401: 'returnNull' }),
   });
 
   const { data: conversations, isLoading: conversationsLoading } = useQuery<DashboardConversation[]>({
     queryKey: ['/api/conversations'],
+    queryFn: getQueryFn({ on401: 'returnNull' }),
   });
 
   const { data: personas, isLoading: personasLoading } = useQuery<DashboardPersona[]>({
     queryKey: ['/api/personas'],
+    queryFn: getQueryFn({ on401: 'returnNull' }),
   });
 
   const { data: scenarios, isLoading: scenariosLoading } = useQuery<DashboardScenario[]>({
     queryKey: ['/api/scenarios'],
+    queryFn: getQueryFn({ on401: 'returnNull' }),
   });
 
   const { data: progress, isLoading: progressLoading } = useQuery<UserProgress>({
     queryKey: ['/api/progress'],
+    queryFn: getQueryFn({ on401: 'returnNull' }),
   });
 
   // Stable memoized filtered conversations
