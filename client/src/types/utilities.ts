@@ -1,4 +1,4 @@
-import type { ScenarioTranslation, ProgressionLevel, ProgressMetrics } from './dashboard';
+import type { ScenarioTranslation, ProgressionLevel, DashboardProgressMetrics } from './dashboard';
 import type { VocabTracker, Conversation } from '@shared/schema';
 
 /**
@@ -32,7 +32,7 @@ export type FilterConversationsByStatusFunction = <T extends Conversation>(
 export type CalculateProgressMetricsFunction = (
   vocabData: readonly VocabTracker[],
   completedConversations: readonly Conversation[]
-) => ProgressMetrics;
+) => DashboardProgressMetrics;
 
 /**
  * Function to validate form data

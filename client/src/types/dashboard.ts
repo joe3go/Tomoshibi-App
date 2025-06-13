@@ -85,7 +85,7 @@ export interface TutorCarouselProps {
  * Props for analytics grid component
  */
 export interface AnalyticsGridProps {
-  readonly metrics: ProgressMetrics;
+  readonly metrics: DashboardProgressMetrics;
   readonly vocabData: readonly VocabTracker[];
   readonly conversations: readonly DashboardConversation[];
   readonly className?: string;
@@ -178,7 +178,7 @@ export interface DashboardState {
   readonly personas: readonly DashboardPersona[];
   readonly progress: UserProgress | null;
   readonly vocabData: readonly VocabTracker[];
-  readonly metrics: ProgressMetrics;
+  readonly metrics: DashboardProgressMetrics;
   readonly isLoading: boolean;
 }
 
