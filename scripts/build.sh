@@ -11,20 +11,26 @@ mkdir -p dist
 echo "Building client..."
 npm run build:client
 
-# Build server files
+# Build server files using esbuild for production
 echo "Building server..."
-npm run build:server
+npx esbuild server/production-index.ts --bundle --platform=node --target=es2022 --format=esm --outfile=dist/index.js \
+  --external:express \
+  --external:@neondatabase/serverless \
+  --external:drizzle-orm \
+  --external:ws \
+  --external:bcrypt \
+  --external:jsonwebtoken \
+  --external:passport \
+  --external:express-session \
+  --external:connect-pg-simple \
+  --external:multer \
+  --external:openai \
+  --external:drizzle-zod \
+  --external:zod \
+  --sourcemap \
+  --define:process.env.NODE_ENV='"production"'
 
-# Create the main entry point at dist/index.js
-echo "Creating production entry point..."
-if [ -f "dist/server/production-index.js" ]; then
-  cp dist/server/production-index.js dist/index.js
-  echo "✓ Entry point created: dist/index.js"
-else
-  echo "Building production entry directly..."
-  npx esbuild server/production-index.ts --bundle --platform=node --target=es2022 --format=esm --outfile=dist/index.js --external:express --external:@neondatabase/serverless --external:drizzle-orm --external:ws --external:bcrypt --external:jsonwebtoken --external:passport --external:express-session --external:connect-pg-simple --external:multer --external:openai
-  echo "✓ Entry point built: dist/index.js"
-fi
+echo "✓ Production server built: dist/index.js"
 
 # Ensure the entry point is executable
 chmod +x dist/index.js
