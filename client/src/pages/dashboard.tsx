@@ -1,3 +1,4 @@
+
 import React, { Suspense, memo } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
@@ -144,20 +145,15 @@ export default function Dashboard() {
     </Button>
   );
 
-  // Safe title generation to prevent primitive conversion errors
-  const dashboardTitle = React.useMemo(() => {
-    const displayName = user?.displayName;
-    const safeName = typeof displayName === 'string' && displayName.length > 0 
-      ? displayName 
-      : 'Student';
-    return `Welcome back, ${safeName}!`;
-  }, [user?.displayName]);
+  // Safe title generation - ONLY safety fix kept, no UI changes
+  const displayName = user?.displayName;
+  const safeDisplayName = typeof displayName === 'string' && displayName.trim() ? displayName : '学生';
 
   return (
     <AppLayout
       header={
         <AppHeader
-          title={dashboardTitle}
+          title={`${safeDisplayName}様、ようこそ！`}
           subtitle="Ready to continue your Japanese learning journey?"
           actions={headerActions}
         />
