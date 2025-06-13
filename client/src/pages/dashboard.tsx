@@ -134,50 +134,31 @@ export default function Dashboard() {
 
   // Header actions
   const headerActions = (
-    <div className="flex items-center space-x-3">
-      <Badge 
-        variant="outline" 
-        className="hidden md:flex px-3 py-1 border-primary/30 text-primary bg-primary/10"
-      >
-        {japaneseStatus}
-      </Badge>
-      <Button
-        onClick={handleNewConversation}
-        className="btn-japanese flex items-center space-x-2"
-      >
-        <Plus className="w-4 h-4" />
-        <span>New Conversation</span>
-      </Button>
-    </div>
+    <Button
+      variant="outline"
+      onClick={() => setLocation(ROUTES.CONVERSATION_NEW)}
+      className="flex items-center gap-2"
+    >
+      <Plus className="w-4 h-4" />
+      Start Conversation
+    </Button>
   );
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <AppLayout
-        header={
-          <AppHeader
-            title="Dashboard"
-            subtitle="ダッシュボード"
-            actions={<div className="h-10 w-32 bg-muted rounded animate-pulse" />}
-          />
-        }
-        maxWidth="7xl"
-        testId="dashboard-page"
-      >
-        <Suspense fallback={<div>Loading...</div>}>
-          <DashboardSkeleton />
-        </Suspense>
-      </AppLayout>
-    );
-  }
+  // Safe title generation to prevent primitive conversion errors
+  const dashboardTitle = React.useMemo(() => {
+    const displayName = user?.displayName;
+    const safeName = typeof displayName === 'string' && displayName.length > 0 
+      ? displayName 
+      : 'Student';
+    return `Welcome back, ${safeName}!`;
+  }, [user?.displayName]);
 
   return (
     <AppLayout
       header={
         <AppHeader
-          title={`Welcome back, ${user?.displayName || 'Student'}!`}
-          subtitle="おかえりなさい！Ready to continue your Japanese journey?"
+          title={dashboardTitle}
+          subtitle="Ready to continue your Japanese learning journey?"
           actions={headerActions}
         />
       }
