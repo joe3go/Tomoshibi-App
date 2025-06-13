@@ -6,9 +6,10 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 channel = "stable-24_05"
 
 [deployment]
-deploymentTarget = "autoscale"
-build = ["npm", "run", "build"]
-run = ["npm", "run", "start"]
+run = ["sh", "-c", "npm run start"]
+
+[env]
+CHROME_PATH = "/home/runner/.nix-profile/bin/chromium-browser"
 
 [[ports]]
 localPort = 5000
