@@ -1,6 +1,7 @@
 [deployment]
-build = ["bash", "scripts/build.sh"]
-run = ["node", "dist/index.js"]
+build = ["npm", "run", "build"]
+run = ["npm", "start"]
+deploymentTarget = "cloudrun"
 
 [env]
 NODE_ENV = "production"
