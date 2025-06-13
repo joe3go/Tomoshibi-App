@@ -1,0 +1,6 @@
+[deployment]
+build = ["bash", "scripts/build.sh"]
+run = ["node", "dist/index.js"]
+
+[env]
+NODE_ENV = "production"

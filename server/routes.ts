@@ -83,19 +83,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Root health check - handle both browser and deployment health checks
-  app.get('/', (req, res) => {
-    // If this is a health check request (JSON accept header), return JSON
-    if (req.headers.accept && req.headers.accept.includes('application/json')) {
-      return res.status(200).json({ 
-        status: 'healthy', 
-        service: 'tomoshibi-app',
-        timestamp: new Date().toISOString()
-      });
-    }
-    // For browser requests, return simple OK (frontend will handle routing)
-    res.status(200).send('OK');
-  });
+
 
   // Auth routes
   app.post('/api/auth/register', async (req, res) => {
