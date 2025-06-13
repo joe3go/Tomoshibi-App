@@ -83,31 +83,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Root health check endpoint for deployment health checks
+  // Simplified root health check endpoint for deployment health checks
   app.get('/', (req, res) => {
-    // Check if this is likely a health check request (deployment systems often check root)
-    const userAgent = req.get('User-Agent') || '';
-    const isHealthCheck = userAgent.toLowerCase().includes('health') || 
-                         userAgent.toLowerCase().includes('check') ||
-                         userAgent.toLowerCase().includes('monitor') ||
-                         req.get('Accept')?.includes('application/json');
-    
-    if (isHealthCheck) {
-      return res.status(200).json({ 
-        status: 'healthy', 
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        service: 'tomoshibi-app'
-      });
-    }
-    
-    // For regular browser requests, let static file serving handle it
-    // This will be handled by serveStatic in production or Vite in development
-    return res.status(200).json({ 
+    // Always respond immediately with 200 for health checks
+    res.status(200).json({ 
       status: 'healthy', 
-      timestamp: new Date().toISOString(),
-      service: 'tomoshibi-app',
-      message: 'Tomoshibi Japanese Learning Platform'
+      service: 'tomoshibi-app'
     });
   });
 
