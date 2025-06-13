@@ -42,8 +42,9 @@ export function useDashboardData() {
   }, [conversations]);
 
   const recentConversations = useMemo(() => {
-    if (!Array.isArray(activeConversations)) return [];
-    return activeConversations
+    if (!Array.isArray(conversations)) return [];
+    const active = conversations.filter(conv => conv && conv.status === 'active');
+    return active
       .filter(conv => conv && conv.startedAt)
       .sort((a, b) => {
         const dateA = new Date(a.startedAt).getTime();
@@ -51,7 +52,7 @@ export function useDashboardData() {
         return dateB - dateA;
       })
       .slice(0, 3);
-  }, [activeConversations]);
+  }, [conversations]);
 
   // Memoized progress calculations with null checks
   const progressMetrics = useMemo(() => {

@@ -120,21 +120,21 @@ export default function Dashboard() {
     isLoading,
   } = useDashboardData();
 
-  // Event handlers
-  const handleConversationClick = (conversationId: number) => {
+  // Event handlers - memoized to prevent re-renders
+  const handleConversationClick = React.useCallback((conversationId: number) => {
     setLocation(`/chat/${conversationId}`);
-  };
+  }, [setLocation]);
 
-  const handleNewConversation = () => {
+  const handleNewConversation = React.useCallback(() => {
     setLocation(ROUTES.TUTOR_SELECTION);
-  };
+  }, [setLocation]);
 
-  const handleSelectTutor = (personaId: number) => {
+  const handleSelectTutor = React.useCallback((personaId: number) => {
     setLocation(`${ROUTES.SCENARIO_SELECTION}?persona=${personaId}`);
-  };
+  }, [setLocation]);
 
-  // Header actions
-  const headerActions = (
+  // Header actions - memoized to prevent re-renders
+  const headerActions = React.useMemo(() => (
     <div className="flex items-center space-x-3">
       <Badge 
         variant="outline" 
@@ -150,7 +150,7 @@ export default function Dashboard() {
         <span>New Conversation</span>
       </Button>
     </div>
-  );
+  ), [japaneseStatus, handleNewConversation]);
 
   // Loading state
   if (isLoading) {
