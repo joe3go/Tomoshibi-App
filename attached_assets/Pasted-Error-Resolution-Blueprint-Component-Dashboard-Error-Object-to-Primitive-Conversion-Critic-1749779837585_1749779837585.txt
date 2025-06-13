@@ -1,0 +1,114 @@
+Error Resolution Blueprint
+
+Component: Dashboard | Error: Object-to-Primitive Conversion
+
+Critical Fix Requirements
+
+1️⃣ Data Sanitization Layer
+
+typescript
+
+// Add to src/lib/safety.ts  
+export const safeJapaneseString = (value: unknown, fallback = '学生') => {  
+  const str = typeof value === 'string' ? value : String(value ?? fallback);  
+  return str.replace(/[^\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}ー・]/gu, '').slice(0, 20);  
+};  
+2️⃣ Query Data Sanitization
+
+typescript
+
+// Update useDashboardData.ts  
+const { data: user } = useQuery<DashboardUser>({  
+  queryKey: ['/api/auth/me'],  
+  select: (data) => ({  
+    ...data,  
+    displayName: safeJapaneseString(data?.displayName),  
+    tenantId: data?.tenantId?.toString() || 'guest'  
+  }),  
+});  
+3️⃣ Title Interpolation Protection
+
+tsx
+
+// Dashboard component header  
+title={`${user?.displayName || '学生'}様、ようこそ！`}  
+Safety Checks to Implement
+
+typescript
+
+// Validation layer in useDashboardData  
+const verifiedPersonas = useMemo(() =>  
+  personas.filter(p => p?.id && p?.name),  
+  [personas]  
+);  
+Performance Impact Protection
+
+diff
+
+// Memoization update  
+const recentConversations = useMemo(() =>  
+-  activeConversations  
++  (activeConversations || [])  
+    .sort(...)  
+    .slice(0, 3),  
+[activeConversations]  
+);  
+Fallback System
+
+tsx
+
+// Create shared fallback component  
+const JapaneseFallback = ({ text }: { text: string }) => (  
+  <span className="border-b border-dashed border-red-500">  
+    {safeJapaneseString(text, 'データなし')}  
+  </span>  
+);  
+Type Safety Protocol
+
+typescript
+
+// Strict profile interface  
+interface SanitizedProfile {  
+  displayName: string;  
+  tenantId: string;  
+  progress?: {  
+    vocabMastered: string[];  
+    grammarMastered: string[];  
+  };  
+}  
+Validation Commands
+
+json
+
+"scripts": {  
+  "check:ssr": "tsc --noEmit --strictNullChecks --jsx preserve",  
+  "audit:interpolations": "grep -rn '\\${' ./src --include='*.tsx'"  
+}  
+Preservation Checklist
+
+text
+
+✓ Japanese honorifics (様)  
+✓ JLPT level milestones (桜 Scholar)  
+✓ Kanji/kana-only display names  
+✓ Conversation history sorting  
+✓ Error boundary cultural context  
+Implementation Strategy
+
+
+Create safety utilities
+
+Sanitize query responses
+
+Replace all inline interpolations
+
+Validate with strict null checks
+
+Regression Tests
+
+gherkin
+
+Scenario: User with invalid displayName  
+  Given API returns {displayName: {first: "太郎"}}  
+  When loading dashboard  
+  Then show "学生様、ようこそ！"  
