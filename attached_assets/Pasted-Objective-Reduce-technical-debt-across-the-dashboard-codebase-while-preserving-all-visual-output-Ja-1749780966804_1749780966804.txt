@@ -1,0 +1,162 @@
+Objective
+Reduce technical debt across the dashboard codebase while preserving all visual output, Japanese language formatting, and user functionality.
+Changes must be safe, typed, and confirmable.
+
+🔐 Core Constraints
+UI must remain pixel-perfect
+
+Functionality must remain exactly the same
+
+Preserve Japanese text, JLPT levels, and formatting
+
+Maintain routing, DOM structure, and interaction flows
+
+JSX changes or layout extractions must get explicit confirmation
+
+📦 Phase Breakdown
+🧩 Phase 1: Type System Enhancements
+Location: ./src/types/*.ts
+
+Convert PropTypes or loose types into TypeScript interfaces
+
+Ensure optional fields (e.g. persona?, metrics?) are strictly typed (undefined | null)
+
+Use readonly for immutable props
+
+Apply branded types for clarity (e.g., type UserId = number)
+
+Add JSDoc comments to all interfaces and props
+
+🧪 Phase 2: Utility + Prop Hygiene
+Scope:
+
+DashboardConversation, DashboardPersona, UserProgress, etc.
+
+ConversationCardProps, AnalyticsGridProps, TutorCarouselProps
+
+Tasks:
+
+Validate all function signatures (no any)
+
+Break large props into reusable shapes (e.g., CardMeta)
+
+Ensure proper typing for callbacks like onClick or onSelectTutor
+
+🧱 Phase 3: Safe Layout Component Extraction ✅ (Expanded)
+Objective:
+Extract reusable layout/UI blocks (like headers, avatar rows, cards) into shared components.
+
+Rules:
+
+Maintain exact DOM structure and classnames (unless updated per class mapping)
+
+Must preserve all layout, spacing, and style tokens
+
+Use typed props interfaces
+
+New components should be atomic and colocated (e.g., /components/Header/index.tsx)
+
+Examples to Extract:
+
+Header
+
+Sidebar
+
+MetricCard
+
+AvatarWithLabel
+
+CardSectionHeader
+
+Component Guidelines:
+
+Use PascalCase filenames
+
+Document each with JSDoc
+
+Create minimal interfaces (HeaderProps, etc.)
+
+Update all usages across the app
+
+Wrap extracted UI in <React.memo> if pure and static
+
+🎨 Phase 4: Style System & Classname Cleanup
+If classNames are overly long, cryptic, or hashed:
+
+Shorten them and provide:
+
+✅ Full OLD => NEW classname mapping (JSON format)
+
+✅ Updated usage in JSX + stylesheets
+
+Adopt BEM conventions where helpful
+
+Extract hardcoded inline styles into CSS variables
+
+Example Output:
+
+json
+Copy
+Edit
+{
+  "header-row--xl-32ff": "header-row",
+  "img-23aflg": "avatar-image"
+}
+✅ Validation Matrix
+Phase	Auto Check	Manual Review
+Type Safety	tsc --noEmit	Optional fields & usage
+Utilities	100% unit test coverage	Japanese format validators
+Components	RTL or visual tests	Layout unchanged (manual diff)
+Styles	CSS regression test diff	Animations & state coverage
+
+🧾 Non-Negotiable Contract
+AI must ask for confirmation before:
+
+Changing JSX tag hierarchy
+
+Moving a block of JSX into a new component
+
+Modifying CSS classnames without mapping
+
+Changing routing, logic flow, or state structure
+
+🧯 Emergency Rollback Trigger
+If any of the following occur:
+
+Japanese locale formatting breaks
+
+Visual diffs exceed threshold > 0.5%
+
+Component states (hover, focus, active) disappear
+
+Classname references mismatch
+
+Execute:
+
+bash
+Copy
+Edit
+npm run rollback -- --scope=dashboard --checkpoint=pre-refactor-v1
+🛠 Example: Header Extraction
+Before:
+
+tsx
+Copy
+Edit
+<div className="header-row">
+  <img src={profileImageUrl} className="avatar-img--square-xl" />
+  <h1 className="greeting-text">Welcome back</h1>
+</div>
+After:
+
+tsx
+Copy
+Edit
+export function Header({ profileImageUrl, greeting }: HeaderProps) {
+  return (
+    <div className="header-row">
+      <img src={profileImageUrl} className="avatar-img--square-xl" />
+      <h1 className="greeting-text">{greeting}</h1>
+    </div>
+  );
+}
