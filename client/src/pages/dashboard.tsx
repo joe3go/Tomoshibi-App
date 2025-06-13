@@ -1,4 +1,3 @@
-
 import React, { Suspense, memo } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
@@ -32,7 +31,7 @@ const ConversationSection = memo(({
   onConversationClick: (id: number) => void;
   onNewConversation: () => void;
 }) => {
-  if (!conversations || conversations.length === 0) {
+  if (conversations.length === 0) {
     return (
       <Card className="content-card text-center p-8">
         <CardContent>
@@ -73,8 +72,8 @@ const ConversationSection = memo(({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {conversations.map((conversation) => {
-          const persona = personas?.find(p => p.id === conversation.personaId);
-          const scenario = scenarios?.find(s => s.id === conversation.scenarioId);
+          const persona = personas.find(p => p.id === conversation.personaId);
+          const scenario = scenarios.find(s => s.id === conversation.scenarioId);
 
           return (
             <Suspense key={conversation.id} fallback={<div className="h-32 bg-muted rounded animate-pulse" />}>
@@ -120,27 +119,27 @@ export default function Dashboard() {
     isLoading,
   } = useDashboardData();
 
-  // Event handlers - memoized to prevent re-renders
-  const handleConversationClick = React.useCallback((conversationId: number) => {
+  // Event handlers
+  const handleConversationClick = (conversationId: number) => {
     setLocation(`/chat/${conversationId}`);
-  }, [setLocation]);
+  };
 
-  const handleNewConversation = React.useCallback(() => {
+  const handleNewConversation = () => {
     setLocation(ROUTES.TUTOR_SELECTION);
-  }, [setLocation]);
+  };
 
-  const handleSelectTutor = React.useCallback((personaId: number) => {
+  const handleSelectTutor = (personaId: number) => {
     setLocation(`${ROUTES.SCENARIO_SELECTION}?persona=${personaId}`);
-  }, [setLocation]);
+  };
 
-  // Header actions - memoized to prevent re-renders
-  const headerActions = React.useMemo(() => (
+  // Header actions
+  const headerActions = (
     <div className="flex items-center space-x-3">
       <Badge 
         variant="outline" 
         className="hidden md:flex px-3 py-1 border-primary/30 text-primary bg-primary/10"
       >
-        {japaneseStatus || '新人 (Newcomer)'}
+        {japaneseStatus}
       </Badge>
       <Button
         onClick={handleNewConversation}
@@ -150,7 +149,7 @@ export default function Dashboard() {
         <span>New Conversation</span>
       </Button>
     </div>
-  ), [japaneseStatus, handleNewConversation]);
+  );
 
   // Loading state
   if (isLoading) {
@@ -173,13 +172,11 @@ export default function Dashboard() {
     );
   }
 
-  const displayName = user?.displayName || 'Student';
-
   return (
     <AppLayout
       header={
         <AppHeader
-          title={`Welcome back, ${displayName}!`}
+          title={`Welcome back, ${user?.displayName || 'Student'}!`}
           subtitle="おかえりなさい！Ready to continue your Japanese journey?"
           actions={headerActions}
         />
@@ -192,13 +189,13 @@ export default function Dashboard() {
         <Suspense fallback={<div className="h-32 bg-muted rounded animate-pulse" />}>
           <AnalyticsGrid
             progress={progress}
-            conversations={activeConversations || []}
+            conversations={activeConversations}
             isLoading={false}
           />
         </Suspense>
 
         {/* Recent Activity */}
-        {recentConversations && recentConversations.length > 0 && (
+        {recentConversations.length > 0 && (
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <TrendingUp className="w-5 h-5 text-primary" />
@@ -208,8 +205,8 @@ export default function Dashboard() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {recentConversations.map((conversation) => {
-                const persona = personas?.find(p => p.id === conversation.personaId);
-                const scenario = scenarios?.find(s => s.id === conversation.scenarioId);
+                const persona = personas.find(p => p.id === conversation.personaId);
+                const scenario = scenarios.find(s => s.id === conversation.scenarioId);
 
                 return (
                   <Suspense key={conversation.id} fallback={<div className="h-32 bg-muted rounded animate-pulse" />}>
@@ -228,9 +225,9 @@ export default function Dashboard() {
 
         {/* All Conversations */}
         <ConversationSection
-          conversations={activeConversations || []}
-          personas={personas || []}
-          scenarios={scenarios || []}
+          conversations={activeConversations}
+          personas={personas}
+          scenarios={scenarios}
           onConversationClick={handleConversationClick}
           onNewConversation={handleNewConversation}
         />
@@ -238,7 +235,7 @@ export default function Dashboard() {
         {/* Tutor Selection */}
         <Suspense fallback={<div className="h-48 bg-muted rounded animate-pulse" />}>
           <TutorCarousel
-            personas={personas || []}
+            personas={personas}
             onSelectTutor={handleSelectTutor}
             isLoading={false}
           />

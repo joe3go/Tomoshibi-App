@@ -24,26 +24,18 @@ const AnalyticsGrid = memo<AnalyticsGridProps>(({
     );
   }
 
-  // Safe property access with fallbacks
-  const vocabMastered = Array.isArray(progress?.vocabMastered) ? progress.vocabMastered.length : 0;
-  const vocabEncountered = Array.isArray(progress?.vocabEncountered) ? progress.vocabEncountered.length : 0;
-  const grammarMastered = Array.isArray(progress?.grammarMastered) ? progress.grammarMastered.length : 0;
-  const grammarEncountered = Array.isArray(progress?.grammarEncountered) ? progress.grammarEncountered.length : 0;
-  const totalConversations = typeof progress?.totalConversations === 'number' ? progress.totalConversations : 0;
-  const totalMessagesSent = typeof progress?.totalMessagesSent === 'number' ? progress.totalMessagesSent : 0;
-
   const metrics = [
     {
       title: 'Vocabulary Mastered',
-      value: vocabMastered,
-      total: vocabEncountered,
+      value: progress?.vocabMastered?.length || 0,
+      total: progress?.vocabEncountered?.length || 0,
       icon: BookOpen,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
     },
     {
       title: 'Conversations',
-      value: totalConversations,
+      value: progress?.totalConversations || 0,
       total: null,
       icon: MessageSquare,
       color: 'text-green-600',
@@ -51,7 +43,7 @@ const AnalyticsGrid = memo<AnalyticsGridProps>(({
     },
     {
       title: 'Messages Sent',
-      value: totalMessagesSent,
+      value: progress?.totalMessagesSent || 0,
       total: null,
       icon: TrendingUp,
       color: 'text-purple-600',
@@ -59,8 +51,8 @@ const AnalyticsGrid = memo<AnalyticsGridProps>(({
     },
     {
       title: 'Grammar Points',
-      value: grammarMastered,
-      total: grammarEncountered,
+      value: progress?.grammarMastered?.length || 0,
+      total: progress?.grammarEncountered?.length || 0,
       icon: Target,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
@@ -71,7 +63,7 @@ const AnalyticsGrid = memo<AnalyticsGridProps>(({
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {metrics.map((metric, index) => {
         const Icon = metric.icon;
-        const progressPercentage = metric.total && metric.total > 0
+        const progressPercentage = metric.total 
           ? Math.round((metric.value / metric.total) * 100) 
           : null;
 
@@ -88,7 +80,7 @@ const AnalyticsGrid = memo<AnalyticsGridProps>(({
             <CardContent>
               <div className="text-2xl font-bold text-foreground">
                 {metric.value}
-                {metric.total && metric.total > 0 && (
+                {metric.total && (
                   <span className="text-sm font-normal text-muted-foreground ml-1">
                     / {metric.total}
                   </span>
