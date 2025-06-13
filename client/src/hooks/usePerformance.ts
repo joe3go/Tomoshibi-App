@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { PerformanceMetrics } from '@shared/types';
 
@@ -36,6 +35,17 @@ export const usePerformance = (options: UsePerformanceOptions = {}) => {
 
   // Track component render time
   useEffect(() => {
+    // Monitor bundle loading performance
+    const observer = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        if (entry.name.includes('.js') && entry.transferSize > 300000) {
+          console.warn(`Large bundle detected: ${entry.name} (${(entry.transferSize / 1024).toFixed(2)}KB)`);
+          onMetric?.('bundleSize', entry.transferSize);
+        }
+      }
+    });
+    observer.observe({ entryTypes: ['resource'] });
+
     if (trackRender) {
       renderStartTime.current = performance.now();
     }
@@ -73,7 +83,7 @@ export const usePerformance = (options: UsePerformanceOptions = {}) => {
   const trackBundleSize = useCallback(() => {
     const scripts = document.querySelectorAll('script[src]');
     let totalSize = 0;
-    
+
     scripts.forEach(script => {
       const src = script.getAttribute('src');
       if (src && !src.startsWith('http')) {

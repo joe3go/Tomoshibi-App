@@ -105,6 +105,15 @@ function runAudit() {
     console.log('ℹ️  Could not check unused dependencies (depcheck not available)');
   }
 
+  console.log('\n🧪 Running test suite...');
+  try {
+    const testResult = execSync('npm run test:types', { encoding: 'utf8' });
+    console.log('✅ TypeScript checks passed');
+  } catch (error) {
+    console.log('❌ TypeScript issues found:');
+    console.log(error.stdout);
+  }
+
   console.log('\n✅ Performance audit completed!');
 }
 
