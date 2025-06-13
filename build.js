@@ -19,16 +19,16 @@ try {
 
   // Build server
   console.log('🔧 Building server...');
-  execSync('npx esbuild server/index.ts --bundle --platform=node --outfile=dist/index.js --external:pg-native --external:better-sqlite3 --external:@neondatabase/serverless', { stdio: 'inherit' });
+  execSync('node build-server.js', { stdio: 'inherit' });
 
-  // Copy package.json for production dependencies
+  // Copy package.json for production dependencies (CommonJS compatible)
   const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
   const prodPackageJson = {
     name: packageJson.name,
     version: packageJson.version,
-    type: packageJson.type,
+    // Removed type: "module" to ensure CommonJS compatibility
     scripts: {
-      start: 'node index.js'
+      start: 'NODE_ENV=production node index.js'
     },
     dependencies: packageJson.dependencies
   };
