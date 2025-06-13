@@ -27,6 +27,11 @@ npx esbuild server/production-index.ts --bundle --platform=node --target=es2022 
   --external:openai \
   --external:drizzle-zod \
   --external:zod \
+  --external:@babel/* \
+  --external:lightningcss \
+  --external:esbuild \
+  --external:autoprefixer \
+  --external:tailwindcss \
   --sourcemap \
   --define:process.env.NODE_ENV='"production"'
 
