@@ -12,59 +12,76 @@ import type {
 export function useDashboardData() {
   const { data: user, isLoading: userLoading } = useQuery<DashboardUser>({
     queryKey: ['/api/auth/me'],
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const { data: conversations = [], isLoading: conversationsLoading } = useQuery<DashboardConversation[]>({
     queryKey: ['/api/conversations'],
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   const { data: personas = [], isLoading: personasLoading } = useQuery<DashboardPersona[]>({
     queryKey: ['/api/personas'],
+    staleTime: 10 * 60 * 1000, // 10 minutes
   });
 
   const { data: scenarios = [], isLoading: scenariosLoading } = useQuery<DashboardScenario[]>({
     queryKey: ['/api/scenarios'],
+    staleTime: 10 * 60 * 1000, // 10 minutes
   });
 
   const { data: progress, isLoading: progressLoading } = useQuery<UserProgress>({
     queryKey: ['/api/progress'],
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Memoized filtered conversations
-  const activeConversations = useMemo(() => 
-    conversations.filter(conv => conv.status === 'active'),
-    [conversations]
-  );
+  // Memoized filtered conversations with proper dependencies
+  const activeConversations = useMemo(() => {
+    if (!Array.isArray(conversations)) return [];
+    return conversations.filter(conv => conv && conv.status === 'active');
+  }, [conversations]);
 
-  const recentConversations = useMemo(() => 
-    activeConversations
-      .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
-      .slice(0, 3),
-    [activeConversations]
-  );
+  const recentConversations = useMemo(() => {
+    if (!Array.isArray(activeConversations)) return [];
+    return activeConversations
+      .filter(conv => conv && conv.startedAt)
+      .sort((a, b) => {
+        const dateA = new Date(a.startedAt).getTime();
+        const dateB = new Date(b.startedAt).getTime();
+        return dateB - dateA;
+      })
+      .slice(0, 3);
+  }, [activeConversations]);
 
-  // Memoized progress calculations
+  // Memoized progress calculations with null checks
   const progressMetrics = useMemo(() => {
-    if (!progress) return null;
+    if (!progress || typeof progress !== 'object') return null;
     
-    const vocabProgress = progress.vocabMastered.length / Math.max(progress.vocabEncountered.length, 1) * 100;
-    const grammarProgress = progress.grammarMastered.length / Math.max(progress.grammarEncountered.length, 1) * 100;
+    const vocabMastered = Array.isArray(progress.vocabMastered) ? progress.vocabMastered.length : 0;
+    const vocabEncountered = Array.isArray(progress.vocabEncountered) ? progress.vocabEncountered.length : 0;
+    const grammarMastered = Array.isArray(progress.grammarMastered) ? progress.grammarMastered.length : 0;
+    const grammarEncountered = Array.isArray(progress.grammarEncountered) ? progress.grammarEncountered.length : 0;
+    
+    const vocabProgress = vocabEncountered > 0 ? (vocabMastered / vocabEncountered) * 100 : 0;
+    const grammarProgress = grammarEncountered > 0 ? (grammarMastered / grammarEncountered) * 100 : 0;
     
     return {
       vocabulary: Math.round(vocabProgress),
       grammar: Math.round(grammarProgress),
-      conversations: progress.totalConversations,
-      messages: progress.totalMessagesSent,
+      conversations: progress.totalConversations || 0,
+      messages: progress.totalMessagesSent || 0,
       streak: progress.metrics?.streak || 0,
       accuracy: progress.metrics?.accuracy || 0,
     };
   }, [progress]);
 
-  // Japanese status calculation
+  // Japanese status calculation with proper null checks
   const japaneseStatus = useMemo(() => {
-    if (!progress) return '新人 (Newcomer)';
+    if (!progress || typeof progress !== 'object') return '新人 (Newcomer)';
     
-    const totalMastered = progress.vocabMastered.length + progress.grammarMastered.length;
+    const vocabMastered = Array.isArray(progress.vocabMastered) ? progress.vocabMastered.length : 0;
+    const grammarMastered = Array.isArray(progress.grammarMastered) ? progress.grammarMastered.length : 0;
+    const totalMastered = vocabMastered + grammarMastered;
     
     if (totalMastered >= 100) return '桜 Scholar (Cherry Blossom Scholar)';
     if (totalMastered >= 50) return '灯火 Apprentice (Lantern Apprentice)';
