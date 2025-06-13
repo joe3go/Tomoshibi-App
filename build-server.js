@@ -17,6 +17,50 @@ async function buildServer() {
       format: 'esm',
       outfile: resolve(__dirname, 'dist/index.js'),
       external: [
+        // Node.js built-in modules - comprehensive list
+        'assert',
+        'async_hooks',
+        'buffer',
+        'child_process',
+        'cluster',
+        'console',
+        'constants',
+        'crypto',
+        'dgram',
+        'dns',
+        'domain',
+        'events',
+        'fs',
+        'fs/promises',
+        'http',
+        'http2',
+        'https',
+        'inspector',
+        'module',
+        'net',
+        'os',
+        'path',
+        'perf_hooks',
+        'process',
+        'punycode',
+        'querystring',
+        'readline',
+        'repl',
+        'stream',
+        'string_decoder',
+        'sys',
+        'timers',
+        'tls',
+        'trace_events',
+        'tty',
+        'url',
+        'util',
+        'v8',
+        'vm',
+        'wasi',
+        'worker_threads',
+        'zlib',
+        // Database drivers
         'pg-native',
         'better-sqlite3',
         'sqlite3',
@@ -24,6 +68,7 @@ async function buildServer() {
         'mysql',
         'oracledb',
         'tedious',
+        // Build tools and other externals
         'lightningcss',
         '@babel/preset-typescript',
         '@babel/core',
@@ -31,14 +76,31 @@ async function buildServer() {
         'vite',
         'autoprefixer',
         'tailwindcss',
-        'postcss'
+        'postcss',
+        // Additional common externals that might cause issues
+        'fsevents',
+        'canvas',
+        'sharp'
       ],
       define: {
         'process.env.NODE_ENV': '"production"'
       },
       minify: true,
       sourcemap: true,
-      logLevel: 'info'
+      logLevel: 'info',
+      banner: {
+        js: `
+import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+const require = createRequire(import.meta.url);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+        `
+      },
+      mainFields: ['module', 'main'],
+      conditions: ['import', 'module', 'default'],
+      packages: 'external'
     });
     
     console.log('Server build completed successfully!');
