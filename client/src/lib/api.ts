@@ -281,6 +281,9 @@ export const contentApi = {
 // Export the http client for advanced usage
 export { httpClient };
 
+// Legacy export for backward compatibility
+export const apiRequest = httpClient;
+
 // Performance monitoring
 export const performanceApi = {
   trackMetric: (metric: string, value: number) => {
