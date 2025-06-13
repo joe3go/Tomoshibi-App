@@ -90,8 +90,7 @@ async function buildServer() {
       logLevel: 'info',
       banner: {
         js: `
-const path = require('path');
-const __dirname = path.dirname(__filename);
+// CommonJS environment - __dirname and __filename are already available
         `
       },
       mainFields: ['main', 'module'],
