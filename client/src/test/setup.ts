@@ -4,7 +4,8 @@ import { vi } from 'vitest';
 // Mock useLocation hook
 vi.mock('wouter', () => ({
   useLocation: () => ['/', vi.fn()],
-  Link: ({ children, href }: any) => <a href={href}>{children}</a>,
+  Link: ({ children, href }: { children: React.ReactNode; href: string }) => 
+    React.createElement('a', { href }, children),
 }));
 
 // Mock performance API

@@ -83,7 +83,7 @@ async function runAudit() {
 
   console.log('\n🔧 Running ESLint...');
   try {
-    const lintResults = execSync('npx eslint . --ext .js,.jsx,.ts,.tsx --max-warnings 0', { 
+    const lintResults = execSync('npx eslint . --max-warnings 0', { 
       encoding: 'utf8',
       cwd: process.cwd()
     });
