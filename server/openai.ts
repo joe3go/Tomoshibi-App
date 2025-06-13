@@ -41,7 +41,7 @@ export async function generateAIResponse(context: ConversationContext): Promise<
     });
 
     const result = JSON.parse(response.choices[0].message.content || '{}');
-    
+
     return {
       content: result.response || "すみません、もう一度言ってください。",
       feedback: result.feedback,
@@ -57,11 +57,11 @@ export async function generateAIResponse(context: ConversationContext): Promise<
 
 function buildSystemPrompt(context: ConversationContext): string {
   const { persona, scenario, conversationHistory, targetVocab, targetGrammar } = context;
-  
+
   const vocabList = targetVocab.map(v => 
     `${v.kanji || v.hiragana} (${v.hiragana}) - ${v.englishMeaning}`
   ).join(', ');
-  
+
   const grammarList = targetGrammar.map(g => 
     `${g.pattern} - ${g.englishExplanation}`
   ).join(', ');
@@ -150,7 +150,7 @@ Adapt your response complexity, correction style, and vocabulary introduction ba
 
 export async function generateScenarioIntroduction(persona: Persona, scenario: Scenario): Promise<string> {
   const systemPrompt = `You are ${persona.name}, starting a new conversation scenario: ${scenario.title}.
-  
+
 Provide a warm, encouraging introduction in Japanese (with English translation) that:
 1. Greets the student appropriately for your persona
 2. Introduces the scenario topic
@@ -174,3 +174,87 @@ Keep it natural and encouraging. Response should be in plain text, not JSON.`;
     return "こんにちは！始めましょう。Hello! Let's begin.";
   }
 }
+
+export async function translateEnglishToJapanese(englishText: string): Promise<{ japanese: string; romaji: string; translation: string }[]> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        {
+          role: 'system',
+          content: `You are a Japanese translation assistant. For each English word or phrase provided, return a JSON array with objects containing:
+- "english": the original English text
+- "japanese": the Japanese translation (prefer kanji when appropriate)
+- "hiragana": the hiragana reading
+- "romaji": the romaji pronunciation
+- "wordType": grammatical type (noun, verb, adjective, etc.)
+
+Only translate actual words/phrases, ignore function words like "the", "a", "is", etc. Focus on content words that would be useful for Japanese vocabulary learning.`
+        },
+        {
+          role: 'user',
+          content: `Translate these English words/phrases to Japanese: "${englishText}"`
+        }
+      ],
+      temperature: 0.1,
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) return [];
+
+    try {
+      const translations = JSON.parse(content);
+      return Array.isArray(translations) ? translations : [];
+    } catch (parseError) {
+      console.error('Failed to parse translation response:', parseError);
+      return [];
+    }
+  } catch (error) {
+    console.error('Translation error:', error);
+    return [];
+  }
+}
+
+export async function detectAndTranslateEnglish(message: string): Promise<{ originalMessage: string; translations: any[]; enhancedMessage: string }> {
+  // Simple heuristic to detect if message contains significant English content
+  const englishWordPattern = /[a-zA-Z]{2,}/g;
+  const englishWords = message.match(englishWordPattern) || [];
+
+  if (englishWords.length === 0) {
+    return {
+      originalMessage: message,
+      translations: [],
+      enhancedMessage: message
+    };
+  }
+
+  // Filter out common function words
+  const contentWords = englishWords.filter(word => 
+    !['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'can'].includes(word.toLowerCase())
+  );
+
+  if (contentWords.length === 0) {
+    return {
+      originalMessage: message,
+      translations: [],
+      enhancedMessage: message
+    };
+  }
+
+  const translations = await translateEnglishToJapanese(contentWords.join(', '));
+
+  // Create enhanced message with Japanese translations inline
+  let enhancedMessage = message;
+  translations.forEach(trans => {
+    const regex = new RegExp(`\\b${trans.english}\\b`, 'gi');
+    enhancedMessage = enhancedMessage.replace(regex, `${trans.english} (${trans.japanese})`);
+  });
+
+  return {
+    originalMessage: message,
+    translations,
+    enhancedMessage
+  };
+}
+
+export { openai };

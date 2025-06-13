@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import EnhancedFuriganaText from "@/components/enhanced-furigana-text";
 import harukiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
 import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
+import * as wanakana from 'wanakana';
 
 export default function Chat() {
   const [, params] = useRoute("/chat/:conversationId");
@@ -27,6 +28,7 @@ export default function Chat() {
   });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
 
   const conversationId = params?.conversationId
@@ -46,13 +48,35 @@ export default function Chat() {
     queryKey: ["/api/scenarios"],
   });
 
+  // WanaKana integration for real-time romaji to kana conversion
+  useEffect(() => {
+    if (textareaRef.current) {
+      // Bind WanaKana to the textarea with IME mode enabled
+      wanakana.bind(textareaRef.current, {
+        IMEMode: true
+      });
+
+      return () => {
+        if (textareaRef.current) {
+          wanakana.unbind(textareaRef.current);
+        }
+      };
+    }
+  }, []);
+
+  // Handle input changes - WanaKana will automatically convert romaji to hiragana
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    // The value will already be converted by WanaKana's IME mode
+    setMessage(e.target.value);
+  };
+
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
       // Immediately add user message to UI
       const userMessage = {
         id: Date.now(), // Temporary ID
         content,
-        sender: 'user', // Fixed: changed from 'role' to 'sender' for proper rendering
+        sender: 'user',
         createdAt: new Date().toISOString(),
         vocabUsed: [],
         grammarUsed: []
@@ -66,25 +90,25 @@ export default function Chat() {
         }),
       );
 
-      // Send to server
+      // Send content to server
       const response = await apiRequest(
         "POST",
         `/api/conversations/${conversationId}/messages`,
         {
-          content,
+          content: content,
         },
       );
       return await response.json();
     },
-    onSuccess: (messages) => {
-      // Replace with actual messages from server
+    onSuccess: (responseData) => {
       queryClient.setQueryData(
         [`/api/conversations/${conversationId}`],
         (oldData: any) => ({
           ...oldData,
-          messages,
+          messages: responseData.messages || responseData,
         }),
       );
+
       setMessage("");
     },
     onError: (error) => {
@@ -96,7 +120,7 @@ export default function Chat() {
           messages: oldData?.messages?.slice(0, -1) || [],
         }),
       );
-      
+
       toast({
         title: "Failed to send message",
         description: error.message,
@@ -122,7 +146,7 @@ export default function Chat() {
       queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
       queryClient.invalidateQueries({ queryKey: ["/api/conversations/completed"] });
       queryClient.invalidateQueries({ queryKey: [`/api/conversations/${conversationId}`] });
-      
+
       toast({
         title: "Conversation completed!",
         description:
@@ -449,13 +473,14 @@ export default function Chat() {
       <div className="content-card rounded-t-2xl p-4 border-t border-border">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-end space-x-3">
-            <div className="flex-1">
+            <div className="flex-1 relative">
               <Textarea
+                ref={textareaRef}
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                onChange={handleInputChange}
                 onKeyPress={handleKeyPress}
-                placeholder="Type your response in Japanese... (English is ok too!)"
-                className="bg-input border-border text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary/20 resize-none"
+                placeholder="Type in romaji for automatic conversion to hiragana..."
+                className="bg-input border-border text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary/20 resize-none font-japanese"
                 rows={1}
                 style={{ maxHeight: "120px" }}
               />
@@ -475,34 +500,34 @@ export default function Chat() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => insertSuggestion("私は")}
-              className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
+              onClick={() => insertSuggestion("watashi wa ")}
+              className="px-3 py-1 text-sm hover:bg-primary/20 text-foreground"
             >
-              私は
+              watashi wa (私は)
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => insertSuggestion("です")}
-              className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
+              onClick={() => insertSuggestion("desu ")}
+              className="px-3 py-1 text-sm hover:bg-primary/20 text-foreground"
             >
-              です
+              desu (です)
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => insertSuggestion("から来ました")}
-              className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
+              onClick={() => insertSuggestion("kara kimashita ")}
+              className="px-3 py-1 text-sm hover:bg-primary/20 text-foreground"
             >
-              から来ました
+              kara kimashita (から来ました)
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => insertSuggestion("よろしくお願いします")}
-              className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
+              onClick={() => insertSuggestion("yoroshiku onegaishimasu ")}
+              className="px-3 py-1 text-sm hover:bg-primary/20 text-foreground"
             >
-              よろしくお願いします
+              yoroshiku (よろしく)
             </Button>
           </div>
         </div>
