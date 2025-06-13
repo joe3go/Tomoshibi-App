@@ -11,6 +11,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Settings, LogOut, MessageCircle, User, Calendar, BookOpen, History, TrendingUp, Award, Target } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { DashboardHeader } from "@/components/DashboardHeader";
+import { MetricCard } from "@/components/MetricCard";
+import { ConversationCard } from "@/components/ConversationCard";
+import { CardSectionHeader } from "@/components/CardSectionHeader";
+import { dashboardUtils } from "@/lib/utils";
+import type { DashboardUser, DashboardConversation } from "@/types/dashboard";
 import harukiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
 import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
 
@@ -76,34 +82,10 @@ export default function Dashboard() {
     logoutMutation.mutate();
   };
 
-  const getScenarioJapanese = (title: string): string => {
-    const scenarios: Record<string, string> = {
-      "Self-Introduction": "自己紹介",
-      Shopping: "買い物",
-      Restaurant: "レストラン",
-      Directions: "道案内",
-      Weather: "天気",
-      Family: "家族",
-      Hobbies: "趣味",
-      Work: "仕事",
-      Travel: "旅行",
-      Health: "健康",
-    };
-    return scenarios[title] || title;
-  };
-
-  const getProgressionLabel = () => {
-    const vocabCount = (vocabData as any[]).length;
-    const completedCount = (completedConversations as any[]).length;
-    const totalInteractions = vocabCount + completedCount;
-
-    if (totalInteractions >= 100) return "🌸 Sakura Scholar";
-    if (totalInteractions >= 75) return "🗾 Island Explorer";
-    if (totalInteractions >= 50) return "🏮 Lantern Bearer";
-    if (totalInteractions >= 25) return "🌱 Bamboo Sprout";
-    if (totalInteractions >= 10) return "📚 Study Starter";
-    return "🌟 Rising Sun";
-  };
+  const progressionLabel = dashboardUtils.getProgressionLabel(
+    (vocabData as any[]).length,
+    (completedConversations as any[]).length
+  );
 
   const updateProfileMutation = useMutation({
     mutationFn: async (updates: any) => {
@@ -241,90 +223,25 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto p-6">
-        {/* Header */}
-        <header className="content-card mb-6 flex items-center justify-between">
-          <div 
-            className="flex items-center space-x-3 cursor-pointer hover:opacity-80"
-            onClick={() => setLocation("/settings")}
-          >
-            <div className="avatar student">
-              {(user as any)?.profileImageUrl ? (
-                <img 
-                  src={(user as any).profileImageUrl} 
-                  alt="Profile" 
-                  className="w-full h-full object-cover rounded-full"
-                />
-              ) : (
-                <span className="font-medium">
-                  {(user as any)?.displayName?.[0]?.toUpperCase() || "U"}
-                </span>
-              )}
-            </div>
-            <div>
-              <h2 className="font-semibold text-primary">
-                {(user as any)?.displayName || "User"}
-              </h2>
-              <p className="text-sm text-foreground">{getProgressionLabel()}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLocation("/vocabulary")}
-              className="text-foreground hover:text-primary flex items-center gap-2"
-            >
-              <BookOpen className="w-4 h-4" />
-              Vocabulary
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLocation("/history")}
-              className="text-foreground hover:text-primary flex items-center gap-2"
-            >
-              <History className="w-4 h-4" />
-              History
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLocation("/settings")}
-              className="p-2 text-foreground hover:text-primary"
-            >
-              <Settings className="w-5 h-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-              className="text-foreground hover:text-primary"
-            >
-              <LogOut className="w-4 h-4 mr-1" />
-              Logout
-            </Button>
-          </div>
-        </header>
+        <DashboardHeader
+          user={user as DashboardUser}
+          progressionLabel={progressionLabel}
+          onNavigate={setLocation}
+          onLogout={handleLogout}
+        />
 
 
 
         {/* Continue Conversations Section */}
         {activeConversations.length > 0 && (
           <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-primary">
-                Continue Learning
-              </h3>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setLocation("/history")}
-                className="text-muted-foreground hover:text-primary"
-              >
-                See more
-              </Button>
-            </div>
+            <CardSectionHeader
+              title="Continue Learning"
+              action={{
+                label: "See more",
+                onClick: () => setLocation("/history")
+              }}
+            />
             <div className="grid gap-3 md:grid-cols-3">
               {activeConversations.slice(0, 3).map((conversation: any) => {
                 const persona = Array.isArray(personas)
@@ -334,95 +251,25 @@ export default function Dashboard() {
                   ? scenarios.find((s: any) => s.id === conversation.scenarioId)
                   : null;
 
-                const formatDate = (dateString: string) => {
-                  if (!dateString) return "Recent";
-                  try {
-                    const date = new Date(dateString);
-                    if (isNaN(date.getTime())) return "Recent";
-                    return date.toLocaleDateString();
-                  } catch {
-                    return "Recent";
-                  }
+                // Enhance conversation with persona and scenario data
+                const enhancedConversation: DashboardConversation = {
+                  ...conversation,
+                  persona: persona ? {
+                    ...persona,
+                    avatarUrl: persona.name === 'Aoi' ? aoiAvatar : 
+                               persona.name === 'Haruki' ? harukiAvatar : 
+                               persona.avatarUrl || ''
+                  } : undefined,
+                  scenario: scenario || undefined
                 };
 
                 return (
-                  <div
+                  <ConversationCard
                     key={conversation.id}
-                    className="content-card group"
-                  >
-                    <div className="flex items-start space-x-3 mb-3">
-                      <div className="avatar flex-shrink-0">
-                        {persona?.name === 'Aoi' ? (
-                          <img 
-                            src={aoiAvatar} 
-                            alt="Aoi" 
-                            className="w-full h-full object-cover rounded-full"
-                          />
-                        ) : persona?.name === 'Haruki' ? (
-                          <img 
-                            src={harukiAvatar} 
-                            alt="Haruki" 
-                            className="w-full h-full object-cover rounded-full"
-                          />
-                        ) : (
-                          <span className="font-japanese">
-                            {persona?.type === "teacher" ? "先" : "友"}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-primary">
-                          {persona?.name || "Unknown"}
-                        </h4>
-                        <p className="text-sm text-foreground">
-                          {scenario?.title || "Practice Session"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="status-tag in-progress">
-                        {conversation.status === 'completed' ? 'Completed' : 'In Progress'}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {formatDate(conversation.startedAt || conversation.createdAt)}
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      {conversation.status === 'active' ? (
-                        <>
-                          <Button
-                            size="sm"
-                            onClick={() => setLocation(`/chat/${conversation.id}`)}
-                            className="flex-1"
-                          >
-                            Continue
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEndSessionDashboard(conversation.id);
-                            }}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            End
-                          </Button>
-                        </>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setLocation(`/chat/${conversation.id}`)}
-                          className="flex-1"
-                        >
-                          View
-                        </Button>
-                      )}
-                    </div>
-                  </div>
+                    conversation={enhancedConversation}
+                    onContinue={(id) => setLocation(`/chat/${id}`)}
+                    onEndSession={handleEndSessionDashboard}
+                  />
                 );
               })}
             </div>
@@ -519,7 +366,7 @@ export default function Dashboard() {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Current Level</span>
-                <Badge variant="secondary">{getProgressionLabel()}</Badge>
+                <Badge variant="secondary">{progressionLabel}</Badge>
               </div>
               
               <div className="flex justify-between items-center">
