@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
+import Header from "@/components/Header";
 
 export default function Landing() {
   const [, setLocation] = useLocation();
@@ -7,20 +8,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
-      <nav className="navbar">
-        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <h1 className="text-2xl font-bold text-foreground">Tomoshibi</h1>
-            <span className="text-lg font-japanese text-muted-foreground">灯火</span>
-          </div>
-          <Button
-            onClick={() => setLocation("/login")}
-            className="btn-primary"
-          >
-            Sign In
-          </Button>
-        </div>
-      </nav>
+      <Header showSignIn={true} />
 
       {/* Hero Section */}
       <section className="section-padding">

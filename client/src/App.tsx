@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import Landing from "@/pages/landing";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
@@ -23,16 +24,7 @@ function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="glass-card rounded-3xl p-8">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 border-4 border-primary border-l-transparent rounded-full animate-spin"></div>
-            <span className="text-foreground">Loading...</span>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner variant="glass" size="md" />;
   }
 
   return (
