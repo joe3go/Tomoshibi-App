@@ -9,7 +9,6 @@ import fs from "fs";
 import type { Request, Response, NextFunction } from "express";
 import { generateAIResponse, generateScenarioIntroduction } from "./openai";
 import { insertUserSchema, insertConversationSchema, insertMessageSchema } from "@shared/schema";
-import { openai, detectAndTranslateEnglish } from './openai';
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -56,7 +55,7 @@ async function trackVocabularyFromMessage(userId: number, content: string, sourc
   try {
     // Extract Japanese words (hiragana, katakana, kanji)
     const japaneseWords = content.match(/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+/g) || [];
-
+    
     for (const word of japaneseWords) {
       if (word.length >= 2) { // Only track words of 2+ characters
         // Try to find the word in our vocabulary database
@@ -73,15 +72,11 @@ async function trackVocabularyFromMessage(userId: number, content: string, sourc
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Note: Health check endpoints are handled in production-index.ts before this function
-
-
-
   // Auth routes
   app.post('/api/auth/register', async (req, res) => {
     try {
       const { email, displayName, password } = insertUserSchema.parse(req.body);
-
+      
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
@@ -90,7 +85,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Hash password
       const passwordHash = await bcrypt.hash(password, 10);
-
+      
       // Create user
       const user = await storage.createUser({
         email,
@@ -101,7 +96,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate JWT token
       const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
-
+      
       res.json({
         token,
         user: {
@@ -120,7 +115,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/auth/login', async (req, res) => {
     try {
       const { email, password } = req.body;
-
+      
       // Find user
       const user = await storage.getUserByEmail(email);
       if (!user) {
@@ -135,7 +130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate JWT token
       const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
-
+      
       res.json({
         token,
         user: {
@@ -179,15 +174,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isNaN(userId) || userId !== req.userId) {
         return res.status(403).json({ message: 'Unauthorized' });
       }
-
+      
       const updates = req.body;
-
+      
       // If password is being updated, hash it
       if (updates.password) {
         updates.passwordHash = await bcrypt.hash(updates.password, 10);
         delete updates.password;
       }
-
+      
       const updatedUser = await storage.updateUser(userId, updates);
       res.json(updatedUser);
     } catch (error) {
@@ -247,23 +242,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         userId: req.userId,
       });
-
+      
       const conversation = await storage.createConversation(conversationData);
-
+      
       // Generate initial AI message
       const persona = await storage.getPersona(conversation.personaId!);
       const scenario = await storage.getScenario(conversation.scenarioId!);
-
+      
       if (persona && scenario) {
         const introduction = await generateScenarioIntroduction(persona, scenario);
-
+        
         await storage.createMessage({
           conversationId: conversation.id,
           sender: 'ai',
           content: introduction,
         });
       }
-
+      
       res.json(conversation);
     } catch (error) {
       console.error('Create conversation error:', error);
@@ -290,13 +285,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Invalid conversation ID' });
       }
       const conversation = await storage.getConversation(conversationId);
-
+      
       if (!conversation || conversation.userId !== req.userId) {
         return res.status(404).json({ message: 'Conversation not found' });
       }
-
+      
       const messages = await storage.getConversationMessages(conversationId);
-
+      
       res.json({ conversation, messages });
     } catch (error) {
       console.error('Get conversation error:', error);
@@ -307,9 +302,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/conversations', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const conversations = await storage.getUserConversations(req.userId!);
-      // Filter for active conversations only (not completed)
-      const activeConversations = conversations.filter(c => c.status !== 'completed');
-      res.json(activeConversations);
+      // Return all conversations - let frontend filter as needed
+      res.json(conversations);
     } catch (error) {
       console.error('Get user conversations error:', error);
       res.status(500).json({ message: 'Failed to get conversations' });
@@ -323,18 +317,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Invalid conversation ID' });
       }
       const updates = req.body;
-
+      
       // Convert ISO string to Date object for timestamp fields
       if (updates.completedAt && typeof updates.completedAt === 'string') {
         updates.completedAt = new Date(updates.completedAt);
       }
-
+      
       // Verify conversation belongs to user
       const conversation = await storage.getConversation(conversationId);
       if (!conversation || conversation.userId !== req.userId) {
         return res.status(404).json({ message: 'Conversation not found' });
       }
-
+      
       const updatedConversation = await storage.updateConversation(conversationId, updates);
       res.json(updatedConversation);
     } catch (error) {
@@ -343,112 +337,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Translation is now handled client-side with WanaKana
-
   // Message routes
   app.post('/api/conversations/:id/messages', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const conversationId = parseInt(req.params.id);
       const { content } = req.body;
-
-      console.log(`[CHAT] User ${req.userId} sending message to conversation ${conversationId}`);
-      console.log(`[CHAT] Message content: "${content}"`);
-
-      if (!content?.trim()) {
-        console.error(`[CHAT ERROR] Empty message content from user ${req.userId}`);
-        return res.status(400).json({ message: 'Message content is required' });
+      
+      // Verify conversation belongs to user
+      const conversation = await storage.getConversation(conversationId);
+      if (!conversation || conversation.userId !== req.userId) {
+        return res.status(404).json({ message: 'Conversation not found' });
       }
-
-      // Create user message with original content
-      console.log(`[CHAT] Creating user message in conversation ${conversationId}`);
+      
+      // Create user message
       const userMessage = await storage.createMessage({
         conversationId,
         sender: 'user',
-        content: content.trim()
+        content,
       });
-      console.log(`[CHAT] User message created with ID: ${userMessage.id}`);
-
-      // Process vocabulary from both original message and translations
-      console.log(`[CHAT] Tracking vocabulary for user ${req.userId}`);
-      await trackVocabularyFromMessage(req.userId!, content, 'user');
-
-      // Get conversation context for AI response
-      console.log(`[CHAT] Getting conversation context for ${conversationId}`);
-      const conversation = await storage.getConversation(conversationId);
-      if (!conversation) {
-        console.error(`[CHAT ERROR] Conversation ${conversationId} not found`);
-        return res.status(404).json({ message: 'Conversation not found' });
-      }
-
-      console.log(`[CHAT] Loading persona ${conversation.personaId} and scenario ${conversation.scenarioId}`);
+      
+      // Get context for AI response
       const persona = await storage.getPersona(conversation.personaId!);
-      const scenario = conversation.scenarioId ? await storage.getScenario(conversation.scenarioId) : null;
+      const scenario = await storage.getScenario(conversation.scenarioId!);
       const messages = await storage.getConversationMessages(conversationId);
       const targetVocab = await storage.getAllVocab(); // Simplified - should filter by scenario
       const targetGrammar = await storage.getAllGrammar(); // Simplified - should filter by scenario
-
-      console.log(`[CHAT] Context loaded - Messages: ${messages.length}, Vocab: ${targetVocab.length}, Grammar: ${targetGrammar.length}`);
-
-      // Generate AI response using enhanced message if translations were found
-      const systemPrompt = persona?.systemPrompt || "You are a helpful Japanese language tutor.";
-      const contextPrompt = scenario ? `\n\nScenario context: ${scenario.description}` : '';
-
-      const chatMessages = messages.slice(-10).map(msg => ({
-        role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
-        content: msg.content
-      }));
-
-      console.log(`[CHAT] Generating AI response for conversation ${conversationId}`);
       
-      if (!persona) {
-        return res.status(404).json({ message: 'Persona not found' });
+      if (persona && scenario) {
+        // Build conversation history
+        const conversationHistory = messages
+          .filter(m => m.id !== userMessage.id)
+          .map(m => ({
+            role: m.sender === 'user' ? 'user' as const : 'assistant' as const,
+            content: m.content,
+          }));
+        
+        // Generate AI response
+        const aiResponse = await generateAIResponse({
+          persona,
+          scenario,
+          conversationHistory,
+          userMessage: content,
+          targetVocab: targetVocab.slice(0, 20), // Limit for context
+          targetGrammar: targetGrammar.slice(0, 10), // Limit for context
+        });
+        
+        // Create AI message
+        await storage.createMessage({
+          conversationId,
+          sender: 'ai',
+          content: aiResponse.content,
+          feedback: aiResponse.feedback,
+          vocabUsed: aiResponse.vocabUsed || [],
+          grammarUsed: aiResponse.grammarUsed || [],
+        });
+
+        // Track vocabulary from both user and AI messages
+        await trackVocabularyFromMessage(req.userId!, content, 'user');
+        await trackVocabularyFromMessage(req.userId!, aiResponse.content, 'ai');
       }
       
-      if (!scenario) {
-        return res.status(404).json({ message: 'Scenario not found' });
-      }
-      
-      const aiResponse = await generateAIResponse({
-        persona,
-        scenario,
-        conversationHistory: chatMessages,
-        userMessage: content,
-        targetVocab: targetVocab.slice(0, 20), // Limit for context
-        targetGrammar: targetGrammar.slice(0, 10), // Limit for context,
-      });
-      console.log(`[CHAT] AI response generated successfully`);
-
-      // Create AI message
-      console.log(`[CHAT] Creating AI message in conversation ${conversationId}`);
-      const aiMessage = await storage.createMessage({
-        conversationId,
-        sender: 'ai',
-        content: aiResponse.content,
-        feedback: aiResponse.feedback,
-        vocabUsed: aiResponse.vocabUsed || [],
-        grammarUsed: aiResponse.grammarUsed || [],
-      });
-      console.log(`[CHAT] AI message created with ID: ${aiMessage.id}`);
-
-      // Process vocabulary from AI message
-      console.log(`[CHAT] Tracking vocabulary from AI response`);
-      await trackVocabularyFromMessage(req.userId!, aiResponse.content, 'ai');
-
-      // Return both messages with translation info if available
-      console.log(`[CHAT] Getting updated messages for response`);
+      // Return updated messages
       const updatedMessages = await storage.getConversationMessages(conversationId);
-      const responseData = {
-        messages: updatedMessages,
-      };
-
-      console.log(`[CHAT] Successfully processed message for conversation ${conversationId}`);
-      res.json(responseData);
-
+      res.json(updatedMessages);
     } catch (error) {
-      console.error(`[CHAT ERROR] Failed to send message for conversation ${req.params.id}:`, error);
-      console.error(`[CHAT ERROR] Error stack:`, error instanceof Error ? error.stack : 'No stack trace available');
-      console.error(`[CHAT ERROR] User ID: ${req.userId}, Content: "${req.body?.content}"`);
-      res.status(500).json({ message: 'Failed to send message', error: error instanceof Error ? error.message : 'Unknown error' });
+      console.error('Send message error:', error);
+      res.status(500).json({ message: 'Failed to send message' });
     }
   });
 
@@ -491,7 +445,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!wordId) {
         return res.status(400).json({ message: 'Word ID is required' });
       }
-
+      
       const tracker = await storage.incrementWordFrequency(req.userId!, wordId, source);
       res.json(tracker);
     } catch (error) {
@@ -503,7 +457,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/word-definition/:word', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const { word } = req.params;
-
+      
       // First check our local vocabulary database
       const localVocab = await storage.searchVocab(word);
       if (localVocab.length > 0) {
@@ -522,7 +476,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         console.log(`Fetching definition for word: ${word}`);
         const url = `https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(word)}`;
-
+        
         const response = await fetch(url, {
           headers: {
             'User-Agent': 'Tomoshibi-App/1.0',
@@ -530,16 +484,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'Content-Type': 'application/json'
           }
         });
-
+        
         if (response.ok) {
           const data = await response.json();
           console.log(`Jisho API response status: ${response.status}`);
-
+          
           if (data.data && data.data.length > 0) {
             const entry = data.data[0];
             const japanese = entry.japanese && entry.japanese[0] ? entry.japanese[0] : {};
             const sense = entry.senses && entry.senses[0] ? entry.senses[0] : {};
-
+            
             return res.json({
               word: japanese.word || japanese.reading || word,
               reading: japanese.reading || word,
@@ -549,7 +503,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           }
         }
-
+        
         console.log(`No definition found for word: ${word}, status: ${response.status}`);
         res.status(404).json({ message: 'Definition not found' });
       } catch (apiError) {

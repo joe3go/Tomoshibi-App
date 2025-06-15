@@ -1,7 +1,0 @@
-[deployment]
-build = ["npm", "run", "build"]
-run = ["sh", "-c", "NODE_ENV=production npm start"]
-deploymentTarget = "cloudrun"
-
-[env]
-NODE_ENV = "production"

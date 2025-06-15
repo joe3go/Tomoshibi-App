@@ -141,40 +141,12 @@ export class DatabaseStorage implements IStorage {
     return conversation;
   }
 
-  async getUserConversations(userId: number): Promise<(Conversation & { messageCount: number; vocabWordsUsed: number })[]> {
-    // Get conversations with message counts
-    const conversationsWithCounts = await db
-      .select({
-        id: conversations.id,
-        userId: conversations.userId,
-        personaId: conversations.personaId,
-        scenarioId: conversations.scenarioId,
-        phase: conversations.phase,
-        status: conversations.status,
-        startedAt: conversations.startedAt,
-        completedAt: conversations.completedAt,
-      })
+  async getUserConversations(userId: number): Promise<Conversation[]> {
+    return await db
+      .select()
       .from(conversations)
       .where(eq(conversations.userId, userId))
       .orderBy(desc(conversations.startedAt));
-
-    // Get message counts and vocabulary data for each conversation
-    const conversationsWithStats = await Promise.all(
-      conversationsWithCounts.map(async (conv) => {
-        const msgs = await this.getConversationMessages(conv.id);
-        const vocabWordsUsed = new Set(
-          msgs.flatMap(msg => msg.vocabUsed || [])
-        ).size;
-        
-        return {
-          ...conv,
-          messageCount: msgs.length,
-          vocabWordsUsed,
-        };
-      })
-    );
-
-    return conversationsWithStats;
   }
 
   async updateConversation(id: number, updates: Partial<Conversation>): Promise<Conversation> {
@@ -269,25 +241,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateVocabTracker(userId: number, wordId: number, updates: Partial<VocabTracker>): Promise<VocabTracker> {
-    // First try to find existing record
-    const existing = await this.getVocabTracker(userId, wordId);
-    
-    if (existing) {
-      // Update existing record
-      const [updated] = await db
-        .update(vocabTracker)
-        .set(updates)
-        .where(and(eq(vocabTracker.userId, userId), eq(vocabTracker.wordId, wordId)))
-        .returning();
-      return updated;
-    } else {
-      // Create new record
-      const [created] = await db
-        .insert(vocabTracker)
-        .values({ userId, wordId, ...updates })
-        .returning();
-      return created;
-    }
+    const [updated] = await db
+      .insert(vocabTracker)
+      .values({ userId, wordId, ...updates })
+      .onConflictDoUpdate({
+        target: [vocabTracker.userId, vocabTracker.wordId],
+        set: updates,
+      })
+      .returning();
+    return updated;
   }
 
   async getUserVocabTracker(userId: number): Promise<(VocabTracker & { word: JlptVocab })[]> {

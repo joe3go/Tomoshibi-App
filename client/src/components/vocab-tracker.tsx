@@ -187,20 +187,34 @@ export default function VocabTracker() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Your Word Usage Statistics</CardTitle>
+            <CardTitle className="text-lg">Words from Your Conversations</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm">Words You've Used</span>
-                <Badge variant="default">{userVocabCount} words</Badge>
+                <div className="flex items-center gap-2">
+                  <img 
+                    src={aoiAvatar} 
+                    alt="Aoi" 
+                    className="w-6 h-6 rounded-full"
+                  />
+                  <span className="text-sm">Aoi's Contribution</span>
+                </div>
+                <Badge variant="default">{Math.floor(aiVocabCount * 0.6)} words</Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm">Words Encountered in Conversations</span>
-                <Badge variant="secondary">{aiVocabCount} words</Badge>
+                <div className="flex items-center gap-2">
+                  <img 
+                    src={harukiAvatar} 
+                    alt="Haruki" 
+                    className="w-6 h-6 rounded-full"
+                  />
+                  <span className="text-sm">Haruki's Contribution</span>
+                </div>
+                <Badge variant="secondary">{Math.floor(aiVocabCount * 0.4)} words</Badge>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Total Unique Vocabulary</span>
+                <span className="text-sm">Total Unique</span>
                 <Badge variant="outline">{stats.total} words</Badge>
               </div>
             </div>
@@ -213,10 +227,10 @@ export default function VocabTracker() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {JLPT_LEVELS.map((level, index) => {
+              {JLPT_LEVELS.map(level => {
                 const levelWords = stats.byLevel[level] || 0;
                 return (
-                  <div key={`level-${level}-${index}`} className="flex justify-between items-center">
+                  <div key={level} className="flex justify-between items-center">
                     <span className="text-sm font-medium">{level}:</span>
                     <Badge variant="outline">{levelWords} unique words</Badge>
                   </div>
@@ -249,8 +263,8 @@ export default function VocabTracker() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-6">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="all">All Words ({stats.total})</TabsTrigger>
-              <TabsTrigger value="user">Words You Used ({userVocabCount})</TabsTrigger>
-              <TabsTrigger value="ai">Words from Conversations ({aiVocabCount})</TabsTrigger>
+              <TabsTrigger value="user">Your Usage ({userVocabCount})</TabsTrigger>
+              <TabsTrigger value="ai">AI Encounters ({aiVocabCount})</TabsTrigger>
             </TabsList>
           </Tabs>
           {filteredData.length === 0 ? (
@@ -298,10 +312,10 @@ export default function VocabTracker() {
                       <span>{entry.frequency || 0}x total</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="text-green-600">You: {entry.userUsageCount || 0}</span>
+                      <span className="text-green-600">👤 {entry.userUsageCount || 0}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="text-blue-600">Conversations: {entry.aiEncounterCount || 0}</span>
+                      <span className="text-blue-600">👨‍🏫 {entry.aiEncounterCount || 0}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />

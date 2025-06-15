@@ -27,19 +27,6 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
-    chunkSizeWarningLimit: 300,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tabs'],
-          auth: ['passport', 'openid-client', 'jsonwebtoken'],
-          query: ['@tanstack/react-query'],
-          router: ['wouter'],
-          wanakana: ['wanakana'],
-        },
-      },
-    },
   },
   server: {
     fs: {

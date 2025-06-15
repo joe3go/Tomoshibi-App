@@ -124,10 +124,6 @@ export const vocabTracker = pgTable("vocab_tracker", {
   memoryStrength: integer("memory_strength").default(0),
   nextReviewAt: timestamp("next_review_at"),
   source: varchar("source", { length: 20 }).default("conversation"), // 'conversation', 'manual', 'hover'
-}, (table) => {
-  return {
-    userWordUnique: unique().on(table.userId, table.wordId),
-  };
 });
 
 // Insert schemas
