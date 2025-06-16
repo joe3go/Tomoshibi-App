@@ -1,0 +1,74 @@
+This error occurs when your application fails to establish a WebSocket connection to Neon serverless database. Here's how to fix it:
+
+WebSocket Connection Fix
+1. Enable WebSocket Support in Neon
+
+Add &sslmode=require to your Neon connection string:
+
+diff
+
+- postgres://user:pass@ep-cool-bird-123456.us-east-2.aws.neon.tech/dbname
++ postgresql://user:pass@ep-cool-bird-123456.us-east-2.aws.neon.tech/dbname?sslmode=require
+2. Install Required Dependency
+
+For serverless environments (Vercel/Netlify/Cloudflare):
+
+bash
+
+npm install @neondatabase/serverless
+3. Configure WebSocket Wrapper
+
+js
+
+// Add this early in your entry file
+import { WebSocket } from 'undici'
+
+if (!global.WebSocket) {
+  global.WebSocket = WebSocket
+}
+4. Verify Neon Serverless Configuration
+
+Update your Neon client initialization:
+
+js
+
+import { neon } from '@neondatabase/serverless'
+
+const sql = neon(process.env.DATABASE_URL, {
+  wsConstructor: WebSocket // Explicit WebSocket config
+})
+Common Solutions Broken Down
+Issue	Solution	Why
+Incorrect protocol	Use postgresql:// not postgres://	WebSocket compatibility
+Node.js < v18	Update to Node 18+	Native WebSocket support
+Runtime Missing WS	Add undici polyfill	Serverless environment requirement
+SSL Enforcement	Add ?sslmode=require	Secure connection requirement
+Firewall Blocking	Allow neon.tech domains on ports 443/5432	Network policy adjustment
+Troubleshooting Steps
+
+Test WebSocket connectivity:
+
+bash
+
+wscat -c wss://ep-cool-bird-123456.us-east-2.aws.neon.tech/v2
+
+Verify Neon database status:
+
+code
+
+https://neon.tech/status
+
+Force SSL in connection:
+
+js
+
+const sql = neon(process.env.DATABASE_URL + '?sslmode=require')
+Final Checks
+js
+
+// Ensure proper environment variables in .env
+DATABASE_URL="postgresql://user:pass@ep-cool-bird-123456.us-east-2.aws.neon.tech/dbname?sslmode=require"
+
+// Update neonConfig for queries
+import { neonConfig } from '@neondatabase/serverless'
+neonConfig.webSocketConstructor = WebSocket
