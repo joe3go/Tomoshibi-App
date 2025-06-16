@@ -71,6 +71,7 @@ export interface IStorage {
   updateVocabTracker(userId: number, wordId: number, updates: Partial<VocabTracker>): Promise<VocabTracker>;
   getUserVocabTracker(userId: number): Promise<(VocabTracker & { word: JlptVocab })[]>;
   incrementWordFrequency(userId: number, wordId: number, source?: 'user' | 'ai' | 'hover'): Promise<VocabTracker>;
+  getVocabStats(): Promise<{ level: string; count: number }[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -304,6 +305,27 @@ export class DatabaseStorage implements IStorage {
 
       return await this.createVocabTracker(newTracker);
     }
+  }
+
+  async getVocabStats(): Promise<{ level: string; count: number }[]> {
+    const result = await db.select({
+      level: jlptVocab.jlptLevel,
+      count: sql<number>`count(*)`.as('count')
+    })
+      .from(jlptVocab)
+      .groupBy(jlptVocab.jlptLevel)
+      .orderBy(
+        sql`CASE ${jlptVocab.jlptLevel}
+          WHEN 'N5' THEN 1
+          WHEN 'N4' THEN 2
+          WHEN 'N3' THEN 3
+          WHEN 'N2' THEN 4
+          WHEN 'N1' THEN 5
+          ELSE 6
+        END`
+      );
+
+    return result;
   }
 }
 

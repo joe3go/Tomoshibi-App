@@ -38,8 +38,16 @@ interface VocabStats {
 }
 
 const JLPT_LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'];
-// These will be dynamically loaded from the actual jlpt_vocab table
 const JLPT_LEVEL_ORDER = ['N5', 'N4', 'N3', 'N2', 'N1'];
+
+// JLPT level targets for progress tracking
+const JLPT_TARGETS = {
+  N5: 800,
+  N4: 1500,
+  N3: 3750,
+  N2: 6000,
+  N1: 10000
+};
 
 export default function VocabTracker() {
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
@@ -167,7 +175,7 @@ export default function VocabTracker() {
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {JLPT_LEVELS.map(level => {
-          const encountered = stats.byLevel[level] || 0;
+          const encountered = userStats.byLevel[level] || 0;
           const target = JLPT_TARGETS[level as keyof typeof JLPT_TARGETS];
           const percentage = Math.min((encountered / target) * 100, 100);
           
@@ -208,7 +216,7 @@ export default function VocabTracker() {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Total Words</span>
-                <span className="font-semibold">{stats.total}</span>
+                <span className="font-semibold">{userStats.total}</span>
               </div>
               
               <div className="flex items-center justify-between">
@@ -244,7 +252,7 @@ export default function VocabTracker() {
               </div>
               <div className="grid grid-cols-5 gap-1 mt-3">
                 {['N5', 'N4', 'N3', 'N2', 'N1'].map(level => {
-                  const encountered = stats.byLevel[level] || 0;
+                  const encountered = userStats.byLevel[level] || 0;
                   return (
                     <div key={level} className="text-center">
                       <div className="text-xs text-muted-foreground">{level}</div>
@@ -314,7 +322,7 @@ export default function VocabTracker() {
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-6">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="all">All Words ({stats.total})</TabsTrigger>
+              <TabsTrigger value="all">All Words ({userStats.total})</TabsTrigger>
               <TabsTrigger value="user">Your Usage ({userVocabCount})</TabsTrigger>
               <TabsTrigger value="ai">AI Encounters ({aiVocabCount})</TabsTrigger>
             </TabsList>
