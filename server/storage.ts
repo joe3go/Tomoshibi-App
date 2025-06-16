@@ -195,7 +195,7 @@ export class DatabaseStorage implements IStorage {
     if (!query || query.trim() === '') {
       return [];
     }
-    
+
     return await db.select().from(jlptVocab).where(
       or(
         like(jlptVocab.hiragana, `%${query}%`),
@@ -340,6 +340,63 @@ export class DatabaseStorage implements IStorage {
       );
 
     return result;
+  }
+
+  async getUserVocabTracker(userId: number): Promise<any[]> {
+    const trackerData = await db
+      .select({
+        id: vocabTracker.id,
+        userId: vocabTracker.userId,
+        wordId: vocabTracker.wordId,
+        frequency: vocabTracker.frequency,
+        userUsageCount: vocabTracker.userUsageCount,
+        aiEncounterCount: vocabTracker.aiEncounterCount,
+        lastSeenAt: vocabTracker.lastSeenAt,
+        memoryStrength: vocabTracker.memoryStrength,
+        nextReviewAt: vocabTracker.nextReviewAt,
+        source: vocabTracker.source,
+        word: {
+          id: jlptVocab.id,
+          kanji: jlptVocab.kanji,
+          hiragana: jlptVocab.hiragana,
+          englishMeaning: jlptVocab.englishMeaning,
+          jlptLevel: jlptVocab.jlptLevel,
+          wordType: jlptVocab.wordType,
+        },
+      })
+      .from(vocabTracker)
+      .leftJoin(jlptVocab, eq(vocabTracker.wordId, jlptVocab.id))
+      .where(eq(vocabTracker.userId, userId));
+
+    return trackerData;
+  }
+
+  async getUserVocabStatsByLevel(userId: number): Promise<{ level: string; userWords: number; totalWords: number }[]> {
+    // Get total vocab counts per level
+    const totalStats = await this.getVocabStats();
+
+    // Get user's vocab counts per level
+    const userStats = await db
+      .select({
+        level: jlptVocab.jlptLevel,
+        userWords: sql<number>`count(*)::int`.as('userWords'),
+      })
+      .from(vocabTracker)
+      .leftJoin(jlptVocab, eq(vocabTracker.wordId, jlptVocab.id))
+      .where(eq(vocabTracker.userId, userId))
+      .groupBy(jlptVocab.jlptLevel);
+
+    // Combine the stats
+    const combined = totalStats.map(total => {
+      const userStat = userStats.find(user => user.level === total.level);
+      return {
+        level: total.level,
+        userWords: userStat?.userWords || 0,
+        totalWords: total.count
+      };
+    });
+
+    return combined;
   }
 }
 

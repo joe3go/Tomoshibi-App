@@ -450,6 +450,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/vocab/user-stats', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const stats = await storage.getUserVocabStatsByLevel(req.userId!);
+      res.json(stats);
+    } catch (error) {
+      console.error('Get user vocab stats error:', error);
+      res.status(500).json({ message: 'Failed to get user vocabulary statistics' });
+    }
+  });
+
   app.post('/api/vocab-tracker/increment', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const { wordId, source = 'hover' } = req.body;

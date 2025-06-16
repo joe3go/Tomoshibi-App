@@ -54,17 +54,56 @@ export default function VocabTracker() {
   const [sortBy, setSortBy] = useState<string>('frequency');
   const [activeTab, setActiveTab] = useState<string>('all');
 
-  const { data: vocabData = [], isLoading } = useQuery<VocabTrackerEntry[]>({
+  const { data: vocabData = [] } = useQuery({
     queryKey: ['/api/vocab-tracker'],
   });
 
-  const { data: allVocab = [] } = useQuery({
-    queryKey: ['/api/vocab'],
-  });
-
-  const { data: vocabStats = [] } = useQuery<{ level: string; count: number }[]>({
+  const { data: vocabStats = [] } = useQuery({
     queryKey: ['/api/vocab/stats'],
   });
+
+  const { data: userVocabStats = [] } = useQuery({
+    queryKey: ['/api/vocab/user-stats'],
+  });
+
+  // Calculate stats from vocabulary data
+  const calculateStats = () => {
+    const stats = {
+      byLevel: {} as Record<string, number>,
+      total: (vocabData as any[]).length,
+      used3Plus: 0,
+      used1to2: 0,
+      notUsed: 0,
+    };
+
+    JLPT_LEVELS.forEach(level => {
+      stats.byLevel[level] = 0;
+    });
+
+    (vocabData as any[]).forEach((entry: any) => {
+      const level = entry.word?.jlptLevel || 'N5';
+      stats.byLevel[level] = (stats.byLevel[level] || 0) + 1;
+
+      const totalUsage = (entry.userUsageCount || 0) + (entry.aiEncounterCount || 0);
+      if (totalUsage >= 3) {
+        stats.used3Plus++;
+      } else if (totalUsage >= 1) {
+        stats.used1to2++;
+      } else {
+        stats.notUsed++;
+      }
+    });
+
+    return stats;
+  };
+
+  const stats = calculateStats();
+
+  // Create level totals from database stats
+  const levelTotals = (vocabStats as any[]).reduce((acc: Record<string, number>, stat: any) => {
+    acc[stat.level] = stat.count;
+    return acc;
+  }, { N5: 0, N4: 0, N3: 0, N2: 0, N1: 0 });
 
   if (isLoading) {
     return (
@@ -128,7 +167,7 @@ export default function VocabTracker() {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
+
     if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${diffInHours}h ago`;
     const diffInDays = Math.floor(diffInHours / 24);
@@ -175,25 +214,18 @@ export default function VocabTracker() {
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {JLPT_LEVELS.map(level => {
-          const encountered = userStats.byLevel[level] || 0;
-          const target = JLPT_TARGETS[level as keyof typeof JLPT_TARGETS];
-          const percentage = Math.min((encountered / target) * 100, 100);
-          
+          const totalWords = levelTotals[level] || 0;
+          const userWords = stats.byLevel[level] || 0;
+          const percentage = totalWords > 0 ? Math.min((userWords / totalWords) * 100, 100) : 0;
+
           return (
-            <Card key={level}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">{level}</CardTitle>
-                <CardDescription>
-                  {encountered}/{target} words
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Progress value={percentage} className="h-2 mb-2" />
-                <p className="text-sm text-muted-foreground">
-                  {percentage.toFixed(1)}% complete
-                </p>
-              </CardContent>
-            </Card>
+            <ProgressRing 
+              key={level} 
+              level={level} 
+              encountered={userWords} 
+              target={totalWords} 
+              percentage={percentage}
+            />
           );
         })}
       </div>
@@ -218,7 +250,7 @@ export default function VocabTracker() {
                 <span className="text-sm text-muted-foreground">Total Words</span>
                 <span className="font-semibold">{userStats.total}</span>
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-5 h-5 bg-gray-200 rounded-full flex items-center justify-center">
@@ -264,7 +296,7 @@ export default function VocabTracker() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">Vocabulary Progress by JLPT Level</CardTitle>
@@ -388,6 +420,60 @@ export default function VocabTracker() {
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function ProgressRing({ level, encountered, target, percentage }: {
+  level: string;
+  encountered: number;
+  target: number;
+  percentage: number;
+}) {
+  const radius = 40;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <div className="content-card text-center">
+      <div className="relative w-24 h-24 mx-auto mb-3">
+        <svg width="96" height="96" className="transform -rotate-90">
+          <circle
+            cx="48"
+            cy="48"
+            r={radius}
+            stroke="currentColor"
+            strokeWidth="6"
+            fill="none"
+            className="text-muted opacity-20"
+          />
+          <circle
+            cx="48"
+            cy="48"
+            r={radius}
+            stroke="currentColor"
+            strokeWidth="6"
+            fill="none"
+            strokeDasharray={circumference}
+            strokeDashoffset={isNaN(strokeDashoffset) ? circumference : strokeDashoffset}
+            className={`transition-all duration-500 ${
+              level === 'N5' ? 'text-green-500' :
+              level === 'N4' ? 'text-blue-500' :
+              level === 'N3' ? 'text-purple-500' :
+              level === 'N2' ? 'text-orange-500' :
+              'text-red-500'
+            }`}
+            strokeLinecap="round"
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-lg font-bold text-foreground">{Math.round(percentage || 0)}%</span>
+        </div>
+      </div>
+      <h4 className="font-semibold text-foreground mb-1">{level}</h4>
+      <p className="text-sm text-muted-foreground">
+        {encountered} / {target}
+      </p>
     </div>
   );
 }
