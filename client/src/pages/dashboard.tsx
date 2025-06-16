@@ -15,7 +15,7 @@ import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1
 // Import our reusable components
 import { EnhancedButton } from "@/components/EnhancedButton";
 import { EnhancedCard } from "@/components/EnhancedCard";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import DashboardHeader from "@/components/DashboardHeader";
 
 export default function Dashboard() {

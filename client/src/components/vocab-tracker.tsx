@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BookOpen, TrendingUp, Clock, Filter } from 'lucide-react';
+import { BookOpen, TrendingUp, Clock, Filter, User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import harukiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
 import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
@@ -207,7 +207,7 @@ export default function VocabTracker() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-5 h-5 bg-gray-200 rounded-full flex items-center justify-center">
-                    <span className="text-xs">👤</span>
+                    <User className="w-3 h-3" />
                   </div>
                   <span className="text-sm text-muted-foreground">Your Words</span>
                 </div>
