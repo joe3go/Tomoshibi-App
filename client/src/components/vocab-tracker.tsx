@@ -187,35 +187,41 @@ export default function VocabTracker() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Words from Your Conversations</CardTitle>
+            <CardTitle className="text-lg">Your Words Overview</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <img 
-                    src={aoiAvatar} 
-                    alt="Aoi" 
-                    className="w-6 h-6 rounded-full"
-                  />
-                  <span className="text-sm">Aoi's Contribution</span>
-                </div>
-                <Badge variant="default">{Math.floor(aiVocabCount * 0.6)} words</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <img 
-                    src={harukiAvatar} 
-                    alt="Haruki" 
-                    className="w-6 h-6 rounded-full"
-                  />
-                  <span className="text-sm">Haruki's Contribution</span>
-                </div>
-                <Badge variant="secondary">{Math.floor(aiVocabCount * 0.4)} words</Badge>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">Words You've Used</span>
+                <Badge variant="default">{userVocabCount} words</Badge>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm">Total Unique</span>
+                <span className="text-sm font-medium">Words from Tutors</span>
+                <Badge variant="secondary">{aiVocabCount} words</Badge>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t">
+                <span className="text-sm font-semibold">Total Unique Words</span>
                 <Badge variant="outline">{stats.total} words</Badge>
+              </div>
+              
+              {/* JLPT Level Progress */}
+              <div className="pt-3 border-t">
+                <h4 className="text-xs font-semibold text-muted-foreground mb-3">JLPT Level Progress</h4>
+                <div className="space-y-2">
+                  {JLPT_LEVELS.map(level => {
+                    const encountered = stats.byLevel[level] || 0;
+                    const target = JLPT_TARGETS[level as keyof typeof JLPT_TARGETS];
+                    const percentage = Math.min((encountered / target) * 100, 100);
+                    
+                    return (
+                      <div key={level} className="flex items-center gap-2">
+                        <span className="text-xs font-mono w-6">{level}</span>
+                        <Progress value={percentage} className="flex-1 h-1.5" />
+                        <span className="text-xs text-muted-foreground w-12">{encountered}/{target}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </CardContent>
