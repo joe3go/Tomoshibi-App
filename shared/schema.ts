@@ -54,10 +54,10 @@ export const jlptVocab = pgTable("jlpt_vocab", {
 export const jlptGrammar = pgTable("jlpt_grammar", {
   id: serial("id").primaryKey(),
   pattern: varchar("pattern", { length: 100 }).notNull(),
-  englishExplanation: text("english_explanation").notNull(),
-  exampleJapanese: text("example_japanese"),
-  exampleEnglish: text("example_english"),
+  meaning: text("meaning").notNull(),
   jlptLevel: varchar("jlpt_level", { length: 10 }).default("N5"),
+  exampleSentence: text("example_sentence"),
+  exampleTranslation: text("example_translation"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
