@@ -14,12 +14,6 @@ dotenv.config();
 // Database connection
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-// Function to escape SQL strings
-function escapeSql(str) {
-  if (!str || str === 'NULL' || str === '') return 'NULL';
-  return `'${str.replace(/'/g, "''").replace(/\\/g, '\\\\')}'`;
-}
-
 // Function to parse CSV line with proper quote handling
 function parseCSVLine(line) {
   const result = [];
@@ -77,26 +71,25 @@ function determineWordType(tags) {
 
 // Function to process a JLPT level CSV file
 async function processJLPTFile(filename, level) {
-  // Try multiple possible locations
+  // Try multiple possible locations including your uploaded files
   const possiblePaths = [
     path.join(__dirname, '..', filename),
-    path.join(__dirname, '..', 'attached_assets', filename),
+    path.join(__dirname, '..', `${level.toLowerCase()}.csv`),
     path.join(__dirname, '..', `${level.toLowerCase()}_1750040266417.csv`),
-    path.join(__dirname, '..', 'attached_assets', `${level.toLowerCase()}_1750040266417.csv`),
-    path.join(__dirname, '..', `${level.toLowerCase()}_1750040231090.csv`),
-    path.join(__dirname, '..', 'attached_assets', `${level.toLowerCase()}_1750040231090.csv`)
+    path.join(__dirname, '..', `${level.toLowerCase()}_1750040231090.csv`)
   ];
 
   let filePath = null;
   for (const testPath of possiblePaths) {
     if (fs.existsSync(testPath)) {
       filePath = testPath;
+      console.log(`Found file: ${testPath}`);
       break;
     }
   }
 
   if (!filePath) {
-    console.log(`File for ${level} not found in any location, skipping...`);
+    console.log(`File for ${level} not found, skipping...`);
     return 0;
   }
 
@@ -108,13 +101,16 @@ async function processJLPTFile(filename, level) {
   let dataLines = lines;
   if (lines.length > 0 && (lines[0].includes('expression') || lines[0].includes('kanji') || lines[0].includes('reading'))) {
     dataLines = lines.slice(1);
+    console.log(`Skipped header line: ${lines[0]}`);
   }
+  
+  console.log(`Processing ${dataLines.length} data lines for ${level}...`);
   
   const vocabEntries = [];
   let processedCount = 0;
   
-  dataLines.forEach((line, index) => {
-    if (!line.trim()) return;
+  for (const [index, line] of dataLines.entries()) {
+    if (!line.trim()) continue;
     
     try {
       const columns = parseCSVLine(line);
@@ -126,7 +122,7 @@ async function processJLPTFile(filename, level) {
         const tags = columns[3] || '';
         
         // Skip empty entries
-        if (!expression && !reading && !meaning) return;
+        if (!expression && !reading && !meaning) continue;
         
         // Clean up the data
         const kanji = expression && expression !== reading && expression.match(/[\u4e00-\u9faf]/) ? expression : null;
@@ -147,15 +143,23 @@ async function processJLPTFile(filename, level) {
     } catch (error) {
       console.log(`Error parsing line ${index + 1} in ${level}: ${error.message}`);
     }
-  });
+  }
   
   // Insert in batches of 100
   const batchSize = 100;
+  let insertedCount = 0;
+  
   for (let i = 0; i < vocabEntries.length; i += batchSize) {
     const batch = vocabEntries.slice(i, i + batchSize);
-    const values = batch.map(entry => 
-      `(${escapeSql(entry.kanji)}, ${escapeSql(entry.hiragana)}, ${escapeSql(entry.englishMeaning)}, '${entry.jlptLevel}', '${entry.wordType}')`
-    ).join(',\n');
+    const values = batch.map(entry => {
+      const kanjiVal = entry.kanji ? `'${entry.kanji.replace(/'/g, "''")}'` : 'NULL';
+      const hiraganaVal = `'${entry.hiragana.replace(/'/g, "''")}'`;
+      const meaningVal = `'${entry.englishMeaning.replace(/'/g, "''")}'`;
+      const levelVal = `'${entry.jlptLevel}'`;
+      const typeVal = `'${entry.wordType}'`;
+      
+      return `(${kanjiVal}, ${hiraganaVal}, ${meaningVal}, ${levelVal}, ${typeVal})`;
+    }).join(',\n');
     
     const query = `
       INSERT INTO jlpt_vocab (kanji, hiragana, english_meaning, jlpt_level, word_type) 
@@ -164,24 +168,31 @@ async function processJLPTFile(filename, level) {
     `;
     
     try {
-      await pool.query(query);
-      console.log(`Inserted batch ${Math.floor(i/batchSize) + 1} for ${level} (${batch.length} entries)`);
+      const result = await pool.query(query);
+      insertedCount += batch.length;
+      console.log(`✅ Inserted batch ${Math.floor(i/batchSize) + 1} for ${level} (${batch.length} entries)`);
     } catch (error) {
-      console.error(`Error inserting batch for ${level}:`, error.message);
+      console.error(`❌ Error inserting batch for ${level}:`, error.message);
     }
   }
   
-  console.log(`Processed ${processedCount} entries from ${level}`);
+  console.log(`📊 ${level} Summary: Processed ${processedCount} entries, inserted ${insertedCount}`);
   return processedCount;
 }
 
 // Main function to load all vocabulary data
 async function loadVocabularyData() {
   try {
-    console.log('Starting vocabulary data import...');
+    console.log('🚀 Starting vocabulary data import...');
+    
+    // Check what CSV files exist
+    console.log('\n📁 Checking for CSV files...');
+    const rootFiles = fs.readdirSync(path.join(__dirname, '..'));
+    const csvFiles = rootFiles.filter(file => file.endsWith('.csv'));
+    console.log('Found CSV files:', csvFiles);
     
     // Clear existing vocabulary data
-    console.log('Clearing existing vocabulary data...');
+    console.log('\n🗑️ Clearing existing vocabulary data...');
     await pool.query('DELETE FROM jlpt_vocab;');
     
     const levels = [
@@ -198,24 +209,6 @@ async function loadVocabularyData() {
       const count = await processJLPTFile(file, level);
       totalProcessed += count;
     }
-
-    // Insert basic grammar patterns
-    console.log('Adding basic grammar patterns...');
-    await pool.query(`
-      DELETE FROM jlpt_grammar;
-      
-      INSERT INTO jlpt_grammar (pattern, meaning, jlpt_level, example_sentence, example_translation) VALUES
-      ('だ/である', 'To be (assertion)', 'N5', '私は学生だ。', 'I am a student.'),
-      ('です/ます', 'Polite form', 'N5', '私は学生です。', 'I am a student.'),
-      ('か', 'Question particle', 'N5', 'あなたは学生ですか。', 'Are you a student?'),
-      ('が', 'Subject particle', 'N5', '私が学生です。', 'I am the student.'),
-      ('を', 'Object particle', 'N5', 'りんごを食べます。', 'I eat an apple.'),
-      ('に', 'Direction/Time particle', 'N5', '学校に行きます。', 'I go to school.'),
-      ('で', 'Location/Method particle', 'N5', '図書館で勉強します。', 'I study at the library.'),
-      ('と', 'And/With particle', 'N5', '友達と映画を見ます。', 'I watch a movie with friends.'),
-      ('の', 'Possessive particle', 'N5', '私の本です。', 'It is my book.'),
-      ('は', 'Topic particle', 'N5', '私は日本人です。', 'I am Japanese.');
-    `);
 
     console.log(`\n✅ Vocabulary import completed!`);
     console.log(`📊 Total entries processed: ${totalProcessed}`);
