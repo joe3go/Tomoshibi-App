@@ -17,6 +17,13 @@ import { EnhancedButton } from "@/components/EnhancedButton";
 import { EnhancedCard } from "@/components/EnhancedCard";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import DashboardHeader from "@/components/DashboardHeader";
+import { 
+  VocabProgressRings, 
+  MiniVocabHeatmap, 
+  JLPTLevelComparison, 
+  WordSpotlightCarousel, 
+  KnownVsUsedGap 
+} from "@/components/VocabAnalytics";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -368,6 +375,47 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {/* Compact Vocabulary Usage Analytics */}
+        <div className="space-y-6 mb-8">
+          {/* Vocabulary Progress Rings - Horizontal scrollable strip */}
+          <VocabProgressRings 
+            vocabData={vocabData} 
+            compact={true}
+            onNavigate={setLocation}
+          />
+          
+          {/* Two-column layout for remaining analytics */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Mini Vocab Usage Heatmap - takes 1/3 width on desktop */}
+            <MiniVocabHeatmap 
+              vocabData={vocabData} 
+              compact={true}
+              className="lg:col-span-1"
+            />
+            
+            {/* JLPT Level Usage Comparison and Known vs Used Gap */}
+            <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <JLPTLevelComparison 
+                vocabData={vocabData} 
+                compact={true}
+              />
+              
+              <KnownVsUsedGap 
+                vocabData={vocabData} 
+                compact={true}
+                onNavigate={setLocation}
+              />
+            </div>
+          </div>
+          
+          {/* Word Spotlight Carousel - Full width */}
+          <WordSpotlightCarousel 
+            vocabData={vocabData} 
+            compact={true}
+            onNavigate={setLocation}
+          />
+        </div>
 
         {/* Analytics Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">

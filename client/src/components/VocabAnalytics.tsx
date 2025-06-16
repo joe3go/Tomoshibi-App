@@ -227,13 +227,15 @@ export function JLPTLevelComparison({
   });
 
   return (
-    <EnhancedCard className="mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-primary flex items-center gap-2">
-          <BarChart3 className="w-5 h-5" />
-          JLPT Level Usage
-        </h3>
-      </div>
+    <EnhancedCard className={`${compact ? 'mb-4' : 'mb-6'} ${className}`}>
+      {showTitle && (
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-primary flex items-center gap-2">
+            <BarChart3 className="w-5 h-5" />
+            JLPT Level Usage
+          </h3>
+        </div>
+      )}
       
       <div className="space-y-3">
         {levelStats.map(({ level, used, reviewed, unseen, total }) => (
@@ -272,18 +274,24 @@ export function JLPTLevelComparison({
   );
 }
 
-export function WordSpotlightCarousel({ vocabData }: VocabAnalyticsProps) {
+export function WordSpotlightCarousel({ 
+  vocabData, 
+  className = "", 
+  showTitle = true, 
+  compact = false,
+  onNavigate 
+}: BaseAnalyticsProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   
-  // Get most used words this week (simulated)
+  // Get most used words this week
   const mostUsed = vocabData
-    .filter(entry => (entry.userUsageCount || 0) > 0)
-    .sort((a, b) => (b.userUsageCount || 0) - (a.userUsageCount || 0))
+    .filter((entry: VocabEntry) => (entry.userUsageCount || 0) > 0)
+    .sort((a: VocabEntry, b: VocabEntry) => (b.userUsageCount || 0) - (a.userUsageCount || 0))
     .slice(0, 5);
   
-  // Get inactive words (not used in 2+ weeks, simulated)
+  // Get inactive words (not used in 2+ weeks)
   const inactive = vocabData
-    .filter(entry => (entry.userUsageCount || 0) > 0 && (entry.userUsageCount || 0) < 3)
+    .filter((entry: VocabEntry) => (entry.userUsageCount || 0) > 0 && (entry.userUsageCount || 0) < 3)
     .slice(0, 5);
   
   const sections = [
@@ -297,31 +305,33 @@ export function WordSpotlightCarousel({ vocabData }: VocabAnalyticsProps) {
   if (!currentWord) return null;
   
   return (
-    <EnhancedCard className="mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-primary flex items-center gap-2">
-          <TrendingUp className="w-5 h-5" />
-          Word Spotlight
-        </h3>
-        <div className="flex gap-1">
-          <EnhancedButton
-            variant="ghost"
-            size="sm"
-            onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
-            disabled={currentIndex === 0}
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </EnhancedButton>
-          <EnhancedButton
-            variant="ghost"
-            size="sm"
-            onClick={() => setCurrentIndex(Math.min(5, currentIndex + 1))}
-            disabled={currentIndex >= 5}
-          >
-            <ChevronRight className="w-4 h-4" />
-          </EnhancedButton>
+    <EnhancedCard className={`${compact ? 'mb-4' : 'mb-6'} ${className}`}>
+      {showTitle && (
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-primary flex items-center gap-2">
+            <TrendingUp className="w-5 h-5" />
+            Word Spotlight
+          </h3>
+          <div className="flex gap-1">
+            <EnhancedButton
+              variant="ghost"
+              size="sm"
+              onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
+              disabled={currentIndex === 0}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </EnhancedButton>
+            <EnhancedButton
+              variant="ghost"
+              size="sm"
+              onClick={() => setCurrentIndex(Math.min(5, currentIndex + 1))}
+              disabled={currentIndex >= 5}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </EnhancedButton>
+          </div>
         </div>
-      </div>
+      )}
       
       <div className="text-center">
         <div className="flex items-center justify-center gap-2 mb-2">
@@ -354,22 +364,30 @@ export function WordSpotlightCarousel({ vocabData }: VocabAnalyticsProps) {
   );
 }
 
-export function KnownVsUsedGap({ vocabData }: VocabAnalyticsProps) {
+export function KnownVsUsedGap({ 
+  vocabData, 
+  className = "", 
+  showTitle = true, 
+  compact = false,
+  onNavigate 
+}: BaseAnalyticsProps) {
   const totalKnown = vocabData.length;
-  const totalUsed = vocabData.filter(entry => (entry.userUsageCount || 0) > 0).length;
+  const totalUsed = vocabData.filter((entry: VocabEntry) => (entry.userUsageCount || 0) > 0).length;
   const activationRate = totalKnown > 0 ? (totalUsed / totalKnown) * 100 : 0;
-  const inactiveN5Words = vocabData.filter(entry => 
+  const inactiveN5Words = vocabData.filter((entry: VocabEntry) => 
     entry.word.jlptLevel === 'N5' && (entry.userUsageCount || 0) === 0
   ).length;
   
   return (
-    <EnhancedCard className="mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-primary flex items-center gap-2">
-          <BarChart3 className="w-5 h-5" />
-          Known vs Used Gap
-        </h3>
-      </div>
+    <EnhancedCard className={`${compact ? 'mb-4' : 'mb-6'} ${className}`}>
+      {showTitle && (
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-primary flex items-center gap-2">
+            <BarChart3 className="w-5 h-5" />
+            Known vs Used Gap
+          </h3>
+        </div>
+      )}
       
       <div className="space-y-4">
         <div className="relative">
