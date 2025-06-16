@@ -1,8 +1,15 @@
 
-const fs = require('fs');
-const path = require('path');
-const { Pool } = require('@neondatabase/serverless');
-require('dotenv').config();
+import fs from 'fs';
+import path from 'path';
+import { Pool } from '@neondatabase/serverless';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import dotenv from 'dotenv';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config();
 
 // Database connection
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -75,7 +82,9 @@ async function processJLPTFile(filename, level) {
     path.join(__dirname, '..', filename),
     path.join(__dirname, '..', 'attached_assets', filename),
     path.join(__dirname, '..', `${level.toLowerCase()}_1750040266417.csv`),
-    path.join(__dirname, '..', 'attached_assets', `${level.toLowerCase()}_1750040266417.csv`)
+    path.join(__dirname, '..', 'attached_assets', `${level.toLowerCase()}_1750040266417.csv`),
+    path.join(__dirname, '..', `${level.toLowerCase()}_1750040231090.csv`),
+    path.join(__dirname, '..', 'attached_assets', `${level.toLowerCase()}_1750040231090.csv`)
   ];
 
   let filePath = null;
@@ -97,7 +106,7 @@ async function processJLPTFile(filename, level) {
   
   // Skip header line if it exists
   let dataLines = lines;
-  if (lines.length > 0 && (lines[0].includes('expression') || lines[0].includes('kanji'))) {
+  if (lines.length > 0 && (lines[0].includes('expression') || lines[0].includes('kanji') || lines[0].includes('reading'))) {
     dataLines = lines.slice(1);
   }
   
@@ -117,7 +126,7 @@ async function processJLPTFile(filename, level) {
         const tags = columns[3] || '';
         
         // Skip empty entries
-        if (!expression && !reading) return;
+        if (!expression && !reading && !meaning) return;
         
         // Clean up the data
         const kanji = expression && expression !== reading && expression.match(/[\u4e00-\u9faf]/) ? expression : null;
