@@ -4,7 +4,7 @@ const path = require('path');
 
 // Function to escape SQL strings
 function escapeSql(str) {
-  if (!str || str === 'NULL') return 'NULL';
+  if (!str || str === 'NULL' || str === '') return 'NULL';
   return `'${str.replace(/'/g, "''").replace(/\\/g, '\\\\')}'`;
 }
 
@@ -59,7 +59,7 @@ function processJLPTFile(filename, level) {
   
   // Skip header line if it exists
   let dataLines = lines;
-  if (lines.length > 0 && (lines[0].includes('expression') || lines[0].includes('kanji') || lines[0].includes('Expression'))) {
+  if (lines.length > 0 && (lines[0].includes('kanji') || lines[0].includes('Kanji'))) {
     dataLines = lines.slice(1);
   }
   
@@ -73,40 +73,28 @@ function processJLPTFile(filename, level) {
       const columns = parseCSVLine(line);
       
       if (columns.length >= 2) {
-        // Expected format: expression,reading,meaning,part_of_speech
-        const expression = columns[0] || '';
-        const reading = columns[1] || '';
+        // Expected format: kanji,kana,meaning
+        const kanji = columns[0] || '';
+        const kana = columns[1] || '';
         const meaning = columns[2] || '';
-        const partOfSpeech = columns[3] || '';
         
         // Skip empty entries
-        if (!expression && !reading) return;
+        if (!kanji && !kana) return;
         
         // Clean up the data
-        const kanji = expression && expression !== reading && expression.match(/[\u4e00-\u9faf]/) ? expression : null;
-        const hiragana = reading || expression;
+        const kanjiField = kanji && kanji !== kana && kanji.match(/[\u4e00-\u9faf]/) ? kanji : null;
+        const hiragana = kana || kanji;
         const englishMeaning = meaning || 'No meaning provided';
         
-        // Determine word type from part of speech
+        // Determine word type based on kanji/hiragana patterns
         let wordType = 'noun'; // default
-        if (partOfSpeech) {
-          const pos = partOfSpeech.toLowerCase();
-          if (pos.includes('verb') || pos.includes('v-')) {
-            wordType = 'verb';
-          } else if (pos.includes('adj') || pos.includes('い-adj') || pos.includes('な-adj')) {
-            wordType = 'adjective';
-          } else if (pos.includes('adv')) {
-            wordType = 'adverb';
-          } else if (pos.includes('particle')) {
-            wordType = 'particle';
-          } else if (pos.includes('expression') || pos.includes('exp')) {
-            wordType = 'expression';
-          } else if (pos.includes('number') || pos.includes('num')) {
-            wordType = 'number';
-          }
+        if (hiragana.endsWith('る') || hiragana.endsWith('う') || hiragana.endsWith('す')) {
+          wordType = 'verb';
+        } else if (hiragana.endsWith('い') && hiragana.length > 2) {
+          wordType = 'adjective';
         }
         
-        sqlStatements += `(${escapeSql(kanji)}, ${escapeSql(hiragana)}, ${escapeSql(englishMeaning)}, '${level}', '${wordType}'),\n`;
+        sqlStatements += `(${escapeSql(kanjiField)}, ${escapeSql(hiragana)}, ${escapeSql(englishMeaning)}, '${level}', '${wordType}'),\n`;
         processedCount++;
       }
     } catch (error) {
@@ -198,11 +186,11 @@ if (!fs.existsSync(migrationsDir)) {
 // Write the migration file
 try {
   const migration = generateMigration();
-  const migrationPath = path.join(migrationsDir, '003_comprehensive_jlpt_data.sql');
+  const migrationPath = path.join(migrationsDir, '004_full_jlpt_data.sql');
   fs.writeFileSync(migrationPath, migration);
 
   console.log(`Migration written to ${migrationPath}`);
-  console.log('Run the migration to update your database with JLPT vocabulary!');
+  console.log('Run the migration to update your database with comprehensive JLPT vocabulary!');
 } catch (error) {
   console.error('Error generating migration:', error);
   process.exit(1);
