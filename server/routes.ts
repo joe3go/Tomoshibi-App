@@ -409,11 +409,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Vocabulary routes
   app.get('/api/vocab', authenticateToken, async (req, res) => {
     try {
-      const vocab = await storage.getAllVocab();
+      const { level } = req.query;
+      const vocab = level ? await storage.getVocabByLevel(level as string) : await storage.getAllVocab();
       res.json(vocab);
     } catch (error) {
       console.error('Get vocab error:', error);
       res.status(500).json({ message: 'Failed to get vocabulary' });
+    }
+  });
+
+  app.get('/api/vocab/stats', authenticateToken, async (req, res) => {
+    try {
+      const stats = await storage.getVocabStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('Get vocab stats error:', error);
+      res.status(500).json({ message: 'Failed to get vocabulary statistics' });
     }
   });
 

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -65,7 +64,7 @@ export default function Dashboard() {
   const activeConversations = Array.isArray(conversations) 
     ? conversations.filter((c: any) => c.status === 'active' || !c.status)
     : [];
-  
+
   const completedConversations = Array.isArray(conversations) 
     ? conversations.filter((c: any) => c.status === 'completed')
     : [];
@@ -97,8 +96,7 @@ export default function Dashboard() {
       Family: "家族",
       Hobbies: "趣味",
       Work: "仕事",
-      Travel: "旅行",
-      Health: "健康",
+      Travel: "健康",
     };
     return scenarios[title] || title;
   };
@@ -126,7 +124,7 @@ export default function Dashboard() {
         },
         body: JSON.stringify(updates)
       });
-      
+
       if (!response.ok) throw new Error('Failed to update profile');
       return response.json();
     },
@@ -335,7 +333,7 @@ export default function Dashboard() {
                         {formatDate(conversation.startedAt || conversation.createdAt)}
                       </div>
                     </div>
-                    
+
                     <div className="flex gap-2">
                       {conversation.status === 'active' ? (
                         <>
@@ -384,7 +382,7 @@ export default function Dashboard() {
             compact={true}
             onNavigate={setLocation}
           />
-          
+
           {/* Two-column layout for remaining analytics */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Mini Vocab Usage Heatmap - takes 1/3 width on desktop */}
@@ -393,14 +391,14 @@ export default function Dashboard() {
               compact={true}
               className="lg:col-span-1"
             />
-            
+
             {/* JLPT Level Usage Comparison and Known vs Used Gap */}
             <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
               <JLPTLevelComparison 
                 vocabData={vocabData} 
                 compact={true}
               />
-              
+
               <KnownVsUsedGap 
                 vocabData={vocabData} 
                 compact={true}
@@ -408,7 +406,7 @@ export default function Dashboard() {
               />
             </div>
           </div>
-          
+
           {/* Word Spotlight Carousel - Full width */}
           <WordSpotlightCarousel 
             vocabData={vocabData} 
@@ -432,13 +430,13 @@ export default function Dashboard() {
                 <TrendingUp className="w-4 h-4" />
               </EnhancedButton>
             </div>
-            
+
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Total Words</span>
                 <span className="font-semibold">{(vocabData as any[]).length}</span>
               </div>
-              
+
               {(() => {
                 const vocabStats = (vocabData as any[]).reduce((acc: any, entry: any) => {
                   const level = entry.word?.jlptLevel || 'N5';
@@ -503,33 +501,33 @@ export default function Dashboard() {
               </div>
               <h3 className="font-semibold text-primary">Learning Journey</h3>
             </div>
-            
+
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Current Level</span>
                 <Badge variant="secondary">{getProgressionLabel()}</Badge>
               </div>
-              
+
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Active Sessions</span>
                 <span className="font-semibold">{activeConversations.length}</span>
               </div>
-              
+
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Completed Sessions</span>
                 <span className="font-semibold">{completedConversations.length}</span>
               </div>
-              
+
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Words Learned</span>
                 <span className="font-semibold">{(vocabData as any[]).length}</span>
               </div>
-              
+
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Messages Sent</span>
                 <span className="font-semibold">{(progress as any)?.totalMessagesSent || 0}</span>
               </div>
-              
+
               {(() => {
                 const totalInteractions = (vocabData as any[]).length + (Array.isArray(conversations) ? conversations.length : 0);
                 const nextMilestone = totalInteractions >= 100 ? 150 : 
@@ -538,7 +536,7 @@ export default function Dashboard() {
                                     totalInteractions >= 25 ? 50 :
                                     totalInteractions >= 10 ? 25 : 10;
                 const progress = (totalInteractions / nextMilestone) * 100;
-                
+
                 return (
                   <div className="mt-3">
                     <div className="flex justify-between text-xs text-muted-foreground mb-1">

@@ -175,20 +175,20 @@ export default function Landing() {
         <div className="max-w-4xl mx-auto px-6 text-center">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div>
-              <div className="text-3xl font-bold text-primary mb-2">1,000+</div>
+              <div className="text-3xl font-bold text-primary mb-2">100+</div>
               <div className="text-foreground">Active Learners</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-primary mb-2">50+</div>
+              <div className="text-3xl font-bold text-primary mb-2">15+</div>
               <div className="text-foreground">Scenarios</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-primary mb-2">500+</div>
-              <div className="text-foreground">Vocabulary Words</div>
+              <div className="text-3xl font-bold text-primary mb-2">800+</div>
+              <div className="text-foreground">JLPT Vocabulary</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-primary mb-2">95%</div>
-              <div className="text-foreground">Success Rate</div>
+              <div className="text-3xl font-bold text-primary mb-2">90%</div>
+              <div className="text-foreground">Student Satisfaction</div>
             </div>
           </div>
         </div>

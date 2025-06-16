@@ -38,13 +38,8 @@ interface VocabStats {
 }
 
 const JLPT_LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'];
-const JLPT_TARGETS = {
-  N5: 800,
-  N4: 1500,
-  N3: 3750,
-  N2: 6000,
-  N1: 10000
-};
+// These will be dynamically loaded from the actual jlpt_vocab table
+const JLPT_LEVEL_ORDER = ['N5', 'N4', 'N3', 'N2', 'N1'];
 
 export default function VocabTracker() {
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
@@ -59,6 +54,10 @@ export default function VocabTracker() {
     queryKey: ['/api/vocab'],
   });
 
+  const { data: vocabStats = [] } = useQuery<{ level: string; count: number }[]>({
+    queryKey: ['/api/vocab/stats'],
+  });
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
@@ -70,13 +69,21 @@ export default function VocabTracker() {
     );
   }
 
-  // Calculate statistics
-  const stats: VocabStats = (vocabData as VocabTrackerEntry[]).reduce((acc: VocabStats, entry: VocabTrackerEntry) => {
+  // Calculate user's vocabulary statistics (words they've encountered)
+  const userStats: VocabStats = (vocabData as VocabTrackerEntry[]).reduce((acc: VocabStats, entry: VocabTrackerEntry) => {
     acc.total += 1;
     const level = entry.word.jlptLevel;
     acc.byLevel[level] = (acc.byLevel[level] || 0) + 1;
     return acc;
   }, { total: 0, byLevel: {} });
+
+  // Get total vocabulary available in database by level
+  const totalVocabByLevel = vocabStats.reduce((acc: Record<string, number>, stat) => {
+    acc[stat.level] = stat.count;
+    return acc;
+  }, {});
+
+  const totalVocabCount = vocabStats.reduce((sum, stat) => sum + stat.count, 0);
 
   // Filter and sort data
   const filteredData = (vocabData as VocabTrackerEntry[])
@@ -252,23 +259,39 @@ export default function VocabTracker() {
         
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Your Unique Words by JLPT Level</CardTitle>
+            <CardTitle className="text-lg">Vocabulary Progress by JLPT Level</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {JLPT_LEVELS.map(level => {
-                const levelWords = stats.byLevel[level] || 0;
+              {JLPT_LEVEL_ORDER.map(level => {
+                const userWords = userStats.byLevel[level] || 0;
+                const totalWords = totalVocabByLevel[level] || 0;
+                const percentage = totalWords > 0 ? Math.round((userWords / totalWords) * 100) : 0;
                 return (
-                  <div key={level} className="flex justify-between items-center">
-                    <span className="text-sm font-medium">{level}:</span>
-                    <Badge variant="outline">{levelWords} unique words</Badge>
+                  <div key={level} className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">{level}:</span>
+                      <Badge variant="outline">{userWords} / {totalWords} words ({percentage}%)</Badge>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full transition-all duration-300 ${
+                          level === 'N5' ? 'bg-green-500' :
+                          level === 'N4' ? 'bg-blue-500' :
+                          level === 'N3' ? 'bg-purple-500' :
+                          level === 'N2' ? 'bg-orange-500' :
+                          'bg-red-500'
+                        }`}
+                        style={{ width: `${percentage}%` }}
+                      ></div>
+                    </div>
                   </div>
                 );
               })}
               <div className="pt-2 border-t">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-semibold">Total:</span>
-                  <Badge variant="default">{stats.total} unique words</Badge>
+                  <span className="text-sm font-semibold">Total Progress:</span>
+                  <Badge variant="default">{userStats.total} / {totalVocabCount} words</Badge>
                 </div>
               </div>
             </div>

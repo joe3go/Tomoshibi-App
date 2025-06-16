@@ -24,7 +24,7 @@ import {
   type InsertVocabTracker,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, desc, and, like, or, inArray, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -276,19 +276,19 @@ export class DatabaseStorage implements IStorage {
 
   async incrementWordFrequency(userId: number, wordId: number, source: 'user' | 'ai' | 'hover' = 'hover'): Promise<VocabTracker> {
     const existing = await this.getVocabTracker(userId, wordId);
-    
+
     if (existing) {
       const updates: Partial<VocabTracker> = {
         frequency: (existing.frequency || 0) + 1,
         lastSeenAt: new Date(),
       };
-      
+
       if (source === 'user') {
         updates.userUsageCount = (existing.userUsageCount || 0) + 1;
       } else if (source === 'ai') {
         updates.aiEncounterCount = (existing.aiEncounterCount || 0) + 1;
       }
-      
+
       return await this.updateVocabTracker(userId, wordId, updates);
     } else {
       const newTracker: InsertVocabTracker = {
@@ -301,7 +301,7 @@ export class DatabaseStorage implements IStorage {
         memoryStrength: 0,
         source: source === 'hover' ? 'manual' : 'conversation',
       };
-      
+
       return await this.createVocabTracker(newTracker);
     }
   }

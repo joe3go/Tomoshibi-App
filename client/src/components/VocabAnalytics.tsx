@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, BookOpen, TrendingUp, Calendar, BarChart3 } from "lucide-react";
 import { EnhancedCard } from "./EnhancedCard";
 import { EnhancedButton } from "./EnhancedButton";
@@ -59,7 +60,16 @@ export function VocabProgressRings({
   onNavigate 
 }: BaseAnalyticsProps) {
   const levels = ['N5', 'N4', 'N3', 'N2', 'N1'];
-  const levelTotals = { N5: 600, N4: 800, N3: 1200, N2: 1500, N1: 2000 };
+  
+  // Get actual totals from API
+  const { data: vocabStats = [] } = useQuery<{ level: string; count: number }[]>({
+    queryKey: ['/api/vocab/stats'],
+  });
+  
+  const levelTotals = vocabStats.reduce((acc: Record<string, number>, stat) => {
+    acc[stat.level] = stat.count;
+    return acc;
+  }, { N5: 0, N4: 0, N3: 0, N2: 0, N1: 0 });
   
   const levelStats = levels.map(level => {
     const levelWords = vocabData.filter((entry: VocabEntry) => entry.word.jlptLevel === level);
@@ -214,7 +224,16 @@ export function JLPTLevelComparison({
   compact = false 
 }: BaseAnalyticsProps) {
   const levels = ['N5', 'N4', 'N3', 'N2', 'N1'];
-  const levelTotals = { N5: 600, N4: 800, N3: 1200, N2: 1500, N1: 2000 };
+  
+  // Get actual totals from API
+  const { data: vocabStats = [] } = useQuery<{ level: string; count: number }[]>({
+    queryKey: ['/api/vocab/stats'],
+  });
+  
+  const levelTotals = vocabStats.reduce((acc: Record<string, number>, stat) => {
+    acc[stat.level] = stat.count;
+    return acc;
+  }, { N5: 0, N4: 0, N3: 0, N2: 0, N1: 0 });
   
   const levelStats = levels.map(level => {
     const levelWords = vocabData.filter((entry: VocabEntry) => entry.word.jlptLevel === level);
