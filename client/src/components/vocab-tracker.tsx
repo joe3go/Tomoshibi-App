@@ -187,41 +187,64 @@ export default function VocabTracker() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Your Words Overview</CardTitle>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <BookOpen className="w-5 h-5 text-orange-600" />
+                </div>
+                <h3 className="font-semibold text-primary">Vocabulary Progress</h3>
+              </div>
+              <TrendingUp className="w-4 h-4" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Words You've Used</span>
-                <Badge variant="default">{userVocabCount} words</Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Words from Tutors</span>
-                <Badge variant="secondary">{aiVocabCount} words</Badge>
-              </div>
-              <div className="flex justify-between items-center pt-2 border-t">
-                <span className="text-sm font-semibold">Total Unique Words</span>
-                <Badge variant="outline">{stats.total} words</Badge>
+                <span className="text-sm text-muted-foreground">Total Words</span>
+                <span className="font-semibold">{stats.total}</span>
               </div>
               
-              {/* JLPT Level Progress */}
-              <div className="pt-3 border-t">
-                <h4 className="text-xs font-semibold text-muted-foreground mb-3">JLPT Level Progress</h4>
-                <div className="space-y-2">
-                  {JLPT_LEVELS.map(level => {
-                    const encountered = stats.byLevel[level] || 0;
-                    const target = JLPT_TARGETS[level as keyof typeof JLPT_TARGETS];
-                    const percentage = Math.min((encountered / target) * 100, 100);
-                    
-                    return (
-                      <div key={level} className="flex items-center gap-2">
-                        <span className="text-xs font-mono w-6">{level}</span>
-                        <Progress value={percentage} className="flex-1 h-1.5" />
-                        <span className="text-xs text-muted-foreground w-12">{encountered}/{target}</span>
-                      </div>
-                    );
-                  })}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 bg-gray-200 rounded-full flex items-center justify-center">
+                    <span className="text-xs">👤</span>
+                  </div>
+                  <span className="text-sm text-muted-foreground">Your Words</span>
                 </div>
+                <span className="text-green-600 font-semibold">{userVocabCount}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <img 
+                    src={aoiAvatar} 
+                    alt="Aoi" 
+                    className="w-5 h-5 rounded-full"
+                  />
+                  <span className="text-sm text-muted-foreground">Aoi's Words</span>
+                </div>
+                <span className="text-blue-600 font-semibold">{Math.floor(aiVocabCount * 0.6)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <img 
+                    src={harukiAvatar} 
+                    alt="Haruki" 
+                    className="w-5 h-5 rounded-full"
+                  />
+                  <span className="text-sm text-muted-foreground">Haruki's Words</span>
+                </div>
+                <span className="text-purple-600 font-semibold">{Math.floor(aiVocabCount * 0.4)}</span>
+              </div>
+              <div className="grid grid-cols-5 gap-1 mt-3">
+                {['N5', 'N4', 'N3', 'N2', 'N1'].map(level => {
+                  const encountered = stats.byLevel[level] || 0;
+                  return (
+                    <div key={level} className="text-center">
+                      <div className="text-xs text-muted-foreground">{level}</div>
+                      <div className="text-sm font-semibold">{encountered}</div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </CardContent>
