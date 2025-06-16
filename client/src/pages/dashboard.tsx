@@ -1,6 +1,5 @@
+
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -8,11 +7,16 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { Settings, LogOut, MessageCircle, User, Calendar, BookOpen, History, TrendingUp, Award, Target } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import harukiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
 import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
+
+// Import our reusable components
+import { EnhancedButton } from "@/components/EnhancedButton";
+import { EnhancedCard } from "@/components/EnhancedCard";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import DashboardHeader from "@/components/DashboardHeader";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -230,10 +234,7 @@ export default function Dashboard() {
   ) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading your dashboard...</p>
-        </div>
+        <LoadingSpinner />
       </div>
     );
   }
@@ -242,72 +243,11 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
-        <header className="content-card mb-6 flex items-center justify-between">
-          <div 
-            className="flex items-center space-x-3 cursor-pointer hover:opacity-80"
-            onClick={() => setLocation("/settings")}
-          >
-            <div className="avatar student">
-              {(user as any)?.profileImageUrl ? (
-                <img 
-                  src={(user as any).profileImageUrl} 
-                  alt="Profile" 
-                  className="w-full h-full object-cover rounded-full"
-                />
-              ) : (
-                <span className="font-medium">
-                  {(user as any)?.displayName?.[0]?.toUpperCase() || "U"}
-                </span>
-              )}
-            </div>
-            <div>
-              <h2 className="font-semibold text-primary">
-                {(user as any)?.displayName || "User"}
-              </h2>
-              <p className="text-sm text-foreground">{getProgressionLabel()}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLocation("/vocabulary")}
-              className="text-foreground hover:text-primary flex items-center gap-2"
-            >
-              <BookOpen className="w-4 h-4" />
-              Vocabulary
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLocation("/history")}
-              className="text-foreground hover:text-primary flex items-center gap-2"
-            >
-              <History className="w-4 h-4" />
-              History
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLocation("/settings")}
-              className="p-2 text-foreground hover:text-primary"
-            >
-              <Settings className="w-5 h-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-              className="text-foreground hover:text-primary"
-            >
-              <LogOut className="w-4 h-4 mr-1" />
-              Logout
-            </Button>
-          </div>
-        </header>
-
-
+        <DashboardHeader 
+          user={user}
+          progressionLabel={getProgressionLabel()}
+          onLogout={handleLogout}
+        />
 
         {/* Continue Conversations Section */}
         {activeConversations.length > 0 && (
@@ -316,14 +256,14 @@ export default function Dashboard() {
               <h3 className="text-lg font-semibold text-primary">
                 Continue Learning
               </h3>
-              <Button 
+              <EnhancedButton 
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setLocation("/history")}
                 className="text-muted-foreground hover:text-primary"
               >
                 See more
-              </Button>
+              </EnhancedButton>
             </div>
             <div className="grid gap-3 md:grid-cols-3">
               {activeConversations.slice(0, 3).map((conversation: any) => {
@@ -346,9 +286,9 @@ export default function Dashboard() {
                 };
 
                 return (
-                  <div
+                  <EnhancedCard
                     key={conversation.id}
-                    className="content-card group"
+                    className="group"
                   >
                     <div className="flex items-start space-x-3 mb-3">
                       <div className="avatar flex-shrink-0">
@@ -392,14 +332,14 @@ export default function Dashboard() {
                     <div className="flex gap-2">
                       {conversation.status === 'active' ? (
                         <>
-                          <Button
+                          <EnhancedButton
                             size="sm"
                             onClick={() => setLocation(`/chat/${conversation.id}`)}
                             className="flex-1"
                           >
                             Continue
-                          </Button>
-                          <Button
+                          </EnhancedButton>
+                          <EnhancedButton
                             size="sm"
                             variant="outline"
                             onClick={(e) => {
@@ -409,20 +349,20 @@ export default function Dashboard() {
                             className="text-red-600 hover:text-red-700"
                           >
                             End
-                          </Button>
+                          </EnhancedButton>
                         </>
                       ) : (
-                        <Button
+                        <EnhancedButton
                           size="sm"
                           variant="outline"
                           onClick={() => setLocation(`/chat/${conversation.id}`)}
                           className="flex-1"
                         >
                           View
-                        </Button>
+                        </EnhancedButton>
                       )}
                     </div>
-                  </div>
+                  </EnhancedCard>
                 );
               })}
             </div>
@@ -432,7 +372,7 @@ export default function Dashboard() {
         {/* Analytics Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           {/* Comprehensive Vocabulary Analytics */}
-          <div className="content-card">
+          <EnhancedCard>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -440,9 +380,9 @@ export default function Dashboard() {
                 </div>
                 <h3 className="font-semibold text-primary">Vocabulary Progress</h3>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => setLocation("/vocabulary")}>
+              <EnhancedButton variant="ghost" size="sm" onClick={() => setLocation("/vocabulary")}>
                 <TrendingUp className="w-4 h-4" />
-              </Button>
+              </EnhancedButton>
             </div>
             
             <div className="space-y-3">
@@ -505,10 +445,10 @@ export default function Dashboard() {
                 );
               })()}
             </div>
-          </div>
+          </EnhancedCard>
 
           {/* Growth & Development Tracker */}
-          <div className="content-card">
+          <EnhancedCard>
             <div className="flex items-center space-x-3 mb-4">
               <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                 <Award className="w-5 h-5 text-green-600" />
@@ -567,7 +507,7 @@ export default function Dashboard() {
                 );
               })()}
             </div>
-          </div>
+          </EnhancedCard>
         </div>
 
         {/* Tutors Section */}
@@ -591,9 +531,9 @@ export default function Dashboard() {
                   };
 
                   return (
-                    <div
+                    <EnhancedCard
                       key={persona.id}
-                      className="content-card cursor-pointer group hover:shadow-lg transition-shadow"
+                      className="cursor-pointer group hover:shadow-lg transition-shadow"
                       onClick={() => setLocation("/tutor-selection")}
                     >
                       <div className="flex items-start space-x-4">
@@ -632,17 +572,19 @@ export default function Dashboard() {
                           </p>
                         </div>
                       </div>
-                    </div>
+                    </EnhancedCard>
                   );
                 })
             ) : (
-              <div className="col-span-2 content-card text-center py-8">
-                <p className="text-foreground mb-4">
-                  No tutors available at the moment.
-                </p>
-                <p className="text-sm text-foreground opacity-60">
-                  Click below to explore tutor selection anyway.
-                </p>
+              <div className="col-span-2 text-center py-8">
+                <EnhancedCard>
+                  <p className="text-foreground mb-4">
+                    No tutors available at the moment.
+                  </p>
+                  <p className="text-sm text-foreground opacity-60">
+                    Click below to explore tutor selection anyway.
+                  </p>
+                </EnhancedCard>
               </div>
             )}
           </div>
@@ -650,30 +592,30 @@ export default function Dashboard() {
 
         {/* Quick Actions */}
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="content-card">
+          <EnhancedCard>
             <h4 className="font-semibold text-primary mb-3">Quick Practice</h4>
             <p className="text-foreground text-sm mb-4">
               Jump into a conversation with your preferred tutor
             </p>
             <div className="space-y-2">
-              <Button
+              <EnhancedButton
                 onClick={() => setLocation("/tutor-selection")}
                 className="btn-secondary w-full justify-start"
               >
                 <User className="w-4 h-4 mr-2" />
                 Choose Tutor
-              </Button>
-              <Button
+              </EnhancedButton>
+              <EnhancedButton
                 onClick={() => setLocation("/scenario-selection")}
                 className="btn-secondary w-full justify-start"
               >
                 <Calendar className="w-4 h-4 mr-2" />
                 Browse Scenarios
-              </Button>
+              </EnhancedButton>
             </div>
-          </div>
+          </EnhancedCard>
 
-          <div className="content-card">
+          <EnhancedCard>
             <h4 className="font-semibold text-primary mb-3">Learning Tips</h4>
             <div className="space-y-3 text-sm">
               <div className="flex items-start space-x-2">
@@ -695,7 +637,7 @@ export default function Dashboard() {
                 </span>
               </div>
             </div>
-          </div>
+          </EnhancedCard>
         </div>
       </div>
     </div>
