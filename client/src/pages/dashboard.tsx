@@ -241,7 +241,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto p-6 space-y-8">
+      <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <DashboardHeader 
           user={user}
@@ -370,7 +370,7 @@ export default function Dashboard() {
         )}
 
         {/* Analytics Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           {/* Comprehensive Vocabulary Analytics */}
           <EnhancedCard>
             <div className="flex items-center justify-between mb-4">
@@ -515,7 +515,7 @@ export default function Dashboard() {
           <h3 className="text-xl font-semibold mb-4 text-foreground">
             Meet Your Tutors
           </h3>
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-6">
             {Array.isArray(personas) && personas.length > 0 ? (
               // Remove duplicates by filtering unique personas by id
               personas
@@ -591,7 +591,7 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-6">
           <EnhancedCard>
             <h4 className="font-semibold text-primary mb-3">Quick Practice</h4>
             <p className="text-foreground text-sm mb-4">

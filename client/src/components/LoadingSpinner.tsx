@@ -8,7 +8,7 @@ interface LoadingSpinnerProps {
   className?: string;
 }
 
-function LoadingSpinner({ 
+export default function LoadingSpinner({ 
   size = 'md', 
   variant = 'default', 
   text = 'Loading...', 
@@ -65,7 +65,3 @@ export function LoadingShimmer({ className }: { className?: string }) {
     </div>
   );
 }
-
-// Export both as default and named export
-export default LoadingSpinner;
-export { LoadingSpinner };
