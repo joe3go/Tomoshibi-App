@@ -54,6 +54,7 @@ export interface IStorage {
 
   // Vocabulary operations
   getAllVocab(): Promise<JlptVocab[]>;
+  getVocabByLevel(level: string): Promise<JlptVocab[]>;
   getVocabByIds(ids: number[]): Promise<JlptVocab[]>;
   searchVocab(query: string): Promise<JlptVocab[]>;
 
@@ -186,9 +187,22 @@ export class DatabaseStorage implements IStorage {
     );
   }
 
+  async getVocabByLevel(level: string): Promise<JlptVocab[]> {
+    return await db.select().from(jlptVocab).where(eq(jlptVocab.jlptLevel, level));
+  }
+
   async searchVocab(query: string): Promise<JlptVocab[]> {
-    // Simplified search - in real implementation would use proper text search
-    return await db.select().from(jlptVocab);
+    if (!query || query.trim() === '') {
+      return [];
+    }
+    
+    return await db.select().from(jlptVocab).where(
+      or(
+        like(jlptVocab.hiragana, `%${query}%`),
+        like(jlptVocab.kanji, `%${query}%`),
+        like(jlptVocab.englishMeaning, `%${query}%`)
+      )
+    );
   }
 
   // Grammar operations

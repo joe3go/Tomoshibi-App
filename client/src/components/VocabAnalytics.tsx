@@ -30,25 +30,25 @@ interface BaseAnalyticsProps {
 const generateDailyUsageData = (vocabData: VocabEntry[]) => {
   const days = [];
   const today = new Date();
-  
+
   for (let i = 41; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
-    
+
     // Simulate realistic usage patterns
     const dayOfWeek = date.getDay();
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
     const baseUsage = isWeekend ? 2 : 8;
     const randomVariation = Math.random() * 6;
     const wordsUsed = Math.floor(baseUsage + randomVariation);
-    
+
     days.push({
       date: date.toISOString().split('T')[0],
       wordsUsed,
       level: wordsUsed >= 12 ? 4 : wordsUsed >= 8 ? 3 : wordsUsed >= 4 ? 2 : wordsUsed > 0 ? 1 : 0
     });
   }
-  
+
   return days;
 };
 
@@ -60,17 +60,17 @@ export function VocabProgressRings({
   onNavigate 
 }: BaseAnalyticsProps) {
   const levels = ['N5', 'N4', 'N3', 'N2', 'N1'];
-  
+
   // Get actual totals from API
   const { data: vocabStats = [] } = useQuery<{ level: string; count: number }[]>({
     queryKey: ['/api/vocab/stats'],
   });
-  
+
   const levelTotals = vocabStats.reduce((acc: Record<string, number>, stat) => {
     acc[stat.level] = stat.count;
     return acc;
   }, { N5: 0, N4: 0, N3: 0, N2: 0, N1: 0 });
-  
+
   const levelStats = levels.map(level => {
     const levelWords = vocabData.filter((entry: VocabEntry) => entry.word.jlptLevel === level);
     const used3Plus = levelWords.filter((entry: VocabEntry) => (entry.userUsageCount || 0) >= 3).length;
@@ -79,7 +79,7 @@ export function VocabProgressRings({
       return count >= 1 && count < 3;
     }).length;
     const notUsed = levelTotals[level as keyof typeof levelTotals] - used3Plus - used1to2;
-    
+
     return {
       level,
       used3Plus,
@@ -100,13 +100,15 @@ export function VocabProgressRings({
           </h3>
         </div>
       )}
-      
+
       <div className="flex gap-4 overflow-x-auto pb-2">
         {levelStats.map(({ level, used3Plus, used1to2, usedTotal, total }) => {
-          const percentage = (usedTotal / total) * 100;
+          const safeTotal = total || 1;
+          const safeUsedTotal = usedTotal || 0;
+          const percentage = (safeUsedTotal / safeTotal) * 100;
           const strokeDasharray = 2 * Math.PI * 35; // radius = 35
           const strokeDashoffset = strokeDasharray - (strokeDasharray * percentage) / 100;
-          
+
           return (
             <div key={level} className="flex-shrink-0 text-center group">
               <div className="relative w-20 h-20 mb-2">
@@ -141,13 +143,13 @@ export function VocabProgressRings({
                     strokeLinecap="round"
                   />
                 </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-xs">
-                  <div className="font-semibold">{usedTotal}</div>
-                  <div className="text-gray-500">/ {total}</div>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-sm font-bold text-gray-700">{safeUsedTotal}</span>
+                  <span className="text-xs text-gray-500">/ {safeTotal}</span>
                 </div>
               </div>
               <div className="text-sm font-medium">{level}</div>
-              
+
               {/* Tooltip on hover */}
               <div className="invisible group-hover:visible absolute z-10 bg-black text-white text-xs rounded py-1 px-2 mt-1 whitespace-nowrap">
                 🟢 Used 3+ times: {used3Plus}<br/>
@@ -169,7 +171,7 @@ export function MiniVocabHeatmap({
   compact = false 
 }: BaseAnalyticsProps) {
   const dailyData = generateDailyUsageData(vocabData);
-  
+
   return (
     <EnhancedCard className={`${compact ? 'mb-4' : 'mb-6'} ${className}`}>
       {showTitle && (
@@ -181,7 +183,7 @@ export function MiniVocabHeatmap({
           <div className="text-xs text-muted-foreground">Last 6 weeks</div>
         </div>
       )}
-      
+
       <div className="grid grid-cols-7 gap-1 max-w-xs">
         {dailyData.map(({ date, wordsUsed, level }) => (
           <div
@@ -201,7 +203,7 @@ export function MiniVocabHeatmap({
           </div>
         ))}
       </div>
-      
+
       <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
         <span>Less</span>
         <div className="flex gap-1">
@@ -224,24 +226,24 @@ export function JLPTLevelComparison({
   compact = false 
 }: BaseAnalyticsProps) {
   const levels = ['N5', 'N4', 'N3', 'N2', 'N1'];
-  
+
   // Get actual totals from API
   const { data: vocabStats = [] } = useQuery<{ level: string; count: number }[]>({
     queryKey: ['/api/vocab/stats'],
   });
-  
+
   const levelTotals = vocabStats.reduce((acc: Record<string, number>, stat) => {
     acc[stat.level] = stat.count;
     return acc;
   }, { N5: 0, N4: 0, N3: 0, N2: 0, N1: 0 });
-  
+
   const levelStats = levels.map(level => {
     const levelWords = vocabData.filter((entry: VocabEntry) => entry.word.jlptLevel === level);
     const used = levelWords.filter((entry: VocabEntry) => (entry.userUsageCount || 0) > 0).length;
     const reviewed = levelWords.filter((entry: VocabEntry) => (entry.aiEncounterCount || 0) > 0 && (entry.userUsageCount || 0) === 0).length;
     const total = levelTotals[level as keyof typeof levelTotals];
     const unseen = total - used - reviewed;
-    
+
     return { level, used, reviewed, unseen, total };
   });
 
@@ -255,7 +257,7 @@ export function JLPTLevelComparison({
           </h3>
         </div>
       )}
-      
+
       <div className="space-y-3">
         {levelStats.map(({ level, used, reviewed, unseen, total }) => (
           <div key={level} className="group">
@@ -263,7 +265,7 @@ export function JLPTLevelComparison({
               <span className="text-sm font-medium">{level}</span>
               <span className="text-xs text-muted-foreground">{used + reviewed}/{total}</span>
             </div>
-            
+
             <div className="flex w-full h-3 bg-gray-100 rounded-full overflow-hidden">
               <div 
                 className="bg-green-500 h-full" 
@@ -281,7 +283,7 @@ export function JLPTLevelComparison({
                 title={`Unseen: ${unseen}`}
               ></div>
             </div>
-            
+
             {/* Tooltip */}
             <div className="invisible group-hover:visible absolute z-10 bg-black text-white text-xs rounded py-1 px-2 mt-1 whitespace-nowrap">
               {level}: {used} used / {reviewed} reviewed / {unseen} unseen
@@ -301,28 +303,28 @@ export function WordSpotlightCarousel({
   onNavigate 
 }: BaseAnalyticsProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  
+
   // Get most used words this week
   const mostUsed = vocabData
     .filter((entry: VocabEntry) => (entry.userUsageCount || 0) > 0)
     .sort((a: VocabEntry, b: VocabEntry) => (b.userUsageCount || 0) - (a.userUsageCount || 0))
     .slice(0, 5);
-  
+
   // Get inactive words (not used in 2+ weeks)
   const inactive = vocabData
     .filter((entry: VocabEntry) => (entry.userUsageCount || 0) > 0 && (entry.userUsageCount || 0) < 3)
     .slice(0, 5);
-  
+
   const sections = [
     { title: "Most Used This Week", words: mostUsed, icon: "✅", color: "green" },
     { title: "Inactive Words", words: inactive, icon: "⚠️", color: "orange" }
   ];
-  
+
   const currentSection = sections[Math.floor(currentIndex / 3)];
   const currentWord = currentSection?.words[currentIndex % 3];
-  
+
   if (!currentWord) return null;
-  
+
   return (
     <EnhancedCard className={`${compact ? 'mb-4' : 'mb-6'} ${className}`}>
       {showTitle && (
@@ -351,7 +353,7 @@ export function WordSpotlightCarousel({
           </div>
         </div>
       )}
-      
+
       <div className="text-center">
         <div className="flex items-center justify-center gap-2 mb-2">
           <span className="text-lg">{currentSection.icon}</span>
@@ -359,7 +361,7 @@ export function WordSpotlightCarousel({
             {currentSection.title}
           </Badge>
         </div>
-        
+
         <div className="bg-gray-50 rounded-lg p-4 mb-3">
           <div className="text-lg font-bold text-primary mb-1">
             {currentWord.word.word}
@@ -371,7 +373,7 @@ export function WordSpotlightCarousel({
             {currentWord.word.meaning}
           </div>
         </div>
-        
+
         <div className="flex justify-between text-xs text-muted-foreground">
           <span>Used {currentWord.userUsageCount || 0} times</span>
           <Badge variant="outline" className="text-xs">
@@ -396,7 +398,7 @@ export function KnownVsUsedGap({
   const inactiveN5Words = vocabData.filter((entry: VocabEntry) => 
     entry.word.jlptLevel === 'N5' && (entry.userUsageCount || 0) === 0
   ).length;
-  
+
   return (
     <EnhancedCard className={`${compact ? 'mb-4' : 'mb-6'} ${className}`}>
       {showTitle && (
@@ -407,7 +409,7 @@ export function KnownVsUsedGap({
           </h3>
         </div>
       )}
-      
+
       <div className="space-y-4">
         <div className="relative">
           <div className="flex justify-between text-sm mb-1">
@@ -418,7 +420,7 @@ export function KnownVsUsedGap({
             <div className="bg-blue-500 h-full rounded-full"></div>
           </div>
         </div>
-        
+
         <div className="relative">
           <div className="flex justify-between text-sm mb-1">
             <span>Used in Output</span>
@@ -431,7 +433,7 @@ export function KnownVsUsedGap({
             ></div>
           </div>
         </div>
-        
+
         <div className="text-center py-2">
           <div className="text-2xl font-bold text-primary">
             {Math.round(activationRate)}%
@@ -440,7 +442,7 @@ export function KnownVsUsedGap({
             You've activated {Math.round(activationRate)}% of your known words
           </div>
         </div>
-        
+
         {inactiveN5Words > 0 && (
           <EnhancedButton 
             variant="outline" 
