@@ -440,7 +440,8 @@ export default function Dashboard() {
               {(() => {
                 const vocabStats = (vocabData as any[]).reduce((acc: any, entry: any) => {
                   const level = entry.word?.jlptLevel || 'N5';
-                  acc[level] = (acc[level] || 0) + 1;
+                  if (!acc[level]) acc[level] = 0;
+                  acc[level] += 1;
                   acc.userUsage += entry.userUsageCount || 0;
                   acc.aiEncounter += entry.aiEncounterCount || 0;
                   return acc;

@@ -67,7 +67,7 @@ export function VocabProgressRings({
   });
 
   const levelTotals = vocabStats.reduce((acc: Record<string, number>, stat) => {
-    acc[stat.level] = stat.count;
+    acc[stat.level] = parseInt(stat.count.toString());
     return acc;
   }, { N5: 0, N4: 0, N3: 0, N2: 0, N1: 0 });
 
@@ -233,7 +233,7 @@ export function JLPTLevelComparison({
   });
 
   const levelTotals = vocabStats.reduce((acc: Record<string, number>, stat) => {
-    acc[stat.level] = stat.count;
+    acc[stat.level] = parseInt(stat.count.toString());
     return acc;
   }, { N5: 0, N4: 0, N3: 0, N2: 0, N1: 0 });
 

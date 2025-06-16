@@ -37,6 +37,12 @@ interface VocabStats {
   byLevel: Record<string, number>;
 }
 
+interface UserVocabStat {
+  level: string;
+  userWords: number;
+  totalWords: number;
+}
+
 const JLPT_LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'];
 const JLPT_LEVEL_ORDER = ['N5', 'N4', 'N3', 'N2', 'N1'];
 
@@ -62,8 +68,13 @@ export default function VocabTracker() {
     queryKey: ['/api/vocab/stats'],
   });
 
-  const { data: userVocabStats = [] } = useQuery({
+  const { data: userVocabStats = [] } = useQuery<UserVocabStat[]>({
     queryKey: ['/api/vocab/user-stats'],
+  });
+
+  // Get total vocabulary counts from database
+  const { data: totalVocabStats = [] } = useQuery<{ level: string; count: number }[]>({
+    queryKey: ['/api/vocab/stats'],
   });
 
   // Calculate stats from vocabulary data
@@ -98,6 +109,12 @@ export default function VocabTracker() {
   };
 
   const stats = calculateStats();
+
+  // Convert total vocab stats to the expected format
+  const totalVocabByLevel = totalVocabStats.reduce((acc: Record<string, number>, stat) => {
+    acc[stat.level] = parseInt(stat.count.toString());
+    return acc;
+  }, { N5: 0, N4: 0, N3: 0, N2: 0, N1: 0 });
 
   // Create level totals from database stats
   const levelTotals = (vocabStats as any[]).reduce((acc: Record<string, number>, stat: any) => {
@@ -304,7 +321,8 @@ export default function VocabTracker() {
           <CardContent>
             <div className="space-y-3">
               {JLPT_LEVEL_ORDER.map(level => {
-                const userWords = userStats.byLevel[level] || 0;
+                const userStat = userVocabStats.find((stat: any) => stat.level === level);
+                const userWords = userStat?.userWords || 0;
                 const totalWords = totalVocabByLevel[level] || 0;
                 const percentage = totalWords > 0 ? Math.round((userWords / totalWords) * 100) : 0;
                 return (
