@@ -122,17 +122,6 @@ export default function VocabTracker() {
     return acc;
   }, { N5: 0, N4: 0, N3: 0, N2: 0, N1: 0 });
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[200px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-          <p className="text-muted-foreground">Loading vocabulary tracker...</p>
-        </div>
-      </div>
-    );
-  }
-
   // Calculate user's vocabulary statistics (words they've encountered)
   const userStats: VocabStats = (vocabData as VocabTrackerEntry[]).reduce((acc: VocabStats, entry: VocabTrackerEntry) => {
     acc.total += 1;
@@ -140,12 +129,6 @@ export default function VocabTracker() {
     acc.byLevel[level] = (acc.byLevel[level] || 0) + 1;
     return acc;
   }, { total: 0, byLevel: {} });
-
-  // Get total vocabulary available in database by level
-  const totalVocabByLevel = vocabStats.reduce((acc: Record<string, number>, stat) => {
-    acc[stat.level] = stat.count;
-    return acc;
-  }, {});
 
   const totalVocabCount = vocabStats.reduce((sum, stat) => sum + stat.count, 0);
 
