@@ -1,18 +1,36 @@
 
 import fs from 'fs';
 import path from 'path';
-import { Pool } from '@neondatabase/serverless';
+import { Pool, neonConfig } from '@neondatabase/serverless';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import dotenv from 'dotenv';
+import ws from 'ws';
+
+// Configure WebSocket for Neon serverless
+neonConfig.webSocketConstructor = ws;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 dotenv.config();
 
-// Database connection
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+// Ensure the database URL has proper SSL configuration
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  throw new Error('DATABASE_URL environment variable is required');
+}
+
+// Add SSL mode if not present
+const finalDatabaseUrl = databaseUrl.includes('?') 
+  ? `${databaseUrl}&sslmode=require`
+  : `${databaseUrl}?sslmode=require`;
+
+// Database connection with WebSocket support
+const pool = new Pool({ 
+  connectionString: finalDatabaseUrl,
+  ssl: true
+});
 
 // Function to parse CSV line with proper quote handling
 function parseCSVLine(line) {
@@ -202,6 +220,12 @@ async function processJLPTFile(filename, level) {
 async function loadVocabularyData() {
   try {
     console.log('🚀 Starting vocabulary data import...');
+    console.log(`🔗 Connecting to database: ${finalDatabaseUrl.split('@')[1]?.split('?')[0] || 'Unknown'}`);
+    
+    // Test connection first
+    console.log('🔍 Testing database connection...');
+    await pool.query('SELECT 1');
+    console.log('✅ Database connection successful');
     
     // Clear existing vocabulary data
     console.log('\n🗑️  Clearing existing vocabulary data...');
@@ -248,6 +272,7 @@ async function loadVocabularyData() {
     
   } catch (error) {
     console.error('❌ Error loading vocabulary data:', error);
+    console.error('Stack trace:', error.stack);
   } finally {
     await pool.end();
   }
