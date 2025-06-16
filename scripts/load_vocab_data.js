@@ -71,40 +71,53 @@ function determineWordType(tags) {
 
 // Function to process a JLPT level CSV file
 async function processJLPTFile(filename, level) {
-  // Try multiple possible locations including your uploaded files
+  const rootDir = path.join(__dirname, '..');
+  
+  // Try multiple possible locations for the CSV files
   const possiblePaths = [
-    path.join(__dirname, '..', filename),
-    path.join(__dirname, '..', `${level.toLowerCase()}.csv`),
-    path.join(__dirname, '..', `${level.toLowerCase()}_1750040266417.csv`),
-    path.join(__dirname, '..', `${level.toLowerCase()}_1750040231090.csv`)
+    path.join(rootDir, `${level.toLowerCase()}.csv`),
+    path.join(rootDir, `${level.toLowerCase()}_1750040266417.csv`),
+    path.join(rootDir, `${level.toLowerCase()}_1750040231090.csv`),
+    path.join(rootDir, 'attached_assets', `${level.toLowerCase()}_1750040266417.csv`),
+    path.join(rootDir, 'attached_assets', `${level.toLowerCase()}_1750040231090.csv`)
   ];
 
   let filePath = null;
   for (const testPath of possiblePaths) {
     if (fs.existsSync(testPath)) {
       filePath = testPath;
-      console.log(`Found file: ${testPath}`);
+      console.log(`✅ Found file: ${testPath}`);
       break;
     }
   }
 
   if (!filePath) {
-    console.log(`File for ${level} not found, skipping...`);
+    console.log(`⚠️  No CSV file found for ${level}, skipping...`);
     return 0;
   }
 
-  console.log(`Processing ${filePath} for level ${level}...`);
+  console.log(`📄 Processing ${filePath} for level ${level}...`);
   const content = fs.readFileSync(filePath, 'utf-8');
   const lines = content.split('\n').filter(line => line.trim());
+  
+  if (lines.length === 0) {
+    console.log(`⚠️  File ${level} is empty, skipping...`);
+    return 0;
+  }
   
   // Skip header line if it exists
   let dataLines = lines;
   if (lines.length > 0 && (lines[0].includes('expression') || lines[0].includes('kanji') || lines[0].includes('reading'))) {
     dataLines = lines.slice(1);
-    console.log(`Skipped header line: ${lines[0]}`);
+    console.log(`📋 Skipped header line: ${lines[0]}`);
   }
   
-  console.log(`Processing ${dataLines.length} data lines for ${level}...`);
+  if (dataLines.length === 0) {
+    console.log(`⚠️  No data lines found in ${level} after header, skipping...`);
+    return 0;
+  }
+  
+  console.log(`🔄 Processing ${dataLines.length} data lines for ${level}...`);
   
   const vocabEntries = [];
   let processedCount = 0;
@@ -141,8 +154,13 @@ async function processJLPTFile(filename, level) {
         processedCount++;
       }
     } catch (error) {
-      console.log(`Error parsing line ${index + 1} in ${level}: ${error.message}`);
+      console.log(`❌ Error parsing line ${index + 1} in ${level}: ${error.message}`);
     }
+  }
+  
+  if (vocabEntries.length === 0) {
+    console.log(`⚠️  No valid vocabulary entries found in ${level}`);
+    return 0;
   }
   
   // Insert in batches of 100
@@ -176,7 +194,7 @@ async function processJLPTFile(filename, level) {
     }
   }
   
-  console.log(`📊 ${level} Summary: Processed ${processedCount} entries, inserted ${insertedCount}`);
+  console.log(`📊 ${level} Summary: Processed ${processedCount} entries, attempted to insert ${insertedCount}`);
   return processedCount;
 }
 
@@ -185,15 +203,10 @@ async function loadVocabularyData() {
   try {
     console.log('🚀 Starting vocabulary data import...');
     
-    // Check what CSV files exist
-    console.log('\n📁 Checking for CSV files...');
-    const rootFiles = fs.readdirSync(path.join(__dirname, '..'));
-    const csvFiles = rootFiles.filter(file => file.endsWith('.csv'));
-    console.log('Found CSV files:', csvFiles);
-    
     // Clear existing vocabulary data
-    console.log('\n🗑️ Clearing existing vocabulary data...');
+    console.log('\n🗑️  Clearing existing vocabulary data...');
     await pool.query('DELETE FROM jlpt_vocab;');
+    console.log('✅ Cleared existing data');
     
     const levels = [
       { file: 'n5.csv', level: 'N5' },
