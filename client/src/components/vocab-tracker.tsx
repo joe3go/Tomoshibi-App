@@ -110,19 +110,9 @@ export default function VocabTracker() {
 
   const stats = calculateStats();
 
-  // Map numeric levels to JLPT levels
-  const levelMapping: Record<string, string> = {
-    '1': 'N5',
-    '2': 'N4', 
-    '3': 'N3',
-    '4': 'N2',
-    '5': 'N1'
-  };
-
   // Convert vocab stats from API to proper JLPT level totals
   const levelTotals = (vocabStats as any[]).reduce((acc: Record<string, number>, stat: any) => {
-    const jlptLevel = levelMapping[stat.level] || stat.level;
-    acc[jlptLevel] = parseInt(stat.count.toString());
+    acc[stat.level] = parseInt(stat.count.toString());
     return acc;
   }, { N5: 0, N4: 0, N3: 0, N2: 0, N1: 0 });
 

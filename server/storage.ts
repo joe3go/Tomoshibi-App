@@ -322,24 +322,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getVocabStats(): Promise<{ level: string; count: number }[]> {
-    const result = await db.select({
-      level: jlptVocab.jlptLevel,
-      count: sql<number>`count(*)`.as('count')
-    })
+    const stats = await db
+      .select({
+        level: jlptVocab.jlptLevel,
+        count: sql<number>`count(*)::int`.as('count'),
+      })
       .from(jlptVocab)
       .groupBy(jlptVocab.jlptLevel)
-      .orderBy(
-        sql`CASE ${jlptVocab.jlptLevel}
-          WHEN 'N5' THEN 1
-          WHEN 'N4' THEN 2
-          WHEN 'N3' THEN 3
-          WHEN 'N2' THEN 4
-          WHEN 'N1' THEN 5
-          ELSE 6
-        END`
-      );
+      .orderBy(jlptVocab.jlptLevel);
 
-    return result;
+    // Map numeric levels to proper JLPT level names if needed
+    return stats.map(stat => {
+      const levelMapping: Record<string, string> = {
+        '1': 'N5',
+        '2': 'N4', 
+        '3': 'N3',
+        '4': 'N2',
+        '5': 'N1'
+      };
+
+      return {
+        level: levelMapping[stat.level] || stat.level,
+        count: stat.count
+      };
+    });
   }
 
   async getUserVocabTracker(userId: number): Promise<any[]> {
