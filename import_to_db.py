@@ -9,7 +9,7 @@ DB_CONFIG = {
     "port": "5432"
 }
 
-CSV_PATH = "import_ready.csv"
+CSV_PATH = "n1_1750040266417.csv"
 TABLE_NAME = "jlpt_vocab"  # e.g., "vocabulary"
 
 
