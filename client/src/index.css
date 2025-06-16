@@ -129,12 +129,13 @@
 
   /* Gold Frame */
   .gold-frame {
-    @apply border-2 rounded-[var(--radius)] p-4 relative bg-card;
+    @apply border-2 rounded-[var(--radius)] p-6 relative bg-card;
     border-color: var(--accent-gold);
     box-shadow:
       0 4px 6px -1px rgba(0, 0, 0, 0.05),
       0 0 0 1px rgba(251, 191, 36, 0.15),
       inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    margin: 0.75rem;
   }
 
   .gold-frame::before {
@@ -185,11 +186,12 @@
 
   /* Content Card */
   .content-card {
-    @apply bg-card border border-border rounded-xl p-4;
+    @apply bg-card border border-border rounded-xl p-6;
     box-shadow:
       0 4px 6px -1px rgba(0, 0, 0, 0.05),
       0 1px 2px rgba(0, 0, 0, 0.05);
     background: var(--card);
+    margin: 0.5rem;
   }
 
   /* Cherry Blossom Decoration */
@@ -430,6 +432,23 @@
     to {
       background-position-x: -200%;
     }
+  }
+
+  /* Enhanced Component Spacing */
+  .enhanced-card {
+    @apply p-6 m-3;
+  }
+
+  .enhanced-button {
+    @apply px-4 py-2 m-1;
+  }
+
+  .dashboard-container {
+    @apply p-6 space-y-6;
+  }
+
+  .component-spacing {
+    @apply space-y-4 p-4;
   }
 
   /* Reduced Motion */
