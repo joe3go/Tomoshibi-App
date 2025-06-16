@@ -1,56 +1,325 @@
--- Insert personas
-INSERT INTO personas (name, type, description, system_prompt, personality_traits) VALUES
-('Aoi', 'teacher', 'Patient and encouraging male tutor. Uses polite Japanese with detailed explanations. Perfect for structured learning with proper cultural context.', 
-'You are Aoi, a patient and formal Japanese male teacher helping students learn JLPT N5 level Japanese. Always use polite forms (です/ます), provide detailed explanations, and give encouraging feedback. Focus on proper grammar, cultural context, and pronunciation guidance. Maintain a professional but warm teaching style.', 
-'{"formal": true, "patient": true, "detailed": true, "encouraging": true, "cultural_focus": true}'::jsonb),
-('Haruki', 'friend', 'Friendly and relaxed female conversation partner. Uses informal speech patterns and casual expressions. Great for natural conversation practice and building confidence.', 
-'You are Haruki, a casual and friendly Japanese female conversation partner. Use informal speech patterns, be encouraging and relaxed. Help students practice natural conversation while keeping to JLPT N5 vocabulary and grammar. Focus on practical communication and building student confidence through casual, supportive interactions.', 
-'{"casual": true, "friendly": true, "relaxed": true, "natural": true, "supportive": true}'::jsonb);
 
--- Insert scenarios
-INSERT INTO scenarios (title, description, initial_prompt, conversation_tree, target_vocab_ids, target_grammar_ids) VALUES
-('Self-Introduction', 'Learn to introduce yourself in Japanese using proper etiquette and basic personal information.', 
-'Let''s practice introducing ourselves! Please tell me your name, where you''re from, and what you do.', 
-'{"phases": ["greeting", "name", "origin", "occupation", "closing"]}'::jsonb, '{}', '{}'),
-('Ordering Food', 'Practice ordering food at a Japanese restaurant, understanding menu items, and making requests.', 
-'Welcome to our restaurant! Let''s practice ordering food. What would you like to eat or drink today?', 
-'{"phases": ["greeting", "menu_inquiry", "ordering", "preferences", "payment"]}'::jsonb, '{}', '{}'),
-('Shopping', 'Learn shopping phrases, asking for sizes, colors, prices, and making purchases in Japanese stores.', 
-'Welcome to our store! Let''s practice shopping. What are you looking for today?', 
-'{"phases": ["greeting", "item_inquiry", "size_color", "trying_on", "purchase"]}'::jsonb, '{}', '{}');
+-- Clear existing data
+DELETE FROM jlpt_vocab;
+DELETE FROM jlpt_grammar;
 
--- Insert basic JLPT N5 vocabulary
-INSERT INTO jlpt_vocab (kanji, hiragana, romaji, english_meaning, word_type) VALUES
-('私', 'わたし', 'watashi', 'I, me', 'pronoun'),
-('名前', 'なまえ', 'namae', 'name', 'noun'),
-('学生', 'がくせい', 'gakusei', 'student', 'noun'),
-('先生', 'せんせい', 'sensei', 'teacher', 'noun'),
-('日本', 'にほん', 'nihon', 'Japan', 'noun'),
-('アメリカ', 'あめりか', 'amerika', 'America', 'noun'),
-('食べる', 'たべる', 'taberu', 'to eat', 'verb'),
-('飲む', 'のむ', 'nomu', 'to drink', 'verb'),
-('買う', 'かう', 'kau', 'to buy', 'verb'),
-('見る', 'みる', 'miru', 'to see, to watch', 'verb'),
-('大きい', 'おおきい', 'ookii', 'big, large', 'adjective'),
-('小さい', 'ちいさい', 'chiisai', 'small', 'adjective'),
-('高い', 'たかい', 'takai', 'expensive, high', 'adjective'),
-('安い', 'やすい', 'yasui', 'cheap', 'adjective'),
-('美味しい', 'おいしい', 'oishii', 'delicious', 'adjective'),
-('水', 'みず', 'mizu', 'water', 'noun'),
-('お茶', 'おちゃ', 'ocha', 'tea', 'noun'),
-('コーヒー', 'こーひー', 'koohii', 'coffee', 'noun'),
-('パン', 'ぱん', 'pan', 'bread', 'noun'),
-('魚', 'さかな', 'sakana', 'fish', 'noun');
+-- Insert comprehensive JLPT N5 vocabulary (80 words as currently shown)
+INSERT INTO jlpt_vocab (kanji, hiragana, english_meaning, jlpt_level, word_type) VALUES
+-- Basic greetings and expressions
+(NULL, 'おはよう', 'Good morning (casual)', 'N5', 'expression'),
+('おはようございます', 'おはようございます', 'Good morning (polite)', 'N5', 'expression'),
+(NULL, 'こんにちは', 'Hello/Good afternoon', 'N5', 'expression'),
+(NULL, 'こんばんは', 'Good evening', 'N5', 'expression'),
+('ありがとう', 'ありがとう', 'Thank you (casual)', 'N5', 'expression'),
+('ありがとうございます', 'ありがとうございます', 'Thank you (polite)', 'N5', 'expression'),
+('すみません', 'すみません', 'Excuse me/Sorry', 'N5', 'expression'),
+('さようなら', 'さようなら', 'Goodbye', 'N5', 'expression'),
 
--- Insert basic JLPT N5 grammar patterns
-INSERT INTO jlpt_grammar (pattern, english_explanation, example_japanese, example_english) VALUES
-('は', 'Topic marker particle', '私は学生です。', 'I am a student.'),
-('です', 'Polite copula (is/am/are)', '日本人です。', 'I am Japanese.'),
-('を', 'Direct object marker', 'パンを食べます。', 'I eat bread.'),
-('に', 'Direction/time/location particle', '学校に行きます。', 'I go to school.'),
-('で', 'Location of action particle', 'レストランで食べます。', 'I eat at a restaurant.'),
-('から', 'From (origin/source)', 'アメリカから来ました。', 'I came from America.'),
-('まで', 'Until/to (destination)', '駅まで歩きます。', 'I walk to the station.'),
-('と', 'And (connecting nouns)', 'パンとお茶', 'bread and tea'),
-('が', 'Subject marker particle', '魚が好きです。', 'I like fish.'),
-('の', 'Possessive/descriptive particle', '私の名前', 'my name');
+-- Numbers
+('一', 'いち', 'One', 'N5', 'number'),
+('二', 'に', 'Two', 'N5', 'number'),
+('三', 'さん', 'Three', 'N5', 'number'),
+('四', 'よん', 'Four', 'N5', 'number'),
+('五', 'ご', 'Five', 'N5', 'number'),
+('六', 'ろく', 'Six', 'N5', 'number'),
+('七', 'なな', 'Seven', 'N5', 'number'),
+('八', 'はち', 'Eight', 'N5', 'number'),
+('九', 'きゅう', 'Nine', 'N5', 'number'),
+('十', 'じゅう', 'Ten', 'N5', 'number'),
+
+-- Common nouns
+('人', 'ひと', 'Person', 'N5', 'noun'),
+('名前', 'なまえ', 'Name', 'N5', 'noun'),
+('学生', 'がくせい', 'Student', 'N5', 'noun'),
+('先生', 'せんせい', 'Teacher', 'N5', 'noun'),
+('友達', 'ともだち', 'Friend', 'N5', 'noun'),
+('家族', 'かぞく', 'Family', 'N5', 'noun'),
+('母', 'はは', 'Mother', 'N5', 'noun'),
+('父', 'ちち', 'Father', 'N5', 'noun'),
+('水', 'みず', 'Water', 'N5', 'noun'),
+('食べ物', 'たべもの', 'Food', 'N5', 'noun'),
+
+-- Basic verbs
+('食べる', 'たべる', 'To eat', 'N5', 'verb'),
+('飲む', 'のむ', 'To drink', 'N5', 'verb'),
+('見る', 'みる', 'To see/watch', 'N5', 'verb'),
+('聞く', 'きく', 'To listen/hear', 'N5', 'verb'),
+('話す', 'はなす', 'To speak/talk', 'N5', 'verb'),
+('読む', 'よむ', 'To read', 'N5', 'verb'),
+('書く', 'かく', 'To write', 'N5', 'verb'),
+('行く', 'いく', 'To go', 'N5', 'verb'),
+('来る', 'くる', 'To come', 'N5', 'verb'),
+('する', 'する', 'To do', 'N5', 'verb'),
+
+-- Adjectives
+('大きい', 'おおきい', 'Big', 'N5', 'adjective'),
+('小さい', 'ちいさい', 'Small', 'N5', 'adjective'),
+('新しい', 'あたらしい', 'New', 'N5', 'adjective'),
+('古い', 'ふるい', 'Old', 'N5', 'adjective'),
+('良い', 'よい', 'Good', 'N5', 'adjective'),
+('悪い', 'わるい', 'Bad', 'N5', 'adjective'),
+('高い', 'たかい', 'High/Expensive', 'N5', 'adjective'),
+('安い', 'やすい', 'Cheap', 'N5', 'adjective'),
+('暑い', 'あつい', 'Hot', 'N5', 'adjective'),
+('寒い', 'さむい', 'Cold', 'N5', 'adjective'),
+
+-- Time expressions
+('今日', 'きょう', 'Today', 'N5', 'noun'),
+('昨日', 'きのう', 'Yesterday', 'N5', 'noun'),
+('明日', 'あした', 'Tomorrow', 'N5', 'noun'),
+('今', 'いま', 'Now', 'N5', 'noun'),
+('時間', 'じかん', 'Time', 'N5', 'noun'),
+('年', 'ねん', 'Year', 'N5', 'noun'),
+('月', 'つき', 'Month/Moon', 'N5', 'noun'),
+('日', 'ひ', 'Day', 'N5', 'noun'),
+('朝', 'あさ', 'Morning', 'N5', 'noun'),
+('夜', 'よる', 'Night', 'N5', 'noun'),
+
+-- Places
+('家', 'いえ', 'House/Home', 'N5', 'noun'),
+('学校', 'がっこう', 'School', 'N5', 'noun'),
+('駅', 'えき', 'Station', 'N5', 'noun'),
+('店', 'みせ', 'Store/Shop', 'N5', 'noun'),
+('病院', 'びょういん', 'Hospital', 'N5', 'noun'),
+('銀行', 'ぎんこう', 'Bank', 'N5', 'noun'),
+('国', 'くに', 'Country', 'N5', 'noun'),
+('町', 'まち', 'Town', 'N5', 'noun'),
+('道', 'みち', 'Road/Way', 'N5', 'noun'),
+('部屋', 'へや', 'Room', 'N5', 'noun'),
+
+-- Particles and grammar
+('です', 'です', 'To be (polite)', 'N5', 'auxiliary'),
+('だ', 'だ', 'To be (casual)', 'N5', 'auxiliary'),
+('ます', 'ます', 'Polite verb ending', 'N5', 'auxiliary'),
+('ません', 'ません', 'Negative polite verb ending', 'N5', 'auxiliary'),
+('でした', 'でした', 'Was (polite)', 'N5', 'auxiliary'),
+('じゃない', 'じゃない', 'Is not (casual)', 'N5', 'auxiliary'),
+('ではない', 'ではない', 'Is not (formal)', 'N5', 'auxiliary'),
+('どこ', 'どこ', 'Where', 'N5', 'interrogative'),
+('何', 'なに', 'What', 'N5', 'interrogative'),
+('誰', 'だれ', 'Who', 'N5', 'interrogative');
+
+-- Insert N4 vocabulary (significantly more than current 1)
+INSERT INTO jlpt_vocab (kanji, hiragana, english_meaning, jlpt_level, word_type) VALUES
+-- N4 Advanced verbs
+('始める', 'はじめる', 'To begin', 'N4', 'verb'),
+('終わる', 'おわる', 'To end', 'N4', 'verb'),
+('続ける', 'つづける', 'To continue', 'N4', 'verb'),
+('止める', 'やめる', 'To stop/quit', 'N4', 'verb'),
+('忘れる', 'わすれる', 'To forget', 'N4', 'verb'),
+('覚える', 'おぼえる', 'To remember/learn', 'N4', 'verb'),
+('教える', 'おしえる', 'To teach', 'N4', 'verb'),
+('習う', 'ならう', 'To learn', 'N4', 'verb'),
+('働く', 'はたらく', 'To work', 'N4', 'verb'),
+('休む', 'やすむ', 'To rest', 'N4', 'verb'),
+('泳ぐ', 'およぐ', 'To swim', 'N4', 'verb'),
+('歌う', 'うたう', 'To sing', 'N4', 'verb'),
+('踊る', 'おどる', 'To dance', 'N4', 'verb'),
+('運転', 'うんてん', 'To drive', 'N4', 'verb'),
+('料理', 'りょうり', 'To cook/cooking', 'N4', 'verb'),
+
+-- N4 Nouns
+('意味', 'いみ', 'Meaning', 'N4', 'noun'),
+('経験', 'けいけん', 'Experience', 'N4', 'noun'),
+('機会', 'きかい', 'Opportunity', 'N4', 'noun'),
+('理由', 'りゆう', 'Reason', 'N4', 'noun'),
+('結果', 'けっか', 'Result', 'N4', 'noun'),
+('問題', 'もんだい', 'Problem', 'N4', 'noun'),
+('答え', 'こたえ', 'Answer', 'N4', 'noun'),
+('質問', 'しつもん', 'Question', 'N4', 'noun'),
+('説明', 'せつめい', 'Explanation', 'N4', 'noun'),
+('相談', 'そうだん', 'Consultation', 'N4', 'noun'),
+('約束', 'やくそく', 'Promise', 'N4', 'noun'),
+('計画', 'けいかく', 'Plan', 'N4', 'noun'),
+('準備', 'じゅんび', 'Preparation', 'N4', 'noun'),
+('練習', 'れんしゅう', 'Practice', 'N4', 'noun'),
+('試験', 'しけん', 'Examination', 'N4', 'noun'),
+
+-- N4 Adjectives
+('便利', 'べんり', 'Convenient', 'N4', 'adjective'),
+('不便', 'ふべん', 'Inconvenient', 'N4', 'adjective'),
+('簡単', 'かんたん', 'Simple', 'N4', 'adjective'),
+('複雑', 'ふくざつ', 'Complex', 'N4', 'adjective'),
+('大切', 'たいせつ', 'Important', 'N4', 'adjective'),
+('必要', 'ひつよう', 'Necessary', 'N4', 'adjective'),
+('不要', 'ふよう', 'Unnecessary', 'N4', 'adjective'),
+('安全', 'あんぜん', 'Safe', 'N4', 'adjective'),
+('危険', 'きけん', 'Dangerous', 'N4', 'adjective'),
+('正しい', 'ただしい', 'Correct', 'N4', 'adjective'),
+('間違い', 'まちがい', 'Mistake', 'N4', 'noun'),
+('失礼', 'しつれい', 'Rude', 'N4', 'adjective'),
+('丁寧', 'ていねい', 'Polite', 'N4', 'adjective'),
+('親切', 'しんせつ', 'Kind', 'N4', 'adjective'),
+('優しい', 'やさしい', 'Gentle/Kind', 'N4', 'adjective');
+
+-- Insert N3 vocabulary 
+INSERT INTO jlpt_vocab (kanji, hiragana, english_meaning, jlpt_level, word_type) VALUES
+-- N3 Advanced concepts
+('環境', 'かんきょう', 'Environment', 'N3', 'noun'),
+('社会', 'しゃかい', 'Society', 'N3', 'noun'),
+('政治', 'せいじ', 'Politics', 'N3', 'noun'),
+('経済', 'けいざい', 'Economy', 'N3', 'noun'),
+('文化', 'ぶんか', 'Culture', 'N3', 'noun'),
+('歴史', 'れきし', 'History', 'N3', 'noun'),
+('科学', 'かがく', 'Science', 'N3', 'noun'),
+('技術', 'ぎじゅつ', 'Technology', 'N3', 'noun'),
+('情報', 'じょうほう', 'Information', 'N3', 'noun'),
+('データ', 'データ', 'Data', 'N3', 'noun'),
+('システム', 'システム', 'System', 'N3', 'noun'),
+('プログラム', 'プログラム', 'Program', 'N3', 'noun'),
+('コンピューター', 'コンピューター', 'Computer', 'N3', 'noun'),
+('インターネット', 'インターネット', 'Internet', 'N3', 'noun'),
+('ウェブサイト', 'ウェブサイト', 'Website', 'N3', 'noun'),
+
+-- N3 Complex verbs
+('参加', 'さんか', 'To participate', 'N3', 'verb'),
+('協力', 'きょうりょく', 'To cooperate', 'N3', 'verb'),
+('競争', 'きょうそう', 'To compete', 'N3', 'verb'),
+('成功', 'せいこう', 'To succeed', 'N3', 'verb'),
+('失敗', 'しっぱい', 'To fail', 'N3', 'verb'),
+('努力', 'どりょく', 'To make effort', 'N3', 'verb'),
+('改善', 'かいぜん', 'To improve', 'N3', 'verb'),
+('発展', 'はってん', 'To develop', 'N3', 'verb'),
+('進歩', 'しんぽ', 'To progress', 'N3', 'verb'),
+('変化', 'へんか', 'To change', 'N3', 'verb'),
+('増加', 'ぞうか', 'To increase', 'N3', 'verb'),
+('減少', 'げんしょう', 'To decrease', 'N3', 'verb'),
+('影響', 'えいきょう', 'To influence', 'N3', 'verb'),
+('効果', 'こうか', 'Effect', 'N3', 'noun'),
+('原因', 'げんいん', 'Cause', 'N3', 'noun'),
+
+-- N3 Abstract concepts
+('目的', 'もくてき', 'Purpose', 'N3', 'noun'),
+('目標', 'もくひょう', 'Goal', 'N3', 'noun'),
+('希望', 'きぼう', 'Hope', 'N3', 'noun'),
+('夢', 'ゆめ', 'Dream', 'N3', 'noun'),
+('将来', 'しょうらい', 'Future', 'N3', 'noun'),
+('過去', 'かこ', 'Past', 'N3', 'noun'),
+('現在', 'げんざい', 'Present', 'N3', 'noun'),
+('可能性', 'かのうせい', 'Possibility', 'N3', 'noun'),
+('責任', 'せきにん', 'Responsibility', 'N3', 'noun'),
+('権利', 'けんり', 'Right', 'N3', 'noun'),
+('義務', 'ぎむ', 'Duty', 'N3', 'noun'),
+('自由', 'じゆう', 'Freedom', 'N3', 'noun'),
+('平等', 'びょうどう', 'Equality', 'N3', 'noun'),
+('平和', 'へいわ', 'Peace', 'N3', 'noun'),
+('戦争', 'せんそう', 'War', 'N3', 'noun');
+
+-- Insert N2 vocabulary
+INSERT INTO jlpt_vocab (kanji, hiragana, english_meaning, jlpt_level, word_type) VALUES
+-- N2 Business and formal language
+('契約', 'けいやく', 'Contract', 'N2', 'noun'),
+('交渉', 'こうしょう', 'Negotiation', 'N2', 'noun'),
+('会議', 'かいぎ', 'Meeting', 'N2', 'noun'),
+('提案', 'ていあん', 'Proposal', 'N2', 'noun'),
+('決定', 'けってい', 'Decision', 'N2', 'noun'),
+('承認', 'しょうにん', 'Approval', 'N2', 'noun'),
+('拒否', 'きょひ', 'Refusal', 'N2', 'noun'),
+('要求', 'ようきゅう', 'Demand', 'N2', 'noun'),
+('条件', 'じょうけん', 'Condition', 'N2', 'noun'),
+('基準', 'きじゅん', 'Standard', 'N2', 'noun'),
+('評価', 'ひょうか', 'Evaluation', 'N2', 'noun'),
+('分析', 'ぶんせき', 'Analysis', 'N2', 'noun'),
+('研究', 'けんきゅう', 'Research', 'N2', 'noun'),
+('調査', 'ちょうさ', 'Investigation', 'N2', 'noun'),
+('統計', 'とうけい', 'Statistics', 'N2', 'noun'),
+
+-- N2 Academic and intellectual concepts
+('理論', 'りろん', 'Theory', 'N2', 'noun'),
+('概念', 'がいねん', 'Concept', 'N2', 'noun'),
+('原理', 'げんり', 'Principle', 'N2', 'noun'),
+('法則', 'ほうそく', 'Law/Rule', 'N2', 'noun'),
+('現象', 'げんしょう', 'Phenomenon', 'N2', 'noun'),
+('要素', 'ようそ', 'Element', 'N2', 'noun'),
+('構造', 'こうぞう', 'Structure', 'N2', 'noun'),
+('機能', 'きのう', 'Function', 'N2', 'noun'),
+('性質', 'せいしつ', 'Nature/Property', 'N2', 'noun'),
+('特徴', 'とくちょう', 'Characteristic', 'N2', 'noun'),
+('傾向', 'けいこう', 'Tendency', 'N2', 'noun'),
+('動向', 'どうこう', 'Trend', 'N2', 'noun'),
+('背景', 'はいけい', 'Background', 'N2', 'noun'),
+('状況', 'じょうきょう', 'Situation', 'N2', 'noun'),
+('立場', 'たちば', 'Position/Standpoint', 'N2', 'noun'),
+
+-- N2 Complex verbs and expressions
+('推測', 'すいそく', 'To infer', 'N2', 'verb'),
+('想像', 'そうぞう', 'To imagine', 'N2', 'verb'),
+('予想', 'よそう', 'To predict', 'N2', 'verb'),
+('予測', 'よそく', 'To forecast', 'N2', 'verb'),
+('判断', 'はんだん', 'To judge', 'N2', 'verb'),
+('決断', 'けつだん', 'To decide', 'N2', 'verb'),
+('選択', 'せんたく', 'To select', 'N2', 'verb'),
+('優先', 'ゆうせん', 'To prioritize', 'N2', 'verb'),
+('重視', 'じゅうし', 'To emphasize', 'N2', 'verb'),
+('配慮', 'はいりょ', 'To consider', 'N2', 'verb'),
+('検討', 'けんとう', 'To examine', 'N2', 'verb'),
+('考慮', 'こうりょ', 'To take into account', 'N2', 'verb'),
+('対応', 'たいおう', 'To respond', 'N2', 'verb'),
+('対処', 'たいしょ', 'To deal with', 'N2', 'verb'),
+('処理', 'しょり', 'To process', 'N2', 'verb');
+
+-- Insert N1 vocabulary
+INSERT INTO jlpt_vocab (kanji, hiragana, english_meaning, jlpt_level, word_type) VALUES
+-- N1 Advanced abstract concepts
+('哲学', 'てつがく', 'Philosophy', 'N1', 'noun'),
+('思想', 'しそう', 'Thought/Ideology', 'N1', 'noun'),
+('観念', 'かんねん', 'Idea/Notion', 'N1', 'noun'),
+('意識', 'いしき', 'Consciousness', 'N1', 'noun'),
+('無意識', 'むいしき', 'Unconscious', 'N1', 'noun'),
+('直感', 'ちょっかん', 'Intuition', 'N1', 'noun'),
+('洞察', 'どうさつ', 'Insight', 'N1', 'noun'),
+('認識', 'にんしき', 'Recognition', 'N1', 'noun'),
+('理解', 'りかい', 'Understanding', 'N1', 'noun'),
+('把握', 'はあく', 'Grasp/Comprehension', 'N1', 'noun'),
+('習得', 'しゅうとく', 'Acquisition', 'N1', 'noun'),
+('獲得', 'かくとく', 'Acquisition', 'N1', 'noun'),
+('達成', 'たっせい', 'Achievement', 'N1', 'noun'),
+('実現', 'じつげん', 'Realization', 'N1', 'noun'),
+('完成', 'かんせい', 'Completion', 'N1', 'noun'),
+
+-- N1 Sophisticated expressions
+('本質', 'ほんしつ', 'Essence', 'N1', 'noun'),
+('真髄', 'しんずい', 'Essence/Core', 'N1', 'noun'),
+('核心', 'かくしん', 'Core', 'N1', 'noun'),
+('焦点', 'しょうてん', 'Focus', 'N1', 'noun'),
+('視点', 'してん', 'Viewpoint', 'N1', 'noun'),
+('観点', 'かんてん', 'Perspective', 'N1', 'noun'),
+('側面', 'そくめん', 'Aspect', 'N1', 'noun'),
+('次元', 'じげん', 'Dimension', 'N1', 'noun'),
+('範囲', 'はんい', 'Range/Scope', 'N1', 'noun'),
+('領域', 'りょういき', 'Domain/Field', 'N1', 'noun'),
+('分野', 'ぶんや', 'Field/Area', 'N1', 'noun'),
+('専門', 'せんもん', 'Specialty', 'N1', 'noun'),
+('技能', 'ぎのう', 'Skill', 'N1', 'noun'),
+('才能', 'さいのう', 'Talent', 'N1', 'noun'),
+('能力', 'のうりょく', 'Ability', 'N1', 'noun'),
+
+-- N1 Complex verbs
+('追求', 'ついきゅう', 'To pursue', 'N1', 'verb'),
+('探求', 'たんきゅう', 'To explore', 'N1', 'verb'),
+('究明', 'きゅうめい', 'To investigate', 'N1', 'verb'),
+('解明', 'かいめい', 'To clarify', 'N1', 'verb'),
+('証明', 'しょうめい', 'To prove', 'N1', 'verb'),
+('立証', 'りっしょう', 'To substantiate', 'N1', 'verb'),
+('実証', 'じっしょう', 'To demonstrate', 'N1', 'verb'),
+('検証', 'けんしょう', 'To verify', 'N1', 'verb'),
+('確認', 'かくにん', 'To confirm', 'N1', 'verb'),
+('確立', 'かくりつ', 'To establish', 'N1', 'verb'),
+('構築', 'こうちく', 'To construct', 'N1', 'verb'),
+('創造', 'そうぞう', 'To create', 'N1', 'verb'),
+('革新', 'かくしん', 'To innovate', 'N1', 'verb'),
+('変革', 'へんかく', 'To transform', 'N1', 'verb'),
+('改革', 'かいかく', 'To reform', 'N1', 'verb');
+
+-- Insert some basic grammar patterns
+INSERT INTO jlpt_grammar (pattern, meaning, jlpt_level, example_sentence, example_translation) VALUES
+('だ/である', 'To be (assertion)', 'N5', '私は学生だ。', 'I am a student.'),
+('です/ます', 'Polite form', 'N5', '私は学生です。', 'I am a student.'),
+('か', 'Question particle', 'N5', 'あなたは学生ですか。', 'Are you a student?'),
+('が', 'Subject particle', 'N5', '私が学生です。', 'I am the student.'),
+('を', 'Object particle', 'N5', 'りんごを食べます。', 'I eat an apple.'),
+('に', 'Direction/Time particle', 'N5', '学校に行きます。', 'I go to school.'),
+('で', 'Location/Method particle', 'N5', '図書館で勉強します。', 'I study at the library.'),
+('と', 'And/With particle', 'N5', '友達と映画を見ます。', 'I watch a movie with friends.'),
+('の', 'Possessive particle', 'N5', '私の本です。', 'It is my book.'),
+('は', 'Topic particle', 'N5', '私は日本人です。', 'I am Japanese.');
