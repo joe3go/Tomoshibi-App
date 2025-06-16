@@ -93,11 +93,11 @@ async function processJLPTFile(filename, level) {
   
   // Try multiple possible locations for the CSV files
   const possiblePaths = [
-    path.join(rootDir, `${level.toLowerCase()}.csv`),
+    path.join(rootDir, 'attached_assets', `${level.toLowerCase()}_1750040266417.csv`),
+    path.join(rootDir, 'attached_assets', `${level.toLowerCase()}_1750040231090.csv`),
     path.join(rootDir, `${level.toLowerCase()}_1750040266417.csv`),
     path.join(rootDir, `${level.toLowerCase()}_1750040231090.csv`),
-    path.join(rootDir, 'attached_assets', `${level.toLowerCase()}_1750040266417.csv`),
-    path.join(rootDir, 'attached_assets', `${level.toLowerCase()}_1750040231090.csv`)
+    path.join(rootDir, `${level.toLowerCase()}.csv`)
   ];
 
   let filePath = null;
@@ -117,6 +117,14 @@ async function processJLPTFile(filename, level) {
   console.log(`📄 Processing ${filePath} for level ${level}...`);
   const content = fs.readFileSync(filePath, 'utf-8');
   const lines = content.split('\n').filter(line => line.trim());
+  
+  console.log(`📋 File contains ${lines.length} total lines`);
+  if (lines.length > 0) {
+    console.log(`📝 First line: ${lines[0]}`);
+    if (lines.length > 1) {
+      console.log(`📝 Second line: ${lines[1]}`);
+    }
+  }
   
   if (lines.length === 0) {
     console.log(`⚠️  File ${level} is empty, skipping...`);
