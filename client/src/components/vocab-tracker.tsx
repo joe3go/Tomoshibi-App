@@ -119,17 +119,10 @@ export default function VocabTracker() {
     '5': 'N1'
   };
 
-  // Convert total vocab stats to the expected format
-  const totalVocabByLevel = totalVocabStats.reduce((acc: Record<string, number>, stat) => {
-    const jlptLevel = levelMapping[stat.level] || stat.level;
-    acc[jlptLevel] = parseInt(stat.count.toString());
-    return acc;
-  }, { N5: 0, N4: 0, N3: 0, N2: 0, N1: 0 });
-
-  // Create level totals from database stats  
+  // Convert vocab stats from API to proper JLPT level totals
   const levelTotals = (vocabStats as any[]).reduce((acc: Record<string, number>, stat: any) => {
     const jlptLevel = levelMapping[stat.level] || stat.level;
-    acc[jlptLevel] = stat.count;
+    acc[jlptLevel] = parseInt(stat.count.toString());
     return acc;
   }, { N5: 0, N4: 0, N3: 0, N2: 0, N1: 0 });
 
@@ -315,9 +308,8 @@ export default function VocabTracker() {
           <CardContent>
             <div className="space-y-3">
               {JLPT_LEVEL_ORDER.map(level => {
-                const userStat = userVocabStats.find((stat: any) => stat.level === level);
-                const userWords = userStat?.userWords || 0;
-                const totalWords = totalVocabByLevel[level] || 0;
+                const userWords = stats.byLevel[level] || 0;
+                const totalWords = levelTotals[level] || 0;
                 const percentage = totalWords > 0 ? Math.round((userWords / totalWords) * 100) : 0;
                 return (
                   <div key={level} className="space-y-1">
@@ -343,7 +335,7 @@ export default function VocabTracker() {
               <div className="pt-2 border-t">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-semibold">Total Progress:</span>
-                  <Badge variant="default">{userStats.total} / {totalVocabCount} words</Badge>
+                  <Badge variant="default">{userStats.total} / {Object.values(levelTotals).reduce((sum, count) => sum + count, 0)} words</Badge>
                 </div>
               </div>
             </div>
