@@ -9,7 +9,7 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 // Function to escape SQL strings
 function escapeSql(str) {
-  if (!str || str === 'NULL') return 'NULL';
+  if (!str || str === 'NULL' || str === '') return 'NULL';
   return `'${str.replace(/'/g, "''").replace(/\\/g, '\\\\')}'`;
 }
 
@@ -70,13 +70,28 @@ function determineWordType(tags) {
 
 // Function to process a JLPT level CSV file
 async function processJLPTFile(filename, level) {
-  const filePath = path.join(__dirname, '..', filename);
-  if (!fs.existsSync(filePath)) {
-    console.log(`File ${filename} not found, skipping...`);
+  // Try multiple possible locations
+  const possiblePaths = [
+    path.join(__dirname, '..', filename),
+    path.join(__dirname, '..', 'attached_assets', filename),
+    path.join(__dirname, '..', `${level.toLowerCase()}_1750040266417.csv`),
+    path.join(__dirname, '..', 'attached_assets', `${level.toLowerCase()}_1750040266417.csv`)
+  ];
+
+  let filePath = null;
+  for (const testPath of possiblePaths) {
+    if (fs.existsSync(testPath)) {
+      filePath = testPath;
+      break;
+    }
+  }
+
+  if (!filePath) {
+    console.log(`File for ${level} not found in any location, skipping...`);
     return 0;
   }
 
-  console.log(`Processing ${filename} for level ${level}...`);
+  console.log(`Processing ${filePath} for level ${level}...`);
   const content = fs.readFileSync(filePath, 'utf-8');
   const lines = content.split('\n').filter(line => line.trim());
   
@@ -121,7 +136,7 @@ async function processJLPTFile(filename, level) {
         processedCount++;
       }
     } catch (error) {
-      console.log(`Error parsing line ${index + 1} in ${filename}: ${error.message}`);
+      console.log(`Error parsing line ${index + 1} in ${level}: ${error.message}`);
     }
   });
   
@@ -147,7 +162,7 @@ async function processJLPTFile(filename, level) {
     }
   }
   
-  console.log(`Processed ${processedCount} entries from ${filename}`);
+  console.log(`Processed ${processedCount} entries from ${level}`);
   return processedCount;
 }
 
