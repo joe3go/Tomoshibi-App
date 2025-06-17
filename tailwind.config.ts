@@ -52,6 +52,33 @@ export default {
     "../server/**/*.{js,ts}",
     "../shared/**/*.{js,ts}"
   ],
+  safelist: [
+    'gold-frame',
+    'message-bubble',
+    'message-bubble.ai',
+    'message-bubble.user',
+    'progress-fill',
+    'btn-japanese',
+    'content-card',
+    'scrollbar-custom',
+    'navbar',
+    'status-tag',
+    'status-tag.n5',
+    'avatar',
+    'avatar.sensei',
+    'avatar.student',
+    'enhanced-card',
+    'enhanced-button',
+    'dashboard-container',
+    'component-spacing',
+    'section-padding',
+    'cherry-blossom',
+    'lantern-decoration',
+    'progress-container',
+    'progress-bar',
+    'bottom-nav',
+    'loading-shimmer'
+  ],
   theme: {
     extend: {
       borderRadius: {
