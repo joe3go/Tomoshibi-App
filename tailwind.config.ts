@@ -44,12 +44,7 @@ const themeVariables = {
 
 export default {
   darkMode: ["class"],
-  content: [
-    "./index.html", 
-    "./src/**/*.{js,jsx,ts,tsx}",
-    "../server/**/*.{js,ts}",
-    "../shared/**/*.{js,ts}"
-  ],
+  content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
       borderRadius: {
