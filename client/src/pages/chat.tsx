@@ -155,8 +155,11 @@ export default function Chat() {
 
   const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
-    if (romajiMode && isRomaji(value)) {
-      setMessage(toHiragana(value));
+    if (romajiMode) {
+      // Convert romaji to hiragana in real-time
+      const converted = toHiragana(value);
+      console.log('Romaji conversion:', value, '->', converted);
+      setMessage(converted);
     } else {
       setMessage(value);
     }
@@ -166,6 +169,7 @@ export default function Chat() {
 
   const handleFuriganaToggle = () => {
     const newState = !showFurigana;
+    console.log('Furigana toggle:', showFurigana, '->', newState);
     setShowFurigana(newState);
     localStorage.setItem("furigana-visible", newState.toString());
   };
