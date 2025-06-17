@@ -11,6 +11,7 @@ import {
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import FuriganaText from "@/components/furigana-text";
+import { MessageWithVocab } from "@/components/MessageWithVocab";
 import { Input } from "@/components/ui/input";
 import { Toggle } from "@/components/ui/toggle";
 import { Languages } from "lucide-react";
@@ -369,11 +370,16 @@ export default function Chat() {
                 )}
 
                 <div className="chat-message-content">
-                  <FuriganaText
-                    text={msg.content}
-                    showFurigana={showFurigana}
-                    showToggleButton={false}
-                  />
+                  <MessageWithVocab
+                    content={msg.content}
+                    className="vocab-enabled-message"
+                  >
+                    <FuriganaText
+                      text={msg.content}
+                      showFurigana={showFurigana}
+                      showToggleButton={false}
+                    />
+                  </MessageWithVocab>
                 </div>
 
                 {msg.sender === "ai" && msg.english && (
