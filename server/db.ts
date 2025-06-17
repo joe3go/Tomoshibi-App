@@ -5,11 +5,17 @@ import * as schema from "@shared/schema";
 
 neonConfig.webSocketConstructor = ws;
 
-if (!process.env.DATABASE_URL) {
+// Use Supabase database URL directly
+const supabaseUrl = "postgresql://postgres:v8f!6PS@W!&XXvk@db.oyawpeylvdqfkhysnjsq.supabase.co:5432/postgres";
+const connectionString = process.env.DATABASE_URL || supabaseUrl;
+
+console.log("🔗 Connecting to database:", connectionString.replace(/:([^:@]*@)/, ':***@'));
+
+if (!connectionString) {
   throw new Error(
     "DATABASE_URL must be set. Did you forget to provision a database?",
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const pool = new Pool({ connectionString });
 export const db = drizzle({ client: pool, schema });
