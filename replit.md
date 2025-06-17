@@ -18,7 +18,7 @@ Tomoshibi is a Japanese conversation learning platform that helps JLPT N5 studen
 ### Backend Architecture
 - **Express.js** with TypeScript for the REST API
 - **Drizzle ORM** for database operations with PostgreSQL
-- **Neon Database** as the serverless PostgreSQL provider
+- **Supabase** as the serverless PostgreSQL provider
 - **JWT** for authentication and authorization
 - **bcrypt** for password hashing
 - **OpenAI GPT-4o** for AI-powered conversation generation
@@ -80,11 +80,11 @@ Tomoshibi is a Japanese conversation learning platform that helps JLPT N5 studen
 
 ### APIs and Services
 - **OpenAI GPT-4o**: AI conversation generation and language processing
-- **Neon Database**: Serverless PostgreSQL hosting
+- **Supabase**: Serverless PostgreSQL hosting with authentication features
 - **Google Fonts**: Inter and Noto Sans JP font families
 
 ### Core Libraries
-- **@neondatabase/serverless**: Database connection pooling
+- **@neondatabase/serverless**: Database connection pooling (compatible with Supabase)
 - **@tanstack/react-query**: Server state management
 - **@radix-ui/react-**: Accessible UI component primitives
 - **drizzle-orm**: Type-safe database operations
@@ -112,6 +112,19 @@ The build process creates a production bundle with:
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
+
+### June 17, 2025 - Successful Migration to Supabase Database
+- **Completed full database migration from Neon to Supabase**:
+  - All existing data preserved: 2 users, 32 conversations, 14,558 vocabulary entries
+  - Updated schema alignment between code and Supabase database structure
+  - Fixed grammar table column mapping (englishExplanation, exampleJapanese, exampleEnglish)
+  - Verified all API endpoints working correctly with Supabase connection
+- **Database performance verified**:
+  - Authentication system functioning properly
+  - Conversation and message retrieval working seamlessly
+  - Vocabulary tracking and analytics operational
+  - All user progress data intact and accessible
+- **Updated project documentation** to reflect Supabase as the primary database provider
 
 ### June 17, 2025 - Enhanced Chat System with Working Furigana and Wanakana Integration
 - **Successfully implemented working Furigana display system** across all chat interfaces:
