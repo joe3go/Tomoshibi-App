@@ -19,12 +19,13 @@ import Vocabulary from "@/pages/vocabulary";
 import History from "@/pages/history";
 import Settings from "@/pages/settings";
 import ScenarioBrowse from "@/pages/scenario-browse";
+import EnhancedScenarioBrowse from "@/pages/enhanced-scenario-browse";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return <LoadingSpinner variant="glass" size="md" />;
+    return <LoadingSpinner size="md" />;
   }
 
   return (
@@ -47,6 +48,7 @@ function Router() {
           <Route path="/vocabulary" component={Vocabulary} />
           <Route path="/settings" component={Settings} />
           <Route path="/scenarios" component={ScenarioBrowse} />
+          <Route path="/scenario-learning" component={EnhancedScenarioBrowse} />
         </>
       )}
       <Route component={NotFound} />

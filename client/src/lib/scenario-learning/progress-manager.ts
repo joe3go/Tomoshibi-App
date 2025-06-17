@@ -280,11 +280,11 @@ export class ScenarioProgressManager {
       updatedProgress.totalXp,
       Object.keys(updatedProgress.vocabMastery).length
     );
-    const unlockedScenariosSet = new Set([
+    const allUnlocked = [
       ...updatedProgress.unlockedScenarios,
       ...availableScenarios.map(s => s.id)
-    ]);
-    const unlockedScenarios = Array.from(unlockedScenariosSet);
+    ];
+    const unlockedScenarios = allUnlocked.filter((id, index) => allUnlocked.indexOf(id) === index);
 
     return this.updateLearningProgress({
       completedScenarios,
