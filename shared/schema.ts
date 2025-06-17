@@ -7,7 +7,8 @@ import {
   jsonb,
   varchar,
   boolean,
-  unique
+  unique,
+  real
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -127,6 +128,18 @@ export const vocabTracker = pgTable("vocab_tracker", {
   source: varchar("source", { length: 20 }).default("conversation"), // 'conversation', 'manual', 'hover'
 });
 
+// Enhanced usage log for tracking all word forms and conjugations
+export const usageLog = pgTable("usage_log", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  wordFormUsed: text("word_form_used").notNull(),
+  wordNormalized: text("word_normalized").notNull(),
+  source: varchar("source", { length: 100 }).notNull(), // 'chat', 'scenario', 'popup'
+  confidence: integer("confidence").default(50), // normalization confidence (0-100)
+  partOfSpeech: text("part_of_speech"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -176,6 +189,11 @@ export const insertVocabTrackerSchema = createInsertSchema(vocabTracker).omit({
   id: true,
 });
 
+export const insertUsageLogSchema = createInsertSchema(usageLog).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -195,3 +213,5 @@ export type UserProgress = typeof userProgress.$inferSelect;
 export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;
 export type VocabTracker = typeof vocabTracker.$inferSelect;
 export type InsertVocabTracker = z.infer<typeof insertVocabTrackerSchema>;
+export type UsageLog = typeof usageLog.$inferSelect;
+export type InsertUsageLog = z.infer<typeof insertUsageLogSchema>;
