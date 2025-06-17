@@ -53,7 +53,7 @@ export function ScenarioPracticeView({
   onExit, 
   className = "" 
 }: ScenarioPracticeViewProps) {
-  const [progressManager] = useState(() => {
+  const [progressManager] = useState<ScenarioProgressManager | null>(() => {
     try {
       return new ScenarioProgressManager(userId);
     } catch (error) {
@@ -277,8 +277,12 @@ export function ScenarioPracticeView({
         evidence.push("Stated name with です");
       }
 
-      if (isCompleted && session) {
-        progressManager.completeGoal(session.id, goal.goalText);
+      if (isCompleted && session && progressManager) {
+        try {
+          progressManager.completeGoal(session.id, goal.goalText);
+        } catch (error) {
+          console.error('Failed to complete goal:', error);
+        }
       }
 
       return {
@@ -309,12 +313,27 @@ export function ScenarioPracticeView({
     };
 
     // Complete scenario if all goals achieved
-    if (getCompletionPercentage() >= 80) {
-      progressManager.completeScenario(scenario.id);
+    if (getCompletionPercentage() >= 80 && progressManager) {
+      try {
+        progressManager.completeScenario(scenario.id);
+      } catch (error) {
+        console.error('Failed to complete scenario:', error);
+      }
     }
 
     onComplete(session.id, feedback);
   };
+
+  if (!progressManager) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-4">
+          <p className="text-destructive">Failed to initialize scenario learning system.</p>
+          <Button onClick={onExit}>Return to Dashboard</Button>
+        </div>
+      </div>
+    );
+  }
 
   if (!session) {
     return (
