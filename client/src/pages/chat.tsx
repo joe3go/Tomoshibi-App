@@ -331,29 +331,15 @@ export default function Chat() {
               <div
                 className={`message-bubble ${msg.sender === "user" ? "user" : "ai"}`}
               >
-                {msg.feedback && (
-                  <div className="chat-message-feedback">
-                    <p className="chat-feedback-text">✨ {msg.feedback}</p>
-                  </div>
-                )}
-
-                <div
-                  className={`chat-message-content ${msg.sender === "user" ? "chat-message-content-user" : "chat-message-content-ai"}`}
-                >
-                  <EnhancedFuriganaText
-                    text={msg.content}
-                    showFurigana={showFurigana}
-                    showToggleButton={false}
-                    enableWordHover={msg.sender === "ai"}
-                    className="text-inherit"
-                  />
-                </div>
-
-                {msg.sender === "ai" && (
-                  <div className="chat-message-encouragement">
-                    💡 Keep practicing! You're doing great!
-                  </div>
-                )}
+                <SmartMessageDisplay
+                  content={msg.content}
+                  englishTranslation={msg.english}
+                  feedback={msg.feedback}
+                  suggestions={msg.suggestions || []}
+                  sender={msg.sender}
+                  showFurigana={showFurigana}
+                  isAiResponse={msg.sender === "ai"}
+                />
               </div>
 
               {msg.sender === "user" && (
