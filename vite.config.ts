@@ -31,7 +31,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           react: ['react', 'react-dom'],
-          router: ['react-router-dom'],
+          router: ['wouter'],
           ui: ['@radix-ui/react-accordion', '@radix-ui/react-alert-dialog', '@radix-ui/react-avatar'],
           icons: ['lucide-react'],
           charts: ['recharts'],
