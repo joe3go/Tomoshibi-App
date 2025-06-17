@@ -68,7 +68,7 @@ export async function removeUserVocab(userId: string, vocabId: string): Promise<
 // Progress functions
 export async function getUserProgress(userId: string): Promise<UserProgress[]> {
   const { data, error } = await supabase
-    .from('user_progress')
+    .from('user_scenario_progress')
     .select('*')
     .eq('user_id', userId)
     .order('updated_at', { ascending: false });
@@ -84,7 +84,7 @@ export async function getUserProgress(userId: string): Promise<UserProgress[]> {
 export async function markScenarioComplete(userId: string, scenarioId: string, xp: number = 0): Promise<UserProgress | null> {
   // First check if progress already exists
   const { data: existing } = await supabase
-    .from('user_progress')
+    .from('user_scenario_progress')
     .select('*')
     .eq('user_id', userId)
     .eq('scenario_id', scenarioId)
@@ -93,7 +93,7 @@ export async function markScenarioComplete(userId: string, scenarioId: string, x
   if (existing) {
     // Update existing progress
     const { data, error } = await supabase
-      .from('user_progress')
+      .from('user_scenario_progress')
       .update({
         completed: true,
         xp: existing.xp + xp,
@@ -112,7 +112,7 @@ export async function markScenarioComplete(userId: string, scenarioId: string, x
   } else {
     // Create new progress entry
     const { data, error } = await supabase
-      .from('user_progress')
+      .from('user_scenario_progress')
       .insert({
         user_id: userId,
         scenario_id: scenarioId,
@@ -133,7 +133,7 @@ export async function markScenarioComplete(userId: string, scenarioId: string, x
 
 export async function updateScenarioXP(userId: string, scenarioId: string, additionalXP: number): Promise<UserProgress | null> {
   const { data: existing } = await supabase
-    .from('user_progress')
+    .from('user_scenario_progress')
     .select('*')
     .eq('user_id', userId)
     .eq('scenario_id', scenarioId)
@@ -141,7 +141,7 @@ export async function updateScenarioXP(userId: string, scenarioId: string, addit
 
   if (existing) {
     const { data, error } = await supabase
-      .from('user_progress')
+      .from('user_scenario_progress')
       .update({
         xp: existing.xp + additionalXP,
         updated_at: new Date().toISOString(),
@@ -159,7 +159,7 @@ export async function updateScenarioXP(userId: string, scenarioId: string, addit
   } else {
     // Create new progress entry
     const { data, error } = await supabase
-      .from('user_progress')
+      .from('user_scenario_progress')
       .insert({
         user_id: userId,
         scenario_id: scenarioId,
