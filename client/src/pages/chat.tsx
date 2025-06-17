@@ -507,7 +507,7 @@ export default function Chat() {
               className="text-xs"
             >
               <Languages className="w-3 h-3 mr-1" />
-              Romaji
+              Hiragana
             </Toggle>
             <button
               onClick={handleFuriganaToggle}

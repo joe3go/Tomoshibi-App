@@ -113,27 +113,27 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### June 17, 2025 - Enhanced Chat System with Smart AI and Furigana Controls
-- **Implemented comprehensive Furigana display system** with persistent user preferences
-- **Added Wanakana integration** for seamless romaji-to-hiragana conversion
-- **Created enhanced chat input component** (`client/src/components/enhanced-chat-input.tsx`):
-  - Toggle between normal and romaji input modes
-  - Auto-conversion settings with real-time preview
-  - Quick phrase insertion for common Japanese expressions
-  - Integrated text conversion tools (hiragana/katakana/romaji)
-  - Advanced input settings panel with switches and controls
-- **Developed smart AI response system** that handles English questions intelligently:
-  - Enhanced OpenAI prompt engineering to detect English vs Japanese input
-  - AI provides clear English explanations followed by Japanese practice
-  - Adaptive teaching approach based on user skill level assessment
-  - Context-aware corrections and cultural insights
-- **Built smart message display component** (`client/src/components/smart-message-display.tsx`):
-  - Toggle English translations for AI responses
-  - Collapsible learning suggestions and tips
-  - Visual indicators for mixed English/Japanese responses
-  - Enhanced feedback display with contextual information
-- **Updated chat interface** to use enhanced components with better UX
-- **Integrated Wanakana library** for improved Japanese text input experience
+### June 17, 2025 - Enhanced Chat System with Working Furigana and Wanakana Integration
+- **Successfully implemented working Furigana display system** across all chat interfaces:
+  - Persistent user preferences stored in localStorage
+  - Toggle functionality that shows/hides ruby text readings
+  - Integrated into both main chat and scenario-based learning chats
+  - Uses original working FuriganaText component with proper CSS styling
+- **Added functional Wanakana integration** for romaji-to-hiragana conversion:
+  - Proper binding using official Wanakana `bind()` method from documentation
+  - Real-time conversion when Hiragana mode is enabled
+  - Clean binding/unbinding with error handling to prevent circular references
+  - Consistent implementation across all chat interfaces
+- **Enhanced AI response system** that handles English questions intelligently:
+  - AI detects English vs Japanese input and provides explanations
+  - English translations available as collapsible sections
+  - Learning suggestions and feedback integrated into message display
+- **Unified chat experience** with consistent controls:
+  - Hiragana toggle button for romaji-to-hiragana conversion
+  - Furigana toggle button for showing/hiding readings
+  - Both features work in main chat and scenario learning chats
+- **Fixed database issues** that were preventing message sending
+- **Removed duplicate components** and restored stable functionality
 
 ### June 17, 2025 - Comprehensive Scenario-Based Learning System
 - **Added complete scenario-based output learning system** with 10 structured scenarios across N5-N3 levels
