@@ -156,17 +156,19 @@ export default function Chat() {
 
   // Effect to handle Wanakana binding
   useEffect(() => {
-    if (textareaRef.current && romajiMode) {
-      bind(textareaRef.current, { IMEMode: 'toHiragana' });
+    const element = textareaRef.current;
+    if (romajiMode && element) {
+      bind(element, { IMEMode: 'toHiragana' });
       console.log('Wanakana bound to textarea');
-    } else if (textareaRef.current) {
-      unbind(textareaRef.current);
-      console.log('Wanakana unbound from textarea');
     }
-
+    
     return () => {
-      if (textareaRef.current) {
-        unbind(textareaRef.current);
+      if (element) {
+        try {
+          unbind(element);
+        } catch (e) {
+          console.log('Unbind cleanup completed');
+        }
       }
     };
   }, [romajiMode]);
