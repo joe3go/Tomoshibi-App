@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -154,12 +155,12 @@ export default function History() {
 
   if (loadingActive || loadingCompleted) {
     return (
-      <div className="min-h-screen bg-background p-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-center min-h-[200px]">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-              <p className="text-muted-foreground">Loading conversation history...</p>
+      <div className="history-page-container">
+        <div className="history-content-wrapper">
+          <div className="history-loading-container">
+            <div className="history-loading-content">
+              <div className="history-loading-spinner"></div>
+              <p className="history-loading-text">Loading conversation history...</p>
             </div>
           </div>
         </div>
@@ -168,13 +169,13 @@ export default function History() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="history-page-container">
+      <div className="history-content-wrapper">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="history-header">
           <div>
-            <h1 className="text-3xl font-bold">Conversation History</h1>
-            <p className="text-muted-foreground">Your Japanese learning journey and progress</p>
+            <h1 className="history-page-title">Conversation History</h1>
+            <p className="history-page-subtitle">Your Japanese learning journey and progress</p>
           </div>
           <Button onClick={() => setLocation('/dashboard')} variant="outline">
             Back to Dashboard
@@ -182,64 +183,64 @@ export default function History() {
         </div>
 
         {/* Analytics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="history-analytics-grid">
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <CardHeader className="history-analytics-card-header">
+              <CardTitle className="history-analytics-card-title">
                 <BarChart3 className="w-4 h-4" />
                 Total Conversations
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analytics.totalConversations}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="history-analytics-value">{analytics.totalConversations}</div>
+              <p className="history-analytics-description">
                 {analytics.completedConversations} completed
               </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <CardHeader className="history-analytics-card-header">
+              <CardTitle className="history-analytics-card-title">
                 <MessageCircle className="w-4 h-4" />
                 Messages Sent
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analytics.totalMessages}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="history-analytics-value">{analytics.totalMessages}</div>
+              <p className="history-analytics-description">
                 ~{analytics.averageMessagesPerConversation} per conversation
               </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <CardHeader className="history-analytics-card-header">
+              <CardTitle className="history-analytics-card-title">
                 <BookOpen className="w-4 h-4" />
                 Vocabulary Used
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analytics.uniqueVocabWords}</div>
-              <p className="text-xs text-muted-foreground">unique words encountered</p>
+              <div className="history-analytics-value">{analytics.uniqueVocabWords}</div>
+              <p className="history-analytics-description">unique words encountered</p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <CardHeader className="history-analytics-card-header">
+              <CardTitle className="history-analytics-card-title">
                 <TrendingUp className="w-4 h-4" />
                 Progress Rate
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="history-analytics-value">
                 {analytics.totalConversations > 0 
                   ? Math.round((analytics.completedConversations / analytics.totalConversations) * 100)
                   : 0}%
               </div>
-              <p className="text-xs text-muted-foreground">completion rate</p>
+              <p className="history-analytics-description">completion rate</p>
             </CardContent>
           </Card>
         </div>
@@ -252,17 +253,17 @@ export default function History() {
           </CardHeader>
           <CardContent>
             <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="history-tabs-list">
                 <TabsTrigger value="all">All ({allConversations.length})</TabsTrigger>
                 <TabsTrigger value="active">Active ({(activeConversations as any[]).length})</TabsTrigger>
                 <TabsTrigger value="completed">Completed ({(completedConversations as any[]).length})</TabsTrigger>
               </TabsList>
 
-              <TabsContent value={selectedTab} className="space-y-4 mt-6">
+              <TabsContent value={selectedTab} className="history-tab-content">
                 {filteredConversations.length === 0 ? (
-                  <div className="text-center py-8">
-                    <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">
+                  <div className="history-empty-state">
+                    <MessageCircle className="history-empty-icon" />
+                    <p className="history-empty-text">
                       {selectedTab === 'completed' 
                         ? "No completed conversations yet" 
                         : selectedTab === 'active'
@@ -271,7 +272,7 @@ export default function History() {
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="history-conversations-list">
                     {filteredConversations.map((conversation: any) => {
                       const persona = (personas as any[]).find((p: any) => p.id === conversation.personaId);
                       const scenario = (scenarios as any[]).find((s: any) => s.id === conversation.scenarioId);
@@ -281,12 +282,12 @@ export default function History() {
                       ).size;
 
                       return (
-                        <Card key={conversation.id} className="hover:shadow-md transition-shadow">
-                          <CardContent className="p-6">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <h3 className="font-semibold text-lg">
+                        <Card key={conversation.id} className="history-conversation-card">
+                          <CardContent className="history-conversation-content">
+                            <div className="history-conversation-layout">
+                              <div className="history-conversation-info">
+                                <div className="history-conversation-header">
+                                  <h3 className="history-conversation-title">
                                     {scenario?.title || 'Unknown Scenario'}
                                   </h3>
                                   <Badge variant={getStatusBadgeVariant(conversation.status)}>
@@ -297,34 +298,34 @@ export default function History() {
                                   <Badge variant="outline">{scenario?.jlptLevel || 'N5'}</Badge>
                                 </div>
 
-                                <p className="text-sm text-muted-foreground mb-3">
+                                <p className="history-conversation-persona">
                                   with {persona?.name || 'Unknown'} • {persona?.type || 'tutor'}
                                 </p>
 
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                  <div className="flex items-center gap-2">
-                                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                                <div className="history-conversation-stats">
+                                  <div className="history-stat-item">
+                                    <Calendar className="history-stat-icon" />
                                     <span>{formatDate(conversation.startedAt)}</span>
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                    <Clock className="w-4 h-4 text-muted-foreground" />
+                                  <div className="history-stat-item">
+                                    <Clock className="history-stat-icon" />
                                     <span>{getConversationDuration(conversation.startedAt, conversation.completedAt)}</span>
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                    <MessageCircle className="w-4 h-4 text-muted-foreground" />
+                                  <div className="history-stat-item">
+                                    <MessageCircle className="history-stat-icon" />
                                     <span>{messageCount} messages</span>
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                    <BookOpen className="w-4 h-4 text-muted-foreground" />
+                                  <div className="history-stat-item">
+                                    <BookOpen className="history-stat-icon" />
                                     <span>{vocabWordsUsed} vocab words</span>
                                   </div>
                                 </div>
 
                                 {/* Last message preview */}
                                 {conversation.messages && conversation.messages.length > 0 && (
-                                  <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                                    <p className="text-xs text-muted-foreground mb-1">Last message:</p>
-                                    <div className="text-sm">
+                                  <div className="history-message-preview">
+                                    <p className="history-message-preview-label">Last message:</p>
+                                    <div className="history-message-preview-content">
                                       <EnhancedFuriganaText
                                         text={conversation.messages[conversation.messages.length - 1].content}
                                         showToggleButton={false}
@@ -336,7 +337,7 @@ export default function History() {
                                 )}
                               </div>
 
-                              <div className="flex gap-2 ml-4">
+                              <div className="history-conversation-actions">
                                 {conversation.status === 'active' && (
                                   <>
                                     <Button
@@ -349,7 +350,7 @@ export default function History() {
                                       onClick={() => handleEndSession(conversation.id)}
                                       variant="outline"
                                       size="sm"
-                                      className="text-red-600 hover:text-red-700"
+                                      className="history-end-session-button"
                                     >
                                       End Session
                                     </Button>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
@@ -174,11 +175,11 @@ export default function Chat() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="content-card p-8">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 border-4 border-primary border-l-transparent rounded-full animate-spin"></div>
-            <span className="text-foreground">Loading conversation...</span>
+      <div className="chat-loading-container">
+        <div className="chat-loading-card">
+          <div className="chat-loading-content">
+            <div className="chat-loading-spinner"></div>
+            <span className="chat-loading-text">Loading conversation...</span>
           </div>
         </div>
       </div>
@@ -187,18 +188,18 @@ export default function Chat() {
 
   if (!conversationData) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="content-card">
-          <CardContent className="p-8 text-center">
-            <h2 className="text-xl font-semibold text-foreground mb-2">
+      <div className="chat-error-container">
+        <Card className="chat-error-card">
+          <CardContent className="chat-error-content">
+            <h2 className="chat-error-title">
               Conversation Not Found
             </h2>
-            <p className="text-muted-foreground mb-4">
+            <p className="chat-error-description">
               This conversation doesn't exist or you don't have access to it.
             </p>
             <Button
               onClick={() => setLocation("/dashboard")}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
+              className="chat-error-button"
             >
               Return to Dashboard
             </Button>
@@ -214,17 +215,17 @@ export default function Chat() {
   // Handle case where conversation doesn't exist
   if (!conversation) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="content-card p-8 text-center">
-          <h2 className="text-xl font-semibold text-foreground mb-4">
+      <div className="chat-error-container">
+        <Card className="chat-error-card">
+          <h2 className="chat-error-title">
             Conversation Not Found
           </h2>
-          <p className="text-muted-foreground mb-6">
+          <p className="chat-error-description">
             This conversation doesn't exist or you don't have access to it.
           </p>
           <Button
             onClick={() => setLocation("/dashboard")}
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
+            className="chat-error-button"
           >
             Return to Dashboard
           </Button>
@@ -241,35 +242,35 @@ export default function Chat() {
     : null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="chat-page-container">
       {/* Chat Header */}
-      <header className="content-card rounded-b-2xl p-4 flex items-center justify-between border-b border-border">
-        <div className="flex items-center space-x-3">
+      <header className="chat-header">
+        <div className="chat-header-navigation">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setLocation("/dashboard")}
-            className="p-2 text-foreground hover:bg-muted"
+            className="chat-back-button"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/30">
+          <div className="chat-header-info">
+            <div className="chat-persona-avatar">
               <img
                 src={getAvatarImage(persona)}
                 alt={persona?.name || "Persona"}
-                className="w-full h-full object-cover"
+                className="chat-persona-image"
                 onError={(e) => {
                   // Fallback to text avatar if image fails
                   const target = e.target as HTMLImageElement;
                   target.style.display = "none";
                   target.parentElement!.innerHTML = `
-                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br ${
+                    <div class="chat-persona-fallback ${
                       persona?.type === "teacher"
-                        ? "from-primary to-primary/60"
-                        : "from-accent to-accent/60"
+                        ? "chat-persona-teacher"
+                        : "chat-persona-friend"
                     }">
-                      <span class="text-lg text-foreground">
+                      <span class="chat-persona-emoji">
                         ${persona?.type === "teacher" ? "👩‍🏫" : "🧑‍🎤"}
                       </span>
                     </div>
@@ -278,27 +279,27 @@ export default function Chat() {
               />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground">
+              <h3 className="chat-persona-name">
                 {persona?.name || "AI"}
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="chat-scenario-title">
                 {scenario?.title || "Conversation"}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="chat-header-controls">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleFuriganaToggle}
-            className="px-3 py-1 text-xs hover:bg-primary/20 transition-colors text-foreground"
+            className="chat-furigana-toggle"
           >
             {showFurigana ? "Hide Furigana" : "Show Furigana"}
           </Button>
           {/* Debug info - remove this later */}
-          <span className="text-xs text-muted-foreground">
+          <span className="chat-debug-info">
             Furigana: {showFurigana ? "ON" : "OFF"}
           </span>
           <Button
@@ -306,7 +307,7 @@ export default function Chat() {
             size="sm"
             onClick={() => completeConversationMutation.mutate()}
             disabled={completeConversationMutation.isPending}
-            className="px-3 py-1 text-xs hover:bg-green-500/20 transition-colors text-foreground flex items-center space-x-1"
+            className="chat-complete-button"
           >
             <CheckCircle className="w-4 h-4" />
             <span>Complete</span>
@@ -314,7 +315,7 @@ export default function Chat() {
           <Button
             variant="ghost"
             size="sm"
-            className="p-2 text-foreground hover:bg-muted"
+            className="chat-settings-button"
           >
             <Settings className="w-5 h-5" />
           </Button>
@@ -322,32 +323,32 @@ export default function Chat() {
       </header>
 
       {/* Chat Messages */}
-      <div className="flex-1 p-4 overflow-y-auto">
-        <div className="max-w-4xl mx-auto space-y-4">
+      <div className="chat-messages-container">
+        <div className="chat-messages-list">
           {messages.map((msg: any) => (
             <div
               key={msg.id}
-              className={`flex items-start space-x-3 ${
-                msg.sender === "user" ? "justify-end" : ""
+              className={`chat-message-wrapper ${
+                msg.sender === "user" ? "chat-message-user" : "chat-message-ai"
               }`}
             >
               {msg.sender === "ai" && (
-                <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
+                <div className="chat-avatar chat-avatar-ai">
                   <img
                     src={getAvatarImage(persona)}
                     alt={persona?.name || "AI"}
-                    className="w-full h-full object-cover"
+                    className="chat-avatar-image"
                     onError={(e) => {
                       // Fallback to text avatar if image fails
                       const target = e.target as HTMLImageElement;
                       target.style.display = "none";
                       target.parentElement!.innerHTML = `
-                        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br ${
+                        <div class="chat-avatar-fallback ${
                           persona?.type === "teacher"
-                            ? "from-primary to-primary/60"
-                            : "from-accent to-accent/60"
+                            ? "chat-avatar-teacher"
+                            : "chat-avatar-friend"
                         }">
-                          <span class="text-sm font-japanese text-foreground">
+                          <span class="chat-avatar-text">
                             ${persona?.type === "teacher" ? "先" : "友"}
                           </span>
                         </div>
@@ -361,13 +362,13 @@ export default function Chat() {
                 className={`message-bubble ${msg.sender === "user" ? "user" : "ai"}`}
               >
                 {msg.feedback && (
-                  <div className="mb-2 p-2 rounded-lg bg-green-50 border border-green-200">
-                    <p className="text-sm text-green-700">✨ {msg.feedback}</p>
+                  <div className="chat-message-feedback">
+                    <p className="chat-feedback-text">✨ {msg.feedback}</p>
                   </div>
                 )}
 
                 <div
-                  className={`font-japanese mb-2 ${msg.sender === "user" ? "text-primary-foreground" : "text-foreground"}`}
+                  className={`chat-message-content ${msg.sender === "user" ? "chat-message-content-user" : "chat-message-content-ai"}`}
                 >
                   <EnhancedFuriganaText
                     text={msg.content}
@@ -379,15 +380,15 @@ export default function Chat() {
                 </div>
 
                 {msg.sender === "ai" && (
-                  <div className="mt-2 text-xs text-muted-foreground">
+                  <div className="chat-message-encouragement">
                     💡 Keep practicing! You're doing great!
                   </div>
                 )}
               </div>
 
               {msg.sender === "user" && (
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm text-primary-foreground font-medium">
+                <div className="chat-avatar chat-avatar-user">
+                  <span className="chat-avatar-user-text">
                     You
                   </span>
                 </div>
@@ -397,23 +398,23 @@ export default function Chat() {
 
           {/* Enhanced Typing Indicator */}
           {sendMessageMutation.isPending && (
-            <div className="flex items-start space-x-3">
-              <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
+            <div className="chat-message-wrapper chat-message-ai">
+              <div className="chat-avatar chat-avatar-ai">
                 <img
                   src={getAvatarImage(persona)}
                   alt={persona?.name || "AI"}
-                  className="w-full h-full object-cover"
+                  className="chat-avatar-image"
                   onError={(e) => {
                     // Fallback to emoji if image fails
                     const target = e.target as HTMLImageElement;
                     target.style.display = "none";
                     target.parentElement!.innerHTML = `
-                      <div class="w-full h-full flex items-center justify-center bg-gradient-to-br ${
+                      <div class="chat-avatar-fallback ${
                         persona?.type === "teacher"
-                          ? "from-primary to-primary/60"
-                          : "from-accent to-accent/60"
+                          ? "chat-avatar-teacher"
+                          : "chat-avatar-friend"
                       }">
-                        <span class="text-sm text-foreground">
+                        <span class="chat-avatar-text">
                           ${persona?.type === "teacher" ? "👩‍🏫" : "🧑‍🎤"}
                         </span>
                       </div>
@@ -422,19 +423,19 @@ export default function Chat() {
                 />
               </div>
               <div className="message-bubble ai">
-                <div className="flex items-center space-x-2">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"></div>
+                <div className="chat-typing-indicator">
+                  <div className="chat-typing-dots">
+                    <div className="chat-typing-dot"></div>
                     <div
-                      className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"
+                      className="chat-typing-dot"
                       style={{ animationDelay: "0.1s" }}
                     ></div>
                     <div
-                      className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"
+                      className="chat-typing-dot"
                       style={{ animationDelay: "0.2s" }}
                     ></div>
                   </div>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="chat-typing-text">
                     Thinking...
                   </span>
                 </div>
@@ -446,16 +447,16 @@ export default function Chat() {
       </div>
 
       {/* Chat Input */}
-      <div className="content-card rounded-t-2xl p-4 border-t border-border">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-end space-x-3">
-            <div className="flex-1">
+      <div className="chat-input-container">
+        <div className="chat-input-wrapper">
+          <div className="chat-input-field-container">
+            <div className="chat-input-field">
               <Textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Type your response in Japanese... (English is ok too!)"
-                className="bg-input border-border text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary/20 resize-none"
+                className="chat-textarea"
                 rows={1}
                 style={{ maxHeight: "120px" }}
               />
@@ -463,7 +464,7 @@ export default function Chat() {
             <Button
               onClick={handleSendMessage}
               disabled={!message.trim() || sendMessageMutation.isPending}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center space-x-2"
+              className="chat-send-button"
             >
               <span>Send</span>
               <Send className="w-4 h-4" />
@@ -471,12 +472,12 @@ export default function Chat() {
           </div>
 
           {/* Input Suggestions */}
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="chat-input-suggestions">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => insertSuggestion("私は")}
-              className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
+              className="chat-suggestion-button"
             >
               私は
             </Button>
@@ -484,7 +485,7 @@ export default function Chat() {
               variant="ghost"
               size="sm"
               onClick={() => insertSuggestion("です")}
-              className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
+              className="chat-suggestion-button"
             >
               です
             </Button>
@@ -492,7 +493,7 @@ export default function Chat() {
               variant="ghost"
               size="sm"
               onClick={() => insertSuggestion("から来ました")}
-              className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
+              className="chat-suggestion-button"
             >
               から来ました
             </Button>
@@ -500,7 +501,7 @@ export default function Chat() {
               variant="ghost"
               size="sm"
               onClick={() => insertSuggestion("よろしくお願いします")}
-              className="px-3 py-1 text-sm hover:bg-primary/20 font-japanese text-foreground"
+              className="chat-suggestion-button"
             >
               よろしくお願いします
             </Button>

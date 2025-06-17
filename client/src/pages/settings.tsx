@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -126,12 +127,12 @@ export default function Settings() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background p-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-              <p className="text-muted-foreground">Loading settings...</p>
+      <div className="settings-page-container">
+        <div className="settings-content-wrapper">
+          <div className="settings-loading-container">
+            <div className="settings-loading-content">
+              <div className="settings-loading-spinner"></div>
+              <p className="settings-loading-text">Loading settings...</p>
             </div>
           </div>
         </div>
@@ -140,35 +141,35 @@ export default function Settings() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="settings-page-container">
+      <div className="settings-content-wrapper">
         {/* Header */}
-        <div className="mb-6">
+        <div className="settings-header">
           <Button
             variant="ghost"
             onClick={() => setLocation('/')}
-            className="flex items-center gap-2 text-muted-foreground hover:text-primary mb-4"
+            className="settings-back-button"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Dashboard
           </Button>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+          <div className="settings-title-section">
+            <div className="settings-icon-container">
               <SettingsIcon className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold">Settings</h1>
-              <p className="text-muted-foreground">Manage your account and learning preferences</p>
+              <h1 className="settings-page-title">Settings</h1>
+              <p className="settings-page-subtitle">Manage your account and learning preferences</p>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="settings-grid-layout">
           {/* Profile Settings */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="settings-main-column">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="settings-section-title">
                   <User className="w-5 h-5" />
                   Profile
                 </CardTitle>
@@ -176,17 +177,17 @@ export default function Settings() {
                   Update your personal information and avatar
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="settings-profile-content">
                 {/* Avatar Upload */}
-                <div className="flex items-center gap-4">
-                  <Avatar className="w-16 h-16">
+                <div className="settings-avatar-section">
+                  <Avatar className="settings-avatar">
                     <AvatarImage src={userSettings?.profileImageUrl} />
                     <AvatarFallback>
                       {userSettings?.displayName?.charAt(0)?.toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <Label htmlFor="avatar-upload" className="cursor-pointer">
+                    <Label htmlFor="avatar-upload" className="settings-avatar-upload-label">
                       <Button 
                         variant="outline" 
                         size="sm" 
@@ -204,9 +205,9 @@ export default function Settings() {
                       type="file"
                       accept="image/*"
                       onChange={handleAvatarUpload}
-                      className="hidden"
+                      className="settings-avatar-input"
                     />
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="settings-avatar-helper-text">
                       JPG, PNG or GIF (max 5MB)
                     </p>
                   </div>
@@ -215,7 +216,7 @@ export default function Settings() {
                 <Separator />
 
                 {/* Display Name */}
-                <div className="space-y-2">
+                <div className="settings-field-group">
                   <Label htmlFor="displayName">Display Name</Label>
                   <Input
                     id="displayName"
@@ -226,15 +227,15 @@ export default function Settings() {
                 </div>
 
                 {/* Email (readonly) */}
-                <div className="space-y-2">
+                <div className="settings-field-group">
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
                     value={userSettings?.email}
                     disabled
-                    className="bg-muted"
+                    className="settings-readonly-field"
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <p className="settings-field-helper-text">
                     Contact support to change your email address
                   </p>
                 </div>
@@ -244,7 +245,7 @@ export default function Settings() {
             {/* Learning Preferences */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="settings-section-title">
                   <BookOpen className="w-5 h-5" />
                   Learning Preferences
                 </CardTitle>
@@ -252,9 +253,9 @@ export default function Settings() {
                   Customize your learning experience
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="settings-preferences-content">
                 {/* JLPT Level */}
-                <div className="space-y-2">
+                <div className="settings-field-group">
                   <Label>Current JLPT Level</Label>
                   <Select
                     defaultValue={progress?.jlptLevel || 'N5'}
@@ -274,7 +275,7 @@ export default function Settings() {
                 </div>
 
                 {/* Study Goal */}
-                <div className="space-y-2">
+                <div className="settings-field-group">
                   <Label>Study Goal</Label>
                   <Select
                     defaultValue={userSettings?.studyGoal || 'conversation'}
@@ -294,7 +295,7 @@ export default function Settings() {
                 </div>
 
                 {/* Preferred Difficulty */}
-                <div className="space-y-2">
+                <div className="settings-field-group">
                   <Label>Preferred Difficulty</Label>
                   <Select
                     defaultValue={userSettings?.preferredDifficulty || 'adaptive'}
@@ -315,29 +316,29 @@ export default function Settings() {
           </div>
 
           {/* Quick Stats */}
-          <div className="space-y-6">
+          <div className="settings-sidebar">
             <Card>
               <CardHeader>
                 <CardTitle>Learning Progress</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">
+              <CardContent className="settings-stats-content">
+                <div className="settings-stat-item">
+                  <div className="settings-stat-value settings-stat-value-primary">
                     {progress?.totalConversations || 0}
                   </div>
-                  <p className="text-sm text-muted-foreground">Conversations</p>
+                  <p className="settings-stat-label">Conversations</p>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">
+                <div className="settings-stat-item">
+                  <div className="settings-stat-value settings-stat-value-green">
                     {progress?.vocabEncountered?.length || 0}
                   </div>
-                  <p className="text-sm text-muted-foreground">Vocabulary Encountered</p>
+                  <p className="settings-stat-label">Vocabulary Encountered</p>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">
+                <div className="settings-stat-item">
+                  <div className="settings-stat-value settings-stat-value-blue">
                     {progress?.vocabMastered?.length || 0}
                   </div>
-                  <p className="text-sm text-muted-foreground">Words Mastered</p>
+                  <p className="settings-stat-label">Words Mastered</p>
                 </div>
               </CardContent>
             </Card>
@@ -346,21 +347,21 @@ export default function Settings() {
               <CardHeader>
                 <CardTitle>Account</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full" disabled>
+              <CardContent className="settings-account-actions">
+                <Button variant="outline" className="settings-action-button" disabled>
                   Export Data
                 </Button>
-                <Button variant="outline" className="w-full" disabled>
+                <Button variant="outline" className="settings-action-button" disabled>
                   Reset Progress
                 </Button>
                 <Button 
                   variant="destructive" 
-                  className="w-full" 
+                  className="settings-logout-button" 
                   onClick={handleLogout}
                 >
                   Logout
                 </Button>
-                <p className="text-xs text-muted-foreground text-center">
+                <p className="settings-logout-help-text">
                   Sign out of your account
                 </p>
               </CardContent>

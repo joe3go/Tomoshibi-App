@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import Header from "@/components/Header";
@@ -6,37 +7,37 @@ export default function Landing() {
   const [, setLocation] = useLocation();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="landing-page-container">
       {/* Navigation */}
       <Header showSignIn={true} />
 
       {/* Hero Section */}
-      <section className="section-padding">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <section className="landing-hero-section">
+        <div className="landing-hero-content">
+          <div className="landing-hero-grid">
             {/* Left Content */}
-            <div className="space-y-8 text-center lg:text-left">
-              <div className="space-y-6">
-                <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-medium">
+            <div className="landing-hero-text">
+              <div className="landing-hero-content-wrapper">
+                <div className="landing-hero-badge">
                   An Output Focused Platform
                 </div>
                 
-                <h1 className="text-4xl lg:text-6xl font-bold text-primary leading-tight">
+                <h1 className="landing-hero-title">
                   Master Japanese
-                  <span className="block text-primary font-japanese">会話を学ぼう</span>
+                  <span className="landing-hero-subtitle">会話を学ぼう</span>
                 </h1>
                 
-                <p className="text-xl text-primary max-w-2xl leading-relaxed">
+                <p className="landing-hero-description">
                   Practice authentic Japanese conversations with AI-powered tutors. 
                   Build confidence through interactive scenarios designed for JLPT N5 learners.
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <div className="landing-hero-actions">
                 <Button 
                   onClick={() => setLocation("/login")}
                   size="lg"
-                  className="btn-primary text-lg px-8 py-4"
+                  className="landing-cta-primary"
                 >
                   Start Learning
                 </Button>
@@ -44,88 +45,88 @@ export default function Landing() {
                 <Button 
                   variant="outline"
                   size="lg"
-                  className="btn-secondary text-lg px-8 py-4"
+                  className="landing-cta-secondary"
                 >
                   View Demo
                 </Button>
               </div>
 
               {/* Feature Highlights */}
-              <div className="flex flex-wrap gap-6 justify-center lg:justify-start pt-4">
-                <div className="flex items-center space-x-2 text-foreground">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <span className="text-sm">AI-Powered Conversations</span>
+              <div className="landing-feature-highlights">
+                <div className="landing-feature-item">
+                  <div className="landing-feature-dot landing-feature-dot-blue"></div>
+                  <span className="landing-feature-text">AI-Powered Conversations</span>
                 </div>
-                <div className="flex items-center space-x-2 text-foreground">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                  <span className="text-sm">Real-World Scenarios</span>
+                <div className="landing-feature-item">
+                  <div className="landing-feature-dot landing-feature-dot-orange"></div>
+                  <span className="landing-feature-text">Real-World Scenarios</span>
                 </div>
-                <div className="flex items-center space-x-2 text-foreground">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm">Progress Tracking</span>
+                <div className="landing-feature-item">
+                  <div className="landing-feature-dot landing-feature-dot-green"></div>
+                  <span className="landing-feature-text">Progress Tracking</span>
                 </div>
               </div>
             </div>
 
             {/* Right Content - Feature Preview */}
-            <div className="flex justify-center lg:justify-end">
-              <div className="relative w-full max-w-md">
+            <div className="landing-preview-container">
+              <div className="landing-preview-wrapper">
                 {/* Main Preview Card */}
-                <div className="content-card">
-                  <div className="space-y-4">
+                <div className="landing-preview-card">
+                  <div className="landing-preview-content">
                     {/* Header */}
-                    <div className="flex items-center justify-between pb-3 border-b border-light">
-                      <h3 className="font-semibold text-primary">Conversation Practice</h3>
-                      <div className="status-tag n5">N5 Level</div>
+                    <div className="landing-preview-header">
+                      <h3 className="landing-preview-title">Conversation Practice</h3>
+                      <div className="landing-preview-badge">N5 Level</div>
                     </div>
                     
                     {/* Conversation Preview */}
-                    <div className="space-y-3">
-                      <div className="flex items-start space-x-3">
-                        <div className="avatar sensei flex-shrink-0">
-                          <span className="font-japanese">先</span>
+                    <div className="landing-conversation-preview">
+                      <div className="landing-message-ai">
+                        <div className="landing-avatar landing-avatar-sensei">
+                          <span className="landing-avatar-text">先</span>
                         </div>
-                        <div className="message-bubble ai flex-1">
-                          <span className="font-japanese">こんにちは！今日はいい天気ですね。</span>
-                          <div className="text-xs text-muted mt-1">Hello! The weather is nice today.</div>
+                        <div className="landing-message-bubble landing-message-bubble-ai">
+                          <span className="landing-message-japanese">こんにちは！今日はいい天気ですね。</span>
+                          <div className="landing-message-translation">Hello! The weather is nice today.</div>
                         </div>
                       </div>
                       
-                      <div className="flex items-start space-x-3 justify-end">
-                        <div className="message-bubble user">
-                          <span className="font-japanese">はい、とてもいい天気です！</span>
+                      <div className="landing-message-user">
+                        <div className="landing-message-bubble landing-message-bubble-user">
+                          <span className="landing-message-japanese">はい、とてもいい天気です！</span>
                         </div>
-                        <div className="avatar student flex-shrink-0">
+                        <div className="landing-avatar landing-avatar-student">
                           <span>You</span>
                         </div>
                       </div>
                     </div>
                     
                     {/* Progress Indicator */}
-                    <div className="pt-3 border-t border-light">
-                      <div className="flex items-center justify-between text-sm text-secondary mb-2">
+                    <div className="landing-progress-section">
+                      <div className="landing-progress-header">
                         <span>Progress</span>
                         <span>3/5 exchanges</span>
                       </div>
-                      <div className="progress-bar">
-                        <div className="progress-fill" style={{ width: '60%' }}></div>
+                      <div className="landing-progress-bar">
+                        <div className="landing-progress-fill" style={{ width: '60%' }}></div>
                       </div>
                     </div>
                   </div>
                 </div>
                 
                 {/* Floating Stats */}
-                <div className="absolute -right-4 -top-4 content-card p-3 shadow-lg">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary">127</div>
-                    <div className="text-xs text-secondary">Words Learned</div>
+                <div className="landing-stat-card landing-stat-card-top">
+                  <div className="landing-stat-content">
+                    <div className="landing-stat-number">127</div>
+                    <div className="landing-stat-label">Words Learned</div>
                   </div>
                 </div>
                 
-                <div className="absolute -left-4 -bottom-4 content-card p-3 shadow-lg">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-orange-500">15</div>
-                    <div className="text-xs text-secondary">Scenarios</div>
+                <div className="landing-stat-card landing-stat-card-bottom">
+                  <div className="landing-stat-content">
+                    <div className="landing-stat-number landing-stat-number-orange">15</div>
+                    <div className="landing-stat-label">Scenarios</div>
                   </div>
                 </div>
               </div>
@@ -135,76 +136,76 @@ export default function Landing() {
       </section>
 
       {/* Features Section */}
-      <section className="section-padding bg-card">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-primary mb-4">Why Choose Tomoshibi?</h2>
-            <p className="text-xl text-foreground">Effective Japanese learning through interactive conversations</p>
+      <section className="landing-features-section">
+        <div className="landing-features-container">
+          <div className="landing-features-header">
+            <h2 className="landing-features-title">Why Choose Tomoshibi?</h2>
+            <p className="landing-features-subtitle">Effective Japanese learning through interactive conversations</p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="content-card text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="landing-features-grid">
+            <div className="landing-feature-card">
+              <div className="landing-feature-icon landing-feature-icon-blue">
                 <span className="text-2xl">🎭</span>
               </div>
-              <h3 className="text-xl font-semibold text-primary mb-3">AI Tutors</h3>
-              <p className="text-foreground">Learn with Haruki-sensei and Aoi-chan, each offering unique teaching approaches tailored to your learning style.</p>
+              <h3 className="landing-feature-title">AI Tutors</h3>
+              <p className="landing-feature-description">Learn with Haruki-sensei and Aoi-chan, each offering unique teaching approaches tailored to your learning style.</p>
             </div>
             
-            <div className="content-card text-center">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="landing-feature-card">
+              <div className="landing-feature-icon landing-feature-icon-orange">
                 <span className="text-2xl">💬</span>
               </div>
-              <h3 className="text-xl font-semibold text-primary mb-3">Real Scenarios</h3>
-              <p className="text-foreground">Practice conversations for everyday situations like shopping, dining, and social interactions.</p>
+              <h3 className="landing-feature-title">Real Scenarios</h3>
+              <p className="landing-feature-description">Practice conversations for everyday situations like shopping, dining, and social interactions.</p>
             </div>
             
-            <div className="content-card text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="landing-feature-card">
+              <div className="landing-feature-icon landing-feature-icon-green">
                 <span className="text-2xl">📊</span>
               </div>
-              <h3 className="text-xl font-semibold text-primary mb-3">Track Progress</h3>
-              <p className="text-foreground">Monitor your vocabulary growth, conversation skills, and JLPT N5 preparation progress.</p>
+              <h3 className="landing-feature-title">Track Progress</h3>
+              <p className="landing-feature-description">Monitor your vocabulary growth, conversation skills, and JLPT N5 preparation progress.</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Stats Section */}
-      <section className="section-padding">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <section className="landing-stats-section">
+        <div className="landing-stats-container">
+          <div className="landing-stats-grid">
             <div>
-              <div className="text-3xl font-bold text-primary mb-2">100+</div>
-              <div className="text-foreground">Active Learners</div>
+              <div className="landing-stat-value">100+</div>
+              <div className="landing-stat-description">Active Learners</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-primary mb-2">15+</div>
-              <div className="text-foreground">Scenarios</div>
+              <div className="landing-stat-value">15+</div>
+              <div className="landing-stat-description">Scenarios</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-primary mb-2">800+</div>
-              <div className="text-foreground">JLPT Vocabulary</div>
+              <div className="landing-stat-value">800+</div>
+              <div className="landing-stat-description">JLPT Vocabulary</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-primary mb-2">90%</div>
-              <div className="text-foreground">Student Satisfaction</div>
+              <div className="landing-stat-value">90%</div>
+              <div className="landing-stat-description">Student Satisfaction</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="section-padding bg-blue-50">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-3xl font-bold text-primary mb-4">Ready to Start Your Japanese Journey?</h2>
-          <p className="text-xl text-foreground mb-8">
+      <section className="landing-cta-section">
+        <div className="landing-cta-container">
+          <h2 className="landing-cta-title">Ready to Start Your Japanese Journey?</h2>
+          <p className="landing-cta-description">
             Join thousands of learners building confidence in Japanese conversation
           </p>
           <Button 
             onClick={() => setLocation("/login")}
             size="lg"
-            className="btn-primary text-lg px-8 py-4"
+            className="landing-cta-button"
           >
             Start Learning Today
           </Button>

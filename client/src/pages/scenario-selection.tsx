@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -72,11 +73,11 @@ export default function ScenarioSelection() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="glass-card rounded-3xl p-8">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 border-4 border-primary border-l-transparent rounded-full animate-spin"></div>
-            <span className="text-foreground">Loading scenarios...</span>
+      <div className="scenario-selection-loading-container">
+        <div className="scenario-selection-loading-card">
+          <div className="scenario-selection-loading-content">
+            <div className="scenario-selection-loading-spinner"></div>
+            <span className="scenario-selection-loading-text">Loading scenarios...</span>
           </div>
         </div>
       </div>
@@ -84,39 +85,39 @@ export default function ScenarioSelection() {
   }
 
   return (
-    <div className="min-h-screen bg-deep-navy p-4">
+    <div className="scenario-selection-page-container">
       {/* Header */}
-      <header className="glass-card rounded-2xl p-4 mb-6 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
+      <header className="scenario-selection-header">
+        <div className="scenario-selection-navigation">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setLocation("/tutor-selection")}
-            className="p-2 text-off-white hover:bg-kanji-glow"
+            className="scenario-selection-back-button"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-xl font-semibold text-off-white">Choose a Scenario</h1>
+          <h1 className="scenario-selection-page-title">Choose a Scenario</h1>
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto">
+      <div className="scenario-selection-content-container">
         {/* Selected Tutor Info */}
         {persona && (
-          <Card className="glass-card border-glass-border mb-8">
-            <CardContent className="p-6 flex items-center space-x-4">
-              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-lantern-orange/30">
+          <Card className="scenario-selection-tutor-info">
+            <CardContent className="scenario-selection-tutor-content">
+              <div className="scenario-selection-tutor-avatar">
                 <img 
                   src={getAvatarImage(persona)} 
                   alt={persona.name}
-                  className="w-full h-full object-cover"
+                  className="scenario-selection-tutor-image"
                 />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-off-white">
+                <h3 className="scenario-selection-tutor-name">
                   Learning with {persona.name} {persona.type === 'teacher' ? '(陽輝)' : '(葵)'}
                 </h3>
-                <p className="text-off-white/70 text-sm">
+                <p className="scenario-selection-tutor-type">
                   {persona.type === 'teacher' ? 'Formal Teacher' : 'Friendly Tutor'}
                 </p>
               </div>
@@ -124,24 +125,24 @@ export default function ScenarioSelection() {
           </Card>
         )}
 
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-off-white mb-2">What would you like to practice?</h2>
-          <p className="text-off-white/70">Choose a conversation scenario or start with free chat.</p>
+        <div className="scenario-selection-intro">
+          <h2 className="scenario-selection-main-title">What would you like to practice?</h2>
+          <p className="scenario-selection-main-description">Choose a conversation scenario or start with free chat.</p>
         </div>
 
         {/* Free Chat Option */}
-        <Card className="glass-card border-glass-border hover:border-sakura-blue/30 transition-all duration-300 mb-6 cursor-pointer group" onClick={handleFreeChat}>
-          <CardContent className="p-6 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-sakura-blue to-lantern-orange rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+        <Card className="scenario-selection-free-chat-card" onClick={handleFreeChat}>
+          <CardContent className="scenario-selection-free-chat-content">
+            <div className="scenario-selection-free-chat-icon">
               <MessageCircle className="w-8 h-8 text-deep-navy" />
             </div>
-            <h3 className="text-xl font-semibold text-off-white mb-2">Free Chat</h3>
-            <p className="text-off-white/70 mb-4">
+            <h3 className="scenario-selection-free-chat-title">Free Chat</h3>
+            <p className="scenario-selection-free-chat-description">
               Open conversation without specific topics. Perfect for exploring your interests.
             </p>
             <Button 
               variant="outline" 
-              className="border-sakura-blue/50 text-sakura-blue hover:bg-sakura-blue/10"
+              className="scenario-selection-free-chat-button"
               disabled={loadingScenario === 0}
               onClick={(e) => {
                 e.stopPropagation();
@@ -154,28 +155,28 @@ export default function ScenarioSelection() {
         </Card>
 
         {/* Scenario Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="scenario-selection-scenarios-grid">
           {Array.isArray(scenarios) && scenarios.map((scenario: any) => {
             const IconComponent = getScenarioIcon(scenario.title);
             return (
               <Card 
                 key={scenario.id} 
-                className="glass-card border-glass-border hover:border-lantern-orange/30 transition-all duration-300 cursor-pointer group"
+                className="scenario-selection-scenario-card"
                 onClick={() => handleScenarioSelect(scenario.id)}
               >
-                <CardContent className="p-6 text-center">
-                  <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-br from-lantern-orange to-sakura-blue rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <CardContent className="scenario-selection-scenario-content">
+                  <div className="scenario-selection-scenario-icon">
                     <IconComponent className="w-6 h-6 text-deep-navy" />
                   </div>
                   
-                  <h3 className="text-lg font-semibold text-off-white mb-2">{scenario.title}</h3>
-                  <p className="text-off-white/70 text-sm mb-4 leading-relaxed">
+                  <h3 className="scenario-selection-scenario-title">{scenario.title}</h3>
+                  <p className="scenario-selection-scenario-description">
                     {scenario.description}
                   </p>
                   
                   <Button 
                     size="sm"
-                    className="gradient-button w-full group-hover:scale-105 transition-transform duration-300"
+                    className="scenario-selection-scenario-button"
                     disabled={loadingScenario === scenario.id}
                     onClick={(e) => {
                       e.stopPropagation();

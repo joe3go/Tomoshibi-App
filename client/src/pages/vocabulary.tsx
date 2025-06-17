@@ -1,3 +1,4 @@
+
 import VocabTracker from '@/components/vocab-tracker';
 import { EnhancedButton } from '@/components/EnhancedButton';
 import { ArrowLeft } from 'lucide-react';
@@ -7,13 +8,13 @@ export default function Vocabulary() {
   const [, setLocation] = useLocation();
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-6">
+    <div className="vocabulary-page-container">
+      <div className="vocabulary-content-wrapper">
+        <div className="vocabulary-navigation">
           <EnhancedButton
             variant="ghost"
             onClick={() => setLocation('/')}
-            className="flex items-center gap-2 text-muted-foreground hover:text-primary"
+            className="vocabulary-back-button"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Dashboard
