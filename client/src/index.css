@@ -1601,6 +1601,50 @@
 
 
   /* ==============================
+     🎨 Hero Page Feature Images
+     ============================== */
+  .landing-feature-image-container {
+    @apply relative w-full h-48 md:h-56 mb-6 rounded-lg overflow-hidden;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--muted) 100%);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border);
+  }
+
+  .landing-feature-image {
+    @apply w-full h-full object-cover transition-transform duration-300 hover:scale-105;
+    border-radius: 0.5rem;
+    filter: brightness(1.05) contrast(1.02) saturate(1.1);
+  }
+
+  .landing-feature-card {
+    @apply bg-card rounded-lg p-6 shadow-lg hover:shadow-xl transition-all duration-300;
+    border: 1px solid var(--border);
+    background: linear-gradient(145deg, var(--card) 0%, var(--background) 100%);
+  }
+
+  .landing-feature-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent-gold);
+  }
+
+  .landing-feature-card:hover .landing-feature-image {
+    filter: brightness(1.1) contrast(1.05) saturate(1.15);
+  }
+
+  /* Responsive adjustments for feature images */
+  @media (max-width: 768px) {
+    .landing-feature-image-container {
+      @apply h-40 mb-4;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .landing-feature-image-container {
+      @apply h-36 mb-3;
+    }
+  }
+
+  /* ==============================
      🖨️ Print Styles
      ============================== */
   @media print {

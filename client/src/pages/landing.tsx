@@ -2,6 +2,9 @@
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import Header from "@/components/Header";
+import tutorsImage from "@assets/HeroPage Tutors_1750137163692.png";
+import scenariosImage from "@assets/Hero Page Real Scenarios_1750137163691.png";
+import progressImage from "@assets/Progress Motivation_1750137163691.png";
 
 export default function Landing() {
   const [, setLocation] = useLocation();
@@ -145,24 +148,36 @@ export default function Landing() {
           
           <div className="landing-features-grid">
             <div className="landing-feature-card">
-              <div className="landing-feature-icon landing-feature-icon-blue">
-                <span className="text-2xl">🎭</span>
+              <div className="landing-feature-image-container">
+                <img 
+                  src={tutorsImage} 
+                  alt="AI Tutors - Learn with personalized Japanese tutors" 
+                  className="landing-feature-image"
+                />
               </div>
               <h3 className="landing-feature-title">AI Tutors</h3>
               <p className="landing-feature-description">Learn with Haruki-sensei and Aoi-chan, each offering unique teaching approaches tailored to your learning style.</p>
             </div>
             
             <div className="landing-feature-card">
-              <div className="landing-feature-icon landing-feature-icon-orange">
-                <span className="text-2xl">💬</span>
+              <div className="landing-feature-image-container">
+                <img 
+                  src={scenariosImage} 
+                  alt="Real Life Scenarios - Practice Japanese in authentic situations" 
+                  className="landing-feature-image"
+                />
               </div>
               <h3 className="landing-feature-title">Real Scenarios</h3>
               <p className="landing-feature-description">Practice conversations for everyday situations like shopping, dining, and social interactions.</p>
             </div>
             
             <div className="landing-feature-card">
-              <div className="landing-feature-icon landing-feature-icon-green">
-                <span className="text-2xl">📊</span>
+              <div className="landing-feature-image-container">
+                <img 
+                  src={progressImage} 
+                  alt="Track Progress - Monitor your Japanese learning journey" 
+                  className="landing-feature-image"
+                />
               </div>
               <h3 className="landing-feature-title">Track Progress</h3>
               <p className="landing-feature-description">Monitor your vocabulary growth, conversation skills, and JLPT N5 preparation progress.</p>
