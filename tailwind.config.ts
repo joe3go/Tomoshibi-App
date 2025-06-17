@@ -36,9 +36,9 @@ const themeVariables = {
   },
   radius: "0.5rem",
   images: {
-    lantern: "url('../images/lantern.png')",
-    sakura: "url('../images/sakura.png')",
-    waves: "url('../images/japanese-waves.png')",
+    lantern: "url('/lantern.png')",
+    sakura: "url('/sakura.png')",
+    waves: "url('/japanese-waves.png')",
   },
 } as const;
 
