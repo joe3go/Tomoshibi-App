@@ -438,16 +438,46 @@ export default function Chat() {
         </div>
       </div>
 
-      {/* Enhanced Chat Input with Wanakana and Furigana controls */}
-      <EnhancedChatInput
-        message={message}
-        setMessage={setMessage}
-        onSendMessage={handleSendMessage}
-        isLoading={sendMessageMutation.isPending}
-        showFurigana={showFurigana}
-        onToggleFurigana={handleFuriganaToggle}
-        placeholder="Type your response in Japanese... (English questions are welcome too!)"
-      />
+      {/* Chat Input */}
+      <div className="chat-input-container">
+        <div className="chat-input-wrapper">
+          <div className="chat-input-field-container">
+            <div className="chat-input-field">
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+                placeholder="Type your response in Japanese... (English questions are welcome too!)"
+                className="chat-textarea w-full p-3 border border-border rounded-md resize-none"
+                rows={1}
+                style={{ maxHeight: "120px" }}
+              />
+            </div>
+            <button
+              onClick={handleSendMessage}
+              disabled={!message.trim() || sendMessageMutation.isPending}
+              className="chat-send-button ml-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
+            >
+              Send
+            </button>
+          </div>
+
+          {/* Furigana Toggle */}
+          <div className="mt-2 flex items-center gap-2">
+            <button
+              onClick={handleFuriganaToggle}
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              {showFurigana ? "Hide Furigana" : "Show Furigana"}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

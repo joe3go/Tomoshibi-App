@@ -50,18 +50,30 @@ export default function EnhancedChatInput({
 
     if (inputMode === 'romaji' && autoConvert) {
       // Bind Wanakana to automatically convert romaji to hiragana
-      wanakana.bind(textarea, {
-        IMEMode: true, // Better for Japanese IME users
-        useObsoleteKana: false,
-      });
+      try {
+        wanakana.bind(textarea, {
+          IMEMode: true,
+          useObsoleteKana: false,
+        });
+      } catch (error) {
+        console.warn('Failed to bind Wanakana:', error);
+      }
     } else {
       // Unbind Wanakana
-      wanakana.unbind(textarea);
+      try {
+        wanakana.unbind(textarea);
+      } catch (error) {
+        console.warn('Failed to unbind Wanakana:', error);
+      }
     }
 
     return () => {
       if (textarea) {
-        wanakana.unbind(textarea);
+        try {
+          wanakana.unbind(textarea);
+        } catch (error) {
+          console.warn('Failed to cleanup Wanakana:', error);
+        }
       }
     };
   }, [inputMode, autoConvert]);

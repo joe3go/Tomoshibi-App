@@ -53,7 +53,14 @@ export function ScenarioPracticeView({
   onExit, 
   className = "" 
 }: ScenarioPracticeViewProps) {
-  const [progressManager] = useState(() => new ScenarioProgressManager(userId));
+  const [progressManager] = useState(() => {
+    try {
+      return new ScenarioProgressManager(userId);
+    } catch (error) {
+      console.error('Failed to create progress manager:', error);
+      return null;
+    }
+  });
   const [session, setSession] = useState<ScenarioPracticeSession | null>(null);
   const [currentMessage, setCurrentMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -76,8 +83,18 @@ export function ScenarioPracticeView({
   };
 
   const initializeSession = () => {
-    const newSession = progressManager.createPracticeSession(scenario.id, personaId);
-    setSession(newSession);
+    if (!progressManager) {
+      console.error('Progress manager not available');
+      return;
+    }
+    
+    try {
+      const newSession = progressManager.createPracticeSession(scenario.id, personaId);
+      setSession(newSession);
+    } catch (error) {
+      console.error('Failed to create practice session:', error);
+      return;
+    }
     
     // Initialize goal completions
     const initialGoals: GoalCompletion[] = scenario.goals.map(goal => ({
@@ -166,11 +183,15 @@ export function ScenarioPracticeView({
       checkGoalCompletions(currentMessage, aiResponse);
 
       // Update session
-      if (session) {
-        progressManager.updatePracticeSession(session.id, {
-          messages: [...messages, userMessage, aiMessage],
-          score: sessionScore + aiResponse.scoreGain
-        });
+      if (session && progressManager) {
+        try {
+          progressManager.updatePracticeSession(session.id, {
+            messages: [...messages, userMessage, aiMessage],
+            score: sessionScore + aiResponse.scoreGain
+          });
+        } catch (updateError) {
+          console.error('Failed to update session:', updateError);
+        }
       }
 
       setSessionScore(prev => prev + (aiResponse.scoreGain || 0));
