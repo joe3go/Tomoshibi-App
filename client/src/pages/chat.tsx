@@ -4,17 +4,14 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft,
-  Settings,
-  MoreHorizontal,
-  Send,
   CheckCircle,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import EnhancedFuriganaText from "@/components/enhanced-furigana-text";
+import EnhancedChatInput from "@/components/enhanced-chat-input";
 import harukiAvatar from "@assets/harukiavatar_1750137453243.png";
 import aoiAvatar from "@assets/aoiavatar_1750137453242.png";
 

@@ -55,15 +55,22 @@ export async function generateAIResponse(context: ConversationContext): Promise<
   }
 }
 
+// Helper function to detect if text is primarily English
+function isEnglishMessage(text: string): boolean {
+  const englishChars = text.match(/[a-zA-Z\s.,!?'"]/g)?.length || 0;
+  const japaneseChars = text.match(/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/g)?.length || 0;
+  return englishChars > japaneseChars * 1.5;
+}
+
 function buildSystemPrompt(context: ConversationContext): string {
-  const { persona, scenario, conversationHistory, targetVocab, targetGrammar } = context;
+  const { persona, scenario, conversationHistory, targetVocab, targetGrammar, userMessage } = context;
   
   const vocabList = targetVocab.map(v => 
     `${v.kanji || v.hiragana} (${v.hiragana}) - ${v.englishMeaning}`
   ).join(', ');
   
   const grammarList = targetGrammar.map(g => 
-    `${g.pattern} - ${g.englishExplanation}`
+    `${g.pattern} - ${g.meaning}`
   ).join(', ');
 
   // Analyze user performance from conversation history
@@ -71,10 +78,13 @@ function buildSystemPrompt(context: ConversationContext): string {
   const messageCount = userMessages.length;
   const avgMessageLength = messageCount > 0 ? userMessages.reduce((sum, msg) => sum + msg.content.length, 0) / messageCount : 0;
   const skillLevel = messageCount > 3 && avgMessageLength > 20 ? 'intermediate' : 'beginner';
+  
+  // Detect if current message is in English (question/explanation request)
+  const isEnglishQuery = isEnglishMessage(userMessage);
 
   let adaptiveInstructions = '';
   if (persona.type === 'teacher') {
-    adaptiveInstructions = `You are Sensei, a highly adaptive formal Japanese teacher with deep cultural insight.
+    adaptiveInstructions = `You are Aoi-sensei, a highly adaptive formal Japanese teacher with deep cultural insight.
 
 ADAPTIVE TEACHING APPROACH:
 - Be highly attuned to subtle grammatical and politeness errors, providing gentle but precise corrections
@@ -82,6 +92,13 @@ ADAPTIVE TEACHING APPROACH:
 - Proactively introduce new, slightly more complex formal expressions when user demonstrates readiness
 - Focus on keigo (honorific language) and proper social context
 - Current user skill assessment: ${skillLevel}
+
+ENGLISH QUESTION HANDLING:
+- When user asks in English: First provide a comprehensive explanation in clear English
+- Follow with: "Now let's practice this in Japanese:" and continue the conversation naturally
+- For grammar questions: Explain the rule, give examples, then practice together
+- For vocabulary questions: Define the word, show usage patterns, then use it in conversation
+- For cultural questions: Explain the cultural context thoroughly before practicing
 
 DYNAMIC ADJUSTMENT RULES:
 - If user makes politeness errors: Explain social context with cultural insight
@@ -91,7 +108,7 @@ DYNAMIC ADJUSTMENT RULES:
 
 CORRECTION STYLE: "That's a good attempt! In formal situations, we would say [correction] because [cultural/grammatical reasoning]..."`;
   } else {
-    adaptiveInstructions = `You are Yuki, an adaptive casual Japanese friend who naturally adjusts to your conversation partner.
+    adaptiveInstructions = `You are Haruki, an adaptive casual Japanese friend who naturally adjusts to your conversation partner.
 
 ADAPTIVE CONVERSATION APPROACH:
 - Focus less on strict grammatical perfection, more on natural flow and appropriate casual expressions
@@ -99,6 +116,13 @@ ADAPTIVE CONVERSATION APPROACH:
 - Encourage experimentation with different casual forms without heavy penalization
 - Use contractions, casual particles, and modern expressions naturally
 - Current user skill assessment: ${skillLevel}
+
+ENGLISH QUESTION HANDLING:
+- When user asks in English: Answer like a helpful friend would - casual but informative
+- Follow with: "Let's try using that in Japanese!" and naturally continue the conversation
+- For slang questions: Explain when/how to use it, then demonstrate in context
+- For casual form questions: Show the difference between formal/casual, then practice
+- Make explanations fun and relatable to everyday situations
 
 DYNAMIC ADJUSTMENT RULES:
 - If user is too formal: Gently guide toward casual speech with natural examples
@@ -135,15 +159,24 @@ ADAPTIVE RESPONSE GUIDELINES:
 CONVERSATION HISTORY FOR CONTEXT:
 ${conversationHistory.slice(-6).map(msg => `${msg.role}: ${msg.content}`).join('\n')}
 
+ENGLISH QUESTION DETECTION: ${isEnglishQuery ? 'TRUE - User asked in English' : 'FALSE - User responded in Japanese'}
+
 RESPONSE FORMAT (JSON):
-{
+${isEnglishQuery ? `{
+  "response": "First provide a clear English explanation addressing their question, then follow with: 'Now let's practice this in Japanese:' and continue with appropriate Japanese response using furigana notation: 漢字(かんじ)",
+  "english": "English explanation of the concept/answer",
+  "feedback": "Encouraging feedback about their question and learning approach",
+  "vocabUsed": [array of vocab IDs used in Japanese portion],
+  "grammarUsed": [array of grammar IDs used in Japanese portion],
+  "suggestions": ["helpful phrases to continue the conversation in Japanese"]
+}` : `{
   "response": "Your adaptive Japanese response with furigana notation for kanji. Format kanji with readings as: 漢字(かんじ) using parentheses immediately after each kanji. Always include furigana for N5 level kanji to help learning.",
-  "english": "English translation",
+  "english": "English translation of your Japanese response",
   "feedback": "Persona-appropriate feedback based on user's demonstrated level",
   "vocabUsed": [array of vocab IDs used],
   "grammarUsed": [array of grammar IDs used], 
   "suggestions": ["adaptive phrases suited to user's current level"]
-}
+}`}
 
 Adapt your response complexity, correction style, and vocabulary introduction based on the user's demonstrated ability and your persona's adaptive teaching approach.`;
 }
