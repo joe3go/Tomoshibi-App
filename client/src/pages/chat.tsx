@@ -10,8 +10,11 @@ import {
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import EnhancedFuriganaText from "@/components/enhanced-furigana-text";
-import EnhancedChatInput from "@/components/enhanced-chat-input";
+import FuriganaText from "@/components/furigana-text";
+import { Input } from "@/components/ui/input";
+import { Toggle } from "@/components/ui/toggle";
+import { Languages } from "lucide-react";
+import { toHiragana, isRomaji } from 'wanakana';
 import harukiAvatar from "@assets/harukiavatar_1750137453243.png";
 import aoiAvatar from "@assets/aoiavatar_1750137453242.png";
 
@@ -19,6 +22,7 @@ export default function Chat() {
   const [, params] = useRoute("/chat/:conversationId");
   const [, setLocation] = useLocation();
   const [message, setMessage] = useState("");
+  const [romajiMode, setRomajiMode] = useState(false);
   const [showFurigana, setShowFurigana] = useState(() => {
     const saved = localStorage.getItem("furigana-visible");
     return saved !== null ? saved === "true" : true;
@@ -143,7 +147,18 @@ export default function Chat() {
 
   const handleSendMessage = () => {
     if (message.trim() && !sendMessageMutation.isPending) {
-      sendMessageMutation.mutate(message.trim());
+      const finalMessage = romajiMode ? toHiragana(message.trim()) : message.trim();
+      sendMessageMutation.mutate(finalMessage);
+      setMessage("");
+    }
+  };
+
+  const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    if (romajiMode && isRomaji(value)) {
+      setMessage(toHiragana(value));
+    } else {
+      setMessage(value);
     }
   };
 
@@ -337,12 +352,10 @@ export default function Chat() {
                 )}
 
                 <div className="chat-message-content">
-                  <EnhancedFuriganaText
+                  <FuriganaText
                     text={msg.content}
                     showFurigana={showFurigana}
                     showToggleButton={false}
-                    enableWordHover={msg.sender === "ai"}
-                    className="text-inherit"
                   />
                 </div>
 
@@ -445,7 +458,7 @@ export default function Chat() {
             <div className="chat-input-field">
               <textarea
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                onChange={handleMessageChange}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
@@ -467,8 +480,17 @@ export default function Chat() {
             </button>
           </div>
 
-          {/* Furigana Toggle */}
-          <div className="mt-2 flex items-center gap-2">
+          {/* Input Controls */}
+          <div className="mt-2 flex items-center gap-4">
+            <Toggle
+              pressed={romajiMode}
+              onPressedChange={setRomajiMode}
+              size="sm"
+              className="text-xs"
+            >
+              <Languages className="w-3 h-3 mr-1" />
+              Romaji
+            </Toggle>
             <button
               onClick={handleFuriganaToggle}
               className="text-sm text-muted-foreground hover:text-foreground"
