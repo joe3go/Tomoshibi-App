@@ -29,11 +29,11 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [displayName, setDisplayName] = useState((user as any)?.displayName || "");
-  const [newPassword, setNewPassword] = useState("");
-  const [soundNotifications, setSoundNotifications] = useState((user as any)?.soundNotifications ?? true);
-  const [desktopNotifications, setDesktopNotifications] = useState((user as any)?.desktopNotifications ?? true);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [userDisplayName, setUserDisplayName] = useState((user as any)?.displayName || "");
+  const [newUserPassword, setNewUserPassword] = useState("");
+  const [enableSoundNotifications, setEnableSoundNotifications] = useState((user as any)?.soundNotifications ?? true);
+  const [enableDesktopNotifications, setEnableDesktopNotifications] = useState((user as any)?.desktopNotifications ?? true);
 
   // Fetch conversations
   const { data: conversations, isLoading: conversationsLoading } = useQuery({
@@ -69,7 +69,7 @@ export default function Dashboard() {
     ? conversations.filter((c: any) => c.status === 'completed')
     : [];
 
-  const logoutMutation = useMutation({
+  const userLogoutMutation = useMutation({
     mutationFn: async () => {
       // Clear all authentication data
       localStorage.removeItem("token");
@@ -82,12 +82,12 @@ export default function Dashboard() {
     },
   });
 
-  const handleLogout = () => {
-    logoutMutation.mutate();
+  const handleUserLogout = () => {
+    userLogoutMutation.mutate();
   };
 
-  const getScenarioJapanese = (title: string): string => {
-    const scenarios: Record<string, string> = {
+  const getScenarioJapaneseTranslation = (title: string): string => {
+    const scenarioTranslations: Record<string, string> = {
       "Self-Introduction": "自己紹介",
       Shopping: "買い物",
       Restaurant: "レストラン",
@@ -98,10 +98,10 @@ export default function Dashboard() {
       Work: "仕事",
       Travel: "健康",
     };
-    return scenarios[title] || title;
+    return scenarioTranslations[title] || title;
   };
 
-  const getProgressionLabel = () => {
+  const getUserProgressionLabel = () => {
     const vocabCount = (vocabData as any[]).length;
     const completedCount = (completedConversations as any[]).length;
     const totalInteractions = vocabCount + completedCount;
@@ -114,7 +114,7 @@ export default function Dashboard() {
     return "🌟 Rising Sun";
   };
 
-  const updateProfileMutation = useMutation({
+  const userProfileUpdateMutation = useMutation({
     mutationFn: async (updates: any) => {
       const response = await fetch(`/api/users/${(user as any)?.id}`, {
         method: 'PATCH',
@@ -130,11 +130,11 @@ export default function Dashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
-      setSettingsOpen(false);
+      setIsSettingsModalOpen(false);
     }
   });
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUserAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -153,7 +153,7 @@ export default function Dashboard() {
 
       if (response.ok) {
         const { profileImageUrl } = await response.json();
-        updateProfileMutation.mutate({ profileImageUrl });
+        userProfileUpdateMutation.mutate({ profileImageUrl });
       }
     } catch (error) {
       console.error('Upload failed:', error);
@@ -161,7 +161,7 @@ export default function Dashboard() {
   };
 
   // End conversation mutation with enhanced JWT authentication
-  const endConversationMutation = useMutation({
+  const conversationEndMutation = useMutation({
     mutationFn: async (conversationId: number) => {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -208,27 +208,27 @@ export default function Dashboard() {
     },
   });
 
-  const handleEndSessionDashboard = (conversationId: number) => {
-    endConversationMutation.mutate(conversationId);
+  const handleConversationEnd = (conversationId: number) => {
+    conversationEndMutation.mutate(conversationId);
   };
 
-  const handleSaveSettings = () => {
-    const updates: any = {
-      displayName,
-      soundNotifications,
-      desktopNotifications
+  const handleUserSettingsSave = () => {
+    const settingsUpdates: any = {
+      displayName: userDisplayName,
+      soundNotifications: enableSoundNotifications,
+      desktopNotifications: enableDesktopNotifications
     };
 
-    if (newPassword.trim()) {
-      updates.password = newPassword;
+    if (newUserPassword.trim()) {
+      settingsUpdates.password = newUserPassword;
     }
 
-    updateProfileMutation.mutate(updates);
+    userProfileUpdateMutation.mutate(settingsUpdates);
   };
 
-  const handleSendFeedback = () => {
-    const emailUrl = `mailto:feedback@tomoshibiapp.com?subject=Tomoshibi App Feedback&body=Hi team,%0A%0AI'd like to share some feedback about the app:%0A%0A`;
-    window.open(emailUrl, '_blank');
+  const handleUserFeedbackSend = () => {
+    const feedbackEmailUrl = `mailto:feedback@tomoshibiapp.com?subject=Tomoshibi App Feedback&body=Hi team,%0A%0AI'd like to share some feedback about the app:%0A%0A`;
+    window.open(feedbackEmailUrl, '_blank');
   };
 
   if (
@@ -250,8 +250,8 @@ export default function Dashboard() {
         {/* Header */}
         <DashboardHeader 
           user={user}
-          progressionLabel={getProgressionLabel()}
-          onLogout={handleLogout}
+          progressionLabel={getUserProgressionLabel()}
+          onLogout={handleUserLogout}
         />
 
         {/* Continue Conversations Section */}
@@ -349,7 +349,7 @@ export default function Dashboard() {
                             variant="outline"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleEndSessionDashboard(conversation.id);
+                              handleConversationEnd(conversation.id);
                             }}
                             className="text-red-600 hover:text-red-700"
                           >
@@ -506,7 +506,7 @@ export default function Dashboard() {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Current Level</span>
-                <Badge variant="secondary">{getProgressionLabel()}</Badge>
+                <Badge variant="secondary">{getUserProgressionLabel()}</Badge>
               </div>
 
               <div className="flex justify-between items-center">
@@ -571,7 +571,7 @@ export default function Dashboard() {
                     index === self.findIndex((p: any) => p.id === persona.id),
                 )
                 .map((persona: any) => {
-                  const getAvatarImage = (persona: any) => {
+                  const getPersonaAvatarImage = (persona: any) => {
                     if (persona.type === "teacher") return aoiAvatar; // Aoi is the female teacher
                     if (persona.type === "friend") return harukiAvatar; // Haruki is the male friend
                     return aoiAvatar; // Default fallback
@@ -586,7 +586,7 @@ export default function Dashboard() {
                       <div className="flex items-start space-x-4">
                         <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/30 flex-shrink-0">
                           <img
-                            src={getAvatarImage(persona)}
+                            src={getPersonaAvatarImage(persona)}
                             alt={persona.name}
                             className="w-full h-full object-cover"
                             onError={(e) => {
