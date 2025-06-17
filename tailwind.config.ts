@@ -77,7 +77,29 @@ export default {
     'progress-container',
     'progress-bar',
     'bottom-nav',
-    'loading-shimmer'
+    'loading-shimmer',
+    // Landing page classes
+    'landing-preview-card',
+    'landing-message-bubble-ai',
+    'landing-avatar-sensei',
+    'landing-stat-number-orange',
+    'landing-hero-title',
+    'landing-feature-card',
+    'landing-cta-primary',
+    'btn-primary',
+    'text-muted-foreground',
+    'landing-progress-fill',
+    'landing-stat-card-top',
+    'landing-message-bubble-user',
+    'landing-avatar-student',
+    'landing-hero-section',
+    'landing-hero-content',
+    'landing-features-section',
+    'landing-stats-section',
+    'landing-cta-section',
+    'landing-container',
+    'landing-grid',
+    'landing-preview-section'
   ],
   theme: {
     extend: {
