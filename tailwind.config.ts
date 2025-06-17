@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 // Theme constants - Edit colors directly here
@@ -47,15 +48,48 @@ export default {
   content: [
     "./index.html", 
     "./src/**/*.{js,jsx,ts,tsx}",
-    "./src/components/**/*.{js,jsx,ts,tsx}",
-    "./src/pages/**/*.{js,jsx,ts,tsx}",
-    "./src/**/*.css",
+    "./client/src/**/*.{js,jsx,ts,tsx}",
+    "./client/src/components/**/*.{js,jsx,ts,tsx}",
+    "./client/src/pages/**/*.{js,jsx,ts,tsx}",
+    "./client/src/**/*.css",
+    "./client/index.html",
     "../server/**/*.{js,ts}",
     "../shared/**/*.{js,ts}",
     // Include the CSS file itself so Tailwind can scan for class usage
-    "./src/index.css"
+    "./src/index.css",
+    "./client/src/index.css"
   ],
   safelist: [
+    // Core utility classes that should never be purged
+    'bg-background',
+    'bg-card',
+    'bg-primary',
+    'bg-secondary',
+    'bg-muted',
+    'bg-accent',
+    'bg-destructive',
+    'text-foreground',
+    'text-primary',
+    'text-secondary',
+    'text-muted-foreground',
+    'text-white',
+    'text-black',
+    'border',
+    'border-border',
+    'rounded',
+    'rounded-lg',
+    'rounded-xl',
+    'p-4',
+    'p-6',
+    'px-4',
+    'py-2',
+    'flex',
+    'items-center',
+    'justify-center',
+    'space-y-4',
+    'w-full',
+    'h-full',
+    
     // Component classes from index.css
     'gold-frame',
     'message-bubble',
@@ -117,10 +151,10 @@ export default {
       pattern: /^(landing|message|avatar|btn|progress|status|enhanced|dashboard|component|section|cherry|lantern|gold|content|navbar|bottom)-/,
     },
     {
-      pattern: /^(ai|user|sensei|student|n5|primary|secondary|muted|destructive)$/,
+      pattern: /^(bg|text|border|rounded|p|px|py|m|mx|my|w|h|flex|grid|space|gap)-/,
     },
     {
-      pattern: /^text-(shadow|muted-foreground|primary|secondary)$/,
+      pattern: /^text-(shadow|muted-foreground|primary|secondary|white|black)$/,
     }
   ],
   theme: {

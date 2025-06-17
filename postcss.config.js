@@ -7,11 +7,13 @@ export default {
       cssnano: {
         preset: ['default', {
           discardComments: {
-            removeAll: true,
+            removeAll: false,
           },
           // Prevent removal of custom classes
           reduceIdents: false,
           zindex: false,
+          mergeLonghand: false,
+          discardUnused: false,
         }]
       }
     })
