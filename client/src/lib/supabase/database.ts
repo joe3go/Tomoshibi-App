@@ -91,15 +91,16 @@ export async function markScenarioComplete(userId: string, scenarioId: string, x
     .single();
 
   if (existing) {
+    const existingProgress = existing as UserProgress;
     // Update existing progress
     const { data, error } = await supabase
       .from('user_scenario_progress')
       .update({
         completed: true,
-        xp: existing.xp + xp,
+        xp: existingProgress.xp + xp,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', existing.id)
+      .eq('id', existingProgress.id)
       .select()
       .single();
 
@@ -108,7 +109,7 @@ export async function markScenarioComplete(userId: string, scenarioId: string, x
       return null;
     }
 
-    return data;
+    return data as UserProgress;
   } else {
     // Create new progress entry
     const { data, error } = await supabase
@@ -127,7 +128,7 @@ export async function markScenarioComplete(userId: string, scenarioId: string, x
       return null;
     }
 
-    return data;
+    return data as UserProgress;
   }
 }
 
@@ -140,13 +141,14 @@ export async function updateScenarioXP(userId: string, scenarioId: string, addit
     .single();
 
   if (existing) {
+    const existingProgress = existing as UserProgress;
     const { data, error } = await supabase
       .from('user_scenario_progress')
       .update({
-        xp: existing.xp + additionalXP,
+        xp: existingProgress.xp + additionalXP,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', existing.id)
+      .eq('id', existingProgress.id)
       .select()
       .single();
 
@@ -155,7 +157,7 @@ export async function updateScenarioXP(userId: string, scenarioId: string, addit
       return null;
     }
 
-    return data;
+    return data as UserProgress;
   } else {
     // Create new progress entry
     const { data, error } = await supabase
@@ -174,6 +176,6 @@ export async function updateScenarioXP(userId: string, scenarioId: string, addit
       return null;
     }
 
-    return data;
+    return data as UserProgress;
   }
 }
