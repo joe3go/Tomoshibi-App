@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 // Theme constants - Edit colors directly here
@@ -37,34 +36,15 @@ const themeVariables = {
   },
   radius: "0.5rem",
   images: {
-    lantern: "url('/lantern.png')",
-    sakura: "url('/sakura.png')",
-    waves: "url('/japanese-waves.png')",
+    lantern: "url('../images/lantern.png')",
+    sakura: "url('../images/sakura.png')",
+    waves: "url('../images/japanese-waves.png')",
   },
 } as const;
 
 export default {
   darkMode: ["class"],
-  content: [
-    "./index.html", 
-    "./src/**/*.{js,jsx,ts,tsx}",
-    "./client/src/**/*.{js,jsx,ts,tsx}",
-    "./client/src/components/**/*.{js,jsx,ts,tsx}",
-    "./client/src/pages/**/*.{js,jsx,ts,tsx}",
-    "./client/src/**/*.css",
-    "./client/index.html",
-    "../server/**/*.{js,ts}",
-    "../shared/**/*.{js,ts}",
-    // Include the CSS file itself so Tailwind can scan for class usage
-    "./src/index.css",
-    "./client/src/index.css"
-  ],
-  safelist: [
-    // Prevent ALL purging by using broad patterns
-    {
-      pattern: /.*/,
-    }
-  ],
+  content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
       borderRadius: {
@@ -186,9 +166,9 @@ export default {
         lvh: "100lvh",
       },
       backgroundImage: {
-        lantern: "url('/lantern.png')",
-        sakura: "url('/sakura.png')",
-        waves: "url('/japanese-waves.png')",
+        lantern: themeVariables.images.lantern,
+        sakura: themeVariables.images.sakura,
+        waves: themeVariables.images.waves,
       },
     },
   },
@@ -238,18 +218,18 @@ export default {
         ".lantern-decoration": {
           "@apply absolute top-0 left-0 bg-contain w-[100px] h-[200px] z-10":
             {},
-          "background-image": "url('/lantern.png')",
+          "background-image": themeVariables.images.lantern,
           animation: "lantern-glow 2s ease-in-out infinite",
         },
         ".sakura-decoration": {
           "@apply absolute w-[150px] h-[150px] bg-contain bg-no-repeat z-0 opacity-70":
             {},
-          "background-image": "url('/sakura.png')",
+          "background-image": themeVariables.images.sakura,
           animation: "float 6s ease-in-out infinite",
         },
         ".wave-pattern": {
           "@apply absolute inset-0 w-full h-full opacity-10": {},
-          "background-image": "url('/japanese-waves.png')",
+          "background-image": themeVariables.images.waves,
           "background-size": "300px",
         },
         ".btn-japanese": {
