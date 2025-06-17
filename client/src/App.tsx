@@ -49,6 +49,7 @@ function Router() {
           <Route path="/history" component={History} />
           <Route path="/vocabulary" component={Vocabulary} />
           <Route path="/my-vocabulary" component={MyVocabulary} />
+          <Route path="/vocab-test" component={VocabTest} />
           <Route path="/settings" component={Settings} />
           <Route path="/scenarios" component={ScenarioBrowse} />
           <Route path="/scenario-learning" component={EnhancedScenarioBrowse} />
