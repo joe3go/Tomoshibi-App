@@ -110,7 +110,7 @@ export default function ScenarioSelection() {
                 <img 
                   src={getAvatarImage(persona)} 
                   alt={persona.name}
-                  className="scenario-selection-tutor-image"
+                  className="scenario-selection-tutor-image w-12 h-12 rounded-full object-cover"
                 />
               </div>
               <div>

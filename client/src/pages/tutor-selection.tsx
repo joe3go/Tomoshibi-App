@@ -81,7 +81,7 @@ export default function TutorSelection() {
                     <img
                       src={getAvatarImage(persona)}
                       alt={persona.name}
-                      className="tutor-avatar-image"
+                      className="tutor-avatar-image w-20 h-20 rounded-full object-cover mx-auto"
                     />
                   </div>
 

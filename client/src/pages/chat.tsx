@@ -259,7 +259,7 @@ export default function Chat() {
               <img
                 src={getAvatarImage(persona)}
                 alt={persona?.name || "Persona"}
-                className="chat-persona-image"
+                className="chat-persona-image w-10 h-10 rounded-full object-cover"
                 onError={(e) => {
                   // Fallback to text avatar if image fails
                   const target = e.target as HTMLImageElement;
@@ -337,7 +337,7 @@ export default function Chat() {
                   <img
                     src={getAvatarImage(persona)}
                     alt={persona?.name || "AI"}
-                    className="chat-avatar-image"
+                    className="chat-avatar-image w-8 h-8 rounded-full object-cover"
                     onError={(e) => {
                       // Fallback to text avatar if image fails
                       const target = e.target as HTMLImageElement;
@@ -403,7 +403,7 @@ export default function Chat() {
                 <img
                   src={getAvatarImage(persona)}
                   alt={persona?.name || "AI"}
-                  className="chat-avatar-image"
+                  className="chat-avatar-image w-8 h-8 rounded-full object-cover"
                   onError={(e) => {
                     // Fallback to emoji if image fails
                     const target = e.target as HTMLImageElement;
