@@ -89,7 +89,7 @@ export function ScenarioProgressWidget({ userId, onNavigateToScenarios, classNam
     return Math.round((learningProgress.completedScenarios.length / scenarios.length) * 100);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <EnhancedCard className={`p-4 ${className}`}>
         <div className="flex items-center space-x-2">
@@ -127,10 +127,23 @@ export function ScenarioProgressWidget({ userId, onNavigateToScenarios, classNam
           <div className="flex items-center space-x-2">
             <Target className="w-5 h-5 text-primary" />
             <h3 className="font-semibold text-foreground">Scenario Learning</h3>
+            {isAuthenticated ? (
+              <Badge variant="outline" className="text-xs flex items-center gap-1">
+                <Database className="w-3 h-3" />
+                Synced
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                <User className="w-3 h-3" />
+                Local
+              </Badge>
+            )}
           </div>
           <div className="flex items-center space-x-1 text-sm">
             <Trophy className="w-4 h-4 text-yellow-500" />
-            <span className="font-medium">{learningProgress.totalXp} XP</span>
+            <span className="font-medium">
+              {isAuthenticated && supabaseProgress.length > 0 ? getTotalXP() : learningProgress.totalXp} XP
+            </span>
           </div>
         </div>
 

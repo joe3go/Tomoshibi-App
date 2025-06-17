@@ -113,18 +113,24 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### June 17, 2025 - Successful Migration to Supabase Database
-- **Completed full database migration from Neon to Supabase**:
-  - All existing data preserved: 2 users, 32 conversations, 14,558 vocabulary entries
-  - Updated schema alignment between code and Supabase database structure
-  - Fixed grammar table column mapping (englishExplanation, exampleJapanese, exampleEnglish)
-  - Verified all API endpoints working correctly with Supabase connection
-- **Database performance verified**:
-  - Authentication system functioning properly
-  - Conversation and message retrieval working seamlessly
-  - Vocabulary tracking and analytics operational
-  - All user progress data intact and accessible
-- **Updated project documentation** to reflect Supabase as the primary database provider
+### June 17, 2025 - Clean Supabase Integration for Vocabulary and Progress
+- **Implemented modular Supabase client integration**:
+  - Created `client/src/lib/supabase/client.ts` with proper environment variable handling
+  - Built type-safe database operations in `client/src/lib/supabase/database.ts`
+  - Added comprehensive authentication system with `client/src/lib/supabase/auth.ts`
+- **Dual-system architecture for seamless migration**:
+  - `useUserVocab()` hook: Supabase sync when authenticated, localStorage fallback
+  - `useUserProgress()` hook: Scenario completion tracking with cloud sync
+  - `useSupabaseAuth()` hook: Session management and authentication state
+- **Enhanced user experience features**:
+  - New `/my-vocabulary` page with search, filtering, and source tracking
+  - Word definition popup enhanced with Supabase vocabulary saving
+  - Scenario progress widget shows sync status (Synced/Local badges)
+  - Clean fallback to localStorage for unauthenticated users
+- **Database schema created**:
+  - `user_vocab` table: Personal vocabulary collection with source tracking
+  - `user_scenario_progress` table: XP and completion tracking per scenario
+  - Proper indexes and UUID primary keys for performance and scalability
 
 ### June 17, 2025 - Enhanced Chat System with Working Furigana and Wanakana Integration
 - **Successfully implemented working Furigana display system** across all chat interfaces:

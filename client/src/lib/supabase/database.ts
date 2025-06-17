@@ -29,7 +29,7 @@ export async function getUserVocab(userId: string): Promise<UserVocab[]> {
     return [];
   }
 
-  return data || [];
+  return (data as UserVocab[]) || [];
 }
 
 export async function addUserVocab(userId: string, vocab: Omit<UserVocab, 'id' | 'user_id' | 'created_at'>): Promise<UserVocab | null> {
@@ -47,7 +47,7 @@ export async function addUserVocab(userId: string, vocab: Omit<UserVocab, 'id' |
     return null;
   }
 
-  return data;
+  return data as UserVocab;
 }
 
 export async function removeUserVocab(userId: string, vocabId: string): Promise<boolean> {
@@ -78,7 +78,7 @@ export async function getUserProgress(userId: string): Promise<UserProgress[]> {
     return [];
   }
 
-  return data || [];
+  return (data as UserProgress[]) || [];
 }
 
 export async function markScenarioComplete(userId: string, scenarioId: string, xp: number = 0): Promise<UserProgress | null> {
