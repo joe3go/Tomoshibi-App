@@ -2,8 +2,8 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-// Use Supabase pooler connection string for better reliability
-const supabaseConnectionString = "postgresql://postgres.oyawpeylvdqfkhysnjsq:85j1KMUjJ0cFi4Gn@aws-0-us-west-1.pooler.supabase.com:6543/postgres";
+// Force Supabase connection for migration
+const supabaseConnectionString = "postgresql://postgres:85j1KMUjJ0cFi4Gn@db.oyawpeylvdqfkhysnjsq.supabase.co:5432/postgres";
 const connectionString = supabaseConnectionString;
 
 console.log("🔗 Connecting to Supabase database:", connectionString.replace(/:([^:@]*@)/, ':***@'));
