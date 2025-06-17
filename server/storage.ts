@@ -267,27 +267,7 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async getUserVocabTracker(userId: number): Promise<(VocabTracker & { word: JlptVocab })[]> {
-    const result = await db
-      .select({
-        id: vocabTracker.id,
-        userId: vocabTracker.userId,
-        wordId: vocabTracker.wordId,
-        frequency: vocabTracker.frequency,
-        userUsageCount: vocabTracker.userUsageCount,
-        aiEncounterCount: vocabTracker.aiEncounterCount,
-        lastSeenAt: vocabTracker.lastSeenAt,
-        memoryStrength: vocabTracker.memoryStrength,
-        nextReviewAt: vocabTracker.nextReviewAt,
-        source: vocabTracker.source,
-        word: jlptVocab,
-      })
-      .from(vocabTracker)
-      .innerJoin(jlptVocab, eq(vocabTracker.wordId, jlptVocab.id))
-      .where(eq(vocabTracker.userId, userId))
-      .orderBy(desc(vocabTracker.frequency));
-    return result;
-  }
+  
 
   async incrementWordFrequency(userId: number, wordId: number, source: 'user' | 'ai' | 'hover' = 'hover'): Promise<VocabTracker> {
     const existing = await this.getVocabTracker(userId, wordId);
