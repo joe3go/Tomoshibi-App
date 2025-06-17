@@ -6,6 +6,8 @@ import { EnhancedButton } from "../EnhancedButton";
 import { ScenarioProgressManager } from "../../lib/scenario-learning/progress-manager";
 import { scenarios, getNextRecommendedScenario } from "../../data/scenarios";
 import { UserLearningProgress } from "../../../../shared/scenario-types";
+import { useUserProgress } from "@/hooks/useUserProgress";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { 
   Target, 
   Star, 
@@ -14,7 +16,9 @@ import {
   ArrowRight,
   PlayCircle,
   CheckCircle,
-  Lock
+  Lock,
+  Database,
+  User
 } from "lucide-react";
 
 interface ScenarioProgressWidgetProps {
@@ -26,7 +30,8 @@ interface ScenarioProgressWidgetProps {
 export function ScenarioProgressWidget({ userId, onNavigateToScenarios, className = "" }: ScenarioProgressWidgetProps) {
   const [progressManager] = useState(() => new ScenarioProgressManager(userId));
   const [learningProgress, setLearningProgress] = useState<UserLearningProgress | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { isAuthenticated } = useSupabaseAuth();
+  const { progress: supabaseProgress, getCompletedScenarios, getTotalXP, isLoading } = useUserProgress();
 
   useEffect(() => {
     loadProgress();
@@ -38,12 +43,23 @@ export function ScenarioProgressWidget({ userId, onNavigateToScenarios, classNam
       setLearningProgress(progress);
     } catch (error) {
       console.error('Failed to load scenario progress:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
   const getStats = () => {
+    // Use Supabase data if authenticated, otherwise fall back to localStorage
+    if (isAuthenticated && supabaseProgress.length > 0) {
+      const completedScenarios = getCompletedScenarios();
+      return scenarios.reduce((acc, scenario) => {
+        if (completedScenarios.some(p => p.scenario_id === scenario.id)) {
+          acc.completed++;
+        } else {
+          acc.available++;
+        }
+        return acc;
+      }, { completed: 0, available: scenarios.length - completedScenarios.length, locked: 0, inProgress: 0 });
+    }
+    
     if (!learningProgress) return { completed: 0, available: 0, locked: 0, inProgress: 0 };
     
     return scenarios.reduce((acc, scenario) => {

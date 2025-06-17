@@ -16,6 +16,7 @@ import ScenarioSelection from "@/pages/scenario-selection";
 import FuriganaDemo from "@/pages/furigana-demo";
 import Transcripts from "@/pages/transcripts";
 import Vocabulary from "@/pages/vocabulary";
+import MyVocabulary from "@/pages/my-vocabulary";
 import History from "@/pages/history";
 import Settings from "@/pages/settings";
 import ScenarioBrowse from "@/pages/scenario-browse";
@@ -46,6 +47,7 @@ function Router() {
           <Route path="/transcripts" component={Transcripts} />
           <Route path="/history" component={History} />
           <Route path="/vocabulary" component={Vocabulary} />
+          <Route path="/my-vocabulary" component={MyVocabulary} />
           <Route path="/settings" component={Settings} />
           <Route path="/scenarios" component={ScenarioBrowse} />
           <Route path="/scenario-learning" component={EnhancedScenarioBrowse} />

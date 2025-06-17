@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, BookOpen, Plus, Volume2 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
+import { useUserVocab } from '@/hooks/useUserVocab';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 
 interface WordDefinition {
   word: string;
@@ -31,6 +33,8 @@ export default function WordDefinitionPopup({
   const [isAdding, setIsAdding] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
+  const { isAuthenticated } = useSupabaseAuth();
+  const { addVocab, isAddingVocab } = useUserVocab();
 
   const { data: definition, isLoading, error } = useQuery({
     queryKey: ['/api/word-definition', word],
@@ -48,6 +52,7 @@ export default function WordDefinitionPopup({
     enabled: !!word,
   });
 
+  // Legacy vocab tracker for existing system
   const addToVocabMutation = useMutation({
     mutationFn: async (wordId: number) => {
       return apiRequest('POST', '/api/vocab-tracker/increment', { wordId });
@@ -92,7 +97,17 @@ export default function WordDefinitionPopup({
   const handleAddToVocab = () => {
     if (!definition) return;
     
-    // Find the word in our vocabulary database
+    setIsAdding(true);
+
+    // Add to Supabase vocab system (primary)
+    addVocab({
+      word: definition.word,
+      reading: definition.reading,
+      meaning: definition.meaning,
+      source: `popup_${definition.source}`,
+    });
+
+    // Also add to legacy system if available for compatibility
     const vocabWord = (allVocab as any[]).find((v: any) => 
       v.kanji === definition.word || 
       v.hiragana === definition.word ||
@@ -100,9 +115,10 @@ export default function WordDefinitionPopup({
     );
 
     if (vocabWord) {
-      setIsAdding(true);
       addToVocabMutation.mutate(vocabWord.id);
     }
+
+    setIsAdding(false);
   };
 
   // Calculate popup position to keep it on screen
