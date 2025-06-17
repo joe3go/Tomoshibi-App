@@ -47,6 +47,8 @@ export default {
   content: [
     "./index.html", 
     "./src/**/*.{js,jsx,ts,tsx}",
+    "./src/components/**/*.{js,jsx,ts,tsx}",
+    "./src/pages/**/*.{js,jsx,ts,tsx}",
     "../server/**/*.{js,ts}",
     "../shared/**/*.{js,ts}"
   ],
