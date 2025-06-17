@@ -8,7 +8,8 @@ import path from "path";
 import fs from "fs";
 import type { Request, Response, NextFunction } from "express";
 import { generateAIResponse, generateScenarioIntroduction } from "./openai";
-import { insertUserSchema, insertConversationSchema, insertMessageSchema } from "@shared/schema";
+import { insertUserSchema, insertConversationSchema, insertMessageSchema, usageLog } from "@shared/schema";
+import { db } from "./db";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -50,7 +51,7 @@ const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) 
   }
 };
 
-// Vocabulary tracking function
+// Vocabulary tracking function (enhanced client-side tracking will be handled by VocabPopup)
 async function trackVocabularyFromMessage(userId: number, content: string, source: 'user' | 'ai'): Promise<void> {
   try {
     // Extract Japanese words (hiragana, katakana, kanji)
