@@ -18,6 +18,7 @@ import Transcripts from "@/pages/transcripts";
 import Vocabulary from "@/pages/vocabulary";
 import MyVocabulary from "@/pages/my-vocabulary";
 import VocabularyAnalytics from "@/pages/VocabularyAnalytics";
+import ConjugationDemo from "@/pages/ConjugationDemo";
 import History from "@/pages/history";
 import Settings from "@/pages/settings";
 import ScenarioBrowse from "@/pages/scenario-browse";
@@ -50,6 +51,8 @@ function Router() {
           <Route path="/history" component={History} />
           <Route path="/vocabulary" component={Vocabulary} />
           <Route path="/my-vocabulary" component={MyVocabulary} />
+          <Route path="/vocabulary-analytics" component={VocabularyAnalytics} />
+          <Route path="/conjugation-demo" component={ConjugationDemo} />
           <Route path="/vocab-test" component={VocabTest} />
           <Route path="/settings" component={Settings} />
           <Route path="/scenarios" component={ScenarioBrowse} />
