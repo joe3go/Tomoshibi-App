@@ -14,7 +14,7 @@ import FuriganaText from "@/components/furigana-text";
 import { Input } from "@/components/ui/input";
 import { Toggle } from "@/components/ui/toggle";
 import { Languages } from "lucide-react";
-import { toHiragana, isRomaji } from 'wanakana';
+import { bind, unbind, toHiragana } from 'wanakana';
 import harukiAvatar from "@assets/harukiavatar_1750137453243.png";
 import aoiAvatar from "@assets/aoiavatar_1750137453242.png";
 
@@ -29,6 +29,7 @@ export default function Chat() {
   });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
 
   const conversationId = params?.conversationId
@@ -153,16 +154,26 @@ export default function Chat() {
     }
   };
 
+  // Effect to handle Wanakana binding
+  useEffect(() => {
+    if (textareaRef.current && romajiMode) {
+      bind(textareaRef.current, { IMEMode: 'toHiragana' });
+      console.log('Wanakana bound to textarea');
+    } else if (textareaRef.current) {
+      unbind(textareaRef.current);
+      console.log('Wanakana unbound from textarea');
+    }
+
+    return () => {
+      if (textareaRef.current) {
+        unbind(textareaRef.current);
+      }
+    };
+  }, [romajiMode]);
+
   const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
-    if (romajiMode) {
-      // Convert romaji to hiragana in real-time
-      const converted = toHiragana(value);
-      console.log('Romaji conversion:', value, '->', converted);
-      setMessage(converted);
-    } else {
-      setMessage(value);
-    }
+    setMessage(value);
   };
 
 
@@ -461,6 +472,7 @@ export default function Chat() {
           <div className="chat-input-field-container">
             <div className="chat-input-field">
               <textarea
+                ref={textareaRef}
                 value={message}
                 onChange={handleMessageChange}
                 onKeyDown={(e) => {
