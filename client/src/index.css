@@ -172,6 +172,10 @@
     box-shadow: 0 2px 4px rgba(220, 38, 38, 0.15);
   }
 
+  /* ==============================
+     📱 Page Layout Styles
+     ============================== */
+
   /* Chat Page Styles */
   .chat-page-container {
     @apply flex flex-col h-screen bg-background;
@@ -414,6 +418,895 @@
 
   .chat-error-button {
     @apply bg-primary text-white hover:bg-primary/90;
+  }
+
+  /* ==============================
+     🎯 Tutor Selection Page Styles
+     ============================== */
+
+  .tutor-selection-page-container {
+    @apply min-h-screen bg-background;
+  }
+
+  .tutor-selection-header {
+    @apply border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10;
+  }
+
+  .tutor-selection-navigation {
+    @apply flex items-center gap-4 p-4 max-w-6xl mx-auto;
+  }
+
+  .tutor-selection-back-button {
+    @apply text-muted-foreground hover:text-foreground;
+  }
+
+  .tutor-selection-page-title {
+    @apply text-xl font-semibold text-foreground;
+  }
+
+  .tutor-selection-content-container {
+    @apply max-w-6xl mx-auto p-6 space-y-8;
+  }
+
+  .tutor-selection-intro-section {
+    @apply text-center space-y-2;
+  }
+
+  .tutor-selection-main-title {
+    @apply text-3xl font-bold text-foreground;
+  }
+
+  .tutor-selection-main-description {
+    @apply text-lg text-muted-foreground;
+  }
+
+  .tutor-selection-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+  }
+
+  .tutor-card {
+    @apply bg-card border border-border rounded-xl shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer hover:border-primary/30;
+  }
+
+  .tutor-card-content {
+    @apply p-6 space-y-4;
+  }
+
+  .tutor-avatar-container {
+    @apply flex justify-center;
+  }
+
+  .tutor-avatar-image {
+    @apply border-2 border-primary/20 shadow-sm;
+  }
+
+  .tutor-info-section {
+    @apply text-center space-y-2;
+  }
+
+  .tutor-name {
+    @apply text-xl font-semibold text-foreground;
+  }
+
+  .tutor-type-badge {
+    @apply inline-block px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  .tutor-type-teacher {
+    @apply bg-blue-100 text-blue-700;
+  }
+
+  .tutor-type-friend {
+    @apply bg-green-100 text-green-700;
+  }
+
+  .tutor-description {
+    @apply text-muted-foreground leading-relaxed;
+  }
+
+  .tutor-teaching-style {
+    @apply space-y-2;
+  }
+
+  .tutor-teaching-style-title {
+    @apply font-medium text-foreground;
+  }
+
+  .tutor-teaching-style-description {
+    @apply text-sm text-muted-foreground;
+  }
+
+  .tutor-select-button {
+    @apply w-full bg-primary text-white hover:bg-primary/90;
+  }
+
+  .tutor-free-chat-card {
+    @apply bg-card border border-border rounded-xl shadow-sm;
+  }
+
+  .tutor-free-chat-content {
+    @apply p-6 text-center space-y-4;
+  }
+
+  .tutor-free-chat-title {
+    @apply text-xl font-semibold text-foreground;
+  }
+
+  .tutor-free-chat-description {
+    @apply text-muted-foreground;
+  }
+
+  .tutor-free-chat-button {
+    @apply border-primary text-primary hover:bg-primary hover:text-white;
+  }
+
+  .tutor-selection-loading-container {
+    @apply flex items-center justify-center min-h-screen bg-background;
+  }
+
+  .tutor-selection-loading-card {
+    @apply bg-card border border-border rounded-lg p-8;
+  }
+
+  .tutor-selection-loading-content {
+    @apply flex items-center gap-3;
+  }
+
+  .tutor-selection-loading-spinner {
+    @apply w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin;
+  }
+
+  .tutor-selection-loading-text {
+    @apply text-foreground;
+  }
+
+  /* ==============================
+     🎬 Scenario Selection Page Styles
+     ============================== */
+
+  .scenario-selection-page-container {
+    @apply min-h-screen bg-background;
+  }
+
+  .scenario-selection-header {
+    @apply border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10;
+  }
+
+  .scenario-selection-navigation {
+    @apply flex items-center gap-4 p-4 max-w-6xl mx-auto;
+  }
+
+  .scenario-selection-back-button {
+    @apply text-muted-foreground hover:text-foreground;
+  }
+
+  .scenario-selection-page-title {
+    @apply text-xl font-semibold text-foreground;
+  }
+
+  .scenario-selection-content-container {
+    @apply max-w-6xl mx-auto p-6 space-y-6;
+  }
+
+  .scenario-selection-tutor-info {
+    @apply bg-card border border-border rounded-xl shadow-sm;
+  }
+
+  .scenario-selection-tutor-content {
+    @apply p-4 flex items-center gap-4;
+  }
+
+  .scenario-selection-tutor-avatar {
+    @apply flex-shrink-0;
+  }
+
+  .scenario-selection-tutor-image {
+    @apply border border-border;
+  }
+
+  .scenario-selection-tutor-name {
+    @apply font-semibold text-foreground;
+  }
+
+  .scenario-selection-tutor-type {
+    @apply text-sm text-muted-foreground;
+  }
+
+  .scenario-selection-intro {
+    @apply text-center space-y-2;
+  }
+
+  .scenario-selection-main-title {
+    @apply text-2xl font-bold text-foreground;
+  }
+
+  .scenario-selection-main-description {
+    @apply text-muted-foreground;
+  }
+
+  .scenario-selection-free-chat-card {
+    @apply bg-card border border-border rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 hover:border-primary/30;
+  }
+
+  .scenario-selection-free-chat-content {
+    @apply p-6 text-center space-y-4;
+  }
+
+  .scenario-selection-free-chat-icon {
+    @apply flex justify-center;
+  }
+
+  .scenario-selection-free-chat-title {
+    @apply text-lg font-semibold text-foreground;
+  }
+
+  .scenario-selection-free-chat-description {
+    @apply text-muted-foreground;
+  }
+
+  .scenario-selection-free-chat-button {
+    @apply border-primary text-primary hover:bg-primary hover:text-white;
+  }
+
+  .scenario-selection-scenarios-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4;
+  }
+
+  .scenario-selection-scenario-card {
+    @apply bg-card border border-border rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 hover:border-primary/30;
+  }
+
+  .scenario-selection-scenario-content {
+    @apply p-6 space-y-4;
+  }
+
+  .scenario-selection-scenario-icon {
+    @apply flex justify-center;
+  }
+
+  .scenario-selection-scenario-title {
+    @apply font-semibold text-foreground text-center;
+  }
+
+  .scenario-selection-scenario-description {
+    @apply text-sm text-muted-foreground text-center;
+  }
+
+  .scenario-selection-scenario-button {
+    @apply w-full bg-primary text-white hover:bg-primary/90;
+  }
+
+  .scenario-selection-loading-container {
+    @apply flex items-center justify-center min-h-screen bg-background;
+  }
+
+  .scenario-selection-loading-card {
+    @apply bg-card border border-border rounded-lg p-8;
+  }
+
+  .scenario-selection-loading-content {
+    @apply flex items-center gap-3;
+  }
+
+  .scenario-selection-loading-spinner {
+    @apply w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin;
+  }
+
+  .scenario-selection-loading-text {
+    @apply text-foreground;
+  }
+
+  /* ==============================
+     📚 History Page Styles
+     ============================== */
+
+  .history-page-container {
+    @apply min-h-screen bg-background;
+  }
+
+  .history-content-wrapper {
+    @apply max-w-7xl mx-auto p-6 space-y-6;
+  }
+
+  .history-header {
+    @apply flex items-center justify-between;
+  }
+
+  .history-page-title {
+    @apply text-3xl font-bold text-foreground;
+  }
+
+  .history-page-subtitle {
+    @apply text-muted-foreground;
+  }
+
+  .history-analytics-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4;
+  }
+
+  .history-analytics-card-header {
+    @apply pb-2;
+  }
+
+  .history-analytics-card-title {
+    @apply flex items-center gap-2 text-sm font-medium text-muted-foreground;
+  }
+
+  .history-analytics-value {
+    @apply text-2xl font-bold text-foreground;
+  }
+
+  .history-analytics-description {
+    @apply text-sm text-muted-foreground;
+  }
+
+  .history-tabs-list {
+    @apply grid w-full grid-cols-3;
+  }
+
+  .history-tab-content {
+    @apply mt-6;
+  }
+
+  .history-empty-state {
+    @apply text-center py-12 space-y-4;
+  }
+
+  .history-empty-icon {
+    @apply w-12 h-12 mx-auto text-muted-foreground;
+  }
+
+  .history-empty-text {
+    @apply text-muted-foreground;
+  }
+
+  .history-conversations-list {
+    @apply space-y-4;
+  }
+
+  .history-conversation-card {
+    @apply bg-card border border-border rounded-xl shadow-sm;
+  }
+
+  .history-conversation-content {
+    @apply p-6;
+  }
+
+  .history-conversation-layout {
+    @apply flex items-start justify-between gap-6;
+  }
+
+  .history-conversation-info {
+    @apply flex-1 space-y-3;
+  }
+
+  .history-conversation-header {
+    @apply flex items-center gap-3 flex-wrap;
+  }
+
+  .history-conversation-title {
+    @apply text-lg font-semibold text-foreground;
+  }
+
+  .history-conversation-persona {
+    @apply text-sm text-muted-foreground;
+  }
+
+  .history-conversation-stats {
+    @apply flex items-center gap-4 flex-wrap;
+  }
+
+  .history-stat-item {
+    @apply flex items-center gap-1 text-sm text-muted-foreground;
+  }
+
+  .history-stat-icon {
+    @apply w-4 h-4;
+  }
+
+  .history-message-preview {
+    @apply space-y-1;
+  }
+
+  .history-message-preview-label {
+    @apply text-xs font-medium text-muted-foreground uppercase tracking-wide;
+  }
+
+  .history-message-preview-content {
+    @apply text-sm text-foreground;
+  }
+
+  .history-conversation-actions {
+    @apply flex flex-col gap-2;
+  }
+
+  .history-end-session-button {
+    @apply text-destructive border-destructive hover:bg-destructive hover:text-white;
+  }
+
+  .history-loading-container {
+    @apply flex items-center justify-center min-h-screen bg-background;
+  }
+
+  .history-loading-content {
+    @apply text-center space-y-4;
+  }
+
+  .history-loading-spinner {
+    @apply w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto;
+  }
+
+  .history-loading-text {
+    @apply text-muted-foreground;
+  }
+
+  /* ==============================
+     📖 Vocabulary Page Styles
+     ============================== */
+
+  .vocabulary-page-container {
+    @apply min-h-screen bg-background;
+  }
+
+  .vocabulary-content-wrapper {
+    @apply max-w-7xl mx-auto p-6 space-y-6;
+  }
+
+  .vocabulary-navigation {
+    @apply flex items-center;
+  }
+
+  .vocabulary-back-button {
+    @apply text-muted-foreground hover:text-foreground;
+  }
+
+  /* ==============================
+     ⚙️ Settings Page Styles
+     ============================== */
+
+  .settings-page-container {
+    @apply min-h-screen bg-background;
+  }
+
+  .settings-content-wrapper {
+    @apply max-w-6xl mx-auto p-6 space-y-6;
+  }
+
+  .settings-header {
+    @apply space-y-4;
+  }
+
+  .settings-back-button {
+    @apply text-muted-foreground hover:text-foreground;
+  }
+
+  .settings-title-section {
+    @apply flex items-center gap-4;
+  }
+
+  .settings-icon-container {
+    @apply w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center;
+  }
+
+  .settings-page-title {
+    @apply text-3xl font-bold text-foreground;
+  }
+
+  .settings-page-subtitle {
+    @apply text-muted-foreground;
+  }
+
+  .settings-grid-layout {
+    @apply grid grid-cols-1 lg:grid-cols-3 gap-6;
+  }
+
+  .settings-main-column {
+    @apply lg:col-span-2 space-y-6;
+  }
+
+  .settings-sidebar {
+    @apply space-y-6;
+  }
+
+  .settings-section-title {
+    @apply flex items-center gap-2 font-semibold text-foreground;
+  }
+
+  .settings-profile-content {
+    @apply space-y-6;
+  }
+
+  .settings-avatar-section {
+    @apply flex items-center gap-4;
+  }
+
+  .settings-avatar {
+    @apply w-20 h-20;
+  }
+
+  .settings-avatar-upload-label {
+    @apply cursor-pointer;
+  }
+
+  .settings-avatar-input {
+    @apply sr-only;
+  }
+
+  .settings-avatar-helper-text {
+    @apply text-xs text-muted-foreground mt-1;
+  }
+
+  .settings-field-group {
+    @apply space-y-2;
+  }
+
+  .settings-readonly-field {
+    @apply bg-muted text-muted-foreground;
+  }
+
+  .settings-field-helper-text {
+    @apply text-xs text-muted-foreground;
+  }
+
+  .settings-preferences-content {
+    @apply space-y-4;
+  }
+
+  .settings-stats-content {
+    @apply space-y-4;
+  }
+
+  .settings-stat-item {
+    @apply text-center;
+  }
+
+  .settings-stat-value {
+    @apply text-2xl font-bold;
+  }
+
+  .settings-stat-value-primary {
+    @apply text-primary;
+  }
+
+  .settings-stat-value-green {
+    @apply text-green-600;
+  }
+
+  .settings-stat-value-blue {
+    @apply text-blue-600;
+  }
+
+  .settings-stat-label {
+    @apply text-sm text-muted-foreground;
+  }
+
+  .settings-account-actions {
+    @apply space-y-3;
+  }
+
+  .settings-action-button {
+    @apply w-full;
+  }
+
+  .settings-logout-button {
+    @apply w-full;
+  }
+
+  .settings-logout-help-text {
+    @apply text-xs text-muted-foreground text-center;
+  }
+
+  .settings-loading-container {
+    @apply flex items-center justify-center min-h-screen bg-background;
+  }
+
+  .settings-loading-content {
+    @apply text-center space-y-4;
+  }
+
+  .settings-loading-spinner {
+    @apply w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto;
+  }
+
+  .settings-loading-text {
+    @apply text-muted-foreground;
+  }
+
+  /* ==============================
+     🌸 Landing Page Styles
+     ============================== */
+
+  .landing-page-container {
+    @apply min-h-screen bg-background;
+  }
+
+  .landing-hero-section {
+    @apply relative py-20 lg:py-32 overflow-hidden;
+  }
+
+  .landing-hero-content {
+    @apply max-w-7xl mx-auto px-6;
+  }
+
+  .landing-hero-grid {
+    @apply grid grid-cols-1 lg:grid-cols-2 gap-12 items-center;
+  }
+
+  .landing-hero-text {
+    @apply space-y-8;
+  }
+
+  .landing-hero-content-wrapper {
+    @apply space-y-6;
+  }
+
+  .landing-hero-badge {
+    @apply inline-block bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium;
+  }
+
+  .landing-hero-title {
+    @apply text-4xl lg:text-6xl font-bold text-foreground leading-tight;
+  }
+
+  .landing-hero-subtitle {
+    @apply block text-2xl lg:text-3xl text-primary font-normal mt-2;
+  }
+
+  .landing-hero-description {
+    @apply text-xl text-muted-foreground leading-relaxed;
+  }
+
+  .landing-hero-actions {
+    @apply flex flex-col sm:flex-row gap-4;
+  }
+
+  .landing-cta-primary {
+    @apply bg-primary text-white hover:bg-primary/90 px-8 py-4 text-lg;
+  }
+
+  .landing-cta-secondary {
+    @apply border-primary text-primary hover:bg-primary hover:text-white px-8 py-4 text-lg;
+  }
+
+  .landing-feature-highlights {
+    @apply flex flex-col sm:flex-row gap-4;
+  }
+
+  .landing-feature-item {
+    @apply flex items-center gap-2;
+  }
+
+  .landing-feature-dot {
+    @apply w-2 h-2 rounded-full;
+  }
+
+  .landing-feature-dot-blue {
+    @apply bg-blue-500;
+  }
+
+  .landing-feature-dot-orange {
+    @apply bg-orange-500;
+  }
+
+  .landing-feature-dot-green {
+    @apply bg-green-500;
+  }
+
+  .landing-feature-text {
+    @apply text-sm text-muted-foreground;
+  }
+
+  .landing-preview-container {
+    @apply relative;
+  }
+
+  .landing-preview-wrapper {
+    @apply relative max-w-lg mx-auto;
+  }
+
+  .landing-preview-card {
+    @apply bg-card border border-border rounded-2xl shadow-xl overflow-hidden;
+  }
+
+  .landing-preview-content {
+    @apply p-6 space-y-4;
+  }
+
+  .landing-preview-header {
+    @apply flex items-center justify-between;
+  }
+
+  .landing-preview-title {
+    @apply font-semibold text-foreground;
+  }
+
+  .landing-preview-badge {
+    @apply bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs;
+  }
+
+  .landing-conversation-preview {
+    @apply space-y-4;
+  }
+
+  .landing-message-ai {
+    @apply flex gap-3;
+  }
+
+  .landing-message-user {
+    @apply flex gap-3 flex-row-reverse;
+  }
+
+  .landing-avatar {
+    @apply w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white;
+  }
+
+  .landing-avatar-sensei {
+    @apply bg-blue-500;
+  }
+
+  .landing-avatar-student {
+    @apply bg-gray-500;
+  }
+
+  .landing-avatar-text {
+    @apply text-white;
+  }
+
+  .landing-message-bubble {
+    @apply px-4 py-2 rounded-2xl max-w-xs;
+  }
+
+  .landing-message-bubble-ai {
+    @apply bg-muted text-foreground;
+  }
+
+  .landing-message-bubble-user {
+    @apply bg-primary text-white;
+  }
+
+  .landing-message-japanese {
+    @apply block font-medium;
+  }
+
+  .landing-message-translation {
+    @apply text-xs opacity-70 mt-1;
+  }
+
+  .landing-progress-section {
+    @apply space-y-2;
+  }
+
+  .landing-progress-header {
+    @apply flex justify-between text-sm text-muted-foreground;
+  }
+
+  .landing-progress-bar {
+    @apply bg-muted rounded-full h-2 overflow-hidden;
+  }
+
+  .landing-progress-fill {
+    @apply bg-primary h-full rounded-full transition-all duration-500;
+  }
+
+  .landing-stat-card {
+    @apply absolute bg-card border border-border rounded-lg p-3 shadow-lg;
+  }
+
+  .landing-stat-card-top {
+    @apply -top-4 -right-4 animate-float;
+  }
+
+  .landing-stat-card-bottom {
+    @apply -bottom-4 -left-4;
+    animation: float 3s ease-in-out infinite 1.5s;
+  }
+
+  .landing-stat-content {
+    @apply text-center;
+  }
+
+  .landing-stat-number {
+    @apply text-lg font-bold text-primary;
+  }
+
+  .landing-stat-number-orange {
+    @apply text-orange-500;
+  }
+
+  .landing-stat-label {
+    @apply text-xs text-muted-foreground;
+  }
+
+  .landing-features-section {
+    @apply py-20 bg-muted/30;
+  }
+
+  .landing-features-container {
+    @apply max-w-6xl mx-auto px-6;
+  }
+
+  .landing-features-header {
+    @apply text-center space-y-4 mb-16;
+  }
+
+  .landing-features-title {
+    @apply text-3xl lg:text-4xl font-bold text-foreground;
+  }
+
+  .landing-features-subtitle {
+    @apply text-xl text-muted-foreground;
+  }
+
+  .landing-features-grid {
+    @apply grid grid-cols-1 md:grid-cols-3 gap-8;
+  }
+
+  .landing-feature-card {
+    @apply bg-card border border-border rounded-xl p-6 text-center space-y-4 hover:shadow-lg transition-shadow;
+  }
+
+  .landing-feature-icon {
+    @apply w-16 h-16 rounded-full flex items-center justify-center mx-auto;
+  }
+
+  .landing-feature-icon-blue {
+    @apply bg-blue-100;
+  }
+
+  .landing-feature-icon-orange {
+    @apply bg-orange-100;
+  }
+
+  .landing-feature-icon-green {
+    @apply bg-green-100;
+  }
+
+  .landing-feature-title {
+    @apply text-xl font-semibold text-foreground;
+  }
+
+  .landing-feature-description {
+    @apply text-muted-foreground;
+  }
+
+  .landing-stats-section {
+    @apply py-16 bg-primary text-white;
+  }
+
+  .landing-stats-container {
+    @apply max-w-6xl mx-auto px-6;
+  }
+
+  .landing-stats-grid {
+    @apply grid grid-cols-2 md:grid-cols-4 gap-8 text-center;
+  }
+
+  .landing-stat-value {
+    @apply text-3xl font-bold;
+  }
+
+  .landing-stat-description {
+    @apply text-primary-foreground/80;
+  }
+
+  .landing-cta-section {
+    @apply py-20 bg-background;
+  }
+
+  .landing-cta-container {
+    @apply max-w-4xl mx-auto px-6 text-center space-y-6;
+  }
+
+  .landing-cta-title {
+    @apply text-3xl lg:text-4xl font-bold text-foreground;
+  }
+
+  .landing-cta-description {
+    @apply text-xl text-muted-foreground;
+  }
+
+  .landing-cta-button {
+    @apply bg-primary text-white hover:bg-primary/90 px-8 py-4 text-lg;
   }
 
   /* Progress Bar */
