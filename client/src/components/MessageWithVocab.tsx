@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { VocabPopup } from './VocabPopup';
 import { useVocabDictionary } from '@/hooks/useVocabDictionary';
+import { vocabularyTracker } from '@/lib/vocabulary-tracker';
 
 interface MessageWithVocabProps {
   content: string;
@@ -65,6 +66,14 @@ export function MessageWithVocab({ content, className, children }: MessageWithVo
   const [isHovering, setIsHovering] = useState(false);
   const messageRef = useRef<HTMLDivElement>(null);
   const { findLongestMatch, isLoading } = useVocabDictionary();
+
+  // Track vocabulary usage when message is rendered
+  useEffect(() => {
+    if (hasJapanese(content)) {
+      // Track vocabulary usage with conjugation normalization
+      vocabularyTracker.trackUsageFromText(content, 'chat');
+    }
+  }, [content]);
 
   // Handle click/tap on Japanese text
   const handleTextInteraction = useCallback((event: React.MouseEvent) => {

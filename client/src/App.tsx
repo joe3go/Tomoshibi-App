@@ -17,6 +17,7 @@ import FuriganaDemo from "@/pages/furigana-demo";
 import Transcripts from "@/pages/transcripts";
 import Vocabulary from "@/pages/vocabulary";
 import MyVocabulary from "@/pages/my-vocabulary";
+import VocabularyAnalytics from "@/pages/VocabularyAnalytics";
 import History from "@/pages/history";
 import Settings from "@/pages/settings";
 import ScenarioBrowse from "@/pages/scenario-browse";

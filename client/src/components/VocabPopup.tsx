@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Volume2, BookOpen, X } from 'lucide-react';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { supabase } from '@/lib/supabase/client';
+import { vocabularyTracker } from '@/lib/vocabulary-tracker';
 
 interface VocabPopupProps {
   word: string;
@@ -49,6 +50,9 @@ export function VocabPopup({ word, reading, meaning, position, onClose, onSave }
     
     try {
       if (user) {
+        // Track vocabulary usage with conjugation normalization
+        await vocabularyTracker.trackSingleWord(word, 'popup');
+        
         // Save to Supabase
         const { error } = await supabase
           .from('user_vocab')
