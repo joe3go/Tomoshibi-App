@@ -8,8 +8,8 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Settings, LogOut, MessageCircle, User, Calendar, BookOpen, History, TrendingUp, Award, Target } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import harukiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
-import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
+import harukiAvatar from "@assets/harukiavatar_1750137453243.png";
+import aoiAvatar from "@assets/aoiavatar_1750137453242.png";
 
 // Import our reusable components
 import { EnhancedButton } from "@/components/EnhancedButton";

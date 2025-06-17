@@ -7,8 +7,8 @@ import { useRoute, useLocation } from "wouter";
 import { ArrowLeft, MessageCircle, Coffee, ShoppingCart, Users, Briefcase } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import harukiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
-import aoiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
+import harukiAvatar from "@assets/harukiavatar_1750137453243.png";
+import aoiAvatar from "@assets/aoiavatar_1750137453242.png";
 
 export default function ScenarioSelection() {
   const [, params] = useRoute("/scenario-selection/:personaId");

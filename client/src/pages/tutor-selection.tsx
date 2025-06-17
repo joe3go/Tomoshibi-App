@@ -4,8 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { ArrowLeft, MessageCircle } from "lucide-react";
-import harukiAvatar from "@assets/generation-460be619-9858-4f07-b39f-29798d89bf2b_1749531152184.png";
-import aoiAvatar from "@assets/generation-18a951ed-4a6f-4df5-a163-72cf1173d83d_1749531152183.png";
+import harukiAvatar from "@assets/harukiavatar_1750137453243.png";
+import aoiAvatar from "@assets/aoiavatar_1750137453242.png";
 
 export default function TutorSelection() {
   const [, setLocation] = useLocation();
