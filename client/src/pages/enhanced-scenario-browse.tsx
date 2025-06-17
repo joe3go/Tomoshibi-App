@@ -50,8 +50,8 @@ export default function EnhancedScenarioBrowse() {
   });
 
   useEffect(() => {
-    if (user && typeof user === 'object' && 'id' in user && user.id) {
-      setProgressManager(new ScenarioProgressManager(user.id.toString()));
+    if (user && (user as any)?.id) {
+      setProgressManager(new ScenarioProgressManager((user as any).id.toString()));
     }
   }, [user]);
 
@@ -155,7 +155,7 @@ export default function EnhancedScenarioBrowse() {
         <div className="p-6">
           {viewMode === 'selection' && (
             <ScenarioSelectionView
-              userId={user.id.toString()}
+              userId={(user as any)?.id?.toString() || ""}
               onScenarioSelect={handleScenarioSelect}
             />
           )}
@@ -182,7 +182,7 @@ export default function EnhancedScenarioBrowse() {
                 <h3 className="text-lg font-semibold text-foreground text-center">Choose Your Learning Style</h3>
                 
                 <div className="grid md:grid-cols-2 gap-6">
-                  {personas.map((persona: any) => (
+                  {(personas as any[]).map((persona: any) => (
                     <EnhancedCard
                       key={persona.id}
                       className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:border-primary/30"
@@ -242,8 +242,8 @@ export default function EnhancedScenarioBrowse() {
               <ScenarioPracticeView
                 scenario={selectedScenario}
                 personaId={selectedPersonaId}
-                personaName={personas.find((p: any) => p.id === selectedPersonaId)?.name || "Tutor"}
-                userId={user.id.toString()}
+                personaName={(personas as any[]).find((p: any) => p.id === selectedPersonaId)?.name || "Tutor"}
+                userId={(user as any)?.id?.toString() || ""}
                 onComplete={handlePracticeComplete}
                 onExit={handleExitPractice}
               />

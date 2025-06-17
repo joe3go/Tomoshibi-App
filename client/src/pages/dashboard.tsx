@@ -23,6 +23,7 @@ import {
   WordSpotlightCarousel, 
   KnownVsUsedGap 
 } from "@/components/VocabAnalytics";
+import { ScenarioProgressWidget } from "@/components/scenario-learning/ScenarioProgressWidget";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -638,7 +639,13 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-3 gap-6">
+          {/* Scenario-Based Learning Widget */}
+          <ScenarioProgressWidget
+            userId={(user as any)?.id?.toString() || ""}
+            onNavigateToScenarios={() => setLocation("/scenario-learning")}
+          />
+
           <EnhancedCard>
             <h4 className="font-semibold text-primary mb-3">Quick Practice</h4>
             <p className="text-foreground text-sm mb-4">
@@ -653,7 +660,7 @@ export default function Dashboard() {
                 Choose Tutor
               </EnhancedButton>
               <EnhancedButton
-                onClick={() => setLocation("/scenario-selection")}
+                onClick={() => setLocation("/scenarios")}
                 className="btn-secondary w-full justify-start"
               >
                 <Calendar className="w-4 h-4 mr-2" />

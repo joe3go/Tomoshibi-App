@@ -111,7 +111,27 @@ The build process creates a production bundle with:
 
 Preferred communication style: Simple, everyday language.
 
-## Changelog
+## Recent Changes
 
-Changelog:
+### June 17, 2025 - Comprehensive Scenario-Based Learning System
+- **Added complete scenario-based output learning system** with 10 structured scenarios across N5-N3 levels
+- **Implemented modular architecture**:
+  - `shared/scenario-types.ts`: Core type definitions for scenarios, progress, and sessions
+  - `client/src/data/scenarios.ts`: Static scenario data with goals, vocab, and unlock conditions
+  - `client/src/lib/scenario-learning/progress-manager.ts`: Progress tracking and XP management
+  - `client/src/components/scenario-learning/`: Reusable UI components for scenario system
+- **Enhanced dashboard integration** with scenario progress widget showing completion stats and recommendations
+- **New route `/scenario-learning`** for comprehensive scenario-based practice alongside existing `/scenarios` route
+- **Features implemented**:
+  - Goal-based conversation practice with real-time tracking
+  - XP and badge reward system with level progression
+  - Scenario unlocking based on completion and vocabulary usage
+  - Vocabulary mastery tracking with spaced repetition concepts
+  - Learning streak management and progress analytics
+  - Personalized tutor selection for each scenario
+  - Session completion feedback with detailed performance metrics
+
+### Previous Updates
 - June 16, 2025. Initial setup
+- Added compact vocabulary usage analytics to dashboard
+- Integrated reusable vocabulary analytics components
