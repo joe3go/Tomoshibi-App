@@ -1,15 +1,12 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-neonConfig.webSocketConstructor = ws;
-
-// Use Supabase database URL directly
+// Force connection to Supabase database
 const supabaseUrl = "postgresql://postgres:v8f!6PS@W!&XXvk@db.oyawpeylvdqfkhysnjsq.supabase.co:5432/postgres";
-const connectionString = process.env.DATABASE_URL || supabaseUrl;
+const connectionString = supabaseUrl;
 
-console.log("🔗 Connecting to database:", connectionString.replace(/:([^:@]*@)/, ':***@'));
+console.log("🔗 Connecting to Supabase database:", connectionString.replace(/:([^:@]*@)/, ':***@'));
 
 if (!connectionString) {
   throw new Error(
@@ -17,5 +14,8 @@ if (!connectionString) {
   );
 }
 
-export const pool = new Pool({ connectionString });
-export const db = drizzle({ client: pool, schema });
+export const pool = new Pool({ 
+  connectionString,
+  ssl: { rejectUnauthorized: false }
+});
+export const db = drizzle(pool, { schema });
