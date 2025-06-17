@@ -37,9 +37,9 @@ const themeVariables = {
   },
   radius: "0.5rem",
   images: {
-    lantern: "url('../images/lantern.png')",
-    sakura: "url('../images/sakura.png')",
-    waves: "url('../images/japanese-waves.png')",
+    lantern: "url('/lantern.png')",
+    sakura: "url('/sakura.png')",
+    waves: "url('/japanese-waves.png')",
   },
 } as const;
 
@@ -186,9 +186,9 @@ export default {
         lvh: "100lvh",
       },
       backgroundImage: {
-        lantern: themeVariables.images.lantern,
-        sakura: themeVariables.images.sakura,
-        waves: themeVariables.images.waves,
+        lantern: "url('/lantern.png')",
+        sakura: "url('/sakura.png')",
+        waves: "url('/japanese-waves.png')",
       },
     },
   },
@@ -238,18 +238,18 @@ export default {
         ".lantern-decoration": {
           "@apply absolute top-0 left-0 bg-contain w-[100px] h-[200px] z-10":
             {},
-          "background-image": themeVariables.images.lantern,
+          "background-image": "url('/lantern.png')",
           animation: "lantern-glow 2s ease-in-out infinite",
         },
         ".sakura-decoration": {
           "@apply absolute w-[150px] h-[150px] bg-contain bg-no-repeat z-0 opacity-70":
             {},
-          "background-image": themeVariables.images.sakura,
+          "background-image": "url('/sakura.png')",
           animation: "float 6s ease-in-out infinite",
         },
         ".wave-pattern": {
           "@apply absolute inset-0 w-full h-full opacity-10": {},
-          "background-image": themeVariables.images.waves,
+          "background-image": "url('/japanese-waves.png')",
           "background-size": "300px",
         },
         ".btn-japanese": {
