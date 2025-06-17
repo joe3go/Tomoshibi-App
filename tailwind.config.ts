@@ -49,15 +49,21 @@ export default {
     "./src/**/*.{js,jsx,ts,tsx}",
     "./src/components/**/*.{js,jsx,ts,tsx}",
     "./src/pages/**/*.{js,jsx,ts,tsx}",
+    "./src/**/*.css",
     "../server/**/*.{js,ts}",
-    "../shared/**/*.{js,ts}"
+    "../shared/**/*.{js,ts}",
+    // Include the CSS file itself so Tailwind can scan for class usage
+    "./src/index.css"
   ],
   safelist: [
+    // Component classes from index.css
     'gold-frame',
     'message-bubble',
     'message-bubble.ai',
     'message-bubble.user',
     'progress-fill',
+    'progress-container',
+    'progress-bar',
     'btn-japanese',
     'content-card',
     'scrollbar-custom',
@@ -74,11 +80,18 @@ export default {
     'section-padding',
     'cherry-blossom',
     'lantern-decoration',
-    'progress-container',
-    'progress-bar',
     'bottom-nav',
     'loading-shimmer',
-    // Landing page classes
+    'scrollbar-japanese',
+    'btn-primary',
+    'text-muted-foreground',
+    'sakura-decoration',
+    'wave-pattern',
+    'hide-furigana',
+    'toggle-furigana',
+    'gradient-button',
+    
+    // Landing page specific classes
     'landing-preview-card',
     'landing-message-bubble-ai',
     'landing-avatar-sensei',
@@ -86,8 +99,6 @@ export default {
     'landing-hero-title',
     'landing-feature-card',
     'landing-cta-primary',
-    'btn-primary',
-    'text-muted-foreground',
     'landing-progress-fill',
     'landing-stat-card-top',
     'landing-message-bubble-user',
@@ -99,7 +110,18 @@ export default {
     'landing-cta-section',
     'landing-container',
     'landing-grid',
-    'landing-preview-section'
+    'landing-preview-section',
+    
+    // Pattern-based safelist to catch any dynamic classes
+    {
+      pattern: /^(landing|message|avatar|btn|progress|status|enhanced|dashboard|component|section|cherry|lantern|gold|content|navbar|bottom)-/,
+    },
+    {
+      pattern: /^(ai|user|sensei|student|n5|primary|secondary|muted|destructive)$/,
+    },
+    {
+      pattern: /^text-(shadow|muted-foreground|primary|secondary)$/,
+    }
   ],
   theme: {
     extend: {
