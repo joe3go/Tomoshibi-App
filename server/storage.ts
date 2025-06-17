@@ -348,7 +348,34 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  
+  async getUserVocabTracker(userId: number): Promise<any[]> {
+    const trackerData = await db
+      .select({
+        id: vocabTracker.id,
+        userId: vocabTracker.userId,
+        wordId: vocabTracker.wordId,
+        frequency: vocabTracker.frequency,
+        userUsageCount: vocabTracker.userUsageCount,
+        aiEncounterCount: vocabTracker.aiEncounterCount,
+        lastSeenAt: vocabTracker.lastSeenAt,
+        memoryStrength: vocabTracker.memoryStrength,
+        nextReviewAt: vocabTracker.nextReviewAt,
+        source: vocabTracker.source,
+        word: {
+          id: jlptVocab.id,
+          kanji: jlptVocab.kanji,
+          hiragana: jlptVocab.hiragana,
+          englishMeaning: jlptVocab.englishMeaning,
+          jlptLevel: jlptVocab.jlptLevel,
+          wordType: jlptVocab.wordType,
+        },
+      })
+      .from(vocabTracker)
+      .leftJoin(jlptVocab, eq(vocabTracker.wordId, jlptVocab.id))
+      .where(eq(vocabTracker.userId, userId));
+
+    return trackerData;
+  }
 
   async getUserVocabStatsByLevel(userId: number): Promise<{ level: string; userWords: number; totalWords: number }[]> {
     // Get total vocab counts per level
