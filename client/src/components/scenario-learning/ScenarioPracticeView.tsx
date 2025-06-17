@@ -7,6 +7,7 @@ import { Toggle } from "@/components/ui/toggle";
 import { EnhancedCard } from "../EnhancedCard";
 import { EnhancedButton } from "../EnhancedButton";
 import FuriganaText from "../furigana-text";
+import { MessageWithVocab } from "../MessageWithVocab";
 import { ScenarioProgressManager } from "../../lib/scenario-learning/progress-manager";
 import { Scenario, ScenarioPracticeSession, GoalCompletion } from "../../../../shared/scenario-types";
 import { 
@@ -464,11 +465,16 @@ export function ScenarioPracticeView({
                   : 'bg-card border border-border'
             }`}>
               <div className="text-sm">
-                <FuriganaText
-                  text={message.content}
-                  showFurigana={showFurigana}
-                  showToggleButton={false}
-                />
+                <MessageWithVocab
+                  content={message.content}
+                  className="vocab-enabled-scenario-message"
+                >
+                  <FuriganaText
+                    text={message.content}
+                    showFurigana={showFurigana}
+                    showToggleButton={false}
+                  />
+                </MessageWithVocab>
               </div>
               
               {message.vocabHighlights && message.vocabHighlights.length > 0 && (

@@ -1000,6 +1000,38 @@
     @apply flex items-center justify-center min-h-screen bg-background;
   }
 
+  /* ==============================
+     📚 Vocabulary Popup System Styles
+     ============================== */
+  
+  .vocab-enabled-message {
+    @apply relative;
+  }
+
+  .vocab-enabled-message[data-vocab-enabled="true"] {
+    @apply select-text cursor-pointer;
+  }
+
+  .vocab-enabled-scenario-message {
+    @apply relative;
+  }
+
+  .vocab-enabled-scenario-message[data-vocab-enabled="true"] {
+    @apply select-text cursor-pointer;
+  }
+
+  /* Hover effect for Japanese text */
+  .vocab-enabled-message:hover[data-vocab-enabled="true"],
+  .vocab-enabled-scenario-message:hover[data-vocab-enabled="true"] {
+    @apply bg-blue-50 rounded transition-colors duration-150;
+  }
+
+  /* Dark mode hover effect */
+  .dark .vocab-enabled-message:hover[data-vocab-enabled="true"],
+  .dark .vocab-enabled-scenario-message:hover[data-vocab-enabled="true"] {
+    @apply bg-blue-900/20;
+  }
+
   .settings-loading-content {
     @apply text-center space-y-4;
   }

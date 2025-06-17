@@ -21,6 +21,7 @@ import History from "@/pages/history";
 import Settings from "@/pages/settings";
 import ScenarioBrowse from "@/pages/scenario-browse";
 import EnhancedScenarioBrowse from "@/pages/enhanced-scenario-browse";
+import VocabTest from "@/pages/vocab-test";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
