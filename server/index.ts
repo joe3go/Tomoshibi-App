@@ -56,6 +56,16 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
+  const PORT = process.env.PORT || 5000;
+  server.listen(PORT, "0.0.0.0", () => {
+    log(`🌸 Tomoshibi server running on http://0.0.0.0:${PORT}`);
+  });
+})().catch((err) => {
+  console.error("Server startup error:", err);
+  process.exit(1);
+});
+  }
+
   // ALWAYS serve the app on port 5000
   // this serves both the API and the client.
   // It is the only port that is not firewalled.

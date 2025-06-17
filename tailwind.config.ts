@@ -166,9 +166,9 @@ export default {
         lvh: "100lvh",
       },
       backgroundImage: {
-        lantern: themeVariables.images.lantern,
-        sakura: themeVariables.images.sakura,
-        waves: themeVariables.images.waves,
+        lantern: "url('/lantern.png')",
+        sakura: "url('/sakura.png')",
+        waves: "url('/japanese-waves.png')",
       },
     },
   },
