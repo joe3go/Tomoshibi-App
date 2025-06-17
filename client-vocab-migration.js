@@ -96,7 +96,7 @@ async function migrateVocabulary() {
       if (vocabItems.length > 0) {
         const { data, error } = await supabase
           .from('jlpt_vocab')
-          .upsert(vocabItems, { onConflict: 'hiragana,jlpt_level' });
+          .insert(vocabItems);
         
         if (error) {
           console.error(`Error inserting ${level} batch:`, error.message);
