@@ -12,7 +12,6 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import EnhancedFuriganaText from "@/components/enhanced-furigana-text";
 import EnhancedChatInput from "@/components/enhanced-chat-input";
-import SmartMessageDisplay from "@/components/smart-message-display";
 import harukiAvatar from "@assets/harukiavatar_1750137453243.png";
 import aoiAvatar from "@assets/aoiavatar_1750137453242.png";
 
@@ -331,15 +330,52 @@ export default function Chat() {
               <div
                 className={`message-bubble ${msg.sender === "user" ? "user" : "ai"}`}
               >
-                <SmartMessageDisplay
-                  content={msg.content}
-                  englishTranslation={msg.english}
-                  feedback={msg.feedback}
-                  suggestions={msg.suggestions || []}
-                  sender={msg.sender}
-                  showFurigana={showFurigana}
-                  isAiResponse={msg.sender === "ai"}
-                />
+                {msg.feedback && (
+                  <div className="chat-message-feedback">
+                    <p className="chat-feedback-text">✨ {msg.feedback}</p>
+                  </div>
+                )}
+
+                <div className="chat-message-content">
+                  <EnhancedFuriganaText
+                    text={msg.content}
+                    showFurigana={showFurigana}
+                    showToggleButton={false}
+                    enableWordHover={msg.sender === "ai"}
+                    className="text-inherit"
+                  />
+                </div>
+
+                {msg.sender === "ai" && msg.english && (
+                  <div className="mt-2">
+                    <details className="text-sm text-muted-foreground">
+                      <summary className="cursor-pointer hover:text-foreground">
+                        Show English translation
+                      </summary>
+                      <div className="mt-1 p-2 bg-muted/50 rounded-md">
+                        {msg.english}
+                      </div>
+                    </details>
+                  </div>
+                )}
+
+                {msg.suggestions && msg.suggestions.length > 0 && (
+                  <div className="mt-2">
+                    <details className="text-sm">
+                      <summary className="cursor-pointer text-blue-600 hover:text-blue-800">
+                        💡 Learning suggestions ({msg.suggestions.length})
+                      </summary>
+                      <div className="mt-1 p-2 bg-blue-50 dark:bg-blue-950/20 rounded-md">
+                        {msg.suggestions.map((suggestion: string, index: number) => (
+                          <div key={index} className="flex items-start gap-2 text-blue-800 dark:text-blue-200">
+                            <span>•</span>
+                            <span>{suggestion}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  </div>
+                )}
               </div>
 
               {msg.sender === "user" && (

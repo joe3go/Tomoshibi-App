@@ -38,17 +38,13 @@ export default function SmartMessageDisplay({
     <div className="space-y-2">
       {/* Main message content */}
       <div className="chat-message-content">
-        {sender === 'ai' ? (
-          <EnhancedFuriganaText
-            text={content}
-            showFurigana={showFurigana}
-            showToggleButton={false}
-            enableWordHover={true}
-            className="text-inherit"
-          />
-        ) : (
-          <span>{content}</span>
-        )}
+        <EnhancedFuriganaText
+          text={content}
+          showFurigana={showFurigana}
+          showToggleButton={false}
+          enableWordHover={sender === 'ai'}
+          className="text-inherit"
+        />
       </div>
 
       {/* Feedback section */}
