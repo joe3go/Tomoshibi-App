@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 
 interface EnhancedChatInputProps {
   message: string;
-  setMessage: (message: string) => void;
+  setMessage: React.Dispatch<React.SetStateAction<string>>;
   onSendMessage: () => void;
   isLoading: boolean;
   showFurigana: boolean;
@@ -108,7 +108,7 @@ export default function EnhancedChatInput({
   ];
 
   const insertPhrase = (phrase: string) => {
-    setMessage((prev: string) => prev + (prev ? " " : "") + phrase);
+    setMessage(prev => prev + (prev ? " " : "") + phrase);
     textareaRef.current?.focus();
   };
 

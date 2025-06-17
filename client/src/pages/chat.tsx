@@ -12,6 +12,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import EnhancedFuriganaText from "@/components/enhanced-furigana-text";
 import EnhancedChatInput from "@/components/enhanced-chat-input";
+import SmartMessageDisplay from "@/components/smart-message-display";
 import harukiAvatar from "@assets/harukiavatar_1750137453243.png";
 import aoiAvatar from "@assets/aoiavatar_1750137453242.png";
 
@@ -147,16 +148,7 @@ export default function Chat() {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
 
-  const insertSuggestion = (text: string) => {
-    setMessage((prev) => prev + text);
-  };
 
   const handleFuriganaToggle = () => {
     const newState = !showFurigana;
@@ -290,31 +282,12 @@ export default function Chat() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleFuriganaToggle}
-            className="chat-furigana-toggle"
-          >
-            {showFurigana ? "Hide Furigana" : "Show Furigana"}
-          </Button>
-          {/* Debug info - remove this later */}
-          <span className="chat-debug-info">
-            Furigana: {showFurigana ? "ON" : "OFF"}
-          </span>
-          <Button
-            variant="ghost"
-            size="sm"
             onClick={() => completeConversationMutation.mutate()}
             disabled={completeConversationMutation.isPending}
             className="chat-complete-button"
           >
             <CheckCircle className="w-4 h-4" />
             <span>Complete</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="chat-settings-button"
-          >
-            <Settings className="w-5 h-5" />
           </Button>
         </div>
       </header>
@@ -443,68 +416,16 @@ export default function Chat() {
         </div>
       </div>
 
-      {/* Chat Input */}
-      <div className="chat-input-container">
-        <div className="chat-input-wrapper">
-          <div className="chat-input-field-container">
-            <div className="chat-input-field">
-              <Textarea
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Type your response in Japanese... (English is ok too!)"
-                className="chat-textarea"
-                rows={1}
-                style={{ maxHeight: "120px" }}
-              />
-            </div>
-            <Button
-              onClick={handleSendMessage}
-              disabled={!message.trim() || sendMessageMutation.isPending}
-              className="chat-send-button"
-            >
-              <span>Send</span>
-              <Send className="w-4 h-4" />
-            </Button>
-          </div>
-
-          {/* Input Suggestions */}
-          <div className="chat-input-suggestions">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => insertSuggestion("私は")}
-              className="chat-suggestion-button"
-            >
-              私は
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => insertSuggestion("です")}
-              className="chat-suggestion-button"
-            >
-              です
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => insertSuggestion("から来ました")}
-              className="chat-suggestion-button"
-            >
-              から来ました
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => insertSuggestion("よろしくお願いします")}
-              className="chat-suggestion-button"
-            >
-              よろしくお願いします
-            </Button>
-          </div>
-        </div>
-      </div>
+      {/* Enhanced Chat Input with Wanakana and Furigana controls */}
+      <EnhancedChatInput
+        message={message}
+        setMessage={setMessage}
+        onSendMessage={handleSendMessage}
+        isLoading={sendMessageMutation.isPending}
+        showFurigana={showFurigana}
+        onToggleFurigana={handleFuriganaToggle}
+        placeholder="Type your response in Japanese... (English questions are welcome too!)"
+      />
     </div>
   );
 }
