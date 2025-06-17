@@ -3,8 +3,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Toggle } from "@/components/ui/toggle";
 import { EnhancedCard } from "../EnhancedCard";
 import { EnhancedButton } from "../EnhancedButton";
+import FuriganaText from "../furigana-text";
 import { ScenarioProgressManager } from "../../lib/scenario-learning/progress-manager";
 import { Scenario, ScenarioPracticeSession, GoalCompletion } from "../../../../shared/scenario-types";
 import { 
@@ -17,8 +19,10 @@ import {
   MessageSquare,
   Lightbulb,
   Trophy,
-  ArrowRight
+  ArrowRight,
+  Languages
 } from "lucide-react";
+import { bind, unbind } from 'wanakana';
 
 interface ScenarioPracticeViewProps {
   scenario: Scenario;
@@ -68,7 +72,13 @@ export function ScenarioPracticeView({
   const [goalCompletions, setGoalCompletions] = useState<GoalCompletion[]>([]);
   const [sessionScore, setSessionScore] = useState(0);
   const [showHints, setShowHints] = useState(false);
+  const [romajiMode, setRomajiMode] = useState(false);
+  const [showFurigana, setShowFurigana] = useState(() => {
+    const saved = localStorage.getItem("furigana-visible");
+    return saved !== null ? saved === "true" : true;
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     initializeSession();
@@ -77,6 +87,25 @@ export function ScenarioPracticeView({
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Effect to handle Wanakana binding
+  useEffect(() => {
+    const element = textareaRef.current;
+    if (romajiMode && element) {
+      bind(element, { IMEMode: 'toHiragana' });
+      console.log('Wanakana bound to scenario textarea');
+    }
+    
+    return () => {
+      if (element) {
+        try {
+          unbind(element);
+        } catch (e) {
+          console.log('Unbind cleanup completed');
+        }
+      }
+    };
+  }, [romajiMode]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -324,6 +353,13 @@ export function ScenarioPracticeView({
     onComplete(session.id, feedback);
   };
 
+  const handleFuriganaToggle = () => {
+    const newState = !showFurigana;
+    console.log('Scenario Furigana toggle:', showFurigana, '->', newState);
+    setShowFurigana(newState);
+    localStorage.setItem("furigana-visible", newState.toString());
+  };
+
   if (!progressManager) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -427,7 +463,13 @@ export function ScenarioPracticeView({
                   ? 'bg-muted text-muted-foreground text-center'
                   : 'bg-card border border-border'
             }`}>
-              <div className="text-sm">{message.content}</div>
+              <div className="text-sm">
+                <FuriganaText
+                  text={message.content}
+                  showFurigana={showFurigana}
+                  showToggleButton={false}
+                />
+              </div>
               
               {message.vocabHighlights && message.vocabHighlights.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1">
@@ -453,13 +495,21 @@ export function ScenarioPracticeView({
       {/* Input */}
       <div className="flex-shrink-0 p-4 border-t border-border bg-card">
         <div className="flex space-x-2">
-          <Input
+          <textarea
+            ref={textareaRef}
             value={currentMessage}
             onChange={(e) => setCurrentMessage(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmitMessage();
+              }
+            }}
             placeholder="Type your response in Japanese..."
-            onKeyPress={(e) => e.key === 'Enter' && handleSubmitMessage()}
             disabled={isSubmitting}
-            className="flex-1"
+            className="flex-1 p-3 border border-border rounded-md resize-none"
+            rows={1}
+            style={{ maxHeight: "120px" }}
           />
           <EnhancedButton
             onClick={handleSubmitMessage}
@@ -467,6 +517,25 @@ export function ScenarioPracticeView({
           >
             <Send className="w-4 h-4" />
           </EnhancedButton>
+        </div>
+        
+        {/* Input Controls */}
+        <div className="mt-2 flex items-center gap-4">
+          <Toggle
+            pressed={romajiMode}
+            onPressedChange={setRomajiMode}
+            size="sm"
+            className="text-xs"
+          >
+            <Languages className="w-3 h-3 mr-1" />
+            Romaji
+          </Toggle>
+          <button
+            onClick={handleFuriganaToggle}
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            {showFurigana ? "Hide Furigana" : "Show Furigana"}
+          </button>
         </div>
         
         <div className="flex items-center justify-between mt-3">
