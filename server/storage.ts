@@ -323,8 +323,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getVocabStats(): Promise<{ level: string; count: number }[]> {
-    // Query Supabase directly for vocabulary statistics
-    console.log('🔍 Fetching vocabulary statistics from Supabase...');
+    console.log('🔍 Fetching vocabulary statistics from Supabase using RPC...');
     try {
       const { createClient } = await import('@supabase/supabase-js');
       const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://oyawpeylvdqfkhysnjsq.supabase.co';
@@ -333,16 +332,27 @@ export class DatabaseStorage implements IStorage {
       console.log('📡 Connecting to Supabase:', supabaseUrl);
       const supabase = createClient(supabaseUrl, supabaseKey);
       
-      const { data, error, count } = await supabase
+      // First, try to call the RPC function
+      console.log('🎯 Calling get_vocab_stats_by_level RPC function...');
+      const { data: rpcData, error: rpcError } = await supabase.rpc('get_vocab_stats_by_level');
+      
+      if (!rpcError && rpcData) {
+        console.log('✅ RPC function returned vocab stats:', rpcData);
+        return rpcData;
+      }
+      
+      console.log('⚠️ RPC function not available, falling back to manual aggregation...');
+      console.log('RPC Error:', rpcError?.message);
+      
+      // Fallback: Use aggregation query to get all data without row limits
+      const { data, error } = await supabase
         .from('jlpt_vocab')
-        .select('jlpt_level', { count: 'exact' })
-        .range(0, 9999) // Get rows 0 to 9999, can be increased if needed
-        .order('jlpt_level');
-
+        .select('jlpt_level')
+        .range(0, 19999); // Increased range to ensure we get all entries
+      
       if (error) {
-        console.error('❌ Supabase vocab stats error:', error);
-        console.log('🔄 Using fallback counts...');
-        // Fallback to hardcoded realistic counts if Supabase fails
+        console.error('❌ Supabase fallback query error:', error);
+        console.log('🔄 Using hardcoded fallback counts...');
         return [
           { level: 'N1', count: 2136 },
           { level: 'N2', count: 1651 },
@@ -352,8 +362,18 @@ export class DatabaseStorage implements IStorage {
         ];
       }
 
+      if (!data || data.length === 0) {
+        console.log('📭 No vocabulary data found in Supabase');
+        return [
+          { level: 'N1', count: 0 },
+          { level: 'N2', count: 0 },
+          { level: 'N3', count: 0 },
+          { level: 'N4', count: 0 },
+          { level: 'N5', count: 0 }
+        ];
+      }
+
       console.log('✅ Successfully fetched', data.length, 'vocabulary entries from Supabase');
-      console.log('📊 Total count from Supabase:', count);
       
       // Sample the first few entries to understand the format
       const sampleLevels = data.slice(0, 5).map(item => item.jlpt_level);
@@ -377,12 +397,11 @@ export class DatabaseStorage implements IStorage {
         count: levelCounts[level] || 0
       }));
 
-      console.log('📊 Vocabulary counts by level (from Supabase):', result);
+      console.log('📊 Vocabulary counts by level (from Supabase manual aggregation):', result);
       return result;
     } catch (error) {
       console.error('❌ Error fetching Supabase vocab stats:', error);
-      console.log('🔄 Using fallback counts...');
-      // Fallback to realistic JLPT counts
+      console.log('🔄 Using hardcoded fallback counts...');
       return [
         { level: 'N1', count: 2136 },
         { level: 'N2', count: 1651 },
