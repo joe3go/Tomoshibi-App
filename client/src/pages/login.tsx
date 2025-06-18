@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { setAuthToken } from "@/lib/auth";
 import { useLocation } from "wouter";
+import { useAuthContext } from "@/context/AuthContext";
 
 
 const loginSchema = z.object({
@@ -29,6 +30,7 @@ export default function Login() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { login } = useAuthContext();
 
   // Check for token in URL params (from email confirmation)
   useEffect(() => {
@@ -64,14 +66,11 @@ export default function Login() {
       return await response.json();
     },
     onSuccess: (data) => {
-      setAuthToken(data.token);
-      queryClient.clear();
-      toast({
-        title: "Welcome back!",
-        description: "Successfully logged in.",
-      });
-      // Force a full page reload to ensure proper auth state
-      window.location.href = "/dashboard";
+      // Use AuthContext login method
+      login(data.token, data.user);
+
+      // Hard redirect to ensure clean state
+      window.location.href = '/dashboard';
     },
     onError: (error) => {
       toast({
@@ -125,7 +124,7 @@ export default function Login() {
           backgroundPosition: "center"
         }}
       />
-      
+
       <Card className="glass-card w-full max-w-md relative z-10 border-glass-border">
         <CardContent className="p-8">
           <div className="text-center mb-8">
@@ -133,7 +132,7 @@ export default function Login() {
             <p className="text-sakura-blue text-lg font-japanese">灯火</p>
             <p className="text-off-white/70 mt-2">Your First Japanese Journey</p>
           </div>
-          
+
           {!isRegistering ? (
             <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
               <div>
@@ -151,7 +150,7 @@ export default function Login() {
                   </p>
                 )}
               </div>
-              
+
               <div>
                 <Label htmlFor="password" className="text-off-white/80">Password</Label>
                 <Input
@@ -167,7 +166,7 @@ export default function Login() {
                   </p>
                 )}
               </div>
-              
+
               <Button
                 type="submit"
                 disabled={loginMutation.isPending}
@@ -192,7 +191,7 @@ export default function Login() {
                   </p>
                 )}
               </div>
-              
+
               <div>
                 <Label htmlFor="registerEmail" className="text-off-white/80">Email</Label>
                 <Input
@@ -208,7 +207,7 @@ export default function Login() {
                   </p>
                 )}
               </div>
-              
+
               <div>
                 <Label htmlFor="registerPassword" className="text-off-white/80">Password</Label>
                 <Input
@@ -224,7 +223,7 @@ export default function Login() {
                   </p>
                 )}
               </div>
-              
+
               <Button
                 type="submit"
                 disabled={registerMutation.isPending}
@@ -234,7 +233,7 @@ export default function Login() {
               </Button>
             </form>
           )}
-          
+
           <div className="text-center mt-6">
             <p className="text-off-white/60">
               {!isRegistering ? "New to Japanese?" : "Already have an account?"}{" "}
