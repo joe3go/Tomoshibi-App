@@ -333,11 +333,11 @@ export class DatabaseStorage implements IStorage {
       console.log('📡 Connecting to Supabase:', supabaseUrl);
       const supabase = createClient(supabaseUrl, supabaseKey);
       
-      const { data, error } = await supabase
+      const { data, error, count } = await supabase
         .from('jlpt_vocab')
-        .select('jlpt_level')
-        .order('jlpt_level')
-        .limit(10000); // Set a high limit to ensure we get all entries
+        .select('jlpt_level', { count: 'exact' })
+        .range(0, 9999) // Get rows 0 to 9999, can be increased if needed
+        .order('jlpt_level');
 
       if (error) {
         console.error('❌ Supabase vocab stats error:', error);
@@ -353,6 +353,7 @@ export class DatabaseStorage implements IStorage {
       }
 
       console.log('✅ Successfully fetched', data.length, 'vocabulary entries from Supabase');
+      console.log('📊 Total count from Supabase:', count);
       
       // Sample the first few entries to understand the format
       const sampleLevels = data.slice(0, 5).map(item => item.jlpt_level);
