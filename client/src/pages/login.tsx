@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -29,6 +29,17 @@ export default function Login() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+
+  // Check for token in URL params (from email confirmation)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    if (token) {
+      setAuthToken(token);
+      queryClient.clear();
+      window.location.href = "/dashboard";
+    }
+  }, []);
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),

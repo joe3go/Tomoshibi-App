@@ -222,8 +222,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Generate JWT token for automatic login
           const token = jwt.sign({ userId: data.user.id, userUuid: data.user.id }, JWT_SECRET, { expiresIn: '7d' });
           
-          // Redirect to dashboard with token
-          return res.redirect(`/dashboard?token=${token}`);
+          // Redirect to dashboard with token - use current host instead of localhost
+          const host = req.get('host') || 'localhost:5000';
+          const protocol = req.secure || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
+          return res.redirect(`${protocol}://${host}/dashboard?token=${token}`);
         }
       }
 
