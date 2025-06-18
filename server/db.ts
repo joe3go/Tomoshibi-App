@@ -2,14 +2,22 @@
 import { createClient } from '@supabase/supabase-js';
 import * as schema from "@shared/schema";
 
-// Use Supabase client for backend operations
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+// Environment-specific Supabase configuration for backend
+const isDevelopment = process.env.NODE_ENV === 'development';
 
-console.log("🔗 Connecting to Supabase:", supabaseUrl);
+const supabaseUrl = isDevelopment 
+  ? process.env.VITE_SUPABASE_DEV_URL 
+  : process.env.VITE_SUPABASE_PROD_URL;
+
+const supabaseServiceKey = isDevelopment
+  ? process.env.VITE_SUPABASE_DEV_SERVICE_KEY
+  : process.env.VITE_SUPABASE_PROD_SERVICE_KEY;
+
+console.log("🔗 Connecting to Supabase:", supabaseUrl, "(Environment:", process.env.NODE_ENV || 'development', ")");
 
 if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error("VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set. Did you forget to set your Supabase credentials?");
+  const envPrefix = isDevelopment ? 'DEV' : 'PROD';
+  throw new Error(`VITE_SUPABASE_${envPrefix}_URL and VITE_SUPABASE_${envPrefix}_SERVICE_KEY must be set. Did you forget to set your Supabase credentials in Secrets?`);
 }
 
 export const supabase = createClient(supabaseUrl, supabaseServiceKey);
