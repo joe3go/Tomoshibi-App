@@ -1,4 +1,3 @@
-
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -56,7 +55,7 @@ const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) 
 // Environment-specific Supabase configuration
 const getSupabaseConfig = () => {
   const isDevelopment = process.env.NODE_ENV === 'development';
-  
+
   if (isDevelopment) {
     return {
       url: process.env.VITE_SUPABASE_DEV_URL || 'https://your-dev-project.supabase.co',
@@ -92,6 +91,30 @@ async function trackVocabularyFromMessage(userId: number, content: string, sourc
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Personas route
+  app.get('/api/personas', async (req, res) => {
+    try {
+      const config = getSupabaseConfig();
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(config.url, config.key);
+      
+      const { data: personas, error } = await supabase
+        .from('personas')
+        .select('*')
+        .order('id');
+
+      if (error) {
+        console.error('Error fetching personas:', error);
+        return res.status(500).json({ error: 'Failed to fetch personas' });
+      }
+
+      res.json(personas || []);
+    } catch (error) {
+      console.error('Error in personas endpoint:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // Auth routes
   app.post('/api/auth/register', async (req, res) => {
     try {
@@ -210,7 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const decoded = jwt.verify(token, JWT_SECRET) as any;
       const user = await storage.getUser(decoded.userId || decoded.userUuid);
-      
+
       if (!user) {
         return res.status(401).json({ valid: false, message: 'User not found' });
       }
@@ -226,7 +249,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/auth/confirm', async (req, res) => {
     try {
       const { token_hash, type } = req.query;
-      
+
       if (token_hash && type) {
         const config = getSupabaseConfig();
         const { createClient } = await import('@supabase/supabase-js');
@@ -245,7 +268,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (data.user) {
           // Generate JWT token for automatic login
           const token = jwt.sign({ userId: data.user.id, userUuid: data.user.id }, JWT_SECRET, { expiresIn: '7d' });
-          
+
           // Redirect to dashboard with token - use current host instead of localhost
           const host = req.get('host') || 'localhost:5000';
           const protocol = req.secure || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
@@ -537,17 +560,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Debug endpoint: Testing Supabase connection...');
       const supabaseStats = await storage.getVocabStats();
-      
+
       // Also test direct Supabase connection
       const config = getSupabaseConfig();
       const { createClient } = await import('@supabase/supabase-js');
       const supabase = createClient(config.url, config.key);
-      
+
       const { data: directData, error: directError } = await supabase
         .from('jlpt_vocab')
         .select('jlpt_level')
         .limit(5);
-      
+
       res.json({
         message: "Vocabulary data now sourced from Supabase",
         totalWords: supabaseStats.reduce((sum, level) => sum + level.count, 0),
