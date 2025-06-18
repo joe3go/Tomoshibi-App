@@ -74,10 +74,63 @@ async function trackVocabularyFromMessage(userId: number, content: string, sourc
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Auth confirmation endpoint for email verification
+  app.get('/auth/confirm', async (req, res) => {
+    try {
+      const { token_hash, type } = req.query;
+      
+      if (!token_hash || type !== 'email') {
+        return res.status(400).send('Invalid confirmation link');
+      }
+
+      // Verify the email confirmation token
+      const { createClient } = await import('@supabase/supabase-js');
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      const supabaseUrl = process.env.SUPABASE_URL || 'https://oyawpeylvdqfkhysnjsq.supabase.co';
+      const supabaseKey = isDevelopment 
+        ? process.env.SUPABASE_DEV_KEY 
+        : process.env.SUPABASE_PROD_KEY ||
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95YXdwZXlsdmRxZmtoeXNuanNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNDg5NzMsImV4cCI6MjA2NTcyNDk3M30.HxmDxm7QFTDCRUboGTGQIpXfnC7Tc4_-P6Z45QzmlM0';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+
+      const { data, error } = await supabase.auth.verifyOtp({
+        token_hash: token_hash as string,
+        type: 'email'
+      });
+
+      if (error) {
+        console.error('Email confirmation error:', error);
+        return res.status(400).send(`Confirmation failed: ${error.message}`);
+      }
+
+      if (data.user) {
+        // Get the current environment's domain for redirect
+        const currentDomain = req.headers.host;
+        const protocol = req.headers['x-forwarded-proto'] || 'https';
+        const redirectUrl = `${protocol}://${currentDomain}/dashboard?confirmed=true`;
+        
+        console.log('✅ Email confirmed successfully for user:', data.user.email);
+        console.log('🔄 Redirecting to:', redirectUrl);
+        
+        return res.redirect(redirectUrl);
+      }
+
+      res.status(400).send('Confirmation failed - no user data received');
+    } catch (error) {
+      console.error('Auth confirmation error:', error);
+      res.status(500).send('Internal server error during confirmation');
+    }
+  });
+
   // Auth routes
   app.post('/api/auth/register', async (req, res) => {
     try {
       const { email, displayName, password } = insertUserSchema.parse(req.body);
+      
+      // Get dynamic redirect URL based on request origin
+      const origin = req.headers.origin || req.headers.referer?.split('/').slice(0, 3).join('/');
+      const redirectTo = origin ? `${origin}/auth/confirm` : undefined;
 
       // Create user with Supabase Auth
       const user = await storage.createUser({
@@ -85,6 +138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password, // Supabase handles password hashing
         displayName,
         preferredKanjiDisplay: 'furigana',
+        emailRedirectTo: redirectTo,
       });
 
       // Generate JWT token with string user ID (Supabase uses UUIDs)
@@ -109,11 +163,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { email, password } = req.body;
 
-      // Use Supabase Auth for login
+      // Use Supabase Auth for login with environment-specific configuration
       const { createClient } = await import('@supabase/supabase-js');
-      const supabaseUrl = 'https://oyawpeylvdqfkhysnjsq.supabase.co';
-      const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95YXdwZXlsdmRxZmtoeXNuanNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNDg5NzMsImV4cCI6MjA2NTcyNDk3M30.HxmDxm7QFTDCRUboGTGQIpXfnC7Tc4_-P6Z45QzmlM0';
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      const supabaseUrl = process.env.SUPABASE_URL || 'https://oyawpeylvdqfkhysnjsq.supabase.co';
+      const supabaseKey = isDevelopment 
+        ? process.env.SUPABASE_DEV_KEY 
+        : process.env.SUPABASE_PROD_KEY ||
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95YXdwZXlsdmRxZmtoeXNuanNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNDg5NzMsImV4cCI6MjA2NTcyNDk3M30.HxmDxm7QFTDCRUboGTGQIpXfnC7Tc4_-P6Z45QzmlM0';
       
+      console.log('🔧 Login Environment:', isDevelopment ? 'development' : 'production');
       console.log('🔧 Login using Supabase URL:', supabaseUrl);
       const supabase = createClient(supabaseUrl, supabaseKey);
 

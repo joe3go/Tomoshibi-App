@@ -25,11 +25,18 @@ import {
 } from "@shared/schema";
 import { createClient } from '@supabase/supabase-js';
 
-// Create Supabase client for server-side operations
-// Force the correct HTTPS URL format for Supabase API
-const supabaseUrl = 'https://oyawpeylvdqfkhysnjsq.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95YXdwZXlsdmRxZmtoeXNuanNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNDg5NzMsImV4cCI6MjA2NTcyNDk3M30.HxmDxm7QFTDCRUboGTGQIpXfnC7Tc4_-P6Z45QzmlM0';
+// Create Supabase client for server-side operations with environment-specific keys
+const isDevelopment = process.env.NODE_ENV === 'development';
+const supabaseUrl = process.env.SUPABASE_URL || 'https://oyawpeylvdqfkhysnjsq.supabase.co';
 
+// Use service role key for server operations, with environment-specific fallback
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 
+  (isDevelopment 
+    ? process.env.SUPABASE_DEV_KEY 
+    : process.env.SUPABASE_PROD_KEY) ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95YXdwZXlsdmRxZmtoeXNuanNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNDg5NzMsImV4cCI6MjA2NTcyNDk3M30.HxmDxm7QFTDCRUboGTGQIpXfnC7Tc4_-P6Z45QzmlM0';
+
+console.log('🔧 Server Supabase Environment:', isDevelopment ? 'development' : 'production');
 console.log('🔧 Using Supabase URL for Auth:', supabaseUrl);
 const supabase = createClient(supabaseUrl, supabaseKey);
 import { eq, desc, and, like, or, inArray, sql } from "drizzle-orm";
@@ -123,17 +130,24 @@ export class DatabaseStorage implements IStorage {
     return undefined;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
+  async createUser(insertUser: InsertUser & { emailRedirectTo?: string }): Promise<User> {
     // Use Supabase Auth instead of manual user creation
+    const signUpOptions: any = {
+      data: {
+        display_name: insertUser.displayName,
+        preferred_kanji_display: insertUser.preferredKanjiDisplay || 'furigana'
+      }
+    };
+
+    // Add dynamic redirect URL if provided
+    if (insertUser.emailRedirectTo) {
+      signUpOptions.emailRedirectTo = insertUser.emailRedirectTo;
+    }
+
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: insertUser.email,
       password: insertUser.password,
-      options: {
-        data: {
-          display_name: insertUser.displayName,
-          preferred_kanji_display: insertUser.preferredKanjiDisplay || 'furigana'
-        }
-      }
+      options: signUpOptions
     });
 
     if (authError) throw new Error(authError.message);
