@@ -23,8 +23,15 @@ import {
   type VocabTracker,
   type InsertVocabTracker,
 } from "@shared/schema";
-import { supabase } from "./db";
+import { createClient } from '@supabase/supabase-js';
+
+// Create Supabase client for server-side operations
+const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://oyawpeylvdqfkhysnjsq.supabase.co';
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95YXdwZXlsdmRxZmtoeXNuanNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNDg5NzMsImV4cCI6MjA2NTcyNDk3M30.HxmDxm7QFTDCRUboGTGQIpXfnC7Tc4_-P6Z45QzmlM0';
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 import { eq, desc, and, like, or, inArray, sql } from "drizzle-orm";
+import { db } from "./db";
 
 export interface IStorage {
   // User operations
