@@ -59,8 +59,8 @@ export default function Login() {
         title: "Welcome back!",
         description: "Successfully logged in.",
       });
-      // Use window.location for reliable redirect
-      window.location.href = "/dashboard";
+      // Use wouter navigation for SPA routing
+      setLocation("/dashboard");
     },
     onError: (error) => {
       toast({
@@ -83,8 +83,8 @@ export default function Login() {
         title: "Welcome to Tomoshibi!",
         description: "Your account has been created successfully.",
       });
-      // Use window.location for reliable redirect
-      window.location.href = "/dashboard";
+      // Use wouter navigation for SPA routing
+      setLocation("/dashboard");
     },
     onError: (error) => {
       toast({
