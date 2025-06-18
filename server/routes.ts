@@ -10,6 +10,7 @@ import type { Request, Response, NextFunction } from "express";
 import { generateAIResponse, generateScenarioIntroduction } from "./openai";
 import { insertUserSchema, insertConversationSchema, insertMessageSchema, usageLog } from "@shared/schema";
 import { db } from "./db";
+import { sql } from "drizzle-orm";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -440,41 +441,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Debug endpoint to check actual vocab counts
+  // Debug endpoint to check Supabase vocab counts
   app.get('/api/debug/vocab-counts', authenticateToken, async (req, res) => {
     try {
-      const allVocab = await storage.getAllVocab();
-      const levelCounts = allVocab.reduce((acc: Record<string, number>, word) => {
-        acc[word.jlptLevel] = (acc[word.jlptLevel] || 0) + 1;
-        return acc;
-      }, {});
-      
-      // Also check direct database query
-      const directQuery = await db.execute(sql`
-        SELECT jlpt_level, COUNT(*) as count 
-        FROM jlpt_vocab 
-        GROUP BY jlpt_level 
-        ORDER BY jlpt_level
-      `);
-      
-      // Check table structure
-      const tableInfo = await db.execute(sql`
-        SELECT column_name, data_type 
-        FROM information_schema.columns 
-        WHERE table_name = 'jlpt_vocab'
-      `);
+      const supabaseStats = await storage.getVocabStats();
       
       res.json({
-        totalWords: allVocab.length,
-        byLevel: levelCounts,
-        directQueryResults: directQuery.rows,
-        tableStructure: tableInfo.rows,
-        sampleWords: allVocab.slice(0, 10).map(w => ({
-          kanji: w.kanji,
-          hiragana: w.hiragana,
-          meaning: w.englishMeaning,
-          level: w.jlptLevel
-        }))
+        message: "Vocabulary data now sourced from Supabase",
+        totalWords: supabaseStats.reduce((sum, level) => sum + level.count, 0),
+        byLevel: supabaseStats.reduce((acc, stat) => {
+          acc[stat.level] = stat.count;
+          return acc;
+        }, {} as Record<string, number>),
+        source: "Supabase",
+        supabaseStats
       });
     } catch (error) {
       console.error('Debug vocab counts error:', error);
