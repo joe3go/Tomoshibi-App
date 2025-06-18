@@ -336,7 +336,8 @@ export class DatabaseStorage implements IStorage {
       const { data, error } = await supabase
         .from('jlpt_vocab')
         .select('jlpt_level')
-        .order('jlpt_level');
+        .order('jlpt_level')
+        .limit(10000); // Set a high limit to ensure we get all entries
 
       if (error) {
         console.error('❌ Supabase vocab stats error:', error);
