@@ -9,6 +9,7 @@ import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import Chat from "@/pages/chat";
 import Settings from "@/pages/settings";
+import TutorSelection from "@/pages/tutor-selection";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -45,6 +46,11 @@ function App() {
             <Route path="/settings">
               <ProtectedRoute>
                 <Settings />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/tutor-selection">
+              <ProtectedRoute>
+                <TutorSelection />
               </ProtectedRoute>
             </Route>
             <Route component={NotFound} />
