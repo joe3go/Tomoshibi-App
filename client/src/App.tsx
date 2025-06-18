@@ -26,28 +26,22 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <LoadingSpinner />;
   }
 
-  // Check both isAuthenticated and user to ensure proper auth state
   if (!isAuthenticated || !user) {
-    // If we're on a protected route but not authenticated, redirect to login
-    if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
-      window.location.href = '/login';
-      return <LoadingSpinner />;
-    }
     return <Login />;
   }
 
   return <>{children}</>;
 }
 
-function AuthenticatedRoute({ component: Component }: { component: React.ComponentType }) {
+function PublicRoute({ component: Component }: { component: React.ComponentType }) {
   const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return <LoadingSpinner />;
   }
 
-  // If authenticated and on login page, redirect to dashboard
-  if (isAuthenticated && user && window.location.pathname === '/login') {
+  // If authenticated and trying to access login, redirect to dashboard
+  if (isAuthenticated && user) {
     window.location.href = '/dashboard';
     return <LoadingSpinner />;
   }
@@ -62,7 +56,7 @@ function App() {
         <Switch>
           <Route path="/" component={Landing} />
           <Route path="/login">
-            <AuthenticatedRoute component={Login} />
+            <PublicRoute component={Login} />
           </Route>
           <Route path="/dashboard">
             <ProtectedRoute>

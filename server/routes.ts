@@ -198,6 +198,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Token verification endpoint
+  app.get('/api/auth/verify', async (req, res) => {
+    try {
+      const authHeader = req.headers['authorization'];
+      const token = authHeader && authHeader.split(' ')[1];
+
+      if (!token) {
+        return res.status(401).json({ valid: false, message: 'No token provided' });
+      }
+
+      const decoded = jwt.verify(token, JWT_SECRET) as any;
+      const user = await storage.getUser(decoded.userId || decoded.userUuid);
+      
+      if (!user) {
+        return res.status(401).json({ valid: false, message: 'User not found' });
+      }
+
+      res.json({ valid: true, user: { id: user.id, email: user.email } });
+    } catch (error) {
+      console.error('Token verification error:', error);
+      res.status(401).json({ valid: false, message: 'Invalid token' });
+    }
+  });
+
   // Add endpoint to handle auth confirmation
   app.get('/auth/confirm', async (req, res) => {
     try {
