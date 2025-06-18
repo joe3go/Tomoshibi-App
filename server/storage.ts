@@ -324,11 +324,13 @@ export class DatabaseStorage implements IStorage {
 
   async getVocabStats(): Promise<{ level: string; count: number }[]> {
     // Query Supabase directly for vocabulary statistics
+    console.log('🔍 Fetching vocabulary statistics from Supabase...');
     try {
       const { createClient } = await import('@supabase/supabase-js');
       const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://oyawpeylvdqfkhysnjsq.supabase.co';
       const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95YXdwZXlsdmRxZmtoeXNuanNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNDg5NzMsImV4cCI6MjA2NTcyNDk3M30.HxmDxm7QFTDCRUboGTGQIpXfnC7Tc4_-P6Z45QzmlM0';
       
+      console.log('📡 Connecting to Supabase:', supabaseUrl);
       const supabase = createClient(supabaseUrl, supabaseKey);
       
       const { data, error } = await supabase
@@ -337,7 +339,8 @@ export class DatabaseStorage implements IStorage {
         .order('jlpt_level');
 
       if (error) {
-        console.error('Supabase vocab stats error:', error);
+        console.error('❌ Supabase vocab stats error:', error);
+        console.log('🔄 Using fallback counts...');
         // Fallback to hardcoded realistic counts if Supabase fails
         return [
           { level: 'N1', count: 2136 },
@@ -348,18 +351,24 @@ export class DatabaseStorage implements IStorage {
         ];
       }
 
+      console.log('✅ Successfully fetched', data.length, 'vocabulary entries from Supabase');
+
       // Count by level
       const levelCounts = data.reduce((acc: Record<string, number>, item) => {
         acc[item.jlpt_level] = (acc[item.jlpt_level] || 0) + 1;
         return acc;
       }, {});
 
-      return ['N1', 'N2', 'N3', 'N4', 'N5'].map(level => ({
+      const result = ['N1', 'N2', 'N3', 'N4', 'N5'].map(level => ({
         level,
         count: levelCounts[level] || 0
       }));
+
+      console.log('📊 Vocabulary counts by level (from Supabase):', result);
+      return result;
     } catch (error) {
-      console.error('Error fetching Supabase vocab stats:', error);
+      console.error('❌ Error fetching Supabase vocab stats:', error);
+      console.log('🔄 Using fallback counts...');
       // Fallback to realistic JLPT counts
       return [
         { level: 'N1', count: 2136 },

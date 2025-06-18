@@ -65,23 +65,28 @@ export function VocabProgressRings({
   const { data: vocabStats = [], error, isLoading } = useQuery<{ level: string; count: number }[]>({
     queryKey: ['/api/vocab/stats'],
     queryFn: async () => {
+      console.log('Fetching vocab stats from Supabase via API...'); // Debug log
       const response = await fetch('/api/vocab/stats', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
       });
       if (!response.ok) {
-        throw new Error('Failed to fetch vocab stats');
+        console.error('API response not ok:', response.status, response.statusText);
+        throw new Error(`Failed to fetch vocab stats: ${response.status}`);
       }
       const data = await response.json();
-      console.log('Vocab stats fetched:', data); // Debug log
+      console.log('Vocab stats fetched from Supabase:', data); // Debug log
       return data;
     },
   });
 
-  // Debug log for errors
+  // Debug log for errors and loading state
   if (error) {
-    console.error('Error fetching vocab stats:', error);
+    console.error('Error fetching vocab stats from Supabase:', error);
+  }
+  if (isLoading) {
+    console.log('Loading vocab stats from Supabase...');
   }
 
   const levelTotals = vocabStats.reduce((acc: Record<string, number>, stat) => {
@@ -245,27 +250,29 @@ export function JLPTLevelComparison({
 }: BaseAnalyticsProps) {
   const levels = ['N5', 'N4', 'N3', 'N2', 'N1'];
 
-  // Get actual totals from API
+  // Get actual totals from API (from Supabase)
   const { data: vocabStats = [], error: statsError } = useQuery<{ level: string; count: number }[]>({
     queryKey: ['/api/vocab/stats'],
     queryFn: async () => {
+      console.log('JLPTLevelComparison - Fetching vocab stats from Supabase...'); // Debug log
       const response = await fetch('/api/vocab/stats', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
       });
       if (!response.ok) {
-        throw new Error('Failed to fetch vocab stats');
+        console.error('JLPTLevelComparison - API response not ok:', response.status, response.statusText);
+        throw new Error(`Failed to fetch vocab stats: ${response.status}`);
       }
       const data = await response.json();
-      console.log('JLPT Level Comparison - Vocab stats fetched:', data); // Debug log
+      console.log('JLPTLevelComparison - Vocab stats fetched from Supabase:', data); // Debug log
       return data;
     },
   });
 
   // Debug log for errors
   if (statsError) {
-    console.error('Error fetching vocab stats in JLPTLevelComparison:', statsError);
+    console.error('JLPTLevelComparison - Error fetching vocab stats from Supabase:', statsError);
   }
 
   const levelTotals = vocabStats.reduce((acc: Record<string, number>, stat) => {

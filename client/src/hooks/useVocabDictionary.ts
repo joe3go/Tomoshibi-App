@@ -16,14 +16,23 @@ class VocabDictionary {
   async loadSupabaseVocabulary() {
     if (this.isLoaded) return;
 
+    console.log('🔍 Loading vocabulary dictionary from Supabase...');
     try {
       const { data: vocab, error } = await supabase
         .from('jlpt_vocab')
-        .select('hiragana, english_meaning, kanji, word_type');
+        .select('hiragana, english_meaning, kanji, word_type, jlpt_level');
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase vocabulary loading error:', error);
+        throw error;
+      }
 
       if (vocab) {
+        console.log('📚 Processing', vocab.length, 'vocabulary entries from Supabase...');
+        
+        // Track counts by level for verification
+        const levelCounts: Record<string, number> = {};
+        
         vocab.forEach(item => {
           const word = item.kanji || item.hiragana;
           const entry: DictionaryEntry = {
@@ -38,13 +47,18 @@ class VocabDictionary {
           if (item.kanji && item.kanji !== item.hiragana) {
             this.supabaseData.set(item.hiragana, entry);
           }
+          
+          // Track level counts
+          levelCounts[item.jlpt_level] = (levelCounts[item.jlpt_level] || 0) + 1;
         });
+        
+        console.log('📊 Vocabulary loaded by JLPT level:', levelCounts);
       }
 
       this.isLoaded = true;
-      console.log(`Loaded ${this.supabaseData.size} vocabulary entries`);
+      console.log(`✅ Successfully loaded ${this.supabaseData.size} vocabulary entries from Supabase`);
     } catch (error) {
-      console.error('Failed to load vocabulary:', error);
+      console.error('❌ Failed to load vocabulary from Supabase:', error);
     }
   }
 

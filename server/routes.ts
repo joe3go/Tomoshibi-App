@@ -444,7 +444,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Debug endpoint to check Supabase vocab counts
   app.get('/api/debug/vocab-counts', authenticateToken, async (req, res) => {
     try {
+      console.log('Debug endpoint: Testing Supabase connection...');
       const supabaseStats = await storage.getVocabStats();
+      
+      // Also test direct Supabase connection
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://oyawpeylvdqfkhysnjsq.supabase.co';
+      const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95YXdwZXlsdmRxZmtoeXNuanNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNDg5NzMsImV4cCI6MjA2NTcyNDk3M30.HxmDxm7QFTDCRUboGTGQIpXfnC7Tc4_-P6Z45QzmlM0';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      const { data: directData, error: directError } = await supabase
+        .from('jlpt_vocab')
+        .select('jlpt_level')
+        .limit(5);
       
       res.json({
         message: "Vocabulary data now sourced from Supabase",
@@ -454,7 +466,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return acc;
         }, {} as Record<string, number>),
         source: "Supabase",
-        supabaseStats
+        supabaseStats,
+        supabaseConnection: {
+          url: supabaseUrl,
+          directTestResult: directError ? directError.message : `Success - fetched ${directData?.length || 0} sample records`,
+          directError: directError?.message || null
+        }
       });
     } catch (error) {
       console.error('Debug vocab counts error:', error);
