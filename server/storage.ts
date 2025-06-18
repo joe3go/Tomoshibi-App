@@ -352,10 +352,21 @@ export class DatabaseStorage implements IStorage {
       }
 
       console.log('✅ Successfully fetched', data.length, 'vocabulary entries from Supabase');
+      
+      // Sample the first few entries to understand the format
+      const sampleLevels = data.slice(0, 5).map(item => item.jlpt_level);
+      console.log('📋 Sample levels from Supabase:', sampleLevels);
 
-      // Count by level
+      // Count by level and map numeric levels to N-format
       const levelCounts = data.reduce((acc: Record<string, number>, item) => {
-        acc[item.jlpt_level] = (acc[item.jlpt_level] || 0) + 1;
+        // Map numeric levels to N-format (1->N1, 2->N2, etc.)
+        const mappedLevel = typeof item.jlpt_level === 'number' 
+          ? `N${item.jlpt_level}` 
+          : item.jlpt_level.toString().startsWith('N') 
+            ? item.jlpt_level 
+            : `N${item.jlpt_level}`;
+        
+        acc[mappedLevel] = (acc[mappedLevel] || 0) + 1;
         return acc;
       }, {});
 
