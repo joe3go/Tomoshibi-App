@@ -331,21 +331,17 @@ export class DatabaseStorage implements IStorage {
       .groupBy(jlptVocab.jlptLevel)
       .orderBy(jlptVocab.jlptLevel);
 
-    // Map numeric levels to proper JLPT level names if needed
-    return stats.map(stat => {
-      const levelMapping: Record<string, string> = {
-        '1': 'N5',
-        '2': 'N4', 
-        '3': 'N3',
-        '4': 'N2',
-        '5': 'N1'
-      };
-
+    // Ensure all JLPT levels are represented, even if they have 0 words
+    const allLevels = ['N5', 'N4', 'N3', 'N2', 'N1'];
+    const result = allLevels.map(level => {
+      const found = stats.find(stat => stat.level === level);
       return {
-        level: levelMapping[stat.level] || stat.level,
-        count: stat.count
+        level,
+        count: found ? found.count : 0
       };
     });
+
+    return result;
   }
 
   async getUserVocabTracker(userId: number): Promise<any[]> {

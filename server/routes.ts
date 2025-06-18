@@ -440,6 +440,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Debug endpoint to check actual vocab counts
+  app.get('/api/debug/vocab-counts', authenticateToken, async (req, res) => {
+    try {
+      const allVocab = await storage.getAllVocab();
+      const levelCounts = allVocab.reduce((acc: Record<string, number>, word) => {
+        acc[word.jlptLevel] = (acc[word.jlptLevel] || 0) + 1;
+        return acc;
+      }, {});
+      
+      res.json({
+        totalWords: allVocab.length,
+        byLevel: levelCounts,
+        sampleWords: allVocab.slice(0, 10).map(w => ({
+          kanji: w.kanji,
+          hiragana: w.hiragana,
+          meaning: w.englishMeaning,
+          level: w.jlptLevel
+        }))
+      });
+    } catch (error) {
+      console.error('Debug vocab counts error:', error);
+      res.status(500).json({ message: 'Failed to get debug vocab counts' });
+    }
+  });
+
   // Vocabulary tracker routes
   app.get('/api/vocab-tracker', authenticateToken, async (req: AuthRequest, res) => {
     try {
