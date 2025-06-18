@@ -1,4 +1,3 @@
-
 // Environment configuration for development vs production
 export const isDevelopment = import.meta.env.MODE === 'development';
 export const isProduction = import.meta.env.MODE === 'production';
@@ -15,13 +14,13 @@ export const getBaseUrl = () => {
 export const getSupabaseConfig = () => {
   if (isDevelopment) {
     return {
-      url: import.meta.env.VITE_SUPABASE_DEV_URL || 'https://your-dev-project.supabase.co',
+      url: import.meta.env.VITE_SUPABASE_DEV_URL || 'https://gsnnydemkpllycgzmalv.supabase.co',
       anonKey: import.meta.env.VITE_SUPABASE_DEV_ANON_KEY || '',
       serviceKey: import.meta.env.VITE_SUPABASE_DEV_SERVICE_KEY || ''
     };
   } else {
     return {
-      url: import.meta.env.VITE_SUPABASE_PROD_URL || 'https://your-prod-project.supabase.co',
+      url: import.meta.env.VITE_SUPABASE_PROD_URL || 'https://gsnnydemkpllycgzmalv.supabase.co',
       anonKey: import.meta.env.VITE_SUPABASE_PROD_ANON_KEY || '',
       serviceKey: import.meta.env.VITE_SUPABASE_PROD_SERVICE_KEY || ''
     };
