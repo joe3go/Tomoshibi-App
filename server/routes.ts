@@ -59,13 +59,13 @@ const getSupabaseConfig = () => {
   
   if (isDevelopment) {
     return {
-      url: process.env.SUPABASE_DEV_URL || 'https://your-dev-project.supabase.co',
-      key: process.env.SUPABASE_DEV_ANON_KEY || ''
+      url: process.env.VITE_SUPABASE_DEV_URL || 'https://your-dev-project.supabase.co',
+      key: process.env.VITE_SUPABASE_DEV_ANON_KEY || ''
     };
   } else {
     return {
-      url: process.env.SUPABASE_PROD_URL || 'https://your-prod-project.supabase.co',
-      key: process.env.SUPABASE_PROD_ANON_KEY || ''
+      url: process.env.VITE_SUPABASE_PROD_URL || 'https://your-prod-project.supabase.co',
+      key: process.env.VITE_SUPABASE_PROD_ANON_KEY || ''
     };
   }
 };
