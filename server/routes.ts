@@ -332,21 +332,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Persona routes - Updated for Supabase
   app.get('/api/personas', authenticateToken, async (req, res) => {
     try {
-      // Use environment-specific Supabase configuration
-      const isDevelopment = process.env.NODE_ENV === 'development';
-      const config = {
-        url: isDevelopment ? 'https://gsnnydemkpllycgzmalv.supabase.co' : 'https://oyawpeylvdqfkhysnjsq.supabase.co',
-        key: isDevelopment ? process.env.VITE_SUPABASE_DEV_SERVICE_KEY : process.env.VITE_SUPABASE_PROD_SERVICE_KEY
-      };
-
-      if (!config.url || !config.key) {
-        console.error('❌ Supabase configuration missing for personas');
-        return res.status(500).json({ message: 'Server configuration error' });
-      }
-
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(config.url, config.key);
-
+      // Use the existing Supabase client from db.ts
+      const { supabase } = await import('./db');
+      
       console.log('🔍 Fetching personas from Supabase...');
       const { data: personas, error } = await supabase
         .from('personas')

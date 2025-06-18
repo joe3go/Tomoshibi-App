@@ -16,6 +16,11 @@ export default function TutorSelection() {
 
   // Debug logging
   console.log('TutorSelection Debug:', { personas, isLoading, error, personasLength: Array.isArray(personas) ? personas.length : 0 });
+  
+  // Check authentication status
+  const token = localStorage.getItem('token');
+  console.log('Auth token exists:', !!token);
+  console.log('Auth token preview:', token ? `${token.substring(0, 20)}...` : 'none');
 
   const handleTutorSelect = (personaId: number) => {
     setLocation(`/scenario-selection/${personaId}`);
