@@ -136,7 +136,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         token,
         user: {
-          id: parseInt(data.user.id),
+          id: data.user.id, // Keep as string UUID
           email: data.user.email,
           displayName: data.user.user_metadata?.display_name || data.user.email?.split('@')[0] || '',
           preferredKanjiDisplay: data.user.user_metadata?.preferred_kanji_display || 'furigana',
@@ -172,8 +172,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch('/api/users/:id', authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const userId = parseInt(req.params.id);
-      if (isNaN(userId) || userId !== req.userId) {
+      const userId = req.params.id;
+      if (userId !== req.userId) {
         return res.status(403).json({ message: 'Unauthorized' });
       }
 
