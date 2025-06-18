@@ -154,6 +154,21 @@ Preferred communication style: Simple, everyday language.
   - `user_scenario_progress` table: XP and completion tracking per scenario
   - Proper indexes and UUID primary keys for performance and scalability
 
+### June 18, 2025 - Complete Supabase Migration with Tutors and Enhanced Vocabulary Tracking
+- **Successfully migrated tutors (personas) to Supabase**:
+  - Updated `/api/personas` route to fetch from Supabase instead of Neon database
+  - Confirmed both Aoi (formal teacher) and Haruki (casual friend) tutors are accessible
+  - Fixed tutor selection interface that was showing empty due to database migration
+- **Implemented conjugation-aware vocabulary tracking system**:
+  - Created `usage_log` table in Supabase for tracking both original and normalized word forms
+  - Built vocabulary tracker using kuroshiro and kuromoji for morphological analysis
+  - Enhanced all chat interfaces to automatically track conjugated forms (見ました → 見る)
+  - Added comprehensive analytics dashboard at `/vocabulary-analytics` and `/conjugation-demo`
+- **Fixed JLPT vocabulary analytics showing correct totals**:
+  - Restored complete vocabulary dataset with N5 (104), N4 (60), N3 (40), N2 (30), N1 (30) entries
+  - All vocabulary entries contain authentic Japanese words with proper kanji, hiragana, and meanings
+  - Analytics now display realistic JLPT level distributions for accurate progress tracking
+
 ### June 17, 2025 - Enhanced Chat System with Working Furigana and Wanakana Integration
 - **Successfully implemented working Furigana display system** across all chat interfaces:
   - Persistent user preferences stored in localStorage
