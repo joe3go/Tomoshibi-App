@@ -86,40 +86,62 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: number): Promise<User | undefined> {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (error || !data) return undefined;
-    return data as User;
+    // With Supabase Auth, user data comes from auth.getUser()
+    // This method would need to be called with a valid session
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error || !user) return undefined;
+
+      return {
+        id: parseInt(user.id),
+        email: user.email!,
+        displayName: user.user_metadata?.display_name || user.email?.split('@')[0] || '',
+        passwordHash: '',
+        preferredKanjiDisplay: user.user_metadata?.preferred_kanji_display || 'furigana',
+        profileImageUrl: user.user_metadata?.avatar_url || null,
+        soundNotifications: true,
+        desktopNotifications: true,
+        createdAt: new Date(user.created_at)
+      } as User;
+    } catch (error) {
+      return undefined;
+    }
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .single();
-    
-    if (error || !data) return undefined;
-    return data as User;
+    // For Supabase Auth, we don't directly query users by email
+    // This method is typically used for login validation, which should use supabase.auth.signInWithPassword instead
+    return undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const { password, ...userData } = insertUser;
-    const { data, error } = await supabase
-      .from('users')
-      .insert({
-        ...userData,
-        password_hash: password
-      })
-      .select()
-      .single();
-    
-    if (error) throw new Error(error.message);
-    return data as User;
+    // Use Supabase Auth instead of manual user creation
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: insertUser.email,
+      password: insertUser.password,
+      options: {
+        data: {
+          display_name: insertUser.displayName,
+          preferred_kanji_display: insertUser.preferredKanjiDisplay || 'furigana'
+        }
+      }
+    });
+
+    if (authError) throw new Error(authError.message);
+    if (!authData.user) throw new Error('Failed to create user');
+
+    // Return user data in expected format
+    return {
+      id: parseInt(authData.user.id), // Convert UUID to number for compatibility
+      email: authData.user.email!,
+      displayName: authData.user.user_metadata?.display_name || insertUser.displayName,
+      passwordHash: '', // Not needed with Supabase Auth
+      preferredKanjiDisplay: authData.user.user_metadata?.preferred_kanji_display || 'furigana',
+      profileImageUrl: null,
+      soundNotifications: true,
+      desktopNotifications: true,
+      createdAt: new Date(authData.user.created_at)
+    } as User;
   }
 
   async updateUser(id: number, updates: Partial<User>): Promise<User> {

@@ -79,24 +79,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { email, displayName, password } = insertUserSchema.parse(req.body);
 
-      // Check if user already exists
-      const existingUser = await storage.getUserByEmail(email);
-      if (existingUser) {
-        return res.status(400).json({ message: 'User already exists' });
-      }
-
-      // Hash password
-      const passwordHash = await bcrypt.hash(password, 10);
-
-      // Create user
+      // Create user with Supabase Auth
       const user = await storage.createUser({
         email,
-        password: passwordHash, // Use hashed password
+        password, // Supabase handles password hashing
         displayName,
         preferredKanjiDisplay: 'furigana',
       });
 
-      // Generate JWT token
+      // Generate JWT token (you can also use Supabase session tokens)
       const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
 
       res.json({
@@ -110,7 +101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error('Registration error:', error);
-      res.status(400).json({ message: 'Registration failed' });
+      res.status(400).json({ message: error.message || 'Registration failed' });
     }
   });
 
@@ -118,28 +109,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { email, password } = req.body;
 
-      // Find user
-      const user = await storage.getUserByEmail(email);
-      if (!user) {
+      // Use Supabase Auth for login
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://oyawpeylvdqfkhysnjsq.supabase.co';
+      const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95YXdwZXlsdmRxZmtoeXNuanNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNDg5NzMsImV4cCI6MjA2NTcyNDk3M30.HxmDxm7QFTDCRUboGTGQIpXfnC7Tc4_-P6Z45QzmlM0';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
         return res.status(401).json({ message: 'Invalid credentials' });
       }
 
-      // Verify password
-      const isValidPassword = await bcrypt.compare(password, user.passwordHash);
-      if (!isValidPassword) {
+      if (!data.user) {
         return res.status(401).json({ message: 'Invalid credentials' });
       }
 
-      // Generate JWT token
-      const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+      // Generate JWT token (or use Supabase session)
+      const token = jwt.sign({ userId: parseInt(data.user.id) }, JWT_SECRET, { expiresIn: '7d' });
 
       res.json({
         token,
         user: {
-          id: user.id,
-          email: user.email,
-          displayName: user.displayName,
-          preferredKanjiDisplay: user.preferredKanjiDisplay,
+          id: parseInt(data.user.id),
+          email: data.user.email,
+          displayName: data.user.user_metadata?.display_name || data.user.email?.split('@')[0] || '',
+          preferredKanjiDisplay: data.user.user_metadata?.preferred_kanji_display || 'furigana',
         }
       });
     } catch (error) {
