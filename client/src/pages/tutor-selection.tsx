@@ -10,9 +10,12 @@ import aoiAvatar from "@assets/aoiavatar_1750137453242.png";
 export default function TutorSelection() {
   const [, setLocation] = useLocation();
 
-  const { data: personas = [], isLoading } = useQuery({
+  const { data: personas = [], isLoading, error } = useQuery({
     queryKey: ["/api/personas"],
   });
+
+  // Debug logging
+  console.log('TutorSelection Debug:', { personas, isLoading, error, personasLength: Array.isArray(personas) ? personas.length : 0 });
 
   const handleTutorSelect = (personaId: number) => {
     setLocation(`/scenario-selection/${personaId}`);
@@ -67,8 +70,18 @@ export default function TutorSelection() {
           </p>
         </div>
 
+        {/* Debug Information */}
+        <div className="debug-info bg-gray-100 p-4 mb-4 rounded">
+          <h3>Debug Info:</h3>
+          <p>Loading: {isLoading ? 'Yes' : 'No'}</p>
+          <p>Error: {error ? JSON.stringify(error) : 'None'}</p>
+          <p>Personas Array: {Array.isArray(personas) ? 'Yes' : 'No'}</p>
+          <p>Personas Length: {Array.isArray(personas) ? personas.length : 0}</p>
+          <p>Personas Data: {JSON.stringify(personas)}</p>
+        </div>
+
         <div className="tutor-selection-grid">
-          {Array.isArray(personas) &&
+          {Array.isArray(personas) && personas.length > 0 ? (
             personas.map((persona: any) => (
               <Card
                 key={persona.id}
@@ -137,7 +150,12 @@ export default function TutorSelection() {
                   </Button>
                 </CardContent>
               </Card>
-            ))}
+            ))
+          ) : (
+            <div className="no-tutors-message">
+              <p>No tutors available</p>
+            </div>
+          )}
         </div>
 
         {/* Free Chat Option */}
