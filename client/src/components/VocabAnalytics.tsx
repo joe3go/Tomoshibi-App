@@ -62,7 +62,7 @@ export function VocabProgressRings({
   const levels = ['N5', 'N4', 'N3', 'N2', 'N1'];
 
   // Get actual totals from API
-  const { data: vocabStats = [] } = useQuery<{ level: string; count: number }[]>({
+  const { data: vocabStats = [], error, isLoading } = useQuery<{ level: string; count: number }[]>({
     queryKey: ['/api/vocab/stats'],
     queryFn: async () => {
       const response = await fetch('/api/vocab/stats', {
@@ -73,9 +73,16 @@ export function VocabProgressRings({
       if (!response.ok) {
         throw new Error('Failed to fetch vocab stats');
       }
-      return response.json();
+      const data = await response.json();
+      console.log('Vocab stats fetched:', data); // Debug log
+      return data;
     },
   });
+
+  // Debug log for errors
+  if (error) {
+    console.error('Error fetching vocab stats:', error);
+  }
 
   const levelTotals = vocabStats.reduce((acc: Record<string, number>, stat) => {
     acc[stat.level] = parseInt(stat.count.toString());
@@ -239,7 +246,7 @@ export function JLPTLevelComparison({
   const levels = ['N5', 'N4', 'N3', 'N2', 'N1'];
 
   // Get actual totals from API
-  const { data: vocabStats = [] } = useQuery<{ level: string; count: number }[]>({
+  const { data: vocabStats = [], error: statsError } = useQuery<{ level: string; count: number }[]>({
     queryKey: ['/api/vocab/stats'],
     queryFn: async () => {
       const response = await fetch('/api/vocab/stats', {
@@ -250,9 +257,16 @@ export function JLPTLevelComparison({
       if (!response.ok) {
         throw new Error('Failed to fetch vocab stats');
       }
-      return response.json();
+      const data = await response.json();
+      console.log('JLPT Level Comparison - Vocab stats fetched:', data); // Debug log
+      return data;
     },
   });
+
+  // Debug log for errors
+  if (statsError) {
+    console.error('Error fetching vocab stats in JLPTLevelComparison:', statsError);
+  }
 
   const levelTotals = vocabStats.reduce((acc: Record<string, number>, stat) => {
     acc[stat.level] = parseInt(stat.count.toString());

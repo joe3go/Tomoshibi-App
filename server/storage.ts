@@ -73,6 +73,7 @@ export interface IStorage {
   getUserVocabTracker(userId: number): Promise<(VocabTracker & { word: JlptVocab })[]>;
   incrementWordFrequency(userId: number, wordId: number, source?: 'user' | 'ai' | 'hover'): Promise<VocabTracker>;
   getVocabStats(): Promise<{ level: string; count: number }[]>;
+  getUserVocabStatsByLevel(userId: number): Promise<{ level: string; userWords: number; totalWords: number }[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -322,7 +323,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getVocabStats(): Promise<{ level: string; count: number }[]> {
-    const stats = await db
+    const results = await db
       .select({
         level: jlptVocab.jlptLevel,
         count: sql<number>`count(*)::int`.as('count'),
@@ -331,46 +332,11 @@ export class DatabaseStorage implements IStorage {
       .groupBy(jlptVocab.jlptLevel)
       .orderBy(jlptVocab.jlptLevel);
 
-    // Ensure all JLPT levels are represented, even if they have 0 words
-    const allLevels = ['N5', 'N4', 'N3', 'N2', 'N1'];
-    const result = allLevels.map(level => {
-      const found = stats.find(stat => stat.level === level);
-      return {
-        level,
-        count: found ? found.count : 0
-      };
-    });
-
-    return result;
-  }
-
-  async getUserVocabTracker(userId: number): Promise<any[]> {
-    const trackerData = await db
-      .select({
-        id: vocabTracker.id,
-        userId: vocabTracker.userId,
-        wordId: vocabTracker.wordId,
-        frequency: vocabTracker.frequency,
-        userUsageCount: vocabTracker.userUsageCount,
-        aiEncounterCount: vocabTracker.aiEncounterCount,
-        lastSeenAt: vocabTracker.lastSeenAt,
-        memoryStrength: vocabTracker.memoryStrength,
-        nextReviewAt: vocabTracker.nextReviewAt,
-        source: vocabTracker.source,
-        word: {
-          id: jlptVocab.id,
-          kanji: jlptVocab.kanji,
-          hiragana: jlptVocab.hiragana,
-          englishMeaning: jlptVocab.englishMeaning,
-          jlptLevel: jlptVocab.jlptLevel,
-          wordType: jlptVocab.wordType,
-        },
-      })
-      .from(vocabTracker)
-      .leftJoin(jlptVocab, eq(vocabTracker.wordId, jlptVocab.id))
-      .where(eq(vocabTracker.userId, userId));
-
-    return trackerData;
+    // Ensure the count is returned as a number, not string
+    return results.map(result => ({
+      level: result.level,
+      count: parseInt(result.count.toString())
+    }));
   }
 
   async getUserVocabStatsByLevel(userId: number): Promise<{ level: string; userWords: number; totalWords: number }[]> {

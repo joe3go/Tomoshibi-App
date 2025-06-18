@@ -62,6 +62,17 @@ export default function VocabTracker() {
 
   const { data: vocabData = [] } = useQuery({
     queryKey: ['/api/vocab-tracker'],
+    queryFn: async () => {
+      const response = await fetch('/api/vocab-tracker', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch vocab tracker data');
+      }
+      return response.json();
+    },
   });
 
   const { data: vocabStats = [] } = useQuery({
@@ -81,6 +92,17 @@ export default function VocabTracker() {
 
   const { data: userVocabStats = [] } = useQuery<UserVocabStat[]>({
     queryKey: ['/api/vocab/user-stats'],
+    queryFn: async () => {
+      const response = await fetch('/api/vocab/user-stats', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch user vocab stats');
+      }
+      return response.json();
+    },
   });
 
   // Get total vocabulary counts from database
