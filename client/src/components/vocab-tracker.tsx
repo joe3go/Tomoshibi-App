@@ -66,6 +66,17 @@ export default function VocabTracker() {
 
   const { data: vocabStats = [] } = useQuery({
     queryKey: ['/api/vocab/stats'],
+    queryFn: async () => {
+      const response = await fetch('/api/vocab/stats', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch vocab stats');
+      }
+      return response.json();
+    },
   });
 
   const { data: userVocabStats = [] } = useQuery<UserVocabStat[]>({
@@ -75,6 +86,17 @@ export default function VocabTracker() {
   // Get total vocabulary counts from database
   const { data: totalVocabStats = [] } = useQuery<{ level: string; count: number }[]>({
     queryKey: ['/api/vocab/stats'],
+    queryFn: async () => {
+      const response = await fetch('/api/vocab/stats', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch vocab stats');
+      }
+      return response.json();
+    },
   });
 
   // Calculate stats from vocabulary data

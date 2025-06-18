@@ -64,6 +64,17 @@ export function VocabProgressRings({
   // Get actual totals from API
   const { data: vocabStats = [] } = useQuery<{ level: string; count: number }[]>({
     queryKey: ['/api/vocab/stats'],
+    queryFn: async () => {
+      const response = await fetch('/api/vocab/stats', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch vocab stats');
+      }
+      return response.json();
+    },
   });
 
   const levelTotals = vocabStats.reduce((acc: Record<string, number>, stat) => {
@@ -230,6 +241,17 @@ export function JLPTLevelComparison({
   // Get actual totals from API
   const { data: vocabStats = [] } = useQuery<{ level: string; count: number }[]>({
     queryKey: ['/api/vocab/stats'],
+    queryFn: async () => {
+      const response = await fetch('/api/vocab/stats', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch vocab stats');
+      }
+      return response.json();
+    },
   });
 
   const levelTotals = vocabStats.reduce((acc: Record<string, number>, stat) => {
