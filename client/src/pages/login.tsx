@@ -78,16 +78,13 @@ export default function Login() {
     },
     onSuccess: (data) => {
       setAuthToken(data.token);
-      // Invalidate auth queries to refresh user data
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      queryClient.clear();
       toast({
         title: "Welcome to Tomoshibi!",
         description: "Your account has been created successfully.",
       });
-      // Force immediate navigation to dashboard
-      queryClient.refetchQueries({ queryKey: ["/api/auth/me"] }).then(() => {
-        setLocation("/dashboard");
-      });
+      // Use window.location for reliable redirect
+      window.location.href = "/dashboard";
     },
     onError: (error) => {
       toast({
