@@ -449,9 +449,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return acc;
       }, {});
       
+      // Also check direct database query
+      const directQuery = await db.execute(sql`
+        SELECT jlpt_level, COUNT(*) as count 
+        FROM jlpt_vocab 
+        GROUP BY jlpt_level 
+        ORDER BY jlpt_level
+      `);
+      
+      // Check table structure
+      const tableInfo = await db.execute(sql`
+        SELECT column_name, data_type 
+        FROM information_schema.columns 
+        WHERE table_name = 'jlpt_vocab'
+      `);
+      
       res.json({
         totalWords: allVocab.length,
         byLevel: levelCounts,
+        directQueryResults: directQuery.rows,
+        tableStructure: tableInfo.rows,
         sampleWords: allVocab.slice(0, 10).map(w => ({
           kanji: w.kanji,
           hiragana: w.hiragana,
