@@ -32,13 +32,13 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 const getSupabaseConfig = () => {
   if (isDevelopment) {
     return {
-      url: process.env.VITE_SUPABASE_DEV_URL || 'https://your-dev-project.supabase.co',
-      key: process.env.VITE_SUPABASE_DEV_SERVICE_KEY || process.env.VITE_SUPABASE_DEV_ANON_KEY || ''
+      url: 'https://gsnnydemkpllycgzmalv.supabase.co',
+      key: process.env.VITE_SUPABASE_DEV_SERVICE_KEY || ''
     };
   } else {
     return {
-      url: process.env.VITE_SUPABASE_PROD_URL || 'https://your-prod-project.supabase.co',
-      key: process.env.VITE_SUPABASE_PROD_SERVICE_KEY || process.env.VITE_SUPABASE_PROD_ANON_KEY || ''
+      url: 'https://oyawpeylvdqfkhysnjsq.supabase.co',
+      key: process.env.VITE_SUPABASE_PROD_SERVICE_KEY || ''
     };
   }
 };
