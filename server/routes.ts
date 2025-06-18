@@ -134,7 +134,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         key: isDevelopment ? process.env.VITE_SUPABASE_DEV_SERVICE_KEY : process.env.VITE_SUPABASE_PROD_SERVICE_KEY
       };
       console.log('🔧 Login Environment:', isDevelopment ? 'development' : 'production');
-      console.log('🔧 Login using Supabase URL:', config.url);.url);
+      console.log('🔧 Login using Supabase URL:', config.url);
 
       if (!config.url || !config.key) {
         console.error('❌ Supabase configuration missing:', { url: !!config.url, key: !!config.key });
