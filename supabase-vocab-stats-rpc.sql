@@ -1,7 +1,3 @@
-
--- Create RPC function to get vocabulary statistics by JLPT level
--- This function efficiently counts vocabulary entries and maps numeric levels to N-format
-
 CREATE OR REPLACE FUNCTION get_vocab_stats_by_level()
 RETURNS TABLE(level TEXT, count BIGINT)
 LANGUAGE plpgsql
@@ -10,21 +6,20 @@ AS $$
 BEGIN
   RETURN QUERY
   SELECT
-    CASE 
-      WHEN jlpt_level = 1 THEN 'N1'
-      WHEN jlpt_level = 2 THEN 'N2'
-      WHEN jlpt_level = 3 THEN 'N3'
-      WHEN jlpt_level = 4 THEN 'N4'
-      WHEN jlpt_level = 5 THEN 'N5'
+    CASE jlpt_level
+      WHEN 1 THEN 'N1'
+      WHEN 2 THEN 'N2'
+      WHEN 3 THEN 'N3'
+      WHEN 4 THEN 'N4'
+      WHEN 5 THEN 'N5'
       ELSE 'Unknown'
-    END AS jlpt_level_name,
-    COUNT(*) AS vocab_count
+    END AS level,
+    COUNT(*) AS count
   FROM jlpt_vocab
-  GROUP BY jlpt_level
-  ORDER BY jlpt_level;
+  GROUP BY level
+  ORDER BY level;
 END;
 $$;
 
--- Grant execute permission to authenticated users
 GRANT EXECUTE ON FUNCTION get_vocab_stats_by_level() TO authenticated;
 GRANT EXECUTE ON FUNCTION get_vocab_stats_by_level() TO anon;
