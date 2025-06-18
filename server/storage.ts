@@ -37,7 +37,7 @@ import { db } from "./db";
 
 export interface IStorage {
   // User operations
-  getUser(id: number): Promise<User | undefined>;
+  getUser(id: string | number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, updates: Partial<User>): Promise<User>;
@@ -87,25 +87,32 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   // User operations
-  async getUser(id: number): Promise<User | undefined> {
-    // With Supabase Auth, user data comes from auth.getUser()
-    // This method would need to be called with a valid session
+  async getUser(id: string | number): Promise<User | undefined> {
     try {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (error || !user) return undefined;
+      const userIdStr = typeof id === 'string' ? id : id.toString();
 
+      // For Supabase Auth, use admin API to get user by ID
+      const { data: user, error } = await supabase.auth.admin.getUserById(userIdStr);
+
+      if (error || !user.user) {
+        console.error('Supabase getUser error:', error);
+        return undefined;
+      }
+
+      // Transform Supabase user to our User type
       return {
-        id: parseInt(user.id),
-        email: user.email!,
-        displayName: user.user_metadata?.display_name || user.email?.split('@')[0] || '',
+        id: user.user.id,
+        email: user.user.email!,
+        displayName: user.user.user_metadata?.display_name || user.user.email?.split('@')[0] || '',
         passwordHash: '',
-        preferredKanjiDisplay: user.user_metadata?.preferred_kanji_display || 'furigana',
-        profileImageUrl: user.user_metadata?.avatar_url || null,
+        preferredKanjiDisplay: user.user.user_metadata?.preferred_kanji_display || 'furigana',
+        profileImageUrl: user.user.user_metadata?.avatar_url || null,
         soundNotifications: true,
         desktopNotifications: true,
-        createdAt: new Date(user.created_at)
+        createdAt: new Date(user.user.created_at)
       } as User;
     } catch (error) {
+      console.error('Error getting user:', error);
       return undefined;
     }
   }
@@ -134,7 +141,7 @@ export class DatabaseStorage implements IStorage {
 
     // Return user data in expected format
     return {
-      id: parseInt(authData.user.id), // Convert UUID to number for compatibility
+      id: authData.user.id, // Convert UUID to number for compatibility
       email: authData.user.email!,
       displayName: authData.user.user_metadata?.display_name || insertUser.displayName,
       passwordHash: '', // Not needed with Supabase Auth
@@ -153,7 +160,7 @@ export class DatabaseStorage implements IStorage {
       .eq('id', id)
       .select()
       .single();
-    
+
     if (error) throw new Error(error.message);
     return data as User;
   }
@@ -163,7 +170,7 @@ export class DatabaseStorage implements IStorage {
     const { data, error } = await supabase
       .from('personas')
       .select('*');
-    
+
     if (error) throw new Error(error.message);
     return (data as Persona[]) || [];
   }
@@ -174,7 +181,7 @@ export class DatabaseStorage implements IStorage {
       .select('*')
       .eq('id', id)
       .single();
-    
+
     if (error || !data) return undefined;
     return data as Persona;
   }
@@ -184,7 +191,7 @@ export class DatabaseStorage implements IStorage {
     const { data, error } = await supabase
       .from('scenarios')
       .select('*');
-    
+
     if (error) throw new Error(error.message);
     return (data as Scenario[]) || [];
   }
@@ -195,7 +202,7 @@ export class DatabaseStorage implements IStorage {
       .select('*')
       .eq('id', id)
       .single();
-    
+
     if (error || !data) return undefined;
     return data as Scenario;
   }
@@ -207,7 +214,7 @@ export class DatabaseStorage implements IStorage {
       .from('scenarios')
       .select('*')
       .limit(3);
-    
+
     if (error) throw new Error(error.message);
     return (data as Scenario[]) || [];
   }
@@ -259,19 +266,19 @@ export class DatabaseStorage implements IStorage {
     const { data, error } = await supabase
       .from('jlpt_vocab')
       .select('*');
-    
+
     if (error) throw new Error(error.message);
     return (data as JlptVocab[]) || [];
   }
 
   async getVocabByIds(ids: number[]): Promise<JlptVocab[]> {
     if (ids.length === 0) return [];
-    
+
     const { data, error } = await supabase
       .from('jlpt_vocab')
       .select('*')
       .in('id', ids);
-    
+
     if (error) throw new Error(error.message);
     return (data as JlptVocab[]) || [];
   }
@@ -281,7 +288,7 @@ export class DatabaseStorage implements IStorage {
       .from('jlpt_vocab')
       .select('*')
       .eq('jlpt_level', level);
-    
+
     if (error) throw new Error(error.message);
     return (data as JlptVocab[]) || [];
   }
@@ -295,7 +302,7 @@ export class DatabaseStorage implements IStorage {
       .from('jlpt_vocab')
       .select('*')
       .or(`hiragana.ilike.%${query}%,kanji.ilike.%${query}%,english_meaning.ilike.%${query}%`);
-    
+
     if (error) throw new Error(error.message);
     return (data as JlptVocab[]) || [];
   }
@@ -422,28 +429,28 @@ export class DatabaseStorage implements IStorage {
       const { createClient } = await import('@supabase/supabase-js');
       const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://oyawpeylvdqfkhysnjsq.supabase.co';
       const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95YXdwZXlsdmRxZmtoeXNuanNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNDg5NzMsImV4cCI6MjA2NTcyNDk3M30.HxmDxm7QFTDCRUboGTGQIpXfnC7Tc4_-P6Z45QzmlM0';
-      
+
       console.log('📡 Connecting to Supabase:', supabaseUrl);
       const supabase = createClient(supabaseUrl, supabaseKey);
-      
+
       // First, try to call the RPC function
       console.log('🎯 Calling get_vocab_stats_by_level RPC function...');
       const { data: rpcData, error: rpcError } = await supabase.rpc('get_vocab_stats_by_level');
-      
+
       if (!rpcError && rpcData) {
         console.log('✅ RPC function returned vocab stats:', rpcData);
         return rpcData;
       }
-      
+
       console.log('⚠️ RPC function not available, falling back to manual aggregation...');
       console.log('RPC Error:', rpcError?.message);
-      
+
       // Fallback: Use aggregation query to get all data without row limits
       const { data, error } = await supabase
         .from('jlpt_vocab')
         .select('jlpt_level')
         .range(0, 19999); // Increased range to ensure we get all entries
-      
+
       if (error) {
         console.error('❌ Supabase fallback query error:', error);
         console.log('🔄 Using hardcoded fallback counts...');
@@ -468,7 +475,7 @@ export class DatabaseStorage implements IStorage {
       }
 
       console.log('✅ Successfully fetched', data.length, 'vocabulary entries from Supabase');
-      
+
       // Sample the first few entries to understand the format
       const sampleLevels = data.slice(0, 5).map(item => item.jlpt_level);
       console.log('📋 Sample levels from Supabase:', sampleLevels);
@@ -481,7 +488,7 @@ export class DatabaseStorage implements IStorage {
           : item.jlpt_level.toString().startsWith('N') 
             ? item.jlpt_level 
             : `N${item.jlpt_level}`;
-        
+
         acc[mappedLevel] = (acc[mappedLevel] || 0) + 1;
         return acc;
       }, {});

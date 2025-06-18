@@ -30,7 +30,7 @@ const upload = multer({
 });
 
 interface AuthRequest extends Request {
-  userId?: number;
+  userId?: string;
 }
 
 // Middleware to verify JWT token
@@ -44,7 +44,7 @@ const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) 
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as any;
-    req.userId = decoded.userId;
+    req.userId = decoded.userId || decoded.userUuid;
     next();
   } catch (err) {
     console.error('JWT verification error:', err);
@@ -87,8 +87,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         preferredKanjiDisplay: 'furigana',
       });
 
-      // Generate JWT token (you can also use Supabase session tokens)
-      const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+      // Generate JWT token with string user ID (Supabase uses UUIDs)
+      const token = jwt.sign({ userId: user.id, userUuid: user.id }, JWT_SECRET, { expiresIn: '7d' });
 
       res.json({
         token,
@@ -130,8 +130,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: 'Invalid credentials' });
       }
 
-      // Generate JWT token (or use Supabase session)
-      const token = jwt.sign({ userId: parseInt(data.user.id) }, JWT_SECRET, { expiresIn: '7d' });
+      // Generate JWT token with string user ID (Supabase uses UUIDs)
+      const token = jwt.sign({ userId: data.user.id, userUuid: data.user.id }, JWT_SECRET, { expiresIn: '7d' });
 
       res.json({
         token,
