@@ -23,7 +23,7 @@ import {
   type VocabTracker,
   type InsertVocabTracker,
 } from "@shared/schema";
-import { db } from "./db";
+import { supabase } from "./db";
 import { eq, desc, and, like, or, inArray, sql } from "drizzle-orm";
 
 export interface IStorage {
@@ -79,58 +79,106 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error || !data) return undefined;
+    return data as User;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user;
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
+    
+    if (error || !data) return undefined;
+    return data as User;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const { password, ...userData } = insertUser;
-    const [user] = await db.insert(users).values({
-      ...userData,
-      passwordHash: password
-    }).returning();
-    return user;
+    const { data, error } = await supabase
+      .from('users')
+      .insert({
+        ...userData,
+        password_hash: password
+      })
+      .select()
+      .single();
+    
+    if (error) throw new Error(error.message);
+    return data as User;
   }
 
   async updateUser(id: number, updates: Partial<User>): Promise<User> {
-    const [user] = await db
-      .update(users)
-      .set(updates)
-      .where(eq(users.id, id))
-      .returning();
-    return user;
+    const { data, error } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw new Error(error.message);
+    return data as User;
   }
 
   // Persona operations
   async getAllPersonas(): Promise<Persona[]> {
-    return await db.select().from(personas);
+    const { data, error } = await supabase
+      .from('personas')
+      .select('*');
+    
+    if (error) throw new Error(error.message);
+    return (data as Persona[]) || [];
   }
 
   async getPersona(id: number): Promise<Persona | undefined> {
-    const [persona] = await db.select().from(personas).where(eq(personas.id, id));
-    return persona;
+    const { data, error } = await supabase
+      .from('personas')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error || !data) return undefined;
+    return data as Persona;
   }
 
   // Scenario operations
   async getAllScenarios(): Promise<Scenario[]> {
-    return await db.select().from(scenarios);
+    const { data, error } = await supabase
+      .from('scenarios')
+      .select('*');
+    
+    if (error) throw new Error(error.message);
+    return (data as Scenario[]) || [];
   }
 
   async getScenario(id: number): Promise<Scenario | undefined> {
-    const [scenario] = await db.select().from(scenarios).where(eq(scenarios.id, id));
-    return scenario;
+    const { data, error } = await supabase
+      .from('scenarios')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error || !data) return undefined;
+    return data as Scenario;
   }
 
   async getUnlockedScenarios(userId: number): Promise<Scenario[]> {
     // For now, return first 3 scenarios as unlocked
     // In a real implementation, this would check user progress
-    const allScenarios = await db.select().from(scenarios);
-    return allScenarios.slice(0, 3);
+    const { data, error } = await supabase
+      .from('scenarios')
+      .select('*')
+      .limit(3);
+    
+    if (error) throw new Error(error.message);
+    return (data as Scenario[]) || [];
   }
 
   // Conversation operations
@@ -177,19 +225,34 @@ export class DatabaseStorage implements IStorage {
 
   // Vocabulary operations
   async getAllVocab(): Promise<JlptVocab[]> {
-    return await db.select().from(jlptVocab);
+    const { data, error } = await supabase
+      .from('jlpt_vocab')
+      .select('*');
+    
+    if (error) throw new Error(error.message);
+    return (data as JlptVocab[]) || [];
   }
 
   async getVocabByIds(ids: number[]): Promise<JlptVocab[]> {
     if (ids.length === 0) return [];
-    return await db.select().from(jlptVocab).where(
-      // Use proper SQL IN operator
-      eq(jlptVocab.id, ids[0]) // Simplified for now, would need proper IN implementation
-    );
+    
+    const { data, error } = await supabase
+      .from('jlpt_vocab')
+      .select('*')
+      .in('id', ids);
+    
+    if (error) throw new Error(error.message);
+    return (data as JlptVocab[]) || [];
   }
 
   async getVocabByLevel(level: string): Promise<JlptVocab[]> {
-    return await db.select().from(jlptVocab).where(eq(jlptVocab.jlptLevel, level));
+    const { data, error } = await supabase
+      .from('jlpt_vocab')
+      .select('*')
+      .eq('jlpt_level', level);
+    
+    if (error) throw new Error(error.message);
+    return (data as JlptVocab[]) || [];
   }
 
   async searchVocab(query: string): Promise<JlptVocab[]> {
@@ -197,13 +260,13 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
 
-    return await db.select().from(jlptVocab).where(
-      or(
-        like(jlptVocab.hiragana, `%${query}%`),
-        like(jlptVocab.kanji, `%${query}%`),
-        like(jlptVocab.englishMeaning, `%${query}%`)
-      )
-    );
+    const { data, error } = await supabase
+      .from('jlpt_vocab')
+      .select('*')
+      .or(`hiragana.ilike.%${query}%,kanji.ilike.%${query}%,english_meaning.ilike.%${query}%`);
+    
+    if (error) throw new Error(error.message);
+    return (data as JlptVocab[]) || [];
   }
 
   // Grammar operations
