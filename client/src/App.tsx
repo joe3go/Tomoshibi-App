@@ -20,13 +20,14 @@ const queryClient = new QueryClient({
 });
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return <LoadingSpinner />;
   }
 
-  if (!isAuthenticated) {
+  // Check both isAuthenticated and user to ensure proper auth state
+  if (!isAuthenticated || !user) {
     return <Login />;
   }
 

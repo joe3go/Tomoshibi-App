@@ -8,6 +8,7 @@ export function useAuth() {
     enabled: !!token,
     retry: false,
     staleTime: 0, // Always refetch when token changes
+    refetchOnWindowFocus: false,
   });
 
   return {
