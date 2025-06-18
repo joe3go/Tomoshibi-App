@@ -9,28 +9,19 @@ SECURITY DEFINER
 AS $$
 BEGIN
   RETURN QUERY
-  SELECT 
+  SELECT
     CASE 
-      WHEN jlpt_level::text = '1' THEN 'N1'
-      WHEN jlpt_level::text = '2' THEN 'N2'
-      WHEN jlpt_level::text = '3' THEN 'N3'
-      WHEN jlpt_level::text = '4' THEN 'N4'
-      WHEN jlpt_level::text = '5' THEN 'N5'
-      WHEN jlpt_level::text LIKE 'N%' THEN jlpt_level::text
-      ELSE 'N' || jlpt_level::text
-    END as level,
-    COUNT(*) as count
-  FROM jlpt_vocab 
-  GROUP BY jlpt_level
-  ORDER BY 
-    CASE 
-      WHEN jlpt_level::text = '1' OR jlpt_level::text = 'N1' THEN 1
-      WHEN jlpt_level::text = '2' OR jlpt_level::text = 'N2' THEN 2
-      WHEN jlpt_level::text = '3' OR jlpt_level::text = 'N3' THEN 3
-      WHEN jlpt_level::text = '4' OR jlpt_level::text = 'N4' THEN 4
-      WHEN jlpt_level::text = '5' OR jlpt_level::text = 'N5' THEN 5
-      ELSE 6
-    END;
+      WHEN jlpt_level = '1' THEN 'N1'
+      WHEN jlpt_level = '2' THEN 'N2'
+      WHEN jlpt_level = '3' THEN 'N3'
+      WHEN jlpt_level = '4' THEN 'N4'
+      WHEN jlpt_level = '5' THEN 'N5'
+      ELSE 'Unknown'
+    END AS jlpt_level_name,
+    COUNT(*) AS vocab_count
+  FROM jlpt_vocab
+  GROUP BY jlpt_level_name
+  ORDER BY jlpt_level_name;
 END;
 $$;
 
