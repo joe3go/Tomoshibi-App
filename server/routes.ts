@@ -1,3 +1,4 @@
+
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -49,6 +50,23 @@ const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) 
   } catch (err) {
     console.error('JWT verification error:', err);
     return res.status(403).json({ message: 'Invalid or expired token' });
+  }
+};
+
+// Environment-specific Supabase configuration
+const getSupabaseConfig = () => {
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  
+  if (isDevelopment) {
+    return {
+      url: process.env.SUPABASE_DEV_URL || 'https://your-dev-project.supabase.co',
+      key: process.env.SUPABASE_DEV_ANON_KEY || ''
+    };
+  } else {
+    return {
+      url: process.env.SUPABASE_PROD_URL || 'https://your-prod-project.supabase.co',
+      key: process.env.SUPABASE_PROD_ANON_KEY || ''
+    };
   }
 };
 
@@ -109,13 +127,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { email, password } = req.body;
 
-      // Use Supabase Auth for login
+      // Use environment-specific Supabase configuration
+      const config = getSupabaseConfig();
+      console.log('🔧 Login Environment:', process.env.NODE_ENV === 'development' ? 'development' : 'production');
+      console.log('🔧 Login using Supabase URL:', config.url);
+
+      if (!config.url || !config.key) {
+        console.error('❌ Supabase configuration missing:', { url: !!config.url, key: !!config.key });
+        return res.status(500).json({ message: 'Server configuration error' });
+      }
+
       const { createClient } = await import('@supabase/supabase-js');
-      const supabaseUrl = 'https://oyawpeylvdqfkhysnjsq.supabase.co';
-      const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95YXdwZXlsdmRxZmtoeXNuanNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNDg5NzMsImV4cCI6MjA2NTcyNDk3M30.HxmDxm7QFTDCRUboGTGQIpXfnC7Tc4_-P6Z45QzmlM0';
-      
-      console.log('🔧 Login using Supabase URL:', supabaseUrl);
-      const supabase = createClient(supabaseUrl, supabaseKey);
+      const supabase = createClient(config.url, config.key);
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -123,6 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       if (error) {
+        console.error('Supabase login error:', error);
         return res.status(401).json({ message: 'Invalid credentials' });
       }
 
@@ -167,6 +191,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Auth me error:', error);
       res.status(500).json({ message: 'Failed to get user' });
+    }
+  });
+
+  // Add endpoint to handle auth confirmation
+  app.get('/auth/confirm', async (req, res) => {
+    try {
+      const { token_hash, type } = req.query;
+      
+      if (token_hash && type) {
+        const config = getSupabaseConfig();
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabase = createClient(config.url, config.key);
+
+        const { data, error } = await supabase.auth.verifyOtp({
+          token_hash: token_hash as string,
+          type: type as any,
+        });
+
+        if (error) {
+          console.error('Email confirmation error:', error);
+          return res.redirect('/login?error=confirmation_failed');
+        }
+
+        if (data.user) {
+          // Generate JWT token for automatic login
+          const token = jwt.sign({ userId: data.user.id, userUuid: data.user.id }, JWT_SECRET, { expiresIn: '7d' });
+          
+          // Redirect to dashboard with token
+          return res.redirect(`/dashboard?token=${token}`);
+        }
+      }
+
+      // If no token or confirmation failed, redirect to login
+      res.redirect('/login');
+    } catch (error) {
+      console.error('Auth confirmation error:', error);
+      res.redirect('/login?error=confirmation_failed');
     }
   });
 
@@ -448,11 +509,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const supabaseStats = await storage.getVocabStats();
       
       // Also test direct Supabase connection
+      const config = getSupabaseConfig();
       const { createClient } = await import('@supabase/supabase-js');
-      const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://oyawpeylvdqfkhysnjsq.supabase.co';
-      const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95YXdwZXlsdmRxZmtoeXNuanNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNDg5NzMsImV4cCI6MjA2NTcyNDk3M30.HxmDxm7QFTDCRUboGTGQIpXfnC7Tc4_-P6Z45QzmlM0';
+      const supabase = createClient(config.url, config.key);
       
-      const supabase = createClient(supabaseUrl, supabaseKey);
       const { data: directData, error: directError } = await supabase
         .from('jlpt_vocab')
         .select('jlpt_level')
@@ -468,7 +528,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         source: "Supabase",
         supabaseStats,
         supabaseConnection: {
-          url: supabaseUrl,
+          url: config.url,
+          environment: process.env.NODE_ENV === 'development' ? 'development' : 'production',
           directTestResult: directError ? directError.message : `Success - fetched ${directData?.length || 0} sample records`,
           directError: directError?.message || null
         }

@@ -1,3 +1,4 @@
+
 import {
   users,
   personas,
@@ -25,13 +26,28 @@ import {
 } from "@shared/schema";
 import { createClient } from '@supabase/supabase-js';
 
-// Create Supabase client for server-side operations
-// Force the correct HTTPS URL format for Supabase API
-const supabaseUrl = 'https://oyawpeylvdqfkhysnjsq.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95YXdwZXlsdmRxZmtoeXNuanNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNDg5NzMsImV4cCI6MjA2NTcyNDk3M30.HxmDxm7QFTDCRUboGTGQIpXfnC7Tc4_-P6Z45QzmlM0';
+// Environment-specific Supabase configuration
+const isDevelopment = process.env.NODE_ENV === 'development';
 
-console.log('🔧 Using Supabase URL for Auth:', supabaseUrl);
-const supabase = createClient(supabaseUrl, supabaseKey);
+const getSupabaseConfig = () => {
+  if (isDevelopment) {
+    return {
+      url: process.env.SUPABASE_DEV_URL || 'https://your-dev-project.supabase.co',
+      key: process.env.SUPABASE_DEV_SERVICE_KEY || process.env.SUPABASE_DEV_ANON_KEY || ''
+    };
+  } else {
+    return {
+      url: process.env.SUPABASE_PROD_URL || 'https://your-prod-project.supabase.co',
+      key: process.env.SUPABASE_PROD_SERVICE_KEY || process.env.SUPABASE_PROD_ANON_KEY || ''
+    };
+  }
+};
+
+const config = getSupabaseConfig();
+console.log('🔧 Server Supabase Environment:', isDevelopment ? 'development' : 'production');
+console.log('🔧 Using Supabase URL for Auth:', config.url);
+
+const supabase = createClient(config.url, config.key);
 import { eq, desc, and, like, or, inArray, sql } from "drizzle-orm";
 import { db } from "./db";
 
@@ -124,6 +140,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
+    // Get the current base URL for redirect
+    const isDev = process.env.NODE_ENV === 'development';
+    const baseUrl = isDev ? 'http://0.0.0.0:5000' : 'https://tomoshibi-joebouchabake.replit.app';
+    
     // Use Supabase Auth instead of manual user creation
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: insertUser.email,
@@ -132,7 +152,8 @@ export class DatabaseStorage implements IStorage {
         data: {
           display_name: insertUser.displayName,
           preferred_kanji_display: insertUser.preferredKanjiDisplay || 'furigana'
-        }
+        },
+        emailRedirectTo: `${baseUrl}/auth/confirm`
       }
     });
 
@@ -426,13 +447,6 @@ export class DatabaseStorage implements IStorage {
   async getVocabStats(): Promise<{ level: string; count: number }[]> {
     console.log('🔍 Fetching vocabulary statistics from Supabase using RPC...');
     try {
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://oyawpeylvdqfkhysnjsq.supabase.co';
-      const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95YXdwZXlsdmRxZmtoeXNuanNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNDg5NzMsImV4cCI6MjA2NTcyNDk3M30.HxmDxm7QFTDCRUboGTGQIpXfnC7Tc4_-P6Z45QzmlM0';
-
-      console.log('📡 Connecting to Supabase:', supabaseUrl);
-      const supabase = createClient(supabaseUrl, supabaseKey);
-
       // First, try to call the RPC function
       console.log('🎯 Calling get_vocab_stats_by_level RPC function...');
       const { data: rpcData, error: rpcError } = await supabase.rpc('get_vocab_stats_by_level');
