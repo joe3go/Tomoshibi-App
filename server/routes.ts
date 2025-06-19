@@ -329,30 +329,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Persona routes - Updated for Supabase
-  app.get('/api/personas', authenticateToken, async (req, res) => {
-    try {
-      // Use the existing Supabase client from db.ts
-      const { supabase } = await import('./db');
-      
-      console.log('🔍 Fetching personas from Supabase...');
-      const { data: personas, error } = await supabase
-        .from('personas')
-        .select('*')
-        .order('id');
-
-      if (error) {
-        console.error('❌ Supabase personas error:', error);
-        return res.status(500).json({ message: 'Failed to fetch personas from Supabase' });
-      }
-
-      console.log('✅ Successfully fetched personas:', personas?.length || 0);
-      res.json(personas || []);
-    } catch (error) {
-      console.error('Get personas error:', error);
-      res.status(500).json({ message: 'Failed to get personas' });
-    }
-  });
+  
 
   // Scenario routes
   app.get('/api/scenarios', authenticateToken, async (req: AuthRequest, res) => {
