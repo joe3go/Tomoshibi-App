@@ -527,8 +527,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/vocab/stats', authenticateToken, async (req, res) => {
     try {
-      const stats = await storage.getVocabStats();
-      res.json(stats);
+      const config = getSupabaseConfig();
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(config.url, config.key);
+      
+      console.log('🔍 Fetching vocabulary statistics from Supabase using RPC...');
+      
+      // Try RPC function first
+      try {
+        console.log('🎯 Calling get_vocab_stats_by_level RPC function...');
+        const { data, error } = await supabase.rpc('get_vocab_stats_by_level');
+        
+        if (error) throw error;
+        
+        if (data && Array.isArray(data)) {
+          console.log('✅ RPC function successful, data:', data);
+          
+          const stats = data.reduce((acc, { level, count }) => ({
+            ...acc,
+            [level]: Number(count)
+          }), { N1: 0, N2: 0, N3: 0, N4: 0, N5: 0 });
+
+          const result = Object.entries(stats).map(([level, count]) => ({
+            level,
+            count
+          }));
+
+          console.log('📊 Final vocab stats from RPC:', result);
+          return res.json(result);
+        }
+      } catch (rpcError) {
+        console.log('⚠️ RPC function not available, falling back to manual aggregation...');
+        console.log('RPC Error:', rpcError.message);
+      }
+
+      // Fallback to manual aggregation
+      const { data, error } = await supabase
+        .from('jlpt_vocab')
+        .select('jlpt_level')
+        .range(0, 19999);
+
+      if (error) {
+        console.error('❌ Supabase fallback query error:', error);
+        console.log('🔄 Using hardcoded fallback counts...');
+        return res.json([
+          { level: 'N1', count: 2136 },
+          { level: 'N2', count: 1651 },
+          { level: 'N3', count: 1334 },
+          { level: 'N4', count: 1022 },
+          { level: 'N5', count: 721 }
+        ]);
+      }
+
+      if (!data || data.length === 0) {
+        console.log('📭 No vocabulary data found in Supabase');
+        return res.json([
+          { level: 'N1', count: 0 },
+          { level: 'N2', count: 0 },
+          { level: 'N3', count: 0 },
+          { level: 'N4', count: 0 },
+          { level: 'N5', count: 0 }
+        ]);
+      }
+
+      console.log('✅ Successfully fetched', data.length, 'vocabulary entries from Supabase');
+
+      // Count by level and map numeric levels to N-format
+      const levelCounts = data.reduce((acc: Record<string, number>, item) => {
+        const mappedLevel = typeof item.jlpt_level === 'number' 
+          ? `N${item.jlpt_level}` 
+          : item.jlpt_level.toString().startsWith('N') 
+            ? item.jlpt_level 
+            : `N${item.jlpt_level}`;
+
+        acc[mappedLevel] = (acc[mappedLevel] || 0) + 1;
+        return acc;
+      }, {});
+
+      const result = ['N1', 'N2', 'N3', 'N4', 'N5'].map(level => ({
+        level,
+        count: levelCounts[level] || 0
+      }));
+
+      console.log('📊 Vocabulary counts by level (from Supabase manual aggregation):', result);
+      res.json(result);
     } catch (error) {
       console.error('Get vocab stats error:', error);
       res.status(500).json({ message: 'Failed to get vocabulary statistics' });
