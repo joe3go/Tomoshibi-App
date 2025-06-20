@@ -5,11 +5,11 @@ import * as schema from "@shared/schema";
 // Environment-aware Supabase configuration for backend
 const supabaseUrl = process.env.NODE_ENV === 'production'
   ? process.env.VITE_SUPABASE_PROD_URL || 'https://oyawpeylvdqfkhysnjsq.supabase.co'
-  : process.env.VITE_SUPABASE_URL || 'https://oyawpeylvdqfkhysnjsq.supabase.co';
+  : process.env.VITE_SUPABASE_DEV_URL || 'https://oyawpeylvdqfkhysnjsq.supabase.co';
 
 const serviceKey = process.env.NODE_ENV === 'production'
   ? process.env.VITE_SUPABASE_PROD_ANON_KEY
-  : process.env.VITE_SUPABASE_ANON_KEY;
+  : process.env.VITE_SUPABASE_DEV_ANON_KEY;
 
 console.log("🔗 Connecting to Supabase:", supabaseUrl, "(Environment:", process.env.NODE_ENV || 'development', ")");
 

@@ -120,7 +120,7 @@ Preferred communication style: Simple, everyday language.
   - Updated database schema queries to use proper column names (created_at vs timestamp)
   - All conversation creation and access now working properly
 - **Restored dynamic dual database configuration**:
-  - Development: Uses VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+  - Development: Uses VITE_SUPABASE_DEV_URL and VITE_SUPABASE_DEV_ANON_KEY
   - Production: Uses VITE_SUPABASE_PROD_URL and VITE_SUPABASE_PROD_ANON_KEY
   - Automatic environment-based switching via NODE_ENV
 - **Complete chat system functionality**:
