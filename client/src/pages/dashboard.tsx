@@ -63,7 +63,7 @@ export default function Dashboard() {
     streak: 7,
     newWordsThisWeek: 12,
     totalWords: 150,
-    activeConversations: conversations?.length || 0,
+    activeConversations: Array.isArray(conversations) ? conversations.length : 0,
     practiceTime: 155, // minutes
     upcomingGoal: "Learn 20 JLPT N5 words"
   };
@@ -171,224 +171,226 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Welcome Section */}
-      <div className="welcome-section">
-        <div className="welcome-content">
-          <h1 className="welcome-title">
-            Welcome back, {(user as any)?.displayName || 'Student'}!
-          </h1>
-          <p className="welcome-subtitle">Keep your momentum going!</p>
+      <div className="dashboard-content">
+        {/* Welcome Section */}
+        <div className="welcome-section">
+          <div className="welcome-content">
+            <h1 className="welcome-title">
+              Welcome back, {(user as any)?.displayName || 'Student'}!
+            </h1>
+            <p className="welcome-subtitle">Keep your momentum going!</p>
+          </div>
         </div>
-      </div>
 
-      {/* Analytics Section */}
-      <div className="analytics-section">
-        <div className="analytics-grid">
-          <Card className="stat-card streak-card">
-            <CardContent className="stat-content">
-              <div className="stat-icon">
-                <Flame className="w-6 h-6 text-orange-500" />
-              </div>
-              <div className="stat-details">
-                <p className="stat-value">{analytics.streak}-day</p>
-                <p className="stat-label">Streak</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="stat-card">
-            <CardContent className="stat-content">
-              <div className="stat-icon">
-                <TrendingUp className="w-6 h-6 text-green-500" />
-              </div>
-              <div className="stat-details">
-                <p className="stat-value">{analytics.newWordsThisWeek}</p>
-                <p className="stat-label">New Words This Week</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="stat-card">
-            <CardContent className="stat-content">
-              <div className="stat-icon">
-                <BookOpen className="w-6 h-6 text-blue-500" />
-              </div>
-              <div className="stat-details">
-                <p className="stat-value">{analytics.totalWords}</p>
-                <p className="stat-label">Total Words Used</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="stat-card">
-            <CardContent className="stat-content">
-              <div className="stat-icon">
-                <MessageCircle className="w-6 h-6 text-purple-500" />
-              </div>
-              <div className="stat-details">
-                <p className="stat-value">{analytics.activeConversations}</p>
-                <p className="stat-label">Active Conversations</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="stat-card">
-            <CardContent className="stat-content">
-              <div className="stat-icon">
-                <Clock className="w-6 h-6 text-indigo-500" />
-              </div>
-              <div className="stat-details">
-                <p className="stat-value">{formatDuration(analytics.practiceTime)}</p>
-                <p className="stat-label">Practice Time</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="stat-card">
-            <CardContent className="stat-content">
-              <div className="stat-icon">
-                <Target className="w-6 h-6 text-red-500" />
-              </div>
-              <div className="stat-details">
-                <p className="stat-value">Goal</p>
-                <p className="stat-label">{analytics.upcomingGoal}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* JLPT Vocabulary Usage Card */}
-      <div className="vocab-analytics-section">
-        <Card className="section-card">
-          <CardHeader className="section-header">
-            <CardTitle className="section-title">
-              <BookOpen className="w-5 h-5" />
-              JLPT Vocabulary Usage
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="section-content">
-            <div className="vocab-levels-grid">
-              {[
-                { level: 'N5', count: 550, color: 'bg-green-500' },
-                { level: 'N4', count: 450, color: 'bg-blue-500' },
-                { level: 'N3', count: 350, color: 'bg-yellow-500' },
-                { level: 'N2', count: 250, color: 'bg-orange-500' },
-                { level: 'N1', count: 150, color: 'bg-red-500' }
-              ].map((levelData) => (
-                <div key={levelData.level} className="vocab-level-card">
-                  <div className="vocab-level-header">
-                    <span className={`vocab-level-badge ${levelData.color}`}>
-                      {levelData.level}
-                    </span>
-                    <span className="vocab-level-count">{levelData.count}</span>
-                  </div>
-                  <div className="vocab-level-bar-container">
-                    <div 
-                      className={`vocab-level-bar ${levelData.color}`}
-                      style={{ width: `${(levelData.count / 550) * 100}%` }}
-                    ></div>
-                  </div>
-                  <p className="vocab-level-label">words available</p>
+        {/* Analytics Section */}
+        <div className="analytics-section">
+          <div className="analytics-grid">
+            <Card className="stat-card streak-card">
+              <CardContent className="stat-content">
+                <div className="stat-icon">
+                  <Flame className="w-6 h-6 text-orange-500" />
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                <div className="stat-details">
+                  <p className="stat-value">{analytics.streak}-day</p>
+                  <p className="stat-label">Streak</p>
+                </div>
+              </CardContent>
+            </Card>
 
-      {/* Recent Conversations Section */}
-      <div className="recent-conversations-section">
-        <Card className="section-card">
-          <CardHeader className="section-header">
-            <CardTitle className="section-title">
-              <MessageCircle className="w-5 h-5" />
-              Recent Conversations
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="section-content">
-            {conversations.length > 0 ? (
-              <div className="conversations-list">
-                {conversations.slice(0, 3).map((conversation: any) => {
-                  const persona = personas.find((p: any) => p.id === conversation.persona_id);
-                  return (
-                    <div key={conversation.id} className="conversation-card">
-                      <div className="conversation-info">
-                        <Avatar className="conversation-avatar">
-                          <AvatarImage src={getAvatarImage(persona)} alt={persona?.name} />
-                          <AvatarFallback>{persona?.name?.[0] || 'T'}</AvatarFallback>
-                        </Avatar>
-                        <div className="conversation-details">
-                          <p className="conversation-tutor">{persona?.name || 'Unknown Tutor'}</p>
-                          <p className="conversation-summary">
-                            {conversation.status === 'active' ? 'Active conversation' : 'Completed'}
-                          </p>
+            <Card className="stat-card">
+              <CardContent className="stat-content">
+                <div className="stat-icon">
+                  <TrendingUp className="w-6 h-6 text-green-500" />
+                </div>
+                <div className="stat-details">
+                  <p className="stat-value">{analytics.newWordsThisWeek}</p>
+                  <p className="stat-label">New Words This Week</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="stat-card">
+              <CardContent className="stat-content">
+                <div className="stat-icon">
+                  <BookOpen className="w-6 h-6 text-blue-500" />
+                </div>
+                <div className="stat-details">
+                  <p className="stat-value">{analytics.totalWords}</p>
+                  <p className="stat-label">Total Words Used</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="stat-card">
+              <CardContent className="stat-content">
+                <div className="stat-icon">
+                  <MessageCircle className="w-6 h-6 text-purple-500" />
+                </div>
+                <div className="stat-details">
+                  <p className="stat-value">{analytics.activeConversations}</p>
+                  <p className="stat-label">Active Conversations</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="stat-card">
+              <CardContent className="stat-content">
+                <div className="stat-icon">
+                  <Clock className="w-6 h-6 text-indigo-500" />
+                </div>
+                <div className="stat-details">
+                  <p className="stat-value">{formatDuration(analytics.practiceTime)}</p>
+                  <p className="stat-label">Practice Time</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="stat-card">
+              <CardContent className="stat-content">
+                <div className="stat-icon">
+                  <Target className="w-6 h-6 text-red-500" />
+                </div>
+                <div className="stat-details">
+                  <p className="stat-value">Goal</p>
+                  <p className="stat-label">{analytics.upcomingGoal}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* JLPT Vocabulary Usage Card */}
+        <div className="vocab-analytics-section">
+          <Card className="section-card">
+            <CardHeader className="section-header">
+              <CardTitle className="section-title">
+                <BookOpen className="w-5 h-5" />
+                JLPT Vocabulary Usage
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="section-content">
+              <div className="vocab-levels-grid">
+                {[
+                  { level: 'N5', count: 550, color: 'bg-green-500' },
+                  { level: 'N4', count: 450, color: 'bg-blue-500' },
+                  { level: 'N3', count: 350, color: 'bg-yellow-500' },
+                  { level: 'N2', count: 250, color: 'bg-orange-500' },
+                  { level: 'N1', count: 150, color: 'bg-red-500' }
+                ].map((levelData) => (
+                  <div key={levelData.level} className="vocab-level-card">
+                    <div className="vocab-level-header">
+                      <span className={`vocab-level-badge ${levelData.color}`}>
+                        {levelData.level}
+                      </span>
+                      <span className="vocab-level-count">{levelData.count}</span>
+                    </div>
+                    <div className="vocab-level-bar-container">
+                      <div 
+                        className={`vocab-level-bar ${levelData.color}`}
+                        style={{ width: `${(levelData.count / 550) * 100}%` }}
+                      ></div>
+                    </div>
+                    <p className="vocab-level-label">words available</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Conversations Section */}
+        <div className="recent-conversations-section">
+          <Card className="section-card">
+            <CardHeader className="section-header">
+              <CardTitle className="section-title">
+                <MessageCircle className="w-5 h-5" />
+                Recent Conversations
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="section-content">
+              {Array.isArray(conversations) && conversations.length > 0 ? (
+                <div className="conversations-list">
+                  {conversations.slice(0, 3).map((conversation: any) => {
+                    const persona = Array.isArray(personas) ? personas.find((p: any) => p.id === conversation.persona_id) : null;
+                    return (
+                      <div key={conversation.id} className="conversation-card">
+                        <div className="conversation-info">
+                          <Avatar className="conversation-avatar">
+                            <AvatarImage src={getAvatarImage(persona)} alt={persona?.name} />
+                            <AvatarFallback>{persona?.name?.[0] || 'T'}</AvatarFallback>
+                          </Avatar>
+                          <div className="conversation-details">
+                            <p className="conversation-tutor">{persona?.name || 'Unknown Tutor'}</p>
+                            <p className="conversation-summary">
+                              {conversation.status === 'active' ? 'Active conversation' : 'Completed'}
+                            </p>
+                          </div>
                         </div>
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleResumeChat(conversation.id)}
+                          className="resume-btn"
+                        >
+                          Resume
+                          <ChevronRight className="w-4 h-4 ml-1" />
+                        </Button>
                       </div>
-                      <Button 
-                        size="sm" 
-                        onClick={() => handleResumeChat(conversation.id)}
-                        className="resume-btn"
-                      >
-                        Resume
-                        <ChevronRight className="w-4 h-4 ml-1" />
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="empty-state">
-                <MessageCircle className="w-12 h-12 text-muted-foreground mb-2" />
-                <p className="empty-title">No conversations yet</p>
-                <p className="empty-description">Start your first chat with a tutor below!</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Meet Your Tutors Section */}
-      <div className="tutors-section">
-        <Card className="section-card">
-          <CardHeader className="section-header">
-            <CardTitle className="section-title">
-              <Users className="w-5 h-5" />
-              Meet Your Tutors
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="section-content">
-            <div className="tutors-grid">
-              {personas.slice(0, 4).map((persona: any) => (
-                <div key={persona.id} className="tutor-preview-card">
-                  <div className="tutor-preview-content">
-                    <Avatar className="tutor-preview-avatar">
-                      <AvatarImage src={getAvatarImage(persona)} alt={persona.name} />
-                      <AvatarFallback>{persona.name?.[0] || 'T'}</AvatarFallback>
-                    </Avatar>
-                    <div className="tutor-preview-info">
-                      <h4 className="tutor-preview-name">{persona.name}</h4>
-                      <Badge variant="secondary" className="tutor-preview-type">
-                        {persona.type === 'teacher' ? 'Teacher' : 'Friend'}
-                      </Badge>
-                      <p className="tutor-preview-description">
-                        {persona.description || 'Available for conversation practice'}
-                      </p>
-                    </div>
-                  </div>
-                  <Button 
-                    onClick={() => handleStartNewChat(persona.id)}
-                    className="start-chat-btn"
-                    size="sm"
-                  >
-                    <Play className="w-4 h-4 mr-1" />
-                    Start Chat
-                  </Button>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              ) : (
+                <div className="empty-state">
+                  <MessageCircle className="w-12 h-12 text-muted-foreground mb-2" />
+                  <p className="empty-title">No conversations yet</p>
+                  <p className="empty-description">Start your first chat with a tutor below!</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Meet Your Tutors Section */}
+        <div className="tutors-section">
+          <Card className="section-card">
+            <CardHeader className="section-header">
+              <CardTitle className="section-title">
+                <Users className="w-5 h-5" />
+                Meet Your Tutors
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="section-content">
+              <div className="tutors-grid">
+                {Array.isArray(personas) && personas.slice(0, 4).map((persona: any) => (
+                  <div key={persona.id} className="tutor-preview-card">
+                    <div className="tutor-preview-content">
+                      <Avatar className="tutor-preview-avatar">
+                        <AvatarImage src={getAvatarImage(persona)} alt={persona.name} />
+                        <AvatarFallback>{persona.name?.[0] || 'T'}</AvatarFallback>
+                      </Avatar>
+                      <div className="tutor-preview-info">
+                        <h4 className="tutor-preview-name">{persona.name}</h4>
+                        <Badge variant="secondary" className="tutor-preview-type">
+                          {persona.type === 'teacher' ? 'Teacher' : 'Friend'}
+                        </Badge>
+                        <p className="tutor-preview-description">
+                          {persona.description || 'Available for conversation practice'}
+                        </p>
+                      </div>
+                    </div>
+                    <Button 
+                      onClick={() => handleStartNewChat(persona.id)}
+                      className="start-chat-btn"
+                      size="sm"
+                    >
+                      <Play className="w-4 h-4 mr-1" />
+                      Start Chat
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
