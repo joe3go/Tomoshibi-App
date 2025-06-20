@@ -408,16 +408,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate initial AI message
       const persona = await storage.getPersona(conversation.personaId!);
-      const scenario = await storage.getScenario(conversation.scenarioId!);
+      
+      if (persona) {
+        let introduction;
+        
+        if (conversation.scenarioId) {
+          // Scenario-based chat - generate scenario introduction
+          const scenario = await storage.getScenario(conversation.scenarioId);
+          if (scenario) {
+            introduction = await generateScenarioIntroduction(persona, scenario);
+          }
+        } else {
+          // Free chat mode - generate simple greeting
+          introduction = `こんにちは！私は${persona.name}です。今日は何について話しましょうか？`;
+        }
 
-      if (persona && scenario) {
-        const introduction = await generateScenarioIntroduction(persona, scenario);
-
-        await storage.createMessage({
-          conversationId: conversation.id,
-          sender: 'ai',
-          content: introduction,
-        });
+        if (introduction) {
+          await storage.createMessage({
+            conversationId: conversation.id,
+            sender: 'ai',
+            content: introduction,
+          });
+        }
       }
 
       res.json(conversation);

@@ -33,16 +33,35 @@ export default function TutorSelection() {
     }
   });
 
-  // Debug logging
-  console.log('TutorSelection Debug:', { personas, isLoading, error, personasLength: Array.isArray(personas) ? personas.length : 0 });
-  
-  // Check authentication status
-  const token = localStorage.getItem('token');
-  console.log('Auth token exists:', !!token);
-  console.log('Auth token preview:', token ? `${token.substring(0, 20)}...` : 'none');
 
-  const handleTutorSelect = (personaId: number) => {
-    setLocation(`/scenario-selection/${personaId}`);
+
+  const handleTutorSelect = async (personaId: number) => {
+    try {
+      // Create a new conversation with the selected tutor
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          persona_id: personaId,
+          scenario_id: null // Free chat mode
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to create conversation: ${response.statusText}`);
+      }
+
+      const conversation = await response.json();
+      setLocation(`/chat/${conversation.id}`);
+    } catch (error) {
+      console.error('Error starting chat:', error);
+      // Fallback to chat page without conversation ID
+      setLocation('/chat');
+    }
   };
 
   if (isLoading) {
