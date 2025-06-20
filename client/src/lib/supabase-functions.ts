@@ -1,15 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Environment-aware Supabase configuration for client
-const supabaseUrl = import.meta.env.PROD === 'true'
-  ? import.meta.env.VITE_SUPABASE_PROD_URL || 'https://gsnnydemkpllycgzmalv.supabase.co'
-  : import.meta.env.VITE_SUPABASE_DEV_URL || 'https://gsnnydemkpllycgzmalv.supabase.co';
+// Supabase configuration for client
+const supabaseUrl = 'https://gsnnydemkpllycgzmalv.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzbnN5ZGVta3BsbHljZ3ptYWx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAzNzY2NjksImV4cCI6MjA2NTk1MjY2OX0.tY9VGo8GOHNRlwMqRgBXR-TrnJ_k1H1BrnVz0jWFhGU';
 
-const supabaseKey = import.meta.env.PROD === 'true'
-  ? import.meta.env.VITE_SUPABASE_PROD_ANON_KEY
-  : import.meta.env.VITE_SUPABASE_DEV_ANON_KEY;
-
-export const supabase = createClient(supabaseUrl, supabaseKey!);
+export const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Conversation management functions
 export async function createConversation(

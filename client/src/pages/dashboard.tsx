@@ -21,11 +21,6 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { getAuthHeaders } from "@/lib/auth";
-import { 
-  getVocabStats,
-  createConversation,
-  getCurrentUser 
-} from "@/lib/supabase-functions";
 import { useToast } from "@/hooks/use-toast";
 
 // Helper function to get avatar image
@@ -85,40 +80,9 @@ export default function Dashboard() {
     fetchTutors();
   }, []);
 
-  // Fetch vocabulary stats from Supabase
-  const { data: vocabStats } = useQuery({
-    queryKey: ["vocab-stats", (user as any)?.id],
-    queryFn: async () => {
-      try {
-        const currentUser = await getCurrentUser();
-        if (!currentUser?.id) return null;
-        return await getVocabStats(currentUser.id);
-      } catch (error) {
-        console.error('Error fetching vocab stats:', error);
-        return null;
-      }
-    },
-    enabled: !!user,
-  });
-
-  // Create conversation mutation using Supabase function
-  const createConversationMutation = useMutation({
-    mutationFn: async ({ personaId, title }: { personaId: number; title: string }) => {
-      const currentUser = await getCurrentUser();
-      if (!currentUser) throw new Error("User not authenticated");
-      
-      return await createConversation(currentUser.id, personaId, null, title);
-    },
-    onSuccess: (conversationId) => {
-      setLocation(`/chat/${conversationId}`);
-    },
-    onError: (error) => {
-      toast({
-        title: "Failed to start conversation",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
+  // Fetch vocabulary stats
+  const { data: vocabStats = [] } = useQuery({
+    queryKey: ["/api/vocab/stats"],
   });
 
   // Mock analytics data (in real app, this would come from API)
@@ -131,10 +95,32 @@ export default function Dashboard() {
     upcomingGoal: "Learn 20 JLPT N5 words"
   };
 
-  // Handle tutor selection for new chat using Supabase function
-  const handleStartNewChat = (personaId: number, tutorName: string) => {
-    const title = `Chat with ${tutorName}`;
-    createConversationMutation.mutate({ personaId, title });
+  // Handle tutor selection for new chat
+  const handleStartNewChat = async (personaId: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          persona_id: personaId,
+          scenario_id: null // Free chat mode
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to create conversation: ${response.statusText}`);
+      }
+
+      const conversation = await response.json();
+      setLocation(`/chat/${conversation.id}`);
+    } catch (error) {
+      console.error('Error starting chat:', error);
+      setLocation('/chat');
+    }
   };
 
   // Handle resume chat
@@ -456,10 +442,9 @@ export default function Dashboard() {
                         </div>
                       </div>
                       <Button 
-                        onClick={() => handleStartNewChat(persona.id, persona.name)}
+                        onClick={() => handleStartNewChat(persona.id)}
                         className="start-chat-btn"
                         size="sm"
-                        disabled={createConversationMutation.isPending}
                       >
                         <Play className="w-4 h-4 mr-1" />
                         Start Chat
