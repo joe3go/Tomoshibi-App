@@ -98,16 +98,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { createClient } = await import('@supabase/supabase-js');
       const supabase = createClient(config.url, config.key);
       
+      console.log('🔍 Fetching personas from Supabase...');
+      
+      // Try RPC function first
+      try {
+        console.log('🎯 Calling get_personas RPC function...');
+        const { data: rpcData, error: rpcError } = await supabase.rpc('get_personas');
+        
+        if (!rpcError && rpcData && Array.isArray(rpcData) && rpcData.length > 0) {
+          console.log('✅ RPC function successful, personas:', rpcData.length);
+          return res.json(rpcData);
+        }
+        
+        if (rpcError) {
+          console.log('⚠️ RPC function error, falling back to direct query:', rpcError.message);
+        }
+      } catch (rpcError) {
+        console.log('⚠️ RPC function not available, falling back to direct query...');
+      }
+
+      // Fallback to direct table query
       const { data: personas, error } = await supabase
         .from('personas')
         .select('*')
         .order('id');
 
       if (error) {
-        console.error('Error fetching personas:', error);
-        return res.status(500).json({ error: 'Failed to fetch personas' });
+        console.error('❌ Error fetching personas:', error);
+        // Return default personas as final fallback
+        return res.json([
+          {
+            id: 1,
+            name: 'Aoi',
+            type: 'teacher',
+            description: 'A formal Japanese teacher who focuses on proper grammar, cultural context, and structured learning. Perfect for building strong foundations in Japanese.',
+            jlpt_level: 'N5',
+            avatar_url: null
+          },
+          {
+            id: 2,
+            name: 'Haruki',
+            type: 'friend',
+            description: 'A friendly Japanese tutor who emphasizes natural conversation flow, casual expressions, and practical communication. Great for building confidence in speaking.',
+            jlpt_level: 'N5',
+            avatar_url: null
+          }
+        ]);
       }
 
+      console.log('✅ Successfully fetched', personas?.length || 0, 'personas from direct query');
       res.json(personas || []);
     } catch (error) {
       console.error('Error in personas endpoint:', error);
@@ -540,13 +579,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (error) throw error;
         
-        if (data && Array.isArray(data)) {
+        if (data && Array.isArray(data) && data.length > 0) {
           console.log('✅ RPC function successful, data:', data);
           
-          const stats = data.reduce((acc, { level, count }) => ({
-            ...acc,
-            [level]: Number(count)
-          }), { N1: 0, N2: 0, N3: 0, N4: 0, N5: 0 });
+          // Initialize with zeros for all levels
+          const stats = { N1: 0, N2: 0, N3: 0, N4: 0, N5: 0 };
+          
+          // Update with actual data
+          data.forEach(({ level, count }) => {
+            if (level && ['N1', 'N2', 'N3', 'N4', 'N5'].includes(level)) {
+              stats[level as keyof typeof stats] = Number(count) || 0;
+            }
+          });
 
           const result = Object.entries(stats).map(([level, count]) => ({
             level,
@@ -555,6 +599,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           console.log('📊 Final vocab stats from RPC:', result);
           return res.json(result);
+        } else {
+          console.log('⚠️ RPC returned empty or invalid data:', data);
         }
       } catch (rpcError) {
         console.log('⚠️ RPC function not available, falling back to manual aggregation...');

@@ -1,7 +1,7 @@
+
 CREATE OR REPLACE FUNCTION get_vocab_stats_by_level()
 RETURNS TABLE(level TEXT, count BIGINT)
 LANGUAGE plpgsql
-SECURITY DEFINER
 AS $$
 BEGIN
   RETURN QUERY
@@ -14,12 +14,10 @@ BEGIN
       WHEN jlpt_level = 5 THEN 'N5'
       ELSE 'Unknown'
     END AS level,
-    COUNT(*) AS count
+    COUNT(*)::BIGINT AS count
   FROM jlpt_vocab
+  WHERE jlpt_level IN (1, 2, 3, 4, 5)
   GROUP BY jlpt_level
   ORDER BY jlpt_level;
 END;
 $$;
-
-GRANT EXECUTE ON FUNCTION get_vocab_stats_by_level() TO authenticated;
-GRANT EXECUTE ON FUNCTION get_vocab_stats_by_level() TO anon;
