@@ -1,14 +1,14 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { getEnvironmentConfig } from '@/lib/environment';
+import { getSupabaseConfig, isDevelopment } from '@/lib/environment';
 
 // Get environment-specific configuration
-const config = getEnvironmentConfig();
+const config = getSupabaseConfig();
 
-console.log('🔗 Creating Supabase client for:', config.supabaseUrl, '(Environment:', config.environment + ')');
+console.log('🔗 Creating Supabase client for:', config.url, '(Environment:', isDevelopment ? 'development' : 'production' + ')');
 
 // Create singleton client instance
-export const supabase = createClient(config.supabaseUrl, config.supabaseAnonKey, {
+export const supabase = createClient(config.url, config.anonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
