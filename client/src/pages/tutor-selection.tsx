@@ -13,6 +13,24 @@ export default function TutorSelection() {
     queryKey: ["/api/personas"],
     retry: 3,
     retryDelay: 1000,
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      const headers: any = {};
+      if (token && token !== 'undefined' && token !== 'null') {
+        headers.Authorization = `Bearer ${token}`;
+      }
+      
+      const response = await fetch('/api/personas', { 
+        headers,
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      return response.json();
+    }
   });
 
   // Debug logging
