@@ -400,39 +400,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Conversation routes
   app.post('/api/conversations', authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const conversationData = insertConversationSchema.parse({
-        ...req.body,
-        userId: req.userId,
-      });
+      console.log('🔄 Creating conversation with data:', req.body);
+      
+      // Use direct Supabase client since we're working with UUIDs now
+      const config = getSupabaseConfig();
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(config.url, config.serviceKey);
 
-      const conversation = await storage.createConversation(conversationData);
+      const { personaId, scenarioId } = req.body;
+      const userId = req.userId;
 
-      // Generate initial AI message
-      const persona = await storage.getPersona(conversation.personaId!);
+      if (!personaId) {
+        return res.status(400).json({ message: 'personaId is required' });
+      }
+
+      // Create conversation directly with Supabase
+      const { data: conversation, error } = await supabase
+        .from('conversations')
+        .insert({
+          user_id: userId,
+          persona_id: personaId,
+          scenario_id: scenarioId || null,
+          status: 'active'
+        })
+        .select('*')
+        .single();
+
+      if (error) {
+        console.error('❌ Error creating conversation:', error);
+        return res.status(400).json({ message: `Failed to create conversation: ${error.message}` });
+      }
+
+      // Get persona for initial message
+      const { data: persona } = await supabase
+        .from('personas')
+        .select('*')
+        .eq('id', personaId)
+        .single();
 
       if (persona) {
         let introduction;
 
-        if (conversation.scenarioId) {
-          // Scenario-based chat - generate scenario introduction
-          const scenario = await storage.getScenario(conversation.scenarioId);
-          if (scenario) {
-            introduction = await generateScenarioIntroduction(persona, scenario);
-          }
+        if (scenarioId) {
+          // For now, use simple greeting - scenario-based intros can be added later
+          introduction = `こんにちは！私は${persona.name}です。今日は何について話しましょうか？`;
         } else {
           // Free chat mode - generate simple greeting
           introduction = `こんにちは！私は${persona.name}です。今日は何について話しましょうか？`;
         }
 
         if (introduction) {
-          await storage.createMessage({
-            conversationId: conversation.id,
-            sender: 'ai',
-            content: introduction,
-          });
+          await supabase
+            .from('messages')
+            .insert({
+              conversation_id: conversation.id,
+              sender: 'ai',
+              content: introduction,
+            });
         }
       }
 
+      console.log('✅ Conversation created successfully:', conversation.id);
       res.json(conversation);
     } catch (error) {
       console.error('Create conversation error:', error);

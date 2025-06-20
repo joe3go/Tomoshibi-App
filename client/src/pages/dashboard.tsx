@@ -121,7 +121,7 @@ export default function Dashboard() {
 
   // Create conversation mutation using Supabase
   const createConversationMutation = useMutation({
-    mutationFn: async ({ personaId, title }: { personaId: number; title: string }) => {
+    mutationFn: async ({ personaId, title }: { personaId: string; title: string }) => {
       if (!user?.id) {
         throw new Error("User not authenticated");
       }
@@ -151,7 +151,7 @@ export default function Dashboard() {
   };
 
   // Handle tutor selection for new chat
-  const handleStartNewChat = async (personaId: number, tutorName: string) => {
+  const handleStartNewChat = async (personaId: string, tutorName: string) => {
     try {
       if (!user?.id) {
         toast({

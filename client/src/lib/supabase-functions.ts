@@ -4,8 +4,8 @@ import { supabase } from '@/lib/supabase/client';
 // Conversation management functions
 export async function createConversation(
   userId: string,
-  personaId: number,
-  scenarioId: number | null,
+  personaId: string,
+  scenarioId: string | null,
   title: string
 ) {
   const { data, error } = await supabase.rpc('create_conversation', {

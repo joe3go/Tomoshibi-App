@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,23 +18,23 @@ export default function TutorSelection() {
       if (token && token !== 'undefined' && token !== 'null') {
         headers.Authorization = `Bearer ${token}`;
       }
-      
+
       const response = await fetch('/api/personas', { 
         headers,
         credentials: 'include'
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       return response.json();
     }
   });
 
 
 
-  const handleTutorSelect = async (personaId: number) => {
+  const handleTutorSelect = async (personaId: string) => {
     try {
       // Create a new conversation with the selected tutor
       const token = localStorage.getItem('token');

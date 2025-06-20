@@ -338,10 +338,10 @@ export default function Chat() {
   }
 
   const persona = Array.isArray(personas)
-    ? personas.find((p: any) => p.id === conversation?.personaId)
+    ? personas.find((p: any) => p.id === conversation?.persona_id)
     : null;
   const scenario = Array.isArray(scenarios)
-    ? scenarios.find((s: any) => s.id === conversation?.scenarioId)
+    ? scenarios.find((s: any) => s.id === conversation?.scenario_id)
     : null;
 
   return (

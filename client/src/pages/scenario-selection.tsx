@@ -13,8 +13,8 @@ export default function ScenarioSelection() {
   const [, params] = useRoute("/scenario-selection/:personaId");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const personaId = parseInt(params?.personaId || "0");
-  const [loadingScenario, setLoadingScenario] = useState<number | null>(null);
+  const personaId = params?.personaId || "";
+  const [loadingScenario, setLoadingScenario] = useState<string | null>(null);
 
   const { data: personas = [] } = useQuery({
     queryKey: ["/api/personas"],
@@ -25,7 +25,7 @@ export default function ScenarioSelection() {
   });
 
   const createConversationMutation = useMutation({
-    mutationFn: async (data: { personaId: number; scenarioId?: number }) => {
+    mutationFn: async (data: { personaId: string; scenarioId?: string }) => {
       const response = await apiRequest("POST", "/api/conversations", data);
       return await response.json();
     },
@@ -54,13 +54,13 @@ export default function ScenarioSelection() {
     return MessageCircle;
   };
 
-  const handleScenarioSelect = (scenarioId: number) => {
+  const handleScenarioSelect = (scenarioId: string) => {
     setLoadingScenario(scenarioId);
     createConversationMutation.mutate({ personaId, scenarioId });
   };
 
   const handleFreeChat = () => {
-    setLoadingScenario(0); // Use 0 for free chat
+    setLoadingScenario("free-chat"); // Use string identifier for free chat
     createConversationMutation.mutate({ personaId });
   };
 
@@ -140,13 +140,13 @@ export default function ScenarioSelection() {
             <Button 
               variant="outline" 
               className="scenario-selection-free-chat-button"
-              disabled={loadingScenario === 0}
+              disabled={loadingScenario === "free-chat"}
               onClick={(e) => {
                 e.stopPropagation();
                 handleFreeChat();
               }}
             >
-              {loadingScenario === 0 ? "Starting..." : "Start Free Chat"}
+              {loadingScenario === "free-chat" ? "Starting..." : "Start Free Chat"}
             </Button>
           </CardContent>
         </Card>
