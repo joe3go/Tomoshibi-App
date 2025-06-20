@@ -244,9 +244,18 @@ export class DatabaseStorage implements IStorage {
   // Conversation operations
   async createConversation(conversation: InsertConversation): Promise<Conversation> {
     // Convert UUID user ID to integer for database compatibility
-    const mappedUserId = validateUuid(conversation.userId) 
-      ? uuidToInt(conversation.userId)
-      : parseInt(conversation.userId) || conversation.userId;
+    let mappedUserId: number;
+    
+    if (validateUuid(conversation.userId)) {
+      mappedUserId = uuidToInt(conversation.userId);
+    } else {
+      mappedUserId = parseInt(conversation.userId);
+      if (isNaN(mappedUserId)) {
+        throw new Error(`Invalid user ID format: ${conversation.userId}`);
+      }
+    }
+
+    console.log(`Creating conversation for user ${conversation.userId} -> mapped to ${mappedUserId}`);
 
     // Insert only the required fields that exist in Supabase
     const { data, error } = await supabase
