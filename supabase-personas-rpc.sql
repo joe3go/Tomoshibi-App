@@ -8,8 +8,16 @@ RETURNS TABLE(
   description TEXT,
   personality TEXT,
   speaking_style TEXT,
+  tone TEXT,
+  level TEXT,
+  origin TEXT,
+  quirks TEXT,
+  correction_style TEXT,
+  language_policy TEXT,
   avatar_url TEXT,
-  jlpt_level TEXT,
+  bubble_class TEXT,
+  voice_model TEXT,
+  system_prompt_hint TEXT,
   created_at TIMESTAMPTZ
 )
 LANGUAGE plpgsql
@@ -23,8 +31,16 @@ BEGIN
     p.description,
     p.personality,
     p.speaking_style,
+    p.tone,
+    p.level,
+    p.origin,
+    p.quirks,
+    p.correction_style,
+    p.language_policy,
     p.avatar_url,
-    COALESCE(p.jlpt_level, 'N5') as jlpt_level,
+    p.bubble_class,
+    p.voice_model,
+    p.system_prompt_hint,
     p.created_at
   FROM personas p
   ORDER BY p.id;
