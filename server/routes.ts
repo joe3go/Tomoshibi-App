@@ -459,6 +459,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Invalid conversation ID' });
       }
       const conversation = await storage.getConversation(conversationId);
+      console.log(`Debug: Conversation lookup for ID ${conversationId}:`, conversation);
 
       if (!conversation) {
         return res.status(404).json({ message: 'Conversation not found' });
@@ -467,6 +468,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Handle UUID to integer mapping for userId comparison
       const userUUID = req.userId;
       const mappedUserId = uuidToInt(userUUID!);
+      
+      console.log(`Debug: conversation.userId=${conversation.userId}, mappedUserId=${mappedUserId}, userUUID=${userUUID}`);
       
       if (conversation.userId !== mappedUserId) {
         console.log(`Access denied: conversation.userId=${conversation.userId}, mappedUserId=${mappedUserId}, userUUID=${userUUID}`);
