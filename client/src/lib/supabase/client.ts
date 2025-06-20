@@ -1,24 +1,33 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { getSupabaseConfig } from '../environment';
+import { getEnvironmentConfig } from '@/lib/environment';
 
-const config = getSupabaseConfig();
+// Get environment-specific configuration
+const config = getEnvironmentConfig();
 
-// Singleton pattern to prevent multiple GoTrueClient instances
-let supabaseInstance: any = null;
+console.log('🔗 Creating Supabase client for:', config.supabaseUrl, '(Environment:', config.environment + ')');
 
-const createSupabaseClient = () => {
-  if (!supabaseInstance) {
-    console.log(`🔗 Creating Supabase client for: ${config.url} (Environment: ${import.meta.env.MODE})`);
-    supabaseInstance = createClient(config.url, config.anonKey, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true
-      }
-    });
+// Create singleton client instance
+export const supabase = createClient(config.supabaseUrl, config.supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storage: window.localStorage,
+    storageKey: 'tomoshibi-auth-token',
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
+  },
+});
+
+// Prevent multiple instances
+if (typeof window !== 'undefined') {
+  if ((window as any).__supabase_client) {
+    console.warn('⚠️ Multiple Supabase clients detected, using existing instance');
+  } else {
+    (window as any).__supabase_client = supabase;
   }
-  return supabaseInstance;
-};
-
-export const supabase = createSupabaseClient();
+}
