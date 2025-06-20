@@ -41,7 +41,7 @@ export default function TutorSelection() {
   }
 
   const getAvatarImage = (persona: any) => {
-    return persona.avatar_url || '/avatars/aoi.svg'; // Use database avatar URL or fallback
+    return persona.avatar_url || '/avatars/aoi.png'; // Use database avatar URL or fallback
   };
 
   return (

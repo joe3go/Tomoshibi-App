@@ -457,7 +457,7 @@ export default function Dashboard() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <img 
-                          src="/avatars/aoi.svg" 
+                          src="/avatars/aoi.png" 
                           alt="Aoi" 
                           className="w-5 h-5 rounded-full"
                         />
@@ -468,7 +468,7 @@ export default function Dashboard() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <img 
-                          src="/avatars/haruki.svg" 
+                          src="/avatars/haruki.png" 
                           alt="Haruki" 
                           className="w-5 h-5 rounded-full"
                         />
@@ -568,7 +568,7 @@ export default function Dashboard() {
                 )
                 .map((persona: any) => {
                   const getPersonaAvatarImage = (persona: any) => {
-                    return persona.avatar_url || '/avatars/aoi.svg'; // Use database avatar URL or fallback
+                    return persona.avatar_url || '/avatars/aoi.png'; // Use database avatar URL or fallback
                   };
 
                   return (

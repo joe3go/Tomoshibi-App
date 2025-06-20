@@ -7,8 +7,7 @@ import { useRoute, useLocation } from "wouter";
 import { ArrowLeft, MessageCircle, Coffee, ShoppingCart, Users, Briefcase } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import harukiAvatar from "@assets/harukiavatar_1750137453243.png";
-import aoiAvatar from "@assets/aoiavatar_1750137453242.png";
+// Avatar images are now served from /avatars/ directory as PNG files
 
 export default function ScenarioSelection() {
   const [, params] = useRoute("/scenario-selection/:personaId");

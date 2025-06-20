@@ -10,10 +10,10 @@ async function updateAvatarUrls() {
 
   try {
     const updates = [
-      { name: 'Aoi', avatar_url: '/avatars/aoi.svg' },
-      { name: 'Haruki', avatar_url: '/avatars/haruki.svg' },
-      { name: 'Yuki', avatar_url: '/avatars/yuki.svg' },
-      { name: 'Ren', avatar_url: '/avatars/ren.svg' }
+      { name: 'Aoi', avatar_url: '/avatars/aoi.png' },
+      { name: 'Haruki', avatar_url: '/avatars/haruki.png' },
+      { name: 'Yuki', avatar_url: '/avatars/yuki.png' },
+      { name: 'Ren', avatar_url: '/avatars/ren.png' }
     ];
 
     for (const update of updates) {
