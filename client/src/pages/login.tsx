@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,12 +16,60 @@ export default function Login() {
   const [displayName, setDisplayName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { session, loading: authLoading } = useAuth();
+  const { session, loading: authLoading, user } = useAuth();
   const isAuthenticated = !!session;
+  
+  // Debug refs and state
+  const renderCount = useRef(0);
+  const authStateChanges = useRef(0);
+  const [debugInfo, setDebugInfo] = useState({
+    renderCount: 0,
+    authLoading,
+    isAuthenticated,
+    hasSession: !!session,
+    hasUser: !!user,
+    userEmail: user?.email,
+    authStateChanges: 0,
+    lastAuthStateChange: new Date().toISOString()
+  });
+
+  // Track renders and auth state changes
+  useEffect(() => {
+    renderCount.current += 1;
+    authStateChanges.current += 1;
+    
+    console.log('🔄 Login Page Render:', {
+      renderCount: renderCount.current,
+      authLoading,
+      isAuthenticated,
+      hasSession: !!session,
+      hasUser: !!user,
+      userEmail: user?.email,
+      timestamp: new Date().toISOString()
+    });
+    
+    setDebugInfo({
+      renderCount: renderCount.current,
+      authLoading,
+      isAuthenticated,
+      hasSession: !!session,
+      hasUser: !!user,
+      userEmail: user?.email,
+      authStateChanges: authStateChanges.current,
+      lastAuthStateChange: new Date().toISOString()
+    });
+  }, [authLoading, isAuthenticated, session, user]);
 
   // Redirect if already authenticated
   useEffect(() => {
+    console.log('🔀 Login Redirect Check:', {
+      authLoading,
+      isAuthenticated,
+      willRedirect: !authLoading && isAuthenticated
+    });
+    
     if (!authLoading && isAuthenticated) {
+      console.log('🚀 Redirecting to dashboard...');
       setLocation('/dashboard');
     }
   }, [isAuthenticated, authLoading, setLocation]);
@@ -29,16 +77,32 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    
+    console.log('🔐 Login attempt started:', {
+      isLogin,
+      email,
+      timestamp: new Date().toISOString()
+    });
 
     try {
       if (isLogin) {
+        console.log('📧 Attempting login with email/password...');
+        
         // Login with Supabase
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
+        console.log('🔑 Login response:', {
+          hasUser: !!data.user,
+          hasSession: !!data.session,
+          error: error?.message,
+          userEmail: data.user?.email
+        });
+
         if (error) {
+          console.error('❌ Login error:', error);
           toast({
             title: "Login failed",
             description: error.message,
@@ -48,13 +112,17 @@ export default function Login() {
         }
 
         if (data.user) {
+          console.log('✅ Login successful, user authenticated');
           toast({
             title: "Welcome back!",
             description: "You have been logged in successfully.",
           });
-          setLocation('/dashboard');
+          // Don't redirect here - let the auth context handle it
+          console.log('⏳ Waiting for auth context to update...');
         }
       } else {
+        console.log('📝 Attempting registration...');
+        
         // Register with Supabase
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -67,7 +135,15 @@ export default function Login() {
           },
         });
 
+        console.log('📋 Registration response:', {
+          hasUser: !!data.user,
+          hasSession: !!data.session,
+          emailConfirmed: !!data.user?.email_confirmed_at,
+          error: error?.message
+        });
+
         if (error) {
+          console.error('❌ Registration error:', error);
           toast({
             title: "Registration failed",
             description: error.message,
@@ -78,6 +154,7 @@ export default function Login() {
 
         if (data.user) {
           if (data.user.email_confirmed_at) {
+            console.log('✅ Registration successful, email confirmed');
             // Email already confirmed, redirect to dashboard
             toast({
               title: "Welcome to Tomoshibi!",
@@ -85,6 +162,7 @@ export default function Login() {
             });
             setLocation('/dashboard');
           } else {
+            console.log('📧 Registration successful, email confirmation required');
             // Email confirmation required
             toast({
               title: "Check your email",
@@ -94,22 +172,36 @@ export default function Login() {
         }
       }
     } catch (error) {
-      console.error('Auth error:', error);
+      console.error('💥 Unexpected auth error:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
+      console.log('🏁 Login attempt finished, setting loading to false');
       setIsLoading(false);
     }
   };
 
   // Show loading while checking auth status
   if (authLoading) {
+    console.log('⏳ Login page showing auth loading spinner');
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 to-orange-50">
-        <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full"></div>
+        <div className="space-y-4 text-center">
+          <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
+          <p className="text-sm text-muted-foreground">Checking authentication...</p>
+          {process.env.NODE_ENV === 'development' && (
+            <div className="bg-black/80 text-white p-3 rounded text-xs space-y-1">
+              <div>Auth Loading: {authLoading ? 'true' : 'false'}</div>
+              <div>Has Session: {!!session ? 'true' : 'false'}</div>
+              <div>Render Count: {debugInfo.renderCount}</div>
+              <div>Auth State Changes: {debugInfo.authStateChanges}</div>
+              <div>Last Update: {debugInfo.lastAuthStateChange}</div>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -176,6 +268,21 @@ export default function Login() {
               >
                 {isLoading ? "Loading..." : (isLogin ? "Sign In" : "Create Account")}
               </Button>
+              
+              {/* Debug info in development */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="mt-4 bg-gray-100 p-3 rounded text-xs space-y-1">
+                  <div><strong>Debug Info:</strong></div>
+                  <div>Auth Loading: {debugInfo.authLoading ? 'true' : 'false'}</div>
+                  <div>Is Authenticated: {debugInfo.isAuthenticated ? 'true' : 'false'}</div>
+                  <div>Has Session: {debugInfo.hasSession ? 'true' : 'false'}</div>
+                  <div>Has User: {debugInfo.hasUser ? 'true' : 'false'}</div>
+                  <div>User Email: {debugInfo.userEmail || 'none'}</div>
+                  <div>Render Count: {debugInfo.renderCount}</div>
+                  <div>Auth State Changes: {debugInfo.authStateChanges}</div>
+                  <div>Form Loading: {isLoading ? 'true' : 'false'}</div>
+                </div>
+              )}
             </form>
 
             <div className="mt-4 text-center">
