@@ -25,6 +25,7 @@ import {
   type InsertVocabTracker,
 } from "@shared/schema";
 import { createClient } from '@supabase/supabase-js';
+import { uuidToInt, validateUuid } from './uuid-mapping';
 
 // Environment-specific Supabase configuration
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -242,11 +243,16 @@ export class DatabaseStorage implements IStorage {
 
   // Conversation operations
   async createConversation(conversation: InsertConversation): Promise<Conversation> {
+    // Convert UUID user ID to integer for database compatibility
+    const mappedUserId = validateUuid(conversation.userId) 
+      ? uuidToInt(conversation.userId)
+      : parseInt(conversation.userId) || conversation.userId;
+
     // Insert only the required fields that exist in Supabase
     const { data, error } = await supabase
       .from('conversations')
       .insert({
-        user_id: conversation.userId,
+        user_id: mappedUserId,
         persona_id: conversation.personaId,
         scenario_id: conversation.scenarioId || null,
         status: conversation.status || 'active'
@@ -259,7 +265,7 @@ export class DatabaseStorage implements IStorage {
     // Map database field names to expected field names
     return {
       id: data.id,
-      userId: data.user_id,
+      userId: conversation.userId, // Return original UUID
       personaId: data.persona_id,
       scenarioId: data.scenario_id,
       phase: data.phase || 'guided',
