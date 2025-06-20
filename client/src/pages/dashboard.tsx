@@ -11,7 +11,9 @@ import {
   BookOpen,
   Users,
   ChevronRight,
-  Play
+  Play,
+  Settings,
+  LogOut
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,6 +51,11 @@ export default function Dashboard() {
   // Fetch personas
   const { data: personas = [], isLoading: personasLoading } = useQuery({
     queryKey: ["/api/personas"],
+  });
+
+  // Fetch vocabulary stats
+  const { data: vocabStats = [] } = useQuery({
+    queryKey: ["/api/vocab/stats"],
   });
 
   // Mock analytics data (in real app, this would come from API)
@@ -94,6 +101,12 @@ export default function Dashboard() {
     setLocation(`/chat/${conversationId}`);
   };
 
+  // Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setLocation('/login');
+  };
+
   if (conversationsLoading || personasLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -104,6 +117,60 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-container">
+      {/* Header */}
+      <header className="dashboard-header">
+        <div className="header-content">
+          <div className="header-left">
+            <h1 className="header-title">🌸 Tomoshibi</h1>
+            <p className="header-subtitle">Japanese Learning Platform</p>
+          </div>
+          <div className="header-right">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocation('/tutor-selection')}
+              className="header-nav-btn"
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Tutors
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocation('/scenarios')}
+              className="header-nav-btn"
+            >
+              <Target className="w-4 h-4 mr-2" />
+              Scenarios
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocation('/vocabulary')}
+              className="header-nav-btn"
+            >
+              <BookOpen className="w-4 h-4 mr-2" />
+              Vocabulary
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="header-nav-btn"
+            >
+              <Settings className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="header-nav-btn"
+            >
+              <LogOut className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </header>
+
       {/* Welcome Section */}
       <div className="welcome-section">
         <div className="welcome-content">
@@ -189,6 +256,45 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* JLPT Vocabulary Usage Card */}
+      <div className="vocab-analytics-section">
+        <Card className="section-card">
+          <CardHeader className="section-header">
+            <CardTitle className="section-title">
+              <BookOpen className="w-5 h-5" />
+              JLPT Vocabulary Usage
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="section-content">
+            <div className="vocab-levels-grid">
+              {[
+                { level: 'N5', count: 550, color: 'bg-green-500' },
+                { level: 'N4', count: 450, color: 'bg-blue-500' },
+                { level: 'N3', count: 350, color: 'bg-yellow-500' },
+                { level: 'N2', count: 250, color: 'bg-orange-500' },
+                { level: 'N1', count: 150, color: 'bg-red-500' }
+              ].map((levelData) => (
+                <div key={levelData.level} className="vocab-level-card">
+                  <div className="vocab-level-header">
+                    <span className={`vocab-level-badge ${levelData.color}`}>
+                      {levelData.level}
+                    </span>
+                    <span className="vocab-level-count">{levelData.count}</span>
+                  </div>
+                  <div className="vocab-level-bar-container">
+                    <div 
+                      className={`vocab-level-bar ${levelData.color}`}
+                      style={{ width: `${(levelData.count / 550) * 100}%` }}
+                    ></div>
+                  </div>
+                  <p className="vocab-level-label">words available</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Recent Conversations Section */}
