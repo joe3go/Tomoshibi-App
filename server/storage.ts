@@ -386,10 +386,24 @@ export class DatabaseStorage implements IStorage {
       .from('messages')
       .select('*')
       .eq('conversation_id', conversationId)
-      .order('timestamp', { ascending: true });
+      .order('created_at', { ascending: true });
 
-    if (error) throw new Error(error.message);
-    return (data as Message[]) || [];
+    if (error) {
+      console.error('getConversationMessages error:', error);
+      throw new Error(error.message);
+    }
+    
+    // Convert Supabase format to our Message format
+    return (data || []).map(item => ({
+      id: item.id,
+      conversationId: item.conversation_id,
+      content: item.content,
+      sender: item.sender,
+      feedback: item.feedback || null,
+      vocabUsed: item.vocab_used || null,
+      grammarUsed: item.grammar_used || null,
+      timestamp: item.created_at ? new Date(item.created_at) : new Date()
+    }));
   }
 
   // Vocabulary operations
