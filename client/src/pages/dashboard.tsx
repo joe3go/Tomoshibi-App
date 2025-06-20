@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { 
@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { getAuthHeaders } from "@/lib/auth";
 
 // Helper function to get avatar image
 const getAvatarImage = (persona: any) => {
@@ -42,19 +43,40 @@ const formatDuration = (minutes: number) => {
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
+  const [tutorsData, setTutorsData] = useState<any[]>([]);
+  const [tutorsLoading, setTutorsLoading] = useState(true);
 
   // Fetch conversations
   const { data: conversations = [], isLoading: conversationsLoading } = useQuery({
     queryKey: ["/api/conversations"],
   });
 
-  // Fetch personas with proper typing
-  const { data: personas, isLoading: personasLoading } = useQuery({
-    queryKey: ["/api/personas"],
-  });
+  // Direct fetch for tutors to ensure they display
+  useEffect(() => {
+    const fetchTutors = async () => {
+      try {
+        const authHeaders = getAuthHeaders();
+        const response = await fetch('/api/personas', {
+          headers: authHeaders,
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Tutors fetched successfully:', data);
+          setTutorsData(Array.isArray(data) ? data : []);
+        } else {
+          console.error('Failed to fetch tutors:', response.status);
+        }
+      } catch (error) {
+        console.error('Error fetching tutors:', error);
+      } finally {
+        setTutorsLoading(false);
+      }
+    };
 
-  // Ensure personas is an array
-  const personasArray = Array.isArray(personas) ? personas : [];
+    fetchTutors();
+  }, []);
 
   // Fetch vocabulary stats
   const { data: vocabStats = [] } = useQuery({
@@ -363,8 +385,13 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent className="section-content">
               <div className="tutors-grid">
-                {personasArray.length > 0 ? (
-                  personasArray.slice(0, 4).map((persona: any) => (
+                {tutorsLoading ? (
+                  <div className="col-span-full text-center py-8">
+                    <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+                    <p className="text-muted-foreground">Loading tutors...</p>
+                  </div>
+                ) : tutorsData.length > 0 ? (
+                  tutorsData.slice(0, 4).map((persona: any) => (
                     <div key={persona.id} className="tutor-preview-card">
                       <div className="tutor-preview-content">
                         <Avatar className="tutor-preview-avatar">
@@ -393,9 +420,7 @@ export default function Dashboard() {
                   ))
                 ) : (
                   <div className="col-span-full text-center py-8">
-                    <p className="text-muted-foreground">
-                      {personasLoading ? 'Loading tutors...' : 'No tutors available'}
-                    </p>
+                    <p className="text-muted-foreground">No tutors available</p>
                   </div>
                 )}
               </div>
