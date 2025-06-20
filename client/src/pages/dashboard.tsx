@@ -92,7 +92,7 @@ export default function Dashboard() {
     queryFn: async () => {
       try {
         // Check session from auth hook
-        if (!session) {
+        if (!supabaseSession) {
           console.warn('No active session for vocab stats');
           return null;
         }
@@ -112,7 +112,7 @@ export default function Dashboard() {
   const createConversationMutation = useMutation({
     mutationFn: async ({ personaId, title }: { personaId: number; title: string }) => {
       // Check session from auth hook
-      if (!session) {
+      if (!supabaseSession) {
         throw new Error("No active session found. Please log in again.");
       }
 
@@ -152,7 +152,7 @@ export default function Dashboard() {
   const handleStartNewChat = async (personaId: number, tutorName: string) => {
     try {
       // Check session from auth hook
-      if (!session) {
+      if (!supabaseSession) {
         toast({
           title: "Authentication Required",
           description: "Please log in to start a conversation",
