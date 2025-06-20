@@ -1,16 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
-
-const config = {
-  url: import.meta.env.NODE_ENV === 'production'
-    ? import.meta.env.VITE_SUPABASE_PROD_URL || 'https://gsnnydemkpllycgzmalv.supabase.co'
-    : import.meta.env.VITE_SUPABASE_DEV_URL || 'https://gsnnydemkpllycgzmalv.supabase.co',
-  anonKey: import.meta.env.NODE_ENV === 'production'
-    ? import.meta.env.VITE_SUPABASE_PROD_ANON_KEY || ''
-    : import.meta.env.VITE_SUPABASE_DEV_ANON_KEY || '',
-};
-
-// Initialize Supabase client using environment-specific configuration.
-export const supabase = createClient(config.url, config.anonKey);
+// Import the centralized Supabase client to avoid multiple instances
+import { supabase } from '@/lib/supabase/client';
 
 // Conversation management functions
 export async function createConversation(
