@@ -48,6 +48,24 @@ export default function Dashboard() {
   // Fetch personas
   const { data: personas, isLoading: personasLoading } = useQuery({
     queryKey: ["/api/personas"],
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      const headers: any = {};
+      if (token && token !== 'undefined' && token !== 'null') {
+        headers.Authorization = `Bearer ${token}`;
+      }
+      
+      const response = await fetch('/api/personas', { 
+        headers,
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      return response.json();
+    }
   });
 
   // Fetch progress
