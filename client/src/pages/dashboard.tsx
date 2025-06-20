@@ -67,7 +67,7 @@ export default function Dashboard() {
           headers: authHeaders,
           credentials: 'include'
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           console.log('Tutors fetched successfully:', data);
@@ -106,7 +106,7 @@ export default function Dashboard() {
     mutationFn: async ({ personaId, title }: { personaId: number; title: string }) => {
       const currentUser = await getCurrentUser();
       if (!currentUser) throw new Error("User not authenticated");
-      
+
       return await createConversation(currentUser.id, personaId, null, title);
     },
     onSuccess: (conversationId) => {
@@ -148,13 +148,7 @@ export default function Dashboard() {
     setLocation('/login');
   };
 
-  if (conversationsLoading || tutorsLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full"></div>
-      </div>
-    );
-  }
+  
 
   return (
     <div className="dashboard-container">

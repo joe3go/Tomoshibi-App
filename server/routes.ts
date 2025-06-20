@@ -96,8 +96,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/personas', async (req, res) => {
     try {
       // Use direct Supabase configuration that works
-      const supabaseUrl = 'https://gsnnydemkpllycgzmalv.supabase.co';
-      const serviceKey = process.env.VITE_SUPABASE_DEV_SERVICE_KEY;
+      const supabaseUrl = process.env.VITE_SUPABASE_DEV_URL || 'https://oyawpeylvdqfkhysnjsq.supabase.co';
+      const serviceKey = process.env.VITE_SUPABASE_DEV_ANON_KEY;
       
       const { createClient } = await import('@supabase/supabase-js');
       if (!serviceKey) {
