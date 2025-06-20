@@ -21,6 +21,11 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { getAuthHeaders } from "@/lib/auth";
+import { 
+  getVocabStats,
+  createConversation,
+  getCurrentUser 
+} from "@/lib/supabase-functions";
 import { useToast } from "@/hooks/use-toast";
 
 // Helper function to get avatar image
@@ -62,7 +67,7 @@ export default function Dashboard() {
           headers: authHeaders,
           credentials: 'include'
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           console.log('Tutors fetched successfully:', data);
@@ -80,9 +85,40 @@ export default function Dashboard() {
     fetchTutors();
   }, []);
 
-  // Fetch vocabulary stats
-  const { data: vocabStats = [] } = useQuery({
-    queryKey: ["/api/vocab/stats"],
+  // Fetch vocabulary stats from Supabase
+  const { data: vocabStats } = useQuery({
+    queryKey: ["vocab-stats", (user as any)?.id],
+    queryFn: async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        if (!currentUser?.id) return null;
+        return await getVocabStats(currentUser.id);
+      } catch (error) {
+        console.error('Error fetching vocab stats:', error);
+        return null;
+      }
+    },
+    enabled: !!user,
+  });
+
+  // Create conversation mutation using Supabase function
+  const createConversationMutation = useMutation({
+    mutationFn: async ({ personaId, title }: { personaId: number; title: string }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) throw new Error("User not authenticated");
+
+      return await createConversation(currentUser.id, personaId, null, title);
+    },
+    onSuccess: (conversationId) => {
+      setLocation(`/chat/${conversationId}`);
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to start conversation",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   // Mock analytics data (in real app, this would come from API)
@@ -95,32 +131,10 @@ export default function Dashboard() {
     upcomingGoal: "Learn 20 JLPT N5 words"
   };
 
-  // Handle tutor selection for new chat
-  const handleStartNewChat = async (personaId: number) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/conversations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          persona_id: personaId,
-          scenario_id: null // Free chat mode
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to create conversation: ${response.statusText}`);
-      }
-
-      const conversation = await response.json();
-      setLocation(`/chat/${conversation.id}`);
-    } catch (error) {
-      console.error('Error starting chat:', error);
-      setLocation('/chat');
-    }
+  // Handle tutor selection for new chat using Supabase function
+  const handleStartNewChat = (personaId: number, tutorName: string) => {
+    const title = `Chat with ${tutorName}`;
+    createConversationMutation.mutate({ personaId, title });
   };
 
   // Handle resume chat
@@ -134,13 +148,7 @@ export default function Dashboard() {
     setLocation('/login');
   };
 
-  if (conversationsLoading || tutorsLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full"></div>
-      </div>
-    );
-  }
+  
 
   return (
     <div className="dashboard-container">
@@ -242,7 +250,12 @@ export default function Dashboard() {
                   <BookOpen className="w-6 h-6 text-blue-500" />
                 </div>
                 <div className="stat-details">
-                  <p className="stat-value">{analytics.totalWords}</p>
+                  <p className="stat-value">
+                    {vocabStats ? 
+                      Object.values(vocabStats).reduce((sum: number, count: any) => sum + (count || 0), 0) : 
+                      analytics.totalWords
+                    }
+                  </p>
                   <p className="stat-label">Total Words Used</p>
                 </div>
               </CardContent>
@@ -285,6 +298,31 @@ export default function Dashboard() {
             </Card>
           </div>
 
+          {/* JLPT Vocabulary Stats */}
+          {vocabStats && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="w-5 h-5" />
+                  JLPT Vocabulary Progress
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  {['N5', 'N4', 'N3', 'N2', 'N1'].map(level => (
+                    <div key={level} className="text-center">
+                      <div className="text-2xl font-bold text-primary">
+                        {vocabStats[level] || 0}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {level} Words
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* JLPT Vocabulary Usage Card */}
@@ -412,9 +450,10 @@ export default function Dashboard() {
                         </div>
                       </div>
                       <Button 
-                        onClick={() => handleStartNewChat(persona.id)}
+                        onClick={() => handleStartNewChat(persona.id, persona.name)}
                         className="start-chat-btn"
                         size="sm"
+                        disabled={createConversationMutation.isPending}
                       >
                         <Play className="w-4 h-4 mr-1" />
                         Start Chat

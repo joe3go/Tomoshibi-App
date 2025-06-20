@@ -16,7 +16,12 @@ import { Input } from "@/components/ui/input";
 import { Toggle } from "@/components/ui/toggle";
 import { Languages } from "lucide-react";
 import { bind, unbind, toHiragana } from 'wanakana';
-
+import { 
+  getConversationMessages, 
+  addMessage, 
+  completeConversation,
+  getCurrentUser 
+} from "@/lib/supabase-functions";
 // Avatar images are now served from /avatars/ directory as SVG files
 
 export default function Chat() {
@@ -38,7 +43,18 @@ export default function Chat() {
     : 0;
 
   const { data: conversationData, isLoading } = useQuery({
-    queryKey: [`/api/conversations/${conversationId}`],
+    queryKey: [`conversation-messages`, conversationId],
+    queryFn: async () => {
+      if (!conversationId) return null;
+      const messages = await getConversationMessages(conversationId);
+      // Get conversation details from existing API for metadata
+      const conversationResponse = await apiRequest("GET", `/api/conversations/${conversationId}`);
+      const conversation = await conversationResponse.json();
+      return {
+        ...conversation,
+        messages: messages || []
+      };
+    },
     enabled: !!conversationId,
   });
 
@@ -52,41 +68,66 @@ export default function Chat() {
 
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
-      // Immediately add user message to UI
-      const userMessage = {
+      const user = await getCurrentUser();
+      if (!user) throw new Error("User not authenticated");
+
+      // Optimistically add user message to UI
+      const optimisticUserMessage = {
         id: Date.now(), // Temporary ID
         content,
-        sender: 'user', // Fixed: changed from 'role' to 'sender' for proper rendering
-        createdAt: new Date().toISOString(),
-        vocabUsed: [],
-        grammarUsed: []
+        sender: 'user',
+        created_at: new Date().toISOString(),
+        vocab_used: [],
+        grammar_used: [],
+        english: null,
+        feedback: null,
+        suggestions: null
       };
 
       queryClient.setQueryData(
-        [`/api/conversations/${conversationId}`],
+        [`conversation-messages`, conversationId],
         (oldData: any) => ({
           ...oldData,
-          messages: [...(oldData?.messages || []), userMessage],
+          messages: [...(oldData?.messages || []), optimisticUserMessage],
         }),
       );
 
-      // Send to server
-      const response = await apiRequest(
+      // Add user message via Supabase function
+      await addMessage(conversationId, 'user', content);
+
+      // Get AI response from existing endpoint
+      const aiResponse = await apiRequest(
         "POST",
-        `/api/conversations/${conversationId}/messages`,
+        `/api/chat/secure`,
         {
-          content,
+          conversationId,
+          message: content,
         },
       );
-      return await response.json();
+      const aiData = await aiResponse.json();
+
+      // Add AI message via Supabase function
+      await addMessage(
+        conversationId,
+        'ai',
+        aiData.content,
+        aiData.english,
+        aiData.feedback,
+        aiData.suggestions,
+        aiData.vocabUsed,
+        aiData.grammarUsed
+      );
+
+      // Refresh messages from Supabase
+      return await getConversationMessages(conversationId);
     },
     onSuccess: (messages) => {
-      // Replace with actual messages from server
+      // Update with fresh messages from Supabase
       queryClient.setQueryData(
-        [`/api/conversations/${conversationId}`],
+        [`conversation-messages`, conversationId],
         (oldData: any) => ({
           ...oldData,
-          messages,
+          messages: messages || [],
         }),
       );
       setMessage("");
@@ -94,7 +135,7 @@ export default function Chat() {
     onError: (error) => {
       // Remove the optimistic user message on error
       queryClient.setQueryData(
-        [`/api/conversations/${conversationId}`],
+        [`conversation-messages`, conversationId],
         (oldData: any) => ({
           ...oldData,
           messages: oldData?.messages?.slice(0, -1) || [],
@@ -111,21 +152,13 @@ export default function Chat() {
 
   const completeConversationMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest(
-        "PATCH",
-        `/api/conversations/${conversationId}`,
-        {
-          status: "completed",
-          completedAt: new Date().toISOString(),
-        },
-      );
-      return await response.json();
+      return await completeConversation(conversationId);
     },
     onSuccess: () => {
       // Invalidate multiple query keys to refresh all conversation lists
       queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
       queryClient.invalidateQueries({ queryKey: ["/api/conversations/completed"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/conversations/${conversationId}`] });
+      queryClient.invalidateQueries({ queryKey: [`conversation-messages`, conversationId] });
       
       toast({
         title: "Conversation completed!",

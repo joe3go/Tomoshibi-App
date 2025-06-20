@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MessageWithVocab } from '@/components/MessageWithVocab';
 import { UsageAnalytics } from '@/components/UsageAnalytics';
-// Component temporarily disabled to fix compilation issues
+import { vocabularyTracker } from '@/lib/vocabulary-tracker';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useLocation } from 'wouter';
 import { ArrowLeft, Play, BarChart3, Target, Brain } from 'lucide-react';
 
@@ -12,7 +13,7 @@ export default function ConjugationDemo() {
   const [, setLocation] = useLocation();
   const [isTracking, setIsTracking] = useState(false);
   const [trackedWords, setTrackedWords] = useState<Array<{word: string, normalized: string}>>([]);
-  // Authentication temporarily disabled
+  const { user } = useSupabaseAuth();
 
   // Sample Japanese sentences with various conjugations
   const demoSentences = [
@@ -43,16 +44,18 @@ export default function ConjugationDemo() {
   ];
 
   const handleTrackSentence = async (sentence: string) => {
-    // Authentication check temporarily disabled
+    if (!user) {
+      alert('Please sign in to test the tracking system');
+      return;
+    }
 
     setIsTracking(true);
     try {
-      // Vocabulary tracking temporarily disabled
       // Track the sentence with conjugation normalization
-      // await vocabularyTracker.trackUsageFromText(sentence, 'chat');
+      await vocabularyTracker.trackUsageFromText(sentence, 'chat');
       
       // Force process any pending entries
-      // await vocabularyTracker.flush();
+      await vocabularyTracker.flush();
       
       setTrackedWords(prev => [...prev, { word: sentence, normalized: 'Processing...' }]);
       
@@ -153,7 +156,7 @@ export default function ConjugationDemo() {
                     <Button
                       size="sm"
                       onClick={() => handleTrackSentence(sentence.content)}
-                      disabled={isTracking}
+                      disabled={isTracking || !user}
                       className="flex items-center gap-2"
                     >
                       <Play className="w-3 h-3" />

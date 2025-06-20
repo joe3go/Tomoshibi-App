@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, Eye, Clock, Target } from 'lucide-react';
+import { vocabularyTracker } from '@/lib/vocabulary-tracker';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { supabase } from '@/lib/supabase/client';
 
 interface UsageStats {
   totalWords: number;
@@ -18,129 +21,214 @@ export function UsageAnalytics() {
   const [stats, setStats] = useState<UsageStats>({ totalWords: 0, uniqueWords: 0, topWords: [] });
   const [conjugationExamples, setConjugationExamples] = useState<ConjugationExample[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useSupabaseAuth();
 
   useEffect(() => {
-    loadUsageData();
-  }, []);
+    if (user) {
+      loadUsageData();
+    }
+  }, [user]);
 
   const loadUsageData = async () => {
     try {
-      // Load from localStorage for now
-      const stored = localStorage.getItem('vocab-usage') || '[]';
-      const usageData = JSON.parse(stored);
+      setIsLoading(true);
       
-      const totalWords = usageData.length;
-      const uniqueWords = new Set(usageData.map((entry: any) => entry.word)).size;
-      const topWords = usageData
-        .slice(0, 10)
-        .map((entry: any) => ({
-          word: entry.word,
-          count: entry.count || 1,
-          lastUsed: entry.timestamp || new Date().toISOString()
-        }));
+      // Get current user ID
+      const { data: userData } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', user?.email)
+        .single();
 
-      setStats({ totalWords, uniqueWords, topWords });
-      setConjugationExamples([]);
-      setIsLoading(false);
+      if (!userData) return;
+
+      // Load usage statistics
+      const usageStats = await vocabularyTracker.getUserUsageStats(userData.id);
+      setStats(usageStats);
+
+      // Load conjugation examples
+      const { data: conjugationData, error } = await supabase
+        .from('usage_log')
+        .select('word_form_used, word_normalized, source')
+        .eq('user_id', userData.id)
+        .neq('word_form_used', 'word_normalized') // Only show conjugated forms
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (!error && conjugationData) {
+        // Group by conjugation pairs
+        const conjugationMap = new Map<string, ConjugationExample>();
+        
+        conjugationData.forEach(entry => {
+          const key = `${entry.word_form_used}-${entry.word_normalized}`;
+          const existing = conjugationMap.get(key);
+          
+          if (existing) {
+            existing.count++;
+          } else {
+            conjugationMap.set(key, {
+              originalForm: entry.word_form_used,
+              normalizedForm: entry.word_normalized,
+              count: 1,
+              source: entry.source
+            });
+          }
+        });
+
+        setConjugationExamples(Array.from(conjugationMap.values()).slice(0, 8));
+      }
+
     } catch (error) {
       console.error('Error loading usage data:', error);
+    } finally {
       setIsLoading(false);
     }
   };
 
+  if (!user) {
+    return (
+      <div className="p-6 bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800">
+        <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-4">
+          Vocabulary Usage Analytics
+        </h3>
+        <p className="text-zinc-600 dark:text-zinc-400">
+          Sign in to view your vocabulary usage patterns and conjugation tracking.
+        </p>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
-          <div className="space-y-3">
-            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
-            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
-          </div>
+      <div className="p-6 bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800">
+        <div className="animate-pulse space-y-4">
+          <div className="h-6 bg-zinc-200 dark:bg-zinc-700 rounded w-1/3"></div>
+          <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-2/3"></div>
+          <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-1/2"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-      <div className="flex items-center gap-2 mb-6">
-        <TrendingUp className="w-5 h-5 text-blue-500" />
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+    <div className="space-y-6">
+      {/* Overall Statistics */}
+      <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-6">
+        <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-4 flex items-center gap-2">
+          <TrendingUp className="w-5 h-5" />
           Vocabulary Usage Analytics
         </h3>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="text-center">
-          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-            {stats.totalWords}
-          </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">
-            Total Words
-          </div>
-        </div>
-        <div className="text-center">
-          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-            {stats.uniqueWords}
-          </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">
-            Unique Words
-          </div>
-        </div>
-        <div className="text-center">
-          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-            {conjugationExamples.length}
-          </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">
-            Conjugations
-          </div>
-        </div>
-        <div className="text-center">
-          <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-            0
-          </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">
-            This Week
-          </div>
-        </div>
-      </div>
-
-      {/* Top Words */}
-      <div className="mb-6">
-        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-          <Eye className="w-4 h-4" />
-          Most Encountered Words
-        </h4>
         
-        {stats.topWords.length > 0 ? (
-          <div className="space-y-2">
-            {stats.topWords.map((wordData, index) => (
-              <div key={wordData.word} className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-700 rounded">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              {stats.totalWords}
+            </div>
+            <div className="text-sm text-zinc-600 dark:text-zinc-400">
+              Total Word Encounters
+            </div>
+          </div>
+          
+          <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+              {stats.uniqueWords}
+            </div>
+            <div className="text-sm text-zinc-600 dark:text-zinc-400">
+              Unique Words
+            </div>
+          </div>
+          
+          <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+              {conjugationExamples.length}
+            </div>
+            <div className="text-sm text-zinc-600 dark:text-zinc-400">
+              Conjugations Detected
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Conjugation Detection Examples */}
+      {conjugationExamples.length > 0 && (
+        <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-6">
+          <h4 className="text-md font-semibold text-zinc-900 dark:text-zinc-100 mb-4 flex items-center gap-2">
+            <Target className="w-4 h-4" />
+            Conjugation Detection (Conjugated → Dictionary Form)
+          </h4>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {conjugationExamples.map((example, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-mono text-gray-500 dark:text-gray-400 w-4">
-                    #{index + 1}
+                  <span className="font-japanese text-lg text-zinc-900 dark:text-zinc-100">
+                    {example.originalForm}
                   </span>
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {wordData.word}
+                  <span className="text-zinc-400">→</span>
+                  <span className="font-japanese text-lg text-blue-600 dark:text-blue-400">
+                    {example.normalizedForm}
                   </span>
                 </div>
-                <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                  <span>{wordData.count} times</span>
-                  <Clock className="w-3 h-3" />
-                  <span>{new Date(wordData.lastUsed).toLocaleDateString()}</span>
+                <div className="flex items-center gap-2 text-sm text-zinc-500">
+                  <span className="bg-zinc-200 dark:bg-zinc-700 px-2 py-1 rounded text-xs">
+                    {example.source}
+                  </span>
+                  <span className="text-xs">×{example.count}</span>
                 </div>
               </div>
             ))}
           </div>
-        ) : (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            <Target className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p>Start chatting to see vocabulary analytics</p>
+          
+          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              <strong>Smart Tracking:</strong> The system automatically detects conjugated forms (like 食べた, 行きます) 
+              and links them to their dictionary forms (食べる, 行く) for accurate usage statistics.
+            </p>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Most Used Words */}
+      {stats.topWords.length > 0 && (
+        <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-6">
+          <h4 className="text-md font-semibold text-zinc-900 dark:text-zinc-100 mb-4 flex items-center gap-2">
+            <Eye className="w-4 h-4" />
+            Most Encountered Words
+          </h4>
+          
+          <div className="space-y-2">
+            {stats.topWords.slice(0, 10).map((wordStat, index) => (
+              <div key={index} className="flex items-center justify-between p-2 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 rounded">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-zinc-500 w-6">#{index + 1}</span>
+                  <span className="font-japanese text-lg text-zinc-900 dark:text-zinc-100">
+                    {wordStat.word}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-zinc-500">
+                  <Clock className="w-3 h-3" />
+                  <span>×{wordStat.count}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* No Data State */}
+      {stats.totalWords === 0 && (
+        <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-6 text-center">
+          <div className="text-zinc-400 mb-2">
+            <TrendingUp className="w-12 h-12 mx-auto mb-3" />
+          </div>
+          <h4 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
+            Start Chatting to See Analytics
+          </h4>
+          <p className="text-zinc-600 dark:text-zinc-400">
+            Begin conversations with AI tutors to start tracking your vocabulary usage with advanced conjugation detection.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
