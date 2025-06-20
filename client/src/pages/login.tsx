@@ -1,259 +1,197 @@
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { setAuthToken } from "@/lib/auth";
-import { useLocation } from "wouter";
-import { useAuth } from "@/context/SupabaseAuthContext";
-
-
-const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
-
-const registerSchema = loginSchema.extend({
-  displayName: z.string().min(1, "Display name is required"),
-});
-
-type LoginForm = z.infer<typeof loginSchema>;
-type RegisterForm = z.infer<typeof registerSchema>;
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/lib/supabase/client";
 
 export default function Login() {
-  const [isRegistering, setIsRegistering] = useState(false);
   const [, setLocation] = useLocation();
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { session, loading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
-  // Redirect if already logged in
+  // Redirect if already authenticated
   useEffect(() => {
-    if (!loading && session) {
+    if (!authLoading && isAuthenticated) {
       setLocation('/dashboard');
     }
-  }, [loading, session, setLocation]);
+  }, [isAuthenticated, authLoading, setLocation]);
 
-  // Check for token in URL params (from email confirmation)
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-    if (token) {
-      setAuthToken(token);
-      queryClient.clear();
-      window.location.href = "/dashboard";
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      if (isLogin) {
+        // Login with Supabase
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) {
+          toast({
+            title: "Login failed",
+            description: error.message,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (data.user) {
+          toast({
+            title: "Welcome back!",
+            description: "You have been logged in successfully.",
+          });
+          setLocation('/dashboard');
+        }
+      } else {
+        // Register with Supabase
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              display_name: displayName,
+              preferred_kanji_display: 'furigana',
+            },
+          },
+        });
+
+        if (error) {
+          toast({
+            title: "Registration failed",
+            description: error.message,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (data.user) {
+          if (data.user.email_confirmed_at) {
+            // Email already confirmed, redirect to dashboard
+            toast({
+              title: "Welcome to Tomoshibi!",
+              description: "Your account has been created successfully.",
+            });
+            setLocation('/dashboard');
+          } else {
+            // Email confirmation required
+            toast({
+              title: "Check your email",
+              description: "We've sent you a confirmation link. Please check your email and click the link to activate your account.",
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Auth error:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }, []);
-
-  const loginForm = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
-  const registerForm = useForm<RegisterForm>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      displayName: "",
-    },
-  });
-
-  const loginMutation = useMutation({
-    mutationFn: async (data: LoginForm) => {
-      const response = await apiRequest("POST", "/api/auth/login", data);
-      return await response.json();
-    },
-    onSuccess: (data) => {
-      setAuthToken(data.token);
-      
-      // The SupabaseAuthProvider will detect the session change
-      setLocation('/dashboard');
-    },
-    onError: (error) => {
-      toast({
-        title: "Login failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const registerMutation = useMutation({
-    mutationFn: async (data: RegisterForm) => {
-      const response = await apiRequest("POST", "/api/auth/register", data);
-      return await response.json();
-    },
-    onSuccess: (data) => {
-      setAuthToken(data.token);
-      queryClient.clear();
-      toast({
-        title: "Welcome to Tomoshibi!",
-        description: "Your account has been created successfully.",
-      });
-      // Force a full page reload to ensure proper auth state
-      window.location.href = "/dashboard";
-    },
-    onError: (error) => {
-      toast({
-        title: "Registration failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const onLoginSubmit = (data: LoginForm) => {
-    loginMutation.mutate(data);
   };
 
-  const onRegisterSubmit = (data: RegisterForm) => {
-    registerMutation.mutate(data);
-  };
+  // Show loading while checking auth status
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 to-orange-50">
+        <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-deep-navy">
-      {/* Background decoration */}
-      <div 
-        className="absolute inset-0 opacity-10" 
-        style={{
-          backgroundImage: "url('https://images.unsplash.com/photo-1545569341-9eb8b30979d9?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1920&h=1080')",
-          backgroundSize: "cover",
-          backgroundPosition: "center"
-        }}
-      />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 to-orange-50">
+      <div className="w-full max-w-md space-y-8 p-6">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">🌸 Tomoshibi</h1>
+          <p className="text-gray-600">Japanese Learning Platform</p>
+        </div>
 
-      <Card className="glass-card w-full max-w-md relative z-10 border-glass-border">
-        <CardContent className="p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-2 text-lantern-orange">Tomoshibi</h1>
-            <p className="text-sakura-blue text-lg font-japanese">灯火</p>
-            <p className="text-off-white/70 mt-2">Your First Japanese Journey</p>
-          </div>
-
-          {!isRegistering ? (
-            <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
-              <div>
-                <Label htmlFor="email" className="text-off-white/80">Email</Label>
+        <Card>
+          <CardHeader>
+            <CardTitle>{isLogin ? "Welcome back" : "Create account"}</CardTitle>
+            <CardDescription>
+              {isLogin 
+                ? "Sign in to continue your Japanese learning journey" 
+                : "Start your Japanese learning adventure"
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {!isLogin && (
+                <div className="space-y-2">
+                  <Label htmlFor="displayName">Display Name</Label>
+                  <Input
+                    id="displayName"
+                    type="text"
+                    placeholder="Your name"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    required
+                  />
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
-                  {...loginForm.register("email")}
-                  className="mt-2 bg-kanji-glow border-glass-border text-off-white focus:border-lantern-orange focus:ring-lantern-orange/20"
                   placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
-                {loginForm.formState.errors.email && (
-                  <p className="text-destructive text-sm mt-1">
-                    {loginForm.formState.errors.email.message}
-                  </p>
-                )}
               </div>
-
-              <div>
-                <Label htmlFor="password" className="text-off-white/80">Password</Label>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   type="password"
-                  {...loginForm.register("password")}
-                  className="mt-2 bg-kanji-glow border-glass-border text-off-white focus:border-lantern-orange focus:ring-lantern-orange/20"
-                  placeholder="••••••••"
+                  placeholder="Your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
-                {loginForm.formState.errors.password && (
-                  <p className="text-destructive text-sm mt-1">
-                    {loginForm.formState.errors.password.message}
-                  </p>
-                )}
               </div>
-
-              <Button
-                type="submit"
-                disabled={loginMutation.isPending}
-                className="w-full gradient-button hover-glow"
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isLoading}
               >
-                {loginMutation.isPending ? "Signing in..." : "Begin Journey"}
+                {isLoading ? "Loading..." : (isLogin ? "Sign In" : "Create Account")}
               </Button>
             </form>
-          ) : (
-            <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-6">
-              <div>
-                <Label htmlFor="displayName" className="text-off-white/80">Display Name</Label>
-                <Input
-                  id="displayName"
-                  {...registerForm.register("displayName")}
-                  className="mt-2 bg-kanji-glow border-glass-border text-off-white focus:border-lantern-orange focus:ring-lantern-orange/20"
-                  placeholder="Your name"
-                />
-                {registerForm.formState.errors.displayName && (
-                  <p className="text-destructive text-sm mt-1">
-                    {registerForm.formState.errors.displayName.message}
-                  </p>
-                )}
-              </div>
 
-              <div>
-                <Label htmlFor="registerEmail" className="text-off-white/80">Email</Label>
-                <Input
-                  id="registerEmail"
-                  type="email"
-                  {...registerForm.register("email")}
-                  className="mt-2 bg-kanji-glow border-glass-border text-off-white focus:border-lantern-orange focus:ring-lantern-orange/20"
-                  placeholder="your@email.com"
-                />
-                {registerForm.formState.errors.email && (
-                  <p className="text-destructive text-sm mt-1">
-                    {registerForm.formState.errors.email.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="registerPassword" className="text-off-white/80">Password</Label>
-                <Input
-                  id="registerPassword"
-                  type="password"
-                  {...registerForm.register("password")}
-                  className="mt-2 bg-kanji-glow border-glass-border text-off-white focus:border-lantern-orange focus:ring-lantern-orange/20"
-                  placeholder="••••••••"
-                />
-                {registerForm.formState.errors.password && (
-                  <p className="text-destructive text-sm mt-1">
-                    {registerForm.formState.errors.password.message}
-                  </p>
-                )}
-              </div>
-
-              <Button
-                type="submit"
-                disabled={registerMutation.isPending}
-                className="w-full gradient-button hover-glow"
-              >
-                {registerMutation.isPending ? "Creating Account..." : "Create Account"}
-              </Button>
-            </form>
-          )}
-
-          <div className="text-center mt-6">
-            <p className="text-off-white/60">
-              {!isRegistering ? "New to Japanese?" : "Already have an account?"}{" "}
+            <div className="mt-4 text-center">
               <button
                 type="button"
-                onClick={() => setIsRegistering(!isRegistering)}
-                className="text-sakura-blue hover:text-sakura-blue/80 transition-colors"
+                onClick={() => setIsLogin(!isLogin)}
+                className="text-sm text-blue-600 hover:underline"
               >
-                {!isRegistering ? "Create Account" : "Sign In"}
+                {isLogin 
+                  ? "Don't have an account? Sign up" 
+                  : "Already have an account? Sign in"
+                }
               </button>
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -1,22 +1,20 @@
-import { useQuery } from "@tanstack/react-query";
-import { getAuthToken } from "@/lib/auth";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 export function useAuth() {
-  const [session, setSession] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const token = getAuthToken();
 
-  // Initialize Supabase session
   useEffect(() => {
+    // Get initial session
     const getSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
           console.error('Failed to get Supabase session:', error);
         }
-        setSession(session);
+        setUser(session?.user || null);
         setLoading(false);
       } catch (error) {
         console.error('Failed to get Supabase session:', error);
@@ -28,7 +26,7 @@ export function useAuth() {
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session);
+      setUser(session?.user || null);
       setLoading(false);
     });
 
@@ -37,29 +35,19 @@ export function useAuth() {
     };
   }, []);
 
-  const { data: user, isLoading: userLoading, error } = useQuery({
-    queryKey: ["/api/auth/me"],
-    enabled: !!token && token !== 'null' && token !== 'undefined' && !loading && !!session,
-    retry: false,
-    staleTime: 0,
-    refetchOnWindowFocus: false,
-    onError: (error: any) => {
-      // If token is invalid, clear it
-      if (error?.status === 401 || error?.status === 403) {
-        localStorage.removeItem('token');
-      }
-    }
-  });
-
-  const hasValidToken = token && token !== 'null' && token !== 'undefined' && token.trim() !== '';
-  const isAuthenticated = !!user && hasValidToken && !!session;
+  const isAuthenticated = !!user;
 
   return {
-    user,
-    isLoading: loading || (userLoading && hasValidToken && !!session),
+    user: user ? {
+      id: user.id,
+      email: user.email,
+      displayName: user.user_metadata?.display_name || user.email?.split('@')[0] || '',
+      preferredKanjiDisplay: user.user_metadata?.preferred_kanji_display || 'furigana',
+    } : null,
+    isLoading: loading,
     isAuthenticated,
-    session,
-    error,
-    supabaseSession: session, // Keep for backward compatibility
+    session: user ? { user } : null,
+    error: null,
+    supabaseSession: user ? { user } : null,
   };
 }

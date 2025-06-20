@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -20,7 +21,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { getAuthHeaders } from "@/lib/auth";
 import { 
   getVocabStats,
   createConversation,
@@ -49,32 +49,46 @@ const formatDuration = (minutes: number) => {
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
-  const { user, isLoading: authLoading, isAuthenticated, supabaseSession } = useAuth();
+  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   const [tutorsData, setTutorsData] = useState<any[]>([]);
   const [tutorsLoading, setTutorsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Fetch conversations
+  // Fetch conversations from Supabase
   const { data: conversations = [], isLoading: conversationsLoading } = useQuery({
-    queryKey: ["/api/conversations"],
+    queryKey: ["conversations", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('conversations')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Failed to fetch conversations:', error);
+        return [];
+      }
+      return data || [];
+    },
+    enabled: !!user?.id,
   });
 
-  // Direct fetch for tutors to ensure they display
+  // Fetch tutors from Supabase
   useEffect(() => {
     const fetchTutors = async () => {
       try {
-        const authHeaders = getAuthHeaders();
-        const response = await fetch('/api/personas', {
-          headers: authHeaders,
-          credentials: 'include'
-        });
+        const { data, error } = await supabase
+          .from('personas')
+          .select('*')
+          .order('id', { ascending: true });
 
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Tutors fetched successfully:', data);
-          setTutorsData(Array.isArray(data) ? data : []);
+        if (error) {
+          console.error('Failed to fetch tutors:', error);
         } else {
-          console.error('Failed to fetch tutors:', response.status);
+          console.log('Tutors fetched successfully:', data);
+          setTutorsData(data || []);
         }
       } catch (error) {
         console.error('Error fetching tutors:', error);
@@ -88,48 +102,35 @@ export default function Dashboard() {
 
   // Fetch vocabulary stats from Supabase
   const { data: vocabStats } = useQuery({
-    queryKey: ["vocab-stats", (user as any)?.id],
+    queryKey: ["vocab-stats", user?.id],
     queryFn: async () => {
       try {
-        // Check session from auth hook
-        if (!supabaseSession) {
-          console.warn('No active session for vocab stats');
+        if (!user?.id) {
+          console.warn('No current user for vocab stats');
           return null;
         }
-
-        const currentUser = await getCurrentUser();
-        if (!currentUser?.id) return null;
-        return await getVocabStats(currentUser.id);
+        return await getVocabStats(user.id);
       } catch (error) {
         console.error('Error fetching vocab stats:', error);
         return null;
       }
     },
-    enabled: !!user && !!supabaseSession,
+    enabled: !!user?.id,
   });
 
-  // Create conversation mutation using Supabase function
+  // Create conversation mutation using Supabase
   const createConversationMutation = useMutation({
     mutationFn: async ({ personaId, title }: { personaId: number; title: string }) => {
-      // Check session from auth hook
-      if (!supabaseSession) {
-        throw new Error("No active session found. Please log in again.");
+      if (!user?.id) {
+        throw new Error("User not authenticated");
       }
 
-      const currentUser = await getCurrentUser();
-      if (!currentUser) throw new Error("User not authenticated");
-
-      return await createConversation(currentUser.id, personaId, null, title);
+      return await createConversation(user.id, personaId, null, title);
     },
     onSuccess: (conversationId) => {
       setLocation(`/chat/${conversationId}`);
     },
     onError: (error) => {
-      if (error.message.includes("session") || error.message.includes("authenticated")) {
-        // Redirect to login if auth-related error
-        localStorage.removeItem('token');
-        setLocation('/login');
-      }
       toast({
         title: "Failed to start conversation",
         description: error.message,
@@ -148,17 +149,15 @@ export default function Dashboard() {
     upcomingGoal: "Learn 20 JLPT N5 words"
   };
 
-  // Handle tutor selection for new chat using Supabase function
+  // Handle tutor selection for new chat
   const handleStartNewChat = async (personaId: number, tutorName: string) => {
     try {
-      // Check session from auth hook
-      if (!supabaseSession) {
+      if (!user?.id) {
         toast({
           title: "Authentication Required",
           description: "Please log in to start a conversation",
           variant: "destructive",
         });
-        localStorage.removeItem('token');
         setLocation('/login');
         return;
       }
@@ -166,14 +165,12 @@ export default function Dashboard() {
       const title = `Chat with ${tutorName}`;
       createConversationMutation.mutate({ personaId, title });
     } catch (error) {
-      console.error('Session check failed:', error);
+      console.error('Failed to start chat:', error);
       toast({
         title: "Authentication Error",
-        description: "Unable to verify session. Please log in again.",
+        description: "Unable to start conversation. Please try again.",
         variant: "destructive",
       });
-      localStorage.removeItem('token');
-      setLocation('/login');
     }
   };
 
@@ -183,9 +180,14 @@ export default function Dashboard() {
   };
 
   // Handle logout
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setLocation('/login');
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setLocation('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      setLocation('/login');
+    }
   };
 
   // Redirect to login if not authenticated (only after loading is complete)
@@ -213,8 +215,6 @@ export default function Dashboard() {
   if (!isAuthenticated) {
     return null;
   }
-
-
 
   return (
     <div className="dashboard-container">
@@ -277,7 +277,7 @@ export default function Dashboard() {
         <div className="welcome-section">
           <div className="welcome-content">
             <h1 className="welcome-title">
-              Welcome back, {(user as any)?.displayName || 'Student'}!
+              Welcome back, {user?.displayName || 'Student'}!
             </h1>
             <p className="welcome-subtitle">Keep your momentum going!</p>
           </div>
