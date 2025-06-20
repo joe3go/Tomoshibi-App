@@ -242,25 +242,16 @@ export class DatabaseStorage implements IStorage {
 
   // Conversation operations
   async createConversation(conversation: InsertConversation): Promise<Conversation> {
+    // Insert only the required fields that exist in Supabase
     const { data, error } = await supabase
       .from('conversations')
       .insert({
         user_id: conversation.userId,
         persona_id: conversation.personaId,
-        scenario_id: conversation.scenarioId,
-        phase: conversation.phase || 'guided',
+        scenario_id: conversation.scenarioId || null,
         status: conversation.status || 'active'
       })
-      .select(`
-        id,
-        user_id,
-        persona_id,
-        scenario_id,
-        phase,
-        status,
-        started_at,
-        completed_at
-      `)
+      .select()
       .single();
 
     if (error) throw new Error(`Failed to create conversation: ${error.message}`);
@@ -271,7 +262,7 @@ export class DatabaseStorage implements IStorage {
       userId: data.user_id,
       personaId: data.persona_id,
       scenarioId: data.scenario_id,
-      phase: data.phase,
+      phase: data.phase || 'guided',
       status: data.status,
       startedAt: data.started_at,
       completedAt: data.completed_at
