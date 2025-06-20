@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import type { Persona, Scenario, JlptVocab, JlptGrammar } from "@shared/schema";
+import { buildSystemPrompt as buildDynamicPrompt, getTutorById, buildUserContext, logPromptUsage, type Tutor, type UserContext } from "./prompt-builder";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({
@@ -21,6 +22,60 @@ export interface AIResponse {
   vocabUsed: number[];
   grammarUsed: number[];
   suggestions: string[];
+}
+
+// New secure dynamic prompt-based AI response function
+export async function generateSecureAIResponse(
+  tutorId: number, 
+  userId: string, 
+  username: string, 
+  userMessage: string, 
+  topic: string, 
+  conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = [],
+  prefersEnglish: boolean = false
+): Promise<AIResponse> {
+  try {
+    // Get tutor data from Supabase
+    const tutor = await getTutorById(tutorId);
+    if (!tutor) {
+      throw new Error(`Tutor with ID ${tutorId} not found`);
+    }
+
+    // Build user context
+    const userContext = await buildUserContext(userId, username, topic, prefersEnglish);
+    
+    // Generate secure, tutor-specific system prompt
+    const systemPrompt = buildDynamicPrompt(tutor, userContext);
+    
+    // Log usage for analytics (without sensitive data)
+    logPromptUsage(tutorId, userId, topic);
+
+    const messages = [
+      { role: 'system' as const, content: systemPrompt },
+      ...conversationHistory,
+      { role: 'user' as const, content: userMessage }
+    ];
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages,
+      max_tokens: 300,
+      temperature: 0.8,
+    });
+
+    const content = response.choices[0].message.content || "すみません、もう一度言ってください。";
+
+    return {
+      content,
+      feedback: undefined,
+      vocabUsed: [],
+      grammarUsed: [],
+      suggestions: [],
+    };
+  } catch (error) {
+    console.error('Error generating secure AI response:', error);
+    throw error;
+  }
 }
 
 export async function generateAIResponse(context: ConversationContext): Promise<AIResponse> {

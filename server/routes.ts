@@ -674,6 +674,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // New secure chat endpoint using dynamic prompts
+  app.post('/api/chat/secure', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { tutorId, message, topic = 'general conversation', prefersEnglish = false } = req.body;
+      const userId = req.userId!;
+
+      if (!tutorId || !message) {
+        return res.status(400).json({ message: 'Missing required fields: tutorId, message' });
+      }
+
+      // Get user info for context
+      const { supabase } = await import('./db');
+      const { data: user } = await supabase
+        .from('users')
+        .select('display_name')
+        .eq('id', userId)
+        .single();
+
+      const username = user?.display_name || 'Student';
+
+      // Get recent conversation history (last 10 messages)
+      const { data: recentMessages } = await supabase
+        .from('messages')
+        .select('sender, content')
+        .eq('conversation_id', req.body.conversationId || 0)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      const conversationHistory = (recentMessages || [])
+        .reverse()
+        .map((msg: any) => ({
+          role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+          content: msg.content
+        }));
+
+      // Generate secure AI response using dynamic prompt
+      const { generateSecureAIResponse } = await import('./openai');
+      const aiResponse = await generateSecureAIResponse(
+        parseInt(tutorId),
+        userId,
+        username,
+        message,
+        topic,
+        conversationHistory,
+        prefersEnglish
+      );
+
+      res.json({
+        content: aiResponse.content,
+        tutorId,
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error('Secure chat error:', error);
+      res.status(500).json({ message: 'Failed to generate AI response' });
+    }
+  });
+
   // Debug endpoint to check Supabase vocab counts
   app.get('/api/debug/vocab-counts', authenticateToken, async (req, res) => {
     try {
