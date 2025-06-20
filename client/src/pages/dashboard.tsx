@@ -16,7 +16,7 @@ import {
   Settings,
   LogOut
 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/context/SupabaseAuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -49,7 +49,8 @@ const formatDuration = (minutes: number) => {
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
-  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { user, loading: authLoading, session } = useAuth();
+  const isAuthenticated = !!session;
   const [tutorsData, setTutorsData] = useState<any[]>([]);
   const [tutorsLoading, setTutorsLoading] = useState(true);
   const { toast } = useToast();
@@ -277,7 +278,7 @@ export default function Dashboard() {
         <div className="welcome-section">
           <div className="welcome-content">
             <h1 className="welcome-title">
-              Welcome back, {user?.displayName || 'Student'}!
+              Welcome back, {user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Student'}!
             </h1>
             <p className="welcome-subtitle">Keep your momentum going!</p>
           </div>
