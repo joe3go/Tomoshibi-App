@@ -22,6 +22,7 @@ import {
   completeConversation,
   getCurrentUser 
 } from "@/lib/supabase-functions";
+import { supabase } from "@/lib/supabase/client";
 // Avatar images are now served from /avatars/ directory as SVG files
 
 export default function Chat() {
@@ -68,6 +69,18 @@ export default function Chat() {
 
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
+      // Check session first
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw new Error("Authentication session error");
+      }
+      
+      if (!session) {
+        throw new Error("No active session found. Please log in again.");
+      }
+
       const user = await getCurrentUser();
       if (!user) throw new Error("User not authenticated");
 
@@ -141,6 +154,13 @@ export default function Chat() {
           messages: oldData?.messages?.slice(0, -1) || [],
         }),
       );
+
+      // Handle auth errors
+      if (error.message.includes("session") || error.message.includes("authenticated")) {
+        localStorage.removeItem('token');
+        setLocation('/login');
+        return;
+      }
       
       toast({
         title: "Failed to send message",
@@ -152,6 +172,13 @@ export default function Chat() {
 
   const completeConversationMutation = useMutation({
     mutationFn: async () => {
+      // Check session first
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error || !session) {
+        throw new Error("No active session found. Please log in again.");
+      }
+
       return await completeConversation(conversationId);
     },
     onSuccess: () => {

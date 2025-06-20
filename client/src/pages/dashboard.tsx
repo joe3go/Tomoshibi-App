@@ -27,6 +27,7 @@ import {
   getCurrentUser 
 } from "@/lib/supabase-functions";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase/client";
 
 // Helper function to get avatar image
 const getAvatarImage = (persona: any) => {
@@ -90,6 +91,13 @@ export default function Dashboard() {
     queryKey: ["vocab-stats", (user as any)?.id],
     queryFn: async () => {
       try {
+        // Check session first
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          console.warn('No active session for vocab stats');
+          return null;
+        }
+
         const currentUser = await getCurrentUser();
         if (!currentUser?.id) return null;
         return await getVocabStats(currentUser.id);
@@ -104,6 +112,18 @@ export default function Dashboard() {
   // Create conversation mutation using Supabase function
   const createConversationMutation = useMutation({
     mutationFn: async ({ personaId, title }: { personaId: number; title: string }) => {
+      // Check session first
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw new Error("Authentication session error");
+      }
+      
+      if (!session) {
+        throw new Error("No active session found. Please log in again.");
+      }
+
       const currentUser = await getCurrentUser();
       if (!currentUser) throw new Error("User not authenticated");
 
@@ -113,6 +133,11 @@ export default function Dashboard() {
       setLocation(`/chat/${conversationId}`);
     },
     onError: (error) => {
+      if (error.message.includes("session") || error.message.includes("authenticated")) {
+        // Redirect to login if auth-related error
+        localStorage.removeItem('token');
+        setLocation('/login');
+      }
       toast({
         title: "Failed to start conversation",
         description: error.message,
@@ -132,9 +157,34 @@ export default function Dashboard() {
   };
 
   // Handle tutor selection for new chat using Supabase function
-  const handleStartNewChat = (personaId: number, tutorName: string) => {
-    const title = `Chat with ${tutorName}`;
-    createConversationMutation.mutate({ personaId, title });
+  const handleStartNewChat = async (personaId: number, tutorName: string) => {
+    try {
+      // Check session before starting chat
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error || !session) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to start a conversation",
+          variant: "destructive",
+        });
+        localStorage.removeItem('token');
+        setLocation('/login');
+        return;
+      }
+
+      const title = `Chat with ${tutorName}`;
+      createConversationMutation.mutate({ personaId, title });
+    } catch (error) {
+      console.error('Session check failed:', error);
+      toast({
+        title: "Authentication Error",
+        description: "Unable to verify session. Please log in again.",
+        variant: "destructive",
+      });
+      localStorage.removeItem('token');
+      setLocation('/login');
+    }
   };
 
   // Handle resume chat
