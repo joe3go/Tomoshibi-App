@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { 
   MessageCircle, 
   TrendingUp, 
@@ -21,6 +21,12 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { getAuthHeaders } from "@/lib/auth";
+import { 
+  getVocabStats,
+  createConversation,
+  getCurrentUser 
+} from "@/lib/supabase-functions";
+import { useToast } from "@/hooks/use-toast";
 
 // Helper function to get avatar image
 const getAvatarImage = (persona: any) => {
@@ -45,6 +51,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const [tutorsData, setTutorsData] = useState<any[]>([]);
   const [tutorsLoading, setTutorsLoading] = useState(true);
+  const { toast } = useToast();
 
   // Fetch conversations
   const { data: conversations = [], isLoading: conversationsLoading } = useQuery({
@@ -78,9 +85,40 @@ export default function Dashboard() {
     fetchTutors();
   }, []);
 
-  // Fetch vocabulary stats
-  const { data: vocabStats = [] } = useQuery({
-    queryKey: ["/api/vocab/stats"],
+  // Fetch vocabulary stats from Supabase
+  const { data: vocabStats } = useQuery({
+    queryKey: ["vocab-stats", (user as any)?.id],
+    queryFn: async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        if (!currentUser?.id) return null;
+        return await getVocabStats(currentUser.id);
+      } catch (error) {
+        console.error('Error fetching vocab stats:', error);
+        return null;
+      }
+    },
+    enabled: !!user,
+  });
+
+  // Create conversation mutation
+  const createConversationMutation = useMutation({
+    mutationFn: async ({ personaId, title }: { personaId: number; title: string }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) throw new Error("User not authenticated");
+      
+      return await createConversation(currentUser.id, personaId, null, title);
+    },
+    onSuccess: (conversationId) => {
+      setLocation(`/chat/${conversationId}`);
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to start conversation",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   // Mock analytics data (in real app, this would come from API)
@@ -93,32 +131,10 @@ export default function Dashboard() {
     upcomingGoal: "Learn 20 JLPT N5 words"
   };
 
-  // Handle tutor selection for new chat
-  const handleStartNewChat = async (personaId: number) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/conversations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          persona_id: personaId,
-          scenario_id: null // Free chat mode
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to create conversation: ${response.statusText}`);
-      }
-
-      const conversation = await response.json();
-      setLocation(`/chat/${conversation.id}`);
-    } catch (error) {
-      console.error('Error starting chat:', error);
-      setLocation('/chat');
-    }
+  // Handle tutor selection for new chat using Supabase function
+  const handleStartNewChat = (personaId: number, tutorName: string) => {
+    const title = `Chat with ${tutorName}`;
+    createConversationMutation.mutate({ personaId, title });
   };
 
   // Handle resume chat
