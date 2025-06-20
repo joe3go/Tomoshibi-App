@@ -242,12 +242,7 @@ export default function Dashboard() {
                   <BookOpen className="w-6 h-6 text-blue-500" />
                 </div>
                 <div className="stat-details">
-                  <p className="stat-value">
-                    {vocabStats ? 
-                      Object.values(vocabStats).reduce((sum: number, count: any) => sum + (count || 0), 0) : 
-                      analytics.totalWords
-                    }
-                  </p>
+                  <p className="stat-value">{analytics.totalWords}</p>
                   <p className="stat-label">Total Words Used</p>
                 </div>
               </CardContent>
@@ -290,31 +285,6 @@ export default function Dashboard() {
             </Card>
           </div>
 
-          {/* JLPT Vocabulary Stats */}
-          {vocabStats && (
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="w-5 h-5" />
-                  JLPT Vocabulary Progress
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  {['N5', 'N4', 'N3', 'N2', 'N1'].map(level => (
-                    <div key={level} className="text-center">
-                      <div className="text-2xl font-bold text-primary">
-                        {vocabStats[level] || 0}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {level} Words
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
 
         {/* JLPT Vocabulary Usage Card */}

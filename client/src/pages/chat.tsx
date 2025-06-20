@@ -16,12 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Toggle } from "@/components/ui/toggle";
 import { Languages } from "lucide-react";
 import { bind, unbind, toHiragana } from 'wanakana';
-// import { 
-//   getConversationMessages, 
-//   addMessage, 
-//   completeConversation,
-//   getCurrentUser 
-// } from "@/lib/supabase-functions";
+
 // Avatar images are now served from /avatars/ directory as SVG files
 
 export default function Chat() {
