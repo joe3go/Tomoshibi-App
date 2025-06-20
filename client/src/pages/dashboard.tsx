@@ -101,7 +101,7 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
-  // Create conversation mutation
+  // Create conversation mutation using Supabase function
   const createConversationMutation = useMutation({
     mutationFn: async ({ personaId, title }: { personaId: number; title: string }) => {
       const currentUser = await getCurrentUser();
