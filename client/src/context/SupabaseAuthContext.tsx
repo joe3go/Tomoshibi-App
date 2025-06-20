@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
 
@@ -18,64 +18,85 @@ const AuthContext = createContext<AuthContextType>({
 export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const authInitialized = useRef(false);
+  const subscriptionRef = useRef<any>(null);
 
   useEffect(() => {
-    let mounted = true;
-    let initialLoadHandled = false;
+    // Prevent multiple initializations
+    if (authInitialized.current) {
+      return;
+    }
+    authInitialized.current = true;
 
-    // Timeout to ensure loading never stays true indefinitely
+    let mounted = true;
+
+    // Cleanup any existing subscription first
+    if (subscriptionRef.current) {
+      subscriptionRef.current.unsubscribe();
+    }
+
+    // Set loading timeout as backup
     const loadingTimeout = setTimeout(() => {
-      if (mounted && !initialLoadHandled) {
-        console.warn('Auth loading timeout reached, setting loading to false');
+      if (mounted && loading) {
+        console.warn('Auth loading timeout - forcing loading to false');
         setLoading(false);
-        initialLoadHandled = true;
       }
-    }, 10000); // 10 second timeout
+    }, 5000); // Reduced to 5 seconds
 
     // Get initial session
-    const getInitialSession = async () => {
+    const initializeAuth = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        if (mounted && !initialLoadHandled) {
+        
+        if (mounted) {
+          console.log('Initial session loaded:', !!session);
           setSession(session);
           setLoading(false);
-          initialLoadHandled = true;
           clearTimeout(loadingTimeout);
         }
       } catch (error) {
-        console.error('Error getting session:', error);
-        if (mounted && !initialLoadHandled) {
+        console.error('Error getting initial session:', error);
+        if (mounted) {
           setSession(null);
           setLoading(false);
-          initialLoadHandled = true;
           clearTimeout(loadingTimeout);
         }
       }
     };
 
-    getInitialSession();
-
-    // Listen for auth state changes
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state change:', event, session);
+      console.log('Auth state change:', event, !!session);
+      
       if (mounted) {
         setSession(session);
-        // Always set loading to false after any auth state change
-        if (!initialLoadHandled) {
-          setLoading(false);
-          initialLoadHandled = true;
-          clearTimeout(loadingTimeout);
-        }
+        
+        // Only set loading to false if we haven't already
+        setLoading(false);
+        clearTimeout(loadingTimeout);
       }
     });
 
+    subscriptionRef.current = subscription;
+    initializeAuth();
+
     return () => {
       mounted = false;
-      initialLoadHandled = true;
+      authInitialized.current = false;
       clearTimeout(loadingTimeout);
-      subscription?.unsubscribe();
+      if (subscriptionRef.current) {
+        subscriptionRef.current.unsubscribe();
+        subscriptionRef.current = null;
+      }
     };
-  }, [])
+  }, []); // Empty dependency array - only run once
+
+  // Reset initialization flag when component unmounts
+  useEffect(() => {
+    return () => {
+      authInitialized.current = false;
+    };
+  }, []);
 
   return (
     <AuthContext.Provider value={{ 
