@@ -251,11 +251,31 @@ export class DatabaseStorage implements IStorage {
         phase: conversation.phase || 'guided',
         status: conversation.status || 'active'
       })
-      .select()
+      .select(`
+        id,
+        user_id,
+        persona_id,
+        scenario_id,
+        phase,
+        status,
+        started_at,
+        completed_at
+      `)
       .single();
 
     if (error) throw new Error(`Failed to create conversation: ${error.message}`);
-    return data as Conversation;
+    
+    // Map database field names to expected field names
+    return {
+      id: data.id,
+      userId: data.user_id,
+      personaId: data.persona_id,
+      scenarioId: data.scenario_id,
+      phase: data.phase,
+      status: data.status,
+      startedAt: data.started_at,
+      completedAt: data.completed_at
+    } as Conversation;
   }
 
   async getConversation(id: number): Promise<Conversation | undefined> {
