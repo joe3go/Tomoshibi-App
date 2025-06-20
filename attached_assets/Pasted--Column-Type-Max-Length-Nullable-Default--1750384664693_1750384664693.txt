@@ -1,0 +1,19 @@
+| Column             | Type                     | Max Length | Nullable? | Default                              |
+| ------------------ | ------------------------ | ---------- | --------- | ------------------------------------ |
+| id                 | integer                  | null       | NO        | nextval('personas_id_seq'::regclass) |
+| name               | character varying        | 255        | NO        | null                                 |
+| description        | text                     | null       | YES       | null                                 |
+| personality        | text                     | null       | YES       | null                                 |
+| speaking_style     | text                     | null       | YES       | null                                 |
+| avatar_url         | character varying        | 255        | YES       | null                                 |
+| created_at         | timestamp with time zone | null       | YES       | now()                                |
+| type               | text                     | null       | NO        | 'tutor'::text                        |
+| tone               | text                     | null       | YES       | null                                 |
+| level              | text                     | null       | YES       | null                                 |
+| origin             | text                     | null       | YES       | null                                 |
+| quirks             | text                     | null       | YES       | null                                 |
+| correction_style   | text                     | null       | YES       | null                                 |
+| language_policy    | text                     | null       | YES       | null                                 |
+| bubble_class       | character varying        | null       | YES       | null                                 |
+| voice_model        | character varying        | null       | YES       | null                                 |
+| system_prompt_hint | text                     | null       | YES       | null                                 |
