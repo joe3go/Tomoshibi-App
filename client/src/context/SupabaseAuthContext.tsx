@@ -21,20 +21,34 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
+    let initialLoadHandled = false;
+
+    // Timeout to ensure loading never stays true indefinitely
+    const loadingTimeout = setTimeout(() => {
+      if (mounted && !initialLoadHandled) {
+        console.warn('Auth loading timeout reached, setting loading to false');
+        setLoading(false);
+        initialLoadHandled = true;
+      }
+    }, 10000); // 10 second timeout
 
     // Get initial session
     const getInitialSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        if (mounted) {
+        if (mounted && !initialLoadHandled) {
           setSession(session);
           setLoading(false);
+          initialLoadHandled = true;
+          clearTimeout(loadingTimeout);
         }
       } catch (error) {
         console.error('Error getting session:', error);
-        if (mounted) {
+        if (mounted && !initialLoadHandled) {
           setSession(null);
           setLoading(false);
+          initialLoadHandled = true;
+          clearTimeout(loadingTimeout);
         }
       }
     };
@@ -46,18 +60,22 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       console.log('Auth state change:', event, session);
       if (mounted) {
         setSession(session);
-        // Only set loading to false after initial session check
-        if (loading) {
+        // Always set loading to false after any auth state change
+        if (!initialLoadHandled) {
           setLoading(false);
+          initialLoadHandled = true;
+          clearTimeout(loadingTimeout);
         }
       }
     });
 
     return () => {
       mounted = false;
+      initialLoadHandled = true;
+      clearTimeout(loadingTimeout);
       subscription?.unsubscribe();
     };
-  }, []); // Remove loading dependency to prevent infinite loop
+  }, [])
 
   return (
     <AuthContext.Provider value={{ 
