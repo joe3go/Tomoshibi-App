@@ -358,7 +358,11 @@ export default function Chat() {
               )}
 
               <div
-                className={`message-bubble ${msg.sender === "user" ? "user" : "ai"}`}
+                className={`message-bubble ${
+                  msg.sender === "user" 
+                    ? "user" 
+                    : persona?.bubble_class || "ai"
+                }`}
               >
                 {msg.feedback && (
                   <div className="chat-message-feedback">

@@ -143,6 +143,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           language_policy,
           system_prompt_hint,
           avatar_url,
+          bubble_class,
           created_at
         `)
         .order('id', { ascending: true });
