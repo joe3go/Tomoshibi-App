@@ -1,55 +1,45 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { getAuthToken } from "@/lib/auth";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
 
 export function useAuth() {
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [supabaseSession, setSupabaseSession] = useState<any>(null);
-  const [supabaseLoading, setSupabaseLoading] = useState(true);
+  const [session, setSession] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const token = getAuthToken();
-  
+
   // Initialize Supabase session
   useEffect(() => {
-    let mounted = true;
-
-    const initializeSession = async () => {
+    const getSession = async () => {
       try {
-        // Wait for Supabase to restore session from localStorage
         const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (mounted) {
-          setSupabaseSession(session);
-          setSupabaseLoading(false);
+        if (error) {
+          console.error('Failed to get Supabase session:', error);
         }
+        setSession(session);
+        setLoading(false);
       } catch (error) {
         console.error('Failed to get Supabase session:', error);
-        if (mounted) {
-          setSupabaseLoading(false);
-        }
+        setLoading(false);
       }
     };
 
-    initializeSession();
+    getSession();
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (mounted) {
-        setSupabaseSession(session);
-        setSupabaseLoading(false);
-      }
+      setSession(session);
+      setLoading(false);
     });
 
     return () => {
-      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
-  
+
   const { data: user, isLoading: userLoading, error } = useQuery({
     queryKey: ["/api/auth/me"],
-    enabled: !!token && token !== 'null' && token !== 'undefined' && isInitialized && !supabaseLoading,
+    enabled: !!token && token !== 'null' && token !== 'undefined' && !loading && !!session,
     retry: false,
     staleTime: 0,
     refetchOnWindowFocus: false,
@@ -61,28 +51,15 @@ export function useAuth() {
     }
   });
 
-  useEffect(() => {
-    // Initialize auth state validation after Supabase is ready
-    if (!supabaseLoading) {
-      const savedToken = getAuthToken();
-      
-      // Clear invalid tokens immediately
-      if (savedToken && (savedToken === 'null' || savedToken === 'undefined' || savedToken.trim() === '')) {
-        localStorage.removeItem('token');
-      }
-      
-      setIsInitialized(true);
-    }
-  }, [supabaseLoading]);
-
   const hasValidToken = token && token !== 'null' && token !== 'undefined' && token.trim() !== '';
-  const isLoading = supabaseLoading || !isInitialized || (userLoading && hasValidToken);
+  const isAuthenticated = !!user && hasValidToken && !!session;
 
   return {
     user,
-    isLoading,
-    isAuthenticated: !!user && hasValidToken && !!supabaseSession,
+    isLoading: loading || (userLoading && hasValidToken && !!session),
+    isAuthenticated,
+    session,
     error,
-    supabaseSession,
+    supabaseSession: session, // Keep for backward compatibility
   };
 }

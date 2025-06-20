@@ -23,6 +23,7 @@ import {
   getCurrentUser 
 } from "@/lib/supabase-functions";
 import { supabase } from "@/lib/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 // Avatar images are now served from /avatars/ directory as SVG files
 
 export default function Chat() {
