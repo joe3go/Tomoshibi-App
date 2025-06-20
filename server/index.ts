@@ -58,9 +58,10 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  const PORT = process.env.PORT || 5000;
+  const PORT = parseInt(process.env.PORT || "5000", 10);
     server.listen(PORT, "0.0.0.0", () => {
       log(`🌸 Tomoshibi server running on http://0.0.0.0:${PORT}`);
+      log(`🌐 External access: https://${process.env.REPL_SLUG || 'your-repl'}.${process.env.REPL_OWNER || 'username'}.replit.app`);
     });
   } catch (err) {
     console.error("Server startup error:", err);
