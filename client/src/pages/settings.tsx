@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Upload, User, BookOpen, Settings as SettingsIcon } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/context/SupabaseAuthContext';
 import { removeAuthToken } from '@/lib/auth';
 
 interface UserSettings {
