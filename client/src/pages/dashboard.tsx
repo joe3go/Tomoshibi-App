@@ -314,7 +314,7 @@ export default function Dashboard() {
               {Array.isArray(conversations) && conversations.length > 0 ? (
                 <div className="conversations-list">
                   {conversations.slice(0, 3).map((conversation: any) => {
-                    const persona = Array.isArray(personas) ? personas.find((p: any) => p.id === conversation.persona_id) : null;
+                    const persona = personasArray.find((p: any) => p.id === conversation.persona_id);
                     return (
                       <div key={conversation.id} className="conversation-card">
                         <div className="conversation-info">
@@ -362,43 +362,42 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="section-content">
-              {/* Debug display */}
-              {!Array.isArray(personas) || personas.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">
-                    {personasLoading ? 'Loading tutors...' : `No tutors found. Data: ${JSON.stringify(personas)}`}
-                  </p>
-                </div>
-              ) : null}
-              
               <div className="tutors-grid">
-                {Array.isArray(personas) && personas.length > 0 && personas.slice(0, 4).map((persona: any) => (
-                  <div key={persona.id} className="tutor-preview-card">
-                    <div className="tutor-preview-content">
-                      <Avatar className="tutor-preview-avatar">
-                        <AvatarImage src={getAvatarImage(persona)} alt={persona.name} />
-                        <AvatarFallback>{persona.name?.[0] || 'T'}</AvatarFallback>
-                      </Avatar>
-                      <div className="tutor-preview-info">
-                        <h4 className="tutor-preview-name">{persona.name}</h4>
-                        <Badge variant="secondary" className="tutor-preview-type">
-                          {persona.type === 'teacher' ? 'Teacher' : 'Friend'}
-                        </Badge>
-                        <p className="tutor-preview-description">
-                          {persona.description || 'Available for conversation practice'}
-                        </p>
+                {personasArray.length > 0 ? (
+                  personasArray.slice(0, 4).map((persona: any) => (
+                    <div key={persona.id} className="tutor-preview-card">
+                      <div className="tutor-preview-content">
+                        <Avatar className="tutor-preview-avatar">
+                          <AvatarImage src={getAvatarImage(persona)} alt={persona.name} />
+                          <AvatarFallback>{persona.name?.[0] || 'T'}</AvatarFallback>
+                        </Avatar>
+                        <div className="tutor-preview-info">
+                          <h4 className="tutor-preview-name">{persona.name}</h4>
+                          <Badge variant="secondary" className="tutor-preview-type">
+                            {persona.type === 'teacher' ? 'Teacher' : 'Friend'}
+                          </Badge>
+                          <p className="tutor-preview-description">
+                            {persona.description || 'Available for conversation practice'}
+                          </p>
+                        </div>
                       </div>
+                      <Button 
+                        onClick={() => handleStartNewChat(persona.id)}
+                        className="start-chat-btn"
+                        size="sm"
+                      >
+                        <Play className="w-4 h-4 mr-1" />
+                        Start Chat
+                      </Button>
                     </div>
-                    <Button 
-                      onClick={() => handleStartNewChat(persona.id)}
-                      className="start-chat-btn"
-                      size="sm"
-                    >
-                      <Play className="w-4 h-4 mr-1" />
-                      Start Chat
-                    </Button>
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-8">
+                    <p className="text-muted-foreground">
+                      {personasLoading ? 'Loading tutors...' : 'No tutors available'}
+                    </p>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
