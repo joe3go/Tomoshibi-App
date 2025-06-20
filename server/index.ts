@@ -38,16 +38,15 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  try {
-    const server = await registerRoutes(app);
+  const server = await registerRoutes(app);
 
-    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      const status = err.status || err.statusCode || 500;
-      const message = err.message || "Internal Server Error";
-      
-      console.error('Server error:', err);
-      res.status(status).json({ message });
-    });
+  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
+
+    res.status(status).json({ message });
+    throw err;
+  });
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
@@ -59,14 +58,10 @@ app.use((req, res, next) => {
   }
 
   const PORT = process.env.PORT || 5000;
-    server.listen(PORT, "0.0.0.0", () => {
-      log(`🌸 Tomoshibi server running on http://0.0.0.0:${PORT}`);
-    });
-  } catch (err) {
-    console.error("Server startup error:", err);
-    process.exit(1);
-  }
+  server.listen(PORT, "0.0.0.0", () => {
+    log(`🌸 Tomoshibi server running on http://0.0.0.0:${PORT}`);
+  });
 })().catch((err) => {
-  console.error("Unhandled server error:", err);
+  console.error("Server startup error:", err);
   process.exit(1);
 });
