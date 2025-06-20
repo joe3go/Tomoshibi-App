@@ -697,6 +697,46 @@
   }
 
   /* ==============================
+     🏠 Dashboard Tutors Grid Styles
+     ============================== */
+
+  .tutors-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4;
+  }
+
+  .tutor-preview-card {
+    @apply bg-card border border-border rounded-lg p-4 space-y-3 hover:shadow-md transition-shadow;
+  }
+
+  .tutor-preview-content {
+    @apply space-y-3;
+  }
+
+  .tutor-preview-avatar {
+    @apply w-12 h-12 mx-auto;
+  }
+
+  .tutor-preview-info {
+    @apply text-center space-y-2;
+  }
+
+  .tutor-preview-name {
+    @apply font-semibold text-foreground;
+  }
+
+  .tutor-preview-type {
+    @apply text-xs;
+  }
+
+  .tutor-preview-description {
+    @apply text-sm text-muted-foreground;
+  }
+
+  .start-chat-btn {
+    @apply w-full bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+
+  /* ==============================
      📚 History Page Styles
      ============================== */
 

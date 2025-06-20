@@ -48,10 +48,13 @@ export default function Dashboard() {
     queryKey: ["/api/conversations"],
   });
 
-  // Fetch personas
-  const { data: personas = [], isLoading: personasLoading } = useQuery({
+  // Fetch personas with proper typing
+  const { data: personas, isLoading: personasLoading } = useQuery({
     queryKey: ["/api/personas"],
   });
+
+  // Ensure personas is an array
+  const personasArray = Array.isArray(personas) ? personas : [];
 
   // Fetch vocabulary stats
   const { data: vocabStats = [] } = useQuery({
@@ -359,8 +362,17 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="section-content">
+              {/* Debug display */}
+              {!Array.isArray(personas) || personas.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    {personasLoading ? 'Loading tutors...' : `No tutors found. Data: ${JSON.stringify(personas)}`}
+                  </p>
+                </div>
+              ) : null}
+              
               <div className="tutors-grid">
-                {Array.isArray(personas) && personas.slice(0, 4).map((persona: any) => (
+                {Array.isArray(personas) && personas.length > 0 && personas.slice(0, 4).map((persona: any) => (
                   <div key={persona.id} className="tutor-preview-card">
                     <div className="tutor-preview-content">
                       <Avatar className="tutor-preview-avatar">
