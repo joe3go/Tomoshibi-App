@@ -320,7 +320,7 @@ export class DatabaseStorage implements IStorage {
       .from('conversations')
       .select('*')
       .eq('user_id', userId)
-      .order('started_at', { ascending: false });
+      .order('created_at', { ascending: false });
 
     if (error) throw new Error(error.message);
     return (data as Conversation[]) || [];
