@@ -12,7 +12,6 @@ import { useToast } from "@/hooks/use-toast";
 export default function Login() {
   const [, setLocation] = useLocation();
   const { loading: authLoading, session } = useAuth();
-  const isAuthenticated = !!session;
   const { toast } = useToast();
 
   const [email, setEmail] = useState("");
@@ -21,11 +20,11 @@ export default function Login() {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (!authLoading && isAuthenticated) {
+    if (!authLoading && session) {
       console.log('🔀 User authenticated, redirecting to dashboard');
       setLocation('/dashboard');
     }
-  }, [authLoading, isAuthenticated, setLocation]);
+  }, [authLoading, session, setLocation]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +62,6 @@ export default function Login() {
           title: "Welcome back!",
           description: "You have been logged in successfully.",
         });
-        // Redirect will happen automatically via useEffect
       }
     } catch (error) {
       console.error('Unexpected login error:', error);
@@ -85,7 +83,7 @@ export default function Login() {
           <CardContent className="pt-6">
             <div className="text-center">
               <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
-              <p className="text-muted-foreground">Loading...</p>
+              <p className="text-muted-foreground">Checking authentication...</p>
             </div>
           </CardContent>
         </Card>
@@ -94,7 +92,7 @@ export default function Login() {
   }
 
   // Don't render form if already authenticated
-  if (isAuthenticated) {
+  if (session) {
     return null;
   }
 
