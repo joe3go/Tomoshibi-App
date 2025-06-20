@@ -287,20 +287,16 @@ export class DatabaseStorage implements IStorage {
   async getConversation(id: number): Promise<Conversation | undefined> {
     const { data, error } = await supabase
       .from('conversations')
-      .select(`
-        id,
-        user_id,
-        persona_id,
-        scenario_id,
-        phase,
-        status,
-        started_at,
-        completed_at
-      `)
+      .select('*')
       .eq('id', id)
       .single();
 
-    if (error || !data) return undefined;
+    if (error) {
+      console.error('getConversation error:', error);
+      return undefined;
+    }
+    
+    if (!data) return undefined;
     
     // Map database field names to expected field names
     return {
@@ -310,8 +306,8 @@ export class DatabaseStorage implements IStorage {
       scenarioId: data.scenario_id,
       phase: data.phase,
       status: data.status,
-      startedAt: data.started_at,
-      completedAt: data.completed_at
+      startedAt: data.created_at ? new Date(data.created_at) : null,
+      completedAt: data.completed_at ? new Date(data.completed_at) : null
     } as Conversation;
   }
 
