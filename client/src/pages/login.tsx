@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { setAuthToken } from "@/lib/auth";
 import { useLocation } from "wouter";
-import { useAuthContext } from "@/context/AuthContext";
+import { useAuth } from "@/context/SupabaseAuthContext";
 
 
 const loginSchema = z.object({
@@ -30,7 +30,14 @@ export default function Login() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { login } = useAuthContext();
+  const { session, loading } = useAuth();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!loading && session) {
+      setLocation('/dashboard');
+    }
+  }, [loading, session, setLocation]);
 
   // Check for token in URL params (from email confirmation)
   useEffect(() => {
@@ -66,11 +73,10 @@ export default function Login() {
       return await response.json();
     },
     onSuccess: (data) => {
-      // Use AuthContext login method
-      login(data.token, data.user);
-
-      // Hard redirect to ensure clean state
-      window.location.href = '/dashboard';
+      setAuthToken(data.token);
+      
+      // The SupabaseAuthProvider will detect the session change
+      setLocation('/dashboard');
     },
     onError: (error) => {
       toast({

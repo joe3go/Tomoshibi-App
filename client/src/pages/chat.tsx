@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
@@ -29,7 +28,7 @@ import { useAuth } from "@/hooks/useAuth";
 export default function Chat() {
   const [, params] = useRoute("/chat/:conversationId");
   const [, setLocation] = useLocation();
-  const { user, isLoading: authLoading, isAuthenticated, supabaseSession } = useAuth();
+  const { user, isLoading: authLoading, isAuthenticated, supabaseSession, session } = useAuth();
   const [message, setMessage] = useState("");
   const [romajiMode, setRomajiMode] = useState(false);
   const [showFurigana, setShowFurigana] = useState(() => {
@@ -47,7 +46,7 @@ export default function Chat() {
 
   // Redirect to login if not authenticated (only after loading is complete)
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    if (!authLoading && !session) {
       toast({
         title: "Authentication Required",
         description: "Please log in to access the chat",
@@ -55,7 +54,7 @@ export default function Chat() {
       });
       setLocation('/login');
     }
-  }, [authLoading, isAuthenticated, setLocation, toast]);
+  }, [authLoading, session, setLocation, toast]);
 
   const { data: conversationData, isLoading } = useQuery({
     queryKey: [`conversation-messages`, conversationId],
@@ -84,7 +83,7 @@ export default function Chat() {
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
       // Check session from auth hook
-      if (!supabaseSession) {
+      if (!session) {
         throw new Error("No active session found. Please log in again.");
       }
 
@@ -168,7 +167,7 @@ export default function Chat() {
         setLocation('/login');
         return;
       }
-      
+
       toast({
         title: "Failed to send message",
         description: error.message,
@@ -180,7 +179,7 @@ export default function Chat() {
   const completeConversationMutation = useMutation({
     mutationFn: async () => {
       // Check session from auth hook
-      if (!supabaseSession) {
+      if (!session) {
         throw new Error("No active session found. Please log in again.");
       }
 
@@ -191,7 +190,7 @@ export default function Chat() {
       queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
       queryClient.invalidateQueries({ queryKey: ["/api/conversations/completed"] });
       queryClient.invalidateQueries({ queryKey: [`conversation-messages`, conversationId] });
-      
+
       toast({
         title: "Conversation completed!",
         description:
@@ -227,7 +226,7 @@ export default function Chat() {
       bind(element, { IMEMode: 'toHiragana' });
       console.log('Wanakana bound to textarea');
     }
-    
+
     return () => {
       if (element) {
         try {
