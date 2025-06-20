@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
@@ -19,15 +20,29 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   const [loading, setLoading] = useState(true);
   const initialized = useRef(false);
   const mountedRef = useRef(true);
+  const subscriptionRef = useRef<any>(null);
 
   useEffect(() => {
-    // Prevent double initialization
-    if (initialized.current) return;
+    // Cleanup on unmount
+    return () => {
+      console.log('🧹 AuthProvider unmounting');
+      mountedRef.current = false;
+      if (subscriptionRef.current) {
+        subscriptionRef.current.unsubscribe();
+        subscriptionRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    // Prevent multiple initializations
+    if (initialized.current) {
+      console.log('⚠️ Auth already initialized, skipping');
+      return;
+    }
+    
     initialized.current = true;
-
     console.log('🚀 Initializing AuthContext (single instance)...');
-
-    let authSubscription: any = null;
 
     const initializeAuth = async () => {
       try {
@@ -49,30 +64,31 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
           });
         }
 
-        // Set up auth state listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-          console.log('🔄 Auth state change:', {
-            event,
-            hasSession: !!session,
-            userEmail: session?.user?.email,
-            mounted: mountedRef.current,
-            timestamp: new Date().toISOString()
+        // Set up auth state listener (only once)
+        if (!subscriptionRef.current) {
+          const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            console.log('🔄 Auth state change:', {
+              event,
+              hasSession: !!session,
+              userEmail: session?.user?.email,
+              mounted: mountedRef.current
+            });
+
+            if (!mountedRef.current) {
+              console.log('❌ Component unmounted, ignoring auth change');
+              return;
+            }
+
+            setSession(session);
+            
+            // Only set loading to false after initial session or sign out
+            if (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT') {
+              setLoading(false);
+            }
           });
 
-          if (!mountedRef.current) {
-            console.log('❌ Component unmounted, ignoring session');
-            return;
-          }
-
-          // Update session for all events
-          setSession(session);
-          
-          // Always set loading to false after any auth state change
-          console.log('🔄 Setting loading to false from auth state change');
-          setLoading(false);
-        });
-
-        authSubscription = subscription;
+          subscriptionRef.current = subscription;
+        }
 
       } catch (error) {
         console.error('💥 Auth initialization error:', error);
@@ -83,28 +99,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     };
 
     initializeAuth();
-
-    // Cleanup function
-    return () => {
-      console.log('🧹 Cleaning up AuthContext');
-      mountedRef.current = false;
-      if (authSubscription) {
-        authSubscription.unsubscribe();
-      }
-    };
   }, []); // Empty dependency array - only run once
-
-  // Track renders for debugging
-  const renderCount = useRef(0);
-  renderCount.current += 1;
-
-  console.log('🔄 AuthContext Render:', {
-    renderCount: renderCount.current,
-    loading,
-    hasSession: !!session,
-    authInitialized: initialized.current,
-    timestamp: new Date().toISOString()
-  });
 
   const user = session?.user ?? null;
 

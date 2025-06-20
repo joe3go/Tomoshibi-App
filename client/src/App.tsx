@@ -1,65 +1,55 @@
-import { Route, Switch } from "wouter";
+
+import { Router, Route, Switch } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { SupabaseAuthProvider } from "@/context/SupabaseAuthContext";
 import { Toaster } from "@/components/ui/toaster";
-import { SupabaseAuthProvider } from "@/context/AuthContext";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import PublicRoute from "@/components/PublicRoute";
+
+// Pages
 import Landing from "@/pages/landing";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import Chat from "@/pages/chat";
-import Settings from "@/pages/settings";
 import TutorSelection from "@/pages/tutor-selection";
+import ScenarioSelection from "@/pages/scenario-selection";
+import Vocabulary from "@/pages/vocabulary";
+import MyVocabulary from "@/pages/my-vocabulary";
+import History from "@/pages/history";
+import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 
+// Create a single QueryClient instance
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
       retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
     },
   },
 });
 
-function App() {
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <SupabaseAuthProvider>
-        <div className="min-h-screen bg-background">
+        <Router>
           <Switch>
             <Route path="/" component={Landing} />
-            <Route path="/login">
-              <PublicRoute>
-                <Login />
-              </PublicRoute>
-            </Route>
-            <Route path="/dashboard">
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            </Route>
-            <Route path="/chat/:conversationId?">
-              <ProtectedRoute>
-                <Chat />
-              </ProtectedRoute>
-            </Route>
-            <Route path="/settings">
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
-            </Route>
-            <Route path="/tutor-selection">
-              <ProtectedRoute>
-                <TutorSelection />
-              </ProtectedRoute>
-            </Route>
+            <Route path="/login" component={Login} />
+            <Route path="/dashboard" component={Dashboard} />
+            <Route path="/chat/:conversationId" component={Chat} />
+            <Route path="/tutors" component={TutorSelection} />
+            <Route path="/tutor-selection" component={TutorSelection} />
+            <Route path="/scenarios" component={ScenarioSelection} />
+            <Route path="/scenario-selection" component={ScenarioSelection} />
+            <Route path="/vocabulary" component={Vocabulary} />
+            <Route path="/my-vocabulary" component={MyVocabulary} />
+            <Route path="/history" component={History} />
+            <Route path="/settings" component={Settings} />
             <Route component={NotFound} />
           </Switch>
-        </div>
+        </Router>
         <Toaster />
       </SupabaseAuthProvider>
     </QueryClientProvider>
   );
 }
-
-export default App;
