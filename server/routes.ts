@@ -59,13 +59,13 @@ const getSupabaseConfig = () => {
 
   if (isDevelopment) {
     return {
-      url: process.env.VITE_SUPABASE_DEV_URL || 'https://your-dev-project.supabase.co',
-      key: process.env.VITE_SUPABASE_DEV_ANON_KEY || ''
+      url: process.env.VITE_SUPABASE_DEV_URL || 'https://oyawpeylvdqfkhysnjsq.supabase.co',
+      serviceKey: process.env.VITE_SUPABASE_DEV_SERVICE_KEY || ''
     };
   } else {
     return {
-      url: process.env.VITE_SUPABASE_PROD_URL || 'https://your-prod-project.supabase.co',
-      key: process.env.VITE_SUPABASE_PROD_ANON_KEY || ''
+      url: process.env.VITE_SUPABASE_PROD_URL || 'https://gsnnydemkpllycgzmalv.supabase.co',
+      serviceKey: process.env.VITE_SUPABASE_PROD_SERVICE_KEY || ''
     };
   }
 };
@@ -98,27 +98,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use direct Supabase configuration that works
       const supabaseUrl = process.env.VITE_SUPABASE_DEV_URL || 'https://oyawpeylvdqfkhysnjsq.supabase.co';
       const serviceKey = process.env.VITE_SUPABASE_DEV_ANON_KEY;
-      
+
       const { createClient } = await import('@supabase/supabase-js');
       if (!serviceKey) {
         console.error('❌ Missing Supabase service key');
         return res.status(500).json({ message: 'Server configuration error' });
       }
-      
+
       const supabase = createClient(supabaseUrl, serviceKey);
-      
+
       console.log('🔍 Fetching personas from Supabase...');
-      
+
       // Try RPC function first
       try {
         console.log('🎯 Calling get_personas RPC function...');
         const { data: rpcData, error: rpcError } = await supabase.rpc('get_personas');
-        
+
         if (!rpcError && rpcData && Array.isArray(rpcData) && rpcData.length > 0) {
           console.log('✅ RPC function successful, personas:', rpcData.length);
           return res.json(rpcData);
         }
-        
+
         if (rpcError) {
           console.log('⚠️ RPC function error, falling back to direct query:', rpcError.message);
         }
@@ -158,11 +158,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log('✅ Successfully fetched', personas?.length || 0, 'personas from direct query');
-      
+
       if (personas && personas.length > 0) {
         console.log('📋 Available tutors:', personas.map(p => `${p.name} (${p.type})`).join(', '));
       }
-      
+
       res.json(personas || []);
     } catch (error) {
       console.error('Error in personas endpoint:', error);
@@ -384,7 +384,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  
+
 
   // Scenario routes
   app.get('/api/scenarios', authenticateToken, async (req: AuthRequest, res) => {
@@ -409,10 +409,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate initial AI message
       const persona = await storage.getPersona(conversation.personaId!);
-      
+
       if (persona) {
         let introduction;
-        
+
         if (conversation.scenarioId) {
           // Scenario-based chat - generate scenario introduction
           const scenario = await storage.getScenario(conversation.scenarioId);
@@ -467,7 +467,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Handle UUID to integer mapping for userId comparison
       const userUUID = req.userId;
       const mappedUserId = uuidToInt(userUUID!);
-      
+
       if (conversation.userId !== mappedUserId) {
         return res.status(404).json({ message: 'Conversation not found' });
       }
@@ -607,22 +607,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const config = getSupabaseConfig();
       const { createClient } = await import('@supabase/supabase-js');
       const supabase = createClient(config.url, config.key);
-      
+
       console.log('🔍 Fetching vocabulary statistics from Supabase using RPC...');
-      
+
       // Try RPC function first
       try {
         console.log('🎯 Calling get_vocab_stats_by_level RPC function...');
         const { data, error } = await supabase.rpc('get_vocab_stats_by_level');
-        
+
         if (error) throw error;
-        
+
         if (data && Array.isArray(data) && data.length > 0) {
           console.log('✅ RPC function successful, data:', data);
-          
+
           // Initialize with zeros for all levels
           const stats = { N1: 0, N2: 0, N3: 0, N4: 0, N5: 0 };
-          
+
           // Update with actual data
           data.forEach(({ level, count }) => {
             if (level && ['N1', 'N2', 'N3', 'N4', 'N5'].includes(level)) {

@@ -14,8 +14,8 @@ export const getBaseUrl = () => {
 export const getSupabaseConfig = () => {
   if (isDevelopment) {
     return {
-      url: import.meta.env.VITE_SUPABASE_DEV_URL || 'https://gsnnydemkpllycgzmalv.supabase.co',
-      anonKey: import.meta.env.VITE_SUPABASE_DEV_ANON_KEY || '',
+      url: import.meta.env.VITE_SUPABASE_DEV_URL || 'https://oyawpeylvdqfkhysnjsq.supabase.co',
+      anonKey: import.meta.env.VITE_SUPABASE_DEV_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95YXdwZXlsdmRxZmtoeXNuanNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNDg5NzMsImV4cCI6MjA2NTcyNDk3M30.HxmDxm7QFTDCRUboGTGQIpXfnC7Tc4_-P6Z45QzmlM0',
       serviceKey: import.meta.env.VITE_SUPABASE_DEV_SERVICE_KEY || ''
     };
   } else {

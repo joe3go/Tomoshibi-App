@@ -4,10 +4,21 @@ import { getSupabaseConfig } from '../environment';
 
 const config = getSupabaseConfig();
 
-export const supabase = createClient(config.url, config.anonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
+// Singleton pattern to prevent multiple GoTrueClient instances
+let supabaseInstance: any = null;
+
+const createSupabaseClient = () => {
+  if (!supabaseInstance) {
+    console.log(`🔗 Creating Supabase client for: ${config.url} (Environment: ${import.meta.env.MODE})`);
+    supabaseInstance = createClient(config.url, config.anonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+      }
+    });
   }
-});
+  return supabaseInstance;
+};
+
+export const supabase = createSupabaseClient();
