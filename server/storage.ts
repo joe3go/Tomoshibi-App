@@ -315,15 +315,43 @@ export class DatabaseStorage implements IStorage {
     } as Conversation;
   }
 
-  async getUserConversations(userId: string): Promise<Conversation[]> {
+  async getUserConversations(userId: string | number): Promise<Conversation[]> {
+    // Convert UUID to integer if needed
+    const mappedUserId = typeof userId === 'string' ? this.uuidToInt(userId) : userId;
+    
     const { data, error } = await supabase
       .from('conversations')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', mappedUserId)
       .order('created_at', { ascending: false });
 
-    if (error) throw new Error(error.message);
-    return (data as Conversation[]) || [];
+    if (error) {
+      console.error('getUserConversations error:', error);
+      throw new Error(error.message);
+    }
+    
+    // Convert Supabase format to our Conversation format
+    return (data || []).map(item => ({
+      id: item.id,
+      userId: item.user_id,
+      personaId: item.persona_id,
+      scenarioId: item.scenario_id,
+      phase: item.phase,
+      status: item.status,
+      startedAt: item.created_at ? new Date(item.created_at) : null,
+      completedAt: item.completed_at ? new Date(item.completed_at) : null
+    }));
+  }
+
+  private uuidToInt(uuid: string): number {
+    // Simple deterministic hash function to convert UUID to positive integer
+    let hash = 0;
+    for (let i = 0; i < uuid.length; i++) {
+      const char = uuid.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash);
   }
 
   async updateConversation(id: number, updates: Partial<Conversation>): Promise<Conversation> {

@@ -11,6 +11,7 @@ import { generateAIResponse, generateScenarioIntroduction } from "./openai";
 import { insertUserSchema, insertConversationSchema, insertMessageSchema, usageLog } from "@shared/schema";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
+import { uuidToInt } from "./uuid-mapping";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -485,8 +486,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Get mapped user ID for UUID to integer conversion
       const userUUID = req.userId!;
-      const mappedUserId = await storage.getOrCreateUserMapping(userUUID);
-      const conversations = await storage.getUserConversations(mappedUserId);
+      const conversations = await storage.getUserConversations(userUUID);
       // Return all conversations - let frontend filter as needed
       res.json(conversations);
     } catch (error) {
