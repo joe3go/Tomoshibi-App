@@ -43,10 +43,7 @@ export default function ConjugationDemo() {
   ];
 
   const handleTrackSentence = async (sentence: string) => {
-    if (!user) {
-      alert('Please sign in to test the tracking system');
-      return;
-    }
+    // Authentication check temporarily disabled
 
     setIsTracking(true);
     try {
@@ -156,7 +153,7 @@ export default function ConjugationDemo() {
                     <Button
                       size="sm"
                       onClick={() => handleTrackSentence(sentence.content)}
-                      disabled={isTracking || !user}
+                      disabled={isTracking}
                       className="flex items-center gap-2"
                     >
                       <Play className="w-3 h-3" />
