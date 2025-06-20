@@ -374,7 +374,7 @@ export default function Dashboard() {
         <div className="space-y-6 mb-8">
           {/* Vocabulary Progress Rings - Horizontal scrollable strip */}
           <VocabProgressRings 
-            vocabData={vocabData} 
+            vocabData={vocabData as any} 
             compact={true}
             onNavigate={setLocation}
           />
@@ -383,7 +383,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Mini Vocab Usage Heatmap - takes 1/3 width on desktop */}
             <MiniVocabHeatmap 
-              vocabData={vocabData} 
+              vocabData={vocabData as any} 
               compact={true}
               className="lg:col-span-1"
             />
@@ -391,12 +391,12 @@ export default function Dashboard() {
             {/* JLPT Level Usage Comparison and Known vs Used Gap */}
             <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
               <JLPTLevelComparison 
-                vocabData={vocabData} 
+                vocabData={vocabData as any} 
                 compact={true}
               />
 
               <KnownVsUsedGap 
-                vocabData={vocabData} 
+                vocabData={vocabData as any} 
                 compact={true}
                 onNavigate={setLocation}
               />
@@ -405,7 +405,7 @@ export default function Dashboard() {
 
           {/* Word Spotlight Carousel - Full width */}
           <WordSpotlightCarousel 
-            vocabData={vocabData} 
+            vocabData={vocabData as any} 
             compact={true}
             onNavigate={setLocation}
           />
@@ -457,7 +457,7 @@ export default function Dashboard() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <img 
-                          src={aoiAvatar} 
+                          src="/avatars/aoi.svg" 
                           alt="Aoi" 
                           className="w-5 h-5 rounded-full"
                         />
@@ -468,7 +468,7 @@ export default function Dashboard() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <img 
-                          src={harukiAvatar} 
+                          src="/avatars/haruki.svg" 
                           alt="Haruki" 
                           className="w-5 h-5 rounded-full"
                         />
@@ -568,9 +568,7 @@ export default function Dashboard() {
                 )
                 .map((persona: any) => {
                   const getPersonaAvatarImage = (persona: any) => {
-                    if (persona.type === "teacher") return aoiAvatar; // Aoi is the female teacher
-                    if (persona.type === "friend") return harukiAvatar; // Haruki is the male friend
-                    return aoiAvatar; // Default fallback
+                    return persona.avatar_url || '/avatars/aoi.svg'; // Use database avatar URL or fallback
                   };
 
                   return (

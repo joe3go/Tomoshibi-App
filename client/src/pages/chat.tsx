@@ -16,8 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Toggle } from "@/components/ui/toggle";
 import { Languages } from "lucide-react";
 import { bind, unbind, toHiragana } from 'wanakana';
-import harukiAvatar from "@assets/harukiavatar_1750137453243.png";
-import aoiAvatar from "@assets/aoiavatar_1750137453242.png";
+// Avatar images are now served from /avatars/ directory as SVG files
 
 export default function Chat() {
   const [, params] = useRoute("/chat/:conversationId");
