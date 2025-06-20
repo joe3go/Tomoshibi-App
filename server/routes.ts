@@ -99,6 +99,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const serviceKey = process.env.VITE_SUPABASE_DEV_SERVICE_KEY;
       
       const { createClient } = await import('@supabase/supabase-js');
+      if (!serviceKey) {
+        console.error('❌ Missing Supabase service key');
+        return res.status(500).json({ message: 'Server configuration error' });
+      }
+      
       const supabase = createClient(supabaseUrl, serviceKey);
       
       console.log('🔍 Fetching personas from Supabase...');

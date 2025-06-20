@@ -8,8 +8,7 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Settings, LogOut, MessageCircle, User, Calendar, BookOpen, History, TrendingUp, Award, Target } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import harukiAvatar from "@assets/harukiavatar_1750137453243.png";
-import aoiAvatar from "@assets/aoiavatar_1750137453242.png";
+// Avatar images are now served from /avatars/ directory as SVG files
 
 // Import our reusable components
 import { EnhancedButton } from "@/components/EnhancedButton";
@@ -297,23 +296,19 @@ export default function Dashboard() {
                     className="group"
                   >
                     <div className="flex items-start space-x-3 mb-3">
-                      <div className="avatar flex-shrink-0">
-                        {persona?.name === 'Aoi' ? (
+                      <div className="avatar flex-shrink-0 w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20">
+                        {persona?.avatar_url ? (
                           <img 
-                            src={aoiAvatar} 
-                            alt="Aoi" 
-                            className="w-full h-full object-cover rounded-full"
-                          />
-                        ) : persona?.name === 'Haruki' ? (
-                          <img 
-                            src={harukiAvatar} 
-                            alt="Haruki" 
-                            className="w-full h-full object-cover rounded-full"
+                            src={persona.avatar_url} 
+                            alt={persona.name} 
+                            className="w-full h-full object-cover"
                           />
                         ) : (
-                          <span className="font-japanese">
-                            {persona?.type === "teacher" ? "先" : "友"}
-                          </span>
+                          <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                            <span className="font-japanese text-primary">
+                              {persona?.type === "teacher" ? "先" : "友"}
+                            </span>
+                          </div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
