@@ -1,11 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Environment-aware Supabase configuration for client
-const supabaseUrl = import.meta.env.NODE_ENV === 'production'
+const supabaseUrl = import.meta.env.PROD === 'true'
   ? import.meta.env.VITE_SUPABASE_PROD_URL || 'https://gsnnydemkpllycgzmalv.supabase.co'
   : import.meta.env.VITE_SUPABASE_DEV_URL || 'https://gsnnydemkpllycgzmalv.supabase.co';
 
-const supabaseKey = import.meta.env.NODE_ENV === 'production'
+const supabaseKey = import.meta.env.PROD === 'true'
   ? import.meta.env.VITE_SUPABASE_PROD_ANON_KEY
   : import.meta.env.VITE_SUPABASE_DEV_ANON_KEY;
 
