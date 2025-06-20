@@ -8,6 +8,26 @@ export async function createConversation(
   scenarioId: string | null,
   title: string
 ) {
+  console.log('🎯 createConversation called with:', { 
+    userId, 
+    personaId, 
+    scenarioId, 
+    title,
+    personaIdType: typeof personaId,
+    scenarioIdType: typeof scenarioId
+  });
+
+  // Validate UUID format
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  
+  if (!uuidRegex.test(personaId)) {
+    throw new Error(`Invalid persona ID format: ${personaId}`);
+  }
+
+  if (scenarioId && !uuidRegex.test(scenarioId)) {
+    throw new Error(`Invalid scenario ID format: ${scenarioId}`);
+  }
+
   const { data, error } = await supabase.rpc('create_conversation', {
     user_id: userId,
     persona_id: personaId,
@@ -15,7 +35,12 @@ export async function createConversation(
     title: title
   });
 
-  if (error) throw error;
+  if (error) {
+    console.error('❌ RPC create_conversation error:', error);
+    throw error;
+  }
+  
+  console.log('✅ RPC create_conversation success:', data);
   return data;
 }
 

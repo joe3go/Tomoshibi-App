@@ -55,12 +55,29 @@ export default function ScenarioSelection() {
   };
 
   const handleScenarioSelect = (scenarioId: string) => {
+    console.log('🎯 Scenario selection - persona ID:', personaId, 'scenario ID:', scenarioId);
+    console.log('🎯 ID types - persona:', typeof personaId, 'scenario:', typeof scenarioId);
+    
+    // Validate UUID format for persona
+    if (!personaId || typeof personaId !== 'string' || personaId.length < 32) {
+      console.error('❌ Invalid persona ID in scenario selection:', personaId);
+      return;
+    }
+    
     setLoadingScenario(scenarioId);
     createConversationMutation.mutate({ personaId, scenarioId });
   };
 
   const handleFreeChat = () => {
-    setLoadingScenario("free-chat"); // Use string identifier for free chat
+    console.log('🎯 Free chat - persona ID:', personaId, 'Type:', typeof personaId);
+    
+    // Validate UUID format for persona
+    if (!personaId || typeof personaId !== 'string' || personaId.length < 32) {
+      console.error('❌ Invalid persona ID in free chat:', personaId);
+      return;
+    }
+    
+    setLoadingScenario("free-chat");
     createConversationMutation.mutate({ personaId });
   };
 

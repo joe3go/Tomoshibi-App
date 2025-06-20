@@ -163,6 +163,19 @@ export default function Dashboard() {
         return;
       }
 
+      console.log('🎯 Starting new chat with persona ID:', personaId, 'Type:', typeof personaId);
+      
+      // Ensure we have a valid UUID
+      if (!personaId || typeof personaId !== 'string' || personaId.length < 32) {
+        console.error('❌ Invalid persona ID:', personaId);
+        toast({
+          title: "Error",
+          description: "Invalid tutor selected. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const title = `Chat with ${tutorName}`;
       createConversationMutation.mutate({ personaId, title });
     } catch (error) {

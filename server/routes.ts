@@ -400,7 +400,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Conversation routes
   app.post('/api/conversations', authenticateToken, async (req: AuthRequest, res) => {
     try {
-      console.log('🔄 Creating conversation with data:', req.body);
+      console.log('🔄 Creating conversation with raw body:', req.body);
       
       // Use direct Supabase client since we're working with UUIDs now
       const config = getSupabaseConfig();
@@ -410,26 +410,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { personaId, scenarioId } = req.body;
       const userId = req.userId;
 
+      console.log('🎯 Extracted values:', { 
+        personaId, 
+        scenarioId, 
+        userId,
+        personaIdType: typeof personaId,
+        scenarioIdType: typeof scenarioId,
+        userIdType: typeof userId
+      });
+
       if (!personaId) {
+        console.error('❌ Missing personaId');
         return res.status(400).json({ message: 'personaId is required' });
       }
 
+      // Validate UUID format
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      
+      if (!uuidRegex.test(personaId)) {
+        console.error('❌ Invalid persona UUID format:', personaId);
+        return res.status(400).json({ message: 'Invalid persona ID format' });
+      }
+
+      if (scenarioId && !uuidRegex.test(scenarioId)) {
+        console.error('❌ Invalid scenario UUID format:', scenarioId);
+        return res.status(400).json({ message: 'Invalid scenario ID format' });
+      }
+
+      console.log('✅ UUID validation passed');
+
       // Create conversation directly with Supabase
+      const insertData = {
+        user_id: userId,
+        persona_id: personaId,
+        scenario_id: scenarioId || null,
+        status: 'active'
+      };
+
+      console.log('📝 Inserting conversation data:', insertData);
+
       const { data: conversation, error } = await supabase
         .from('conversations')
-        .insert({
-          user_id: userId,
-          persona_id: personaId,
-          scenario_id: scenarioId || null,
-          status: 'active'
-        })
+        .insert(insertData)
         .select('*')
         .single();
 
       if (error) {
-        console.error('❌ Error creating conversation:', error);
+        console.error('❌ Supabase error creating conversation:', error);
+        console.error('❌ Error details:', { 
+          code: error.code, 
+          message: error.message, 
+          details: error.details,
+          hint: error.hint
+        });
         return res.status(400).json({ message: `Failed to create conversation: ${error.message}` });
       }
+
+      console.log('✅ Conversation created:', conversation);
 
       // Get persona for initial message
       const { data: persona } = await supabase
@@ -439,25 +476,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .single();
 
       if (persona) {
-        let introduction;
+        let introduction = `こんにちは！私は${persona.name}です。今日は何について話しましょうか？`;
 
-        if (scenarioId) {
-          // For now, use simple greeting - scenario-based intros can be added later
-          introduction = `こんにちは！私は${persona.name}です。今日は何について話しましょうか？`;
-        } else {
-          // Free chat mode - generate simple greeting
-          introduction = `こんにちは！私は${persona.name}です。今日は何について話しましょうか？`;
-        }
+        console.log('💬 Adding initial message:', introduction);
 
-        if (introduction) {
-          await supabase
-            .from('messages')
-            .insert({
-              conversation_id: conversation.id,
-              sender: 'ai',
-              content: introduction,
-            });
-        }
+        await supabase
+          .from('messages')
+          .insert({
+            conversation_id: conversation.id,
+            sender: 'ai',
+            content: introduction,
+          });
       }
 
       console.log('✅ Conversation created successfully:', conversation.id);

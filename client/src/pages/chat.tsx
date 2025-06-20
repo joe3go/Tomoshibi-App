@@ -337,12 +337,22 @@ export default function Chat() {
     );
   }
 
+  console.log('🔍 Chat page - conversation data:', {
+    conversationId: conversation?.id,
+    personaId: conversation?.persona_id,
+    scenarioId: conversation?.scenario_id,
+    personaIdType: typeof conversation?.persona_id,
+    scenarioIdType: typeof conversation?.scenario_id
+  });
+
   const persona = Array.isArray(personas)
     ? personas.find((p: any) => p.id === conversation?.persona_id)
     : null;
   const scenario = Array.isArray(scenarios)
     ? scenarios.find((s: any) => s.id === conversation?.scenario_id)
     : null;
+
+  console.log('🔍 Found persona:', persona?.name, 'Found scenario:', scenario?.title);
 
   return (
     <div className="chat-page-container">
