@@ -132,7 +132,7 @@ export default function Dashboard() {
     setLocation('/login');
   };
 
-  if (conversationsLoading || personasLoading) {
+  if (conversationsLoading || tutorsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full"></div>
@@ -336,7 +336,7 @@ export default function Dashboard() {
               {Array.isArray(conversations) && conversations.length > 0 ? (
                 <div className="conversations-list">
                   {conversations.slice(0, 3).map((conversation: any) => {
-                    const persona = personasArray.find((p: any) => p.id === conversation.persona_id);
+                    const persona = tutorsData.find((p: any) => p.id === conversation.persona_id);
                     return (
                       <div key={conversation.id} className="conversation-card">
                         <div className="conversation-info">
