@@ -8,8 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookOpen, TrendingUp, Clock, Filter, User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import harukiAvatar from "@assets/harukiavatar_1750137453243.png";
-import aoiAvatar from "@assets/aoiavatar_1750137453242.png";
+// Avatar images are now served from /avatars/ directory as SVG files
 
 interface VocabTrackerEntry {
   id: number;
@@ -301,7 +300,7 @@ export default function VocabTracker() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <img 
-                    src={aoiAvatar} 
+                    src="/avatars/aoi.svg" 
                     alt="Aoi" 
                     className="w-5 h-5 rounded-full"
                   />
@@ -312,7 +311,7 @@ export default function VocabTracker() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <img 
-                    src={harukiAvatar} 
+                    src="/avatars/haruki.svg" 
                     alt="Haruki" 
                     className="w-5 h-5 rounded-full"
                   />

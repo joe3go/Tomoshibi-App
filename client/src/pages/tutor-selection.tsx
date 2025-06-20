@@ -41,9 +41,7 @@ export default function TutorSelection() {
   }
 
   const getAvatarImage = (persona: any) => {
-    if (persona.type === "teacher") return aoiAvatar; // Aoi is the female teacher
-    if (persona.type === "friend") return harukiAvatar; // Haruki is the male friend
-    return aoiAvatar; // Default fallback
+    return persona.avatar_url || '/avatars/aoi.svg'; // Use database avatar URL or fallback
   };
 
   return (
