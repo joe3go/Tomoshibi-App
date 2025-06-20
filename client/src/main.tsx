@@ -10,6 +10,6 @@ createRoot(document.getElementById("root")!).render(
       <SupabaseAuthProvider>
 </SupabaseAuthProvider>
       </QueryClientProvider>
-    </Toaster>
-  </StrictMode>
+      <Toaster />
+    </StrictMode>
 );
