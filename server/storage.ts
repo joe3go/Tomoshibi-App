@@ -70,7 +70,7 @@ export interface IStorage {
   // Conversation operations
   createConversation(conversation: InsertConversation): Promise<Conversation>;
   getConversation(id: number): Promise<Conversation | undefined>;
-  getUserConversations(userId: number): Promise<Conversation[]>;
+  getUserConversations(userId: string): Promise<Conversation[]>;
   updateConversation(id: number, updates: Partial<Conversation>): Promise<Conversation>;
 
   // Message operations
@@ -242,44 +242,104 @@ export class DatabaseStorage implements IStorage {
 
   // Conversation operations
   async createConversation(conversation: InsertConversation): Promise<Conversation> {
-    const [conv] = await db.insert(conversations).values(conversation).returning();
-    return conv;
+    const { data, error } = await supabase
+      .from('conversations')
+      .insert({
+        user_id: conversation.userId,
+        persona_id: conversation.personaId,
+        scenario_id: conversation.scenarioId,
+        phase: conversation.phase || 'guided',
+        status: conversation.status || 'active'
+      })
+      .select()
+      .single();
+
+    if (error) throw new Error(`Failed to create conversation: ${error.message}`);
+    return data as Conversation;
   }
 
   async getConversation(id: number): Promise<Conversation | undefined> {
-    const [conversation] = await db.select().from(conversations).where(eq(conversations.id, id));
-    return conversation;
+    const { data, error } = await supabase
+      .from('conversations')
+      .select(`
+        id,
+        user_id,
+        persona_id,
+        scenario_id,
+        phase,
+        status,
+        started_at,
+        completed_at
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error || !data) return undefined;
+    
+    // Map database field names to expected field names
+    return {
+      id: data.id,
+      userId: data.user_id,
+      personaId: data.persona_id,
+      scenarioId: data.scenario_id,
+      phase: data.phase,
+      status: data.status,
+      startedAt: data.started_at,
+      completedAt: data.completed_at
+    } as Conversation;
   }
 
-  async getUserConversations(userId: number): Promise<Conversation[]> {
-    return await db
-      .select()
-      .from(conversations)
-      .where(eq(conversations.userId, userId))
-      .orderBy(desc(conversations.startedAt));
+  async getUserConversations(userId: string): Promise<Conversation[]> {
+    const { data, error } = await supabase
+      .from('conversations')
+      .select('*')
+      .eq('user_id', userId)
+      .order('started_at', { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return (data as Conversation[]) || [];
   }
 
   async updateConversation(id: number, updates: Partial<Conversation>): Promise<Conversation> {
-    const [conversation] = await db
-      .update(conversations)
-      .set(updates)
-      .where(eq(conversations.id, id))
-      .returning();
-    return conversation;
+    const { data, error } = await supabase
+      .from('conversations')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw new Error(`Failed to update conversation: ${error.message}`);
+    return data as Conversation;
   }
 
   // Message operations
   async createMessage(message: InsertMessage): Promise<Message> {
-    const [msg] = await db.insert(messages).values(message).returning();
-    return msg;
+    const { data, error } = await supabase
+      .from('messages')
+      .insert({
+        conversation_id: message.conversationId,
+        sender: message.sender,
+        content: message.content,
+        feedback: message.feedback,
+        vocab_used: message.vocabUsed,
+        grammar_used: message.grammarUsed
+      })
+      .select()
+      .single();
+
+    if (error) throw new Error(`Failed to create message: ${error.message}`);
+    return data as Message;
   }
 
   async getConversationMessages(conversationId: number): Promise<Message[]> {
-    return await db
-      .select()
-      .from(messages)
-      .where(eq(messages.conversationId, conversationId))
-      .orderBy(messages.timestamp);
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('conversation_id', conversationId)
+      .order('timestamp', { ascending: true });
+
+    if (error) throw new Error(error.message);
+    return (data as Message[]) || [];
   }
 
   // Vocabulary operations

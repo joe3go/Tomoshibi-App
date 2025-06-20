@@ -459,7 +459,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const conversation = await storage.getConversation(conversationId);
 
-      if (!conversation || conversation.userId !== req.userId) {
+      if (!conversation || conversation.user_id !== req.userId) {
         return res.status(404).json({ message: 'Conversation not found' });
       }
 
