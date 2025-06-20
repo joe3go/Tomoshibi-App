@@ -2,20 +2,14 @@
 import { createClient } from '@supabase/supabase-js';
 import * as schema from "@shared/schema";
 
-// Environment-aware Supabase configuration for backend
-const supabaseUrl = process.env.NODE_ENV === 'production'
-  ? 'https://oyawpeylvdqfkhysnjsq.supabase.co'
-  : 'https://gsnnydemkpllycgzmalv.supabase.co';
-
-const serviceKey = process.env.NODE_ENV === 'production'
-  ? process.env.VITE_SUPABASE_PROD_SERVICE_KEY
-  : process.env.VITE_SUPABASE_DEV_SERVICE_KEY;
+// Use consistent Supabase configuration from environment
+const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://oyawpeylvdqfkhysnjsq.supabase.co';
+const serviceKey = process.env.VITE_SUPABASE_ANON_KEY;
 
 console.log("🔗 Connecting to Supabase:", supabaseUrl, "(Environment:", process.env.NODE_ENV || 'development', ")");
 
 if (!supabaseUrl || !serviceKey) {
-  const envPrefix = process.env.NODE_ENV === 'production' ? 'PROD' : 'DEV';
-  throw new Error(`VITE_SUPABASE_${envPrefix}_SERVICE_KEY must be set. Did you forget to set your Supabase credentials in Secrets?`);
+  throw new Error(`VITE_SUPABASE_ANON_KEY must be set. Did you forget to set your Supabase credentials in Secrets?`);
 }
 
 export const supabase = createClient(supabaseUrl, serviceKey!);

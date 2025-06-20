@@ -13,7 +13,7 @@ import { db } from "./db";
 import { sql } from "drizzle-orm";
 import { uuidToInt } from "./uuid-mapping";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
 // Configure multer for file uploads
 const storage_multer = multer.memoryStorage();
