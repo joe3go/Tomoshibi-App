@@ -91,12 +91,15 @@ async function trackVocabularyFromMessage(userId: number, content: string, sourc
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Personas route
+  // Personas route - Remove authentication requirement for public tutor data
   app.get('/api/personas', async (req, res) => {
     try {
-      const config = getSupabaseConfig();
+      // Use direct Supabase configuration that works
+      const supabaseUrl = 'https://gsnnydemkpllycgzmalv.supabase.co';
+      const serviceKey = process.env.VITE_SUPABASE_DEV_SERVICE_KEY;
+      
       const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(config.url, config.key);
+      const supabase = createClient(supabaseUrl, serviceKey);
       
       console.log('🔍 Fetching personas from Supabase...');
       
@@ -117,36 +120,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('⚠️ RPC function not available, falling back to direct query...');
       }
 
-      // Fallback to direct table query
+      // Fallback to direct table query with explicit column selection
       const { data: personas, error } = await supabase
         .from('personas')
-        .select('*')
-        .order('id');
+        .select(`
+          id,
+          name,
+          type,
+          description,
+          personality,
+          speaking_style,
+          tone,
+          level,
+          origin,
+          quirks,
+          correction_style,
+          language_policy,
+          system_prompt_hint,
+          avatar_url,
+          created_at
+        `)
+        .order('id', { ascending: true });
 
       if (error) {
         console.error('❌ Error fetching personas:', error);
-        // Return default personas as final fallback
-        return res.json([
-          {
-            id: 1,
-            name: 'Aoi',
-            type: 'teacher',
-            description: 'A formal Japanese teacher who focuses on proper grammar, cultural context, and structured learning. Perfect for building strong foundations in Japanese.',
-            jlpt_level: 'N5',
-            avatar_url: null
-          },
-          {
-            id: 2,
-            name: 'Haruki',
-            type: 'friend',
-            description: 'A friendly Japanese tutor who emphasizes natural conversation flow, casual expressions, and practical communication. Great for building confidence in speaking.',
-            jlpt_level: 'N5',
-            avatar_url: null
-          }
-        ]);
+        return res.status(500).json({ 
+          message: 'Failed to fetch personas from database',
+          error: error.message 
+        });
       }
 
       console.log('✅ Successfully fetched', personas?.length || 0, 'personas from direct query');
+      
+      if (personas && personas.length > 0) {
+        console.log('📋 Available tutors:', personas.map(p => `${p.name} (${p.type})`).join(', '));
+      }
+      
       res.json(personas || []);
     } catch (error) {
       console.error('Error in personas endpoint:', error);
