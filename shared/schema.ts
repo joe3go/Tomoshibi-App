@@ -163,6 +163,8 @@ export const insertConversationSchema = createInsertSchema(conversations).omit({
   id: true,
   startedAt: true,
   completedAt: true,
+}).extend({
+  userId: z.string(), // Allow string UUIDs for Supabase
 });
 
 export const insertMessageSchema = createInsertSchema(messages).omit({

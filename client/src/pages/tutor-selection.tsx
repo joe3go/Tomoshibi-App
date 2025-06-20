@@ -111,17 +111,7 @@ export default function TutorSelection() {
           </p>
         </div>
 
-        {/* Debug Information */}
-        <div className="debug-info bg-gray-100 p-4 mb-4 rounded">
-          <h3>Debug Info:</h3>
-          <p>Loading: {isLoading ? 'Yes' : 'No'}</p>
-          <p>Error: {error ? JSON.stringify(error) : 'None'}</p>
-          <p>Personas Array: {Array.isArray(personas) ? 'Yes' : 'No'}</p>
-          <p>Personas Length: {Array.isArray(personas) ? personas.length : 0}</p>
-          <p>Personas Data: {JSON.stringify(personas)}</p>
-          <p>API URL: /api/personas</p>
-          <p>Token exists: {!!localStorage.getItem('token')}</p>
-        </div>
+
 
         <div className="tutor-selection-grid">
           {Array.isArray(personas) && personas.length > 0 ? (
