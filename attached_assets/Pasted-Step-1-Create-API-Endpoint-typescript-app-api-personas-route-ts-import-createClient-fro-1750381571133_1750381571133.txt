@@ -1,0 +1,92 @@
+Step 1: Create API Endpoint
+typescript
+
+// app/api/personas/route.ts
+import { createClient } from '@/utils/supabase/server';
+
+export async function GET() {
+  const supabase = createClient();
+
+  const { data: personas, error } = await supabase
+    .rpc('get_personas');
+
+  if (error) {
+    return Response.json(
+      { error: error.message },
+      { status: 500 }
+    );
+  }
+
+  if (!personas || personas.length === 0) {
+    return Response.json(
+      { message: 'No tutors found' },
+      { status: 404 }
+    );
+  }
+
+  return Response.json(personas);
+}
+Step 2: Frontend Fetching
+tsx
+
+// components/PersonaList.tsx
+import useSWR from 'swr';
+import TutorCard from './TutorCard';
+
+export default function PersonaList() {
+  const { data, error, isLoading } = useSWR(
+    '/api/personas',
+    url => fetch(url).then(res => res.json())
+  );
+
+  if (error) return <div>Failed to load tutors</div>;
+  if (isLoading) return <div>Loading tutors...</div>;
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {data?.map((tutor) => (
+        <TutorCard
+          key={tutor.id}
+          name={tutor.name}
+          description={tutor.description}
+          avatarUrl={tutor.avatar_url}
+        />
+      ))}
+    </div>
+  );
+}
+Step 3: Authentication Setup (Optional)
+If requiring auth for tutors endpoint:
+
+tsx
+
+// app/api/personas/route.ts
+import { createClient } from '@/utils/supabase/server';
+import { cookies } from 'next/headers';
+
+export async function GET() {
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+  
+  // Rest of the code remains the same...
+}
+Testing Flow
+
+Verify API Endpoint
+
+code
+
+curl http://localhost:3000/api/personas
+
+Check Sanity Filters
+
+sql
+
+-- Add sample data if needed
+INSERT INTO personas (name, type, description, avatar_url)
+VALUES (
+  'Akira Sensei', 
+  'tutor',
+  'Experienced JLPT instructor', 
+  'https://avatar.example.com/akira.jpg'
+);
