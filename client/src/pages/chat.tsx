@@ -28,6 +28,7 @@ import { supabase } from "@/lib/supabase/client";
 export default function Chat() {
   const [, params] = useRoute("/chat/:conversationId");
   const [, setLocation] = useLocation();
+  const { user, isLoading: authLoading, isAuthenticated, supabaseSession } = useAuth();
   const [message, setMessage] = useState("");
   const [romajiMode, setRomajiMode] = useState(false);
   const [showFurigana, setShowFurigana] = useState(() => {
@@ -42,6 +43,18 @@ export default function Chat() {
   const conversationId = params?.conversationId
     ? parseInt(params.conversationId)
     : 0;
+
+  // Redirect to login if not authenticated (only after loading is complete)
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to access the chat",
+        variant: "destructive",
+      });
+      setLocation('/login');
+    }
+  }, [authLoading, isAuthenticated, setLocation, toast]);
 
   const { data: conversationData, isLoading } = useQuery({
     queryKey: [`conversation-messages`, conversationId],
@@ -69,15 +82,8 @@ export default function Chat() {
 
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
-      // Check session first
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error('Session error:', sessionError);
-        throw new Error("Authentication session error");
-      }
-      
-      if (!session) {
+      // Check session from auth hook
+      if (!supabaseSession) {
         throw new Error("No active session found. Please log in again.");
       }
 
@@ -172,10 +178,8 @@ export default function Chat() {
 
   const completeConversationMutation = useMutation({
     mutationFn: async () => {
-      // Check session first
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error || !session) {
+      // Check session from auth hook
+      if (!supabaseSession) {
         throw new Error("No active session found. Please log in again.");
       }
 
@@ -251,6 +255,25 @@ export default function Chat() {
   const getAvatarImage = (persona: any) => {
     return persona?.avatar_url || '/avatars/aoi.png'; // Use database avatar URL or fallback
   };
+
+  // Show loading while auth is being determined
+  if (authLoading) {
+    return (
+      <div className="chat-loading-container">
+        <div className="chat-loading-card">
+          <div className="chat-loading-content">
+            <div className="chat-loading-spinner"></div>
+            <span className="chat-loading-text">Authenticating...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
 
   if (isLoading) {
     return (

@@ -49,7 +49,7 @@ const formatDuration = (minutes: number) => {
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading, isAuthenticated, supabaseSession } = useAuth();
   const [tutorsData, setTutorsData] = useState<any[]>([]);
   const [tutorsLoading, setTutorsLoading] = useState(true);
   const { toast } = useToast();
@@ -91,9 +91,8 @@ export default function Dashboard() {
     queryKey: ["vocab-stats", (user as any)?.id],
     queryFn: async () => {
       try {
-        // Check session first
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
+        // Check session from auth hook
+        if (!supabaseSession) {
           console.warn('No active session for vocab stats');
           return null;
         }
@@ -106,21 +105,14 @@ export default function Dashboard() {
         return null;
       }
     },
-    enabled: !!user,
+    enabled: !!user && !!supabaseSession,
   });
 
   // Create conversation mutation using Supabase function
   const createConversationMutation = useMutation({
     mutationFn: async ({ personaId, title }: { personaId: number; title: string }) => {
-      // Check session first
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error('Session error:', sessionError);
-        throw new Error("Authentication session error");
-      }
-      
-      if (!session) {
+      // Check session from auth hook
+      if (!supabaseSession) {
         throw new Error("No active session found. Please log in again.");
       }
 
@@ -159,10 +151,8 @@ export default function Dashboard() {
   // Handle tutor selection for new chat using Supabase function
   const handleStartNewChat = async (personaId: number, tutorName: string) => {
     try {
-      // Check session before starting chat
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error || !session) {
+      // Check session from auth hook
+      if (!supabaseSession) {
         toast({
           title: "Authentication Required",
           description: "Please log in to start a conversation",
@@ -197,6 +187,32 @@ export default function Dashboard() {
     localStorage.removeItem('token');
     setLocation('/login');
   };
+
+  // Redirect to login if not authenticated (only after loading is complete)
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      setLocation('/login');
+    }
+  }, [authLoading, isAuthenticated, setLocation]);
+
+  // Show loading while auth is being determined
+  if (authLoading) {
+    return (
+      <div className="dashboard-loading-container">
+        <div className="dashboard-loading-card">
+          <div className="dashboard-loading-content">
+            <div className="dashboard-loading-spinner"></div>
+            <span className="dashboard-loading-text">Loading dashboard...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
 
   
 
