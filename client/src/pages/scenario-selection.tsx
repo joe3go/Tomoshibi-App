@@ -65,9 +65,7 @@ export default function ScenarioSelection() {
   };
 
   const getAvatarImage = (persona: any) => {
-    if (persona?.type === 'teacher') return harukiAvatar;
-    if (persona?.type === 'friend') return aoiAvatar;
-    return "";
+    return persona?.avatar_url || '/avatars/aoi.png';
   };
 
   if (isLoading) {

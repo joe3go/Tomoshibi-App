@@ -12,8 +12,7 @@ import { ScenarioProgressManager } from "@/lib/scenario-learning/progress-manage
 import { Scenario } from "../../../shared/scenario-types";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import harukiAvatar from "@assets/harukiavatar_1750137453243.png";
-import aoiAvatar from "@assets/aoiavatar_1750137453242.png";
+// Avatar images are now served from /avatars/ directory as PNG files
 
 type ViewMode = 'selection' | 'tutor-selection' | 'practice' | 'completion';
 
@@ -87,9 +86,7 @@ export default function EnhancedScenarioBrowse() {
   };
 
   const getAvatarImage = (persona: any) => {
-    if (persona.type === "teacher") return aoiAvatar;
-    if (persona.type === "friend") return harukiAvatar;
-    return aoiAvatar;
+    return persona?.avatar_url || '/avatars/aoi.png';
   };
 
   const startTraditionalConversation = (personaId: number) => {

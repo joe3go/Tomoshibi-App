@@ -8,8 +8,7 @@ import { useLocation } from "wouter";
 import { ArrowLeft, MessageCircle, Coffee, ShoppingCart, Users, Briefcase, MapPin, Heart, Camera, Utensils } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import harukiAvatar from "@assets/harukiavatar_1750137453243.png";
-import aoiAvatar from "@assets/aoiavatar_1750137453242.png";
+// Avatar images are now served from /avatars/ directory as PNG files
 
 export default function ScenarioBrowse() {
   const [, setLocation] = useLocation();
@@ -132,7 +131,7 @@ export default function ScenarioBrowse() {
 
           <div className="tutor-selection-grid">
             {Array.isArray(personas) && personas.map((persona: any) => {
-              const avatar = persona.name === 'Aoi' ? aoiAvatar : harukiAvatar;
+              const avatar = persona.avatar_url || '/avatars/aoi.png';
               
               return (
                 <Card key={persona.id} className="tutor-selection-card">
