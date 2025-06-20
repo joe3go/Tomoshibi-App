@@ -113,6 +113,22 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### June 20, 2025 - Chat System Fully Operational with Dual Database Setup
+- **Successfully resolved all chat functionality issues**:
+  - Fixed UUID to integer mapping for database compatibility
+  - Resolved authentication token issues with correct JWT secret configuration
+  - Updated database schema queries to use proper column names (created_at vs timestamp)
+  - All conversation creation and access now working properly
+- **Restored dynamic dual database configuration**:
+  - Development: Uses VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+  - Production: Uses VITE_SUPABASE_PROD_URL and VITE_SUPABASE_PROD_ANON_KEY
+  - Automatic environment-based switching via NODE_ENV
+- **Complete chat system functionality**:
+  - All 4 tutors (Aoi, Haruki, Yuki, Ren) visible on dashboard
+  - Working "Start Chat" buttons for conversation creation
+  - Individual conversation access and message retrieval working
+  - Proper user authentication and authorization for chat access
+
 ### June 17, 2025 - Complete Supabase Database Migration with Full JLPT Vocabulary
 - **Successfully completed comprehensive Supabase migration**:
   - Hybrid architecture: Neon backend for core operations, Supabase frontend for enhanced features
