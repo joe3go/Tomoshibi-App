@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { VocabPopup } from './VocabPopup';
 import { useVocabDictionary } from '@/hooks/useVocabDictionary';
-import { vocabularyTracker } from '@/lib/vocabulary-tracker';
+// Vocabulary tracking temporarily disabled
 
 interface MessageWithVocabProps {
   content: string;
@@ -71,7 +71,7 @@ export function MessageWithVocab({ content, className, children }: MessageWithVo
   useEffect(() => {
     if (hasJapanese(content)) {
       // Track vocabulary usage with conjugation normalization
-      vocabularyTracker.trackUsageFromText(content, 'chat');
+      // Vocabulary tracking temporarily disabled
     }
   }, [content]);
 
