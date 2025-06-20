@@ -22,13 +22,14 @@ import {
   getCurrentUser 
 } from "@/lib/supabase-functions";
 import { supabase } from "@/lib/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/context/SupabaseAuthContext";
 // Avatar images are now served from /avatars/ directory as SVG files
 
 export default function Chat() {
   const [, params] = useRoute("/chat/:conversationId");
   const [, setLocation] = useLocation();
-  const { user, isLoading: authLoading, isAuthenticated, supabaseSession, session } = useAuth();
+  const { user, loading: authLoading, session } = useAuth();
+  const isAuthenticated = !!session;
   const [message, setMessage] = useState("");
   const [romajiMode, setRomajiMode] = useState(false);
   const [showFurigana, setShowFurigana] = useState(() => {
