@@ -42,10 +42,14 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
     getInitialSession();
 
     // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change:', event, session);
       if (mounted) {
         setSession(session);
-        setLoading(false);
+        // Only set loading to false after initial session check
+        if (loading) {
+          setLoading(false);
+        }
       }
     });
 
@@ -53,7 +57,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       mounted = false;
       subscription?.unsubscribe();
     };
-  }, []);
+  }, []); // Remove loading dependency to prevent infinite loop
 
   return (
     <AuthContext.Provider value={{ 
