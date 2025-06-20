@@ -465,7 +465,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Handle UUID to integer mapping for userId comparison
       const userUUID = req.userId;
-      const mappedUserId = await getMappedUserId(userUUID!);
+      const mappedUserId = uuidToInt(userUUID!);
       
       if (conversation.userId !== mappedUserId) {
         console.log(`Access denied: conversation.userId=${conversation.userId}, mappedUserId=${mappedUserId}, userUUID=${userUUID}`);
@@ -483,7 +483,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/conversations', authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const conversations = await storage.getUserConversations(req.userId!);
+      // Get mapped user ID for UUID to integer conversion
+      const userUUID = req.userId!;
+      const mappedUserId = await storage.getOrCreateUserMapping(userUUID);
+      const conversations = await storage.getUserConversations(mappedUserId);
       // Return all conversations - let frontend filter as needed
       res.json(conversations);
     } catch (error) {
