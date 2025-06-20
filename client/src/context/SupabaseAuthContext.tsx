@@ -50,21 +50,28 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         }
 
         // Set up auth state listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        authSubscription = supabase.auth.onAuthStateChange((event, session) => {
           console.log('🔄 Auth state change:', {
             event,
             hasSession: !!session,
             userEmail: session?.user?.email,
             mounted: mountedRef.current,
+            currentLoading: loading,
+            timestamp: new Date().toISOString()
           });
 
-          if (mountedRef.current) {
-            setSession(session);
-            if (loading) {
-              setLoading(false);
-            }
-          } else {
+          if (!mountedRef.current) {
             console.log('❌ Component unmounted, ignoring session');
+            return;
+          }
+
+          // Update session for all events
+          setSession(session);
+
+          // Only set loading to false after we've processed the initial session or any auth change
+          if (loading) {
+            console.log('🔄 Setting loading to false from auth state change');
+            setLoading(false);
           }
         });
 
