@@ -2,18 +2,20 @@
 import { createClient } from '@supabase/supabase-js';
 import { getSupabaseConfig, isDevelopment } from '@/lib/environment';
 
-// Enhanced singleton with proper cleanup
-let supabaseClient: any = null;
+// Singleton pattern with global reference
+declare global {
+  var __supabase_client: any;
+}
+
+let supabaseClient: any;
 
 // Get environment-specific configuration
 const config = getSupabaseConfig();
 
-function createSupabaseClient() {
-  if (supabaseClient) {
-    console.log('🔄 Using existing Supabase client instance');
-    return supabaseClient;
-  }
-
+if (typeof globalThis !== 'undefined' && globalThis.__supabase_client) {
+  console.log('🔄 Using existing Supabase client instance');
+  supabaseClient = globalThis.__supabase_client;
+} else {
   console.log('🔗 Creating new Supabase client for:', config.url, '(Environment:', isDevelopment ? 'development' : 'production' + ')');
   
   supabaseClient = createClient(config.url, config.anonKey, {
@@ -36,7 +38,10 @@ function createSupabaseClient() {
     }
   });
 
-  return supabaseClient;
+  // Store globally to prevent multiple instances
+  if (typeof globalThis !== 'undefined') {
+    globalThis.__supabase_client = supabaseClient;
+  }
 }
 
-export const supabase = createSupabaseClient();
+export const supabase = supabaseClient;
