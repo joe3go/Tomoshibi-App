@@ -46,14 +46,21 @@ export default function Chat() {
     queryKey: [`conversation-messages`, conversationId],
     queryFn: async () => {
       if (!conversationId) return null;
-      const messages = await getConversationMessages(conversationId);
-      // Get conversation details from existing API for now
-      const conversationResponse = await apiRequest("GET", `/api/conversations/${conversationId}`);
-      const conversation = await conversationResponse.json();
-      return {
-        ...conversation,
-        messages: messages || []
-      };
+      try {
+        const messages = await getConversationMessages(conversationId);
+        // Get conversation details from existing API for now
+        const conversationResponse = await apiRequest("GET", `/api/conversations/${conversationId}`);
+        const conversation = await conversationResponse.json();
+        return {
+          ...conversation,
+          messages: messages || []
+        };
+      } catch (error) {
+        console.error('Error fetching conversation:', error);
+        // Fallback to existing API
+        const conversationResponse = await apiRequest("GET", `/api/conversations/${conversationId}`);
+        return await conversationResponse.json();
+      }
     },
     enabled: !!conversationId,
   });
@@ -68,66 +75,83 @@ export default function Chat() {
 
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
-      const user = await getCurrentUser();
-      if (!user) throw new Error("User not authenticated");
+      try {
+        const user = await getCurrentUser();
+        if (!user) throw new Error("User not authenticated");
 
-      // Optimistically add user message to UI
-      const optimisticUserMessage = {
-        id: Date.now(), // Temporary ID
-        content,
-        sender: 'user',
-        created_at: new Date().toISOString(),
-        vocab_used: [],
-        grammar_used: [],
-        english: null,
-        feedback: null,
-        suggestions: null
-      };
+        // Optimistically add user message to UI
+        const optimisticUserMessage = {
+          id: Date.now(), // Temporary ID
+          content,
+          sender: 'user',
+          created_at: new Date().toISOString(),
+          vocab_used: [],
+          grammar_used: [],
+          english: null,
+          feedback: null,
+          suggestions: null
+        };
 
-      queryClient.setQueryData(
-        [`conversation-messages`, conversationId],
-        (oldData: any) => ({
-          ...oldData,
-          messages: [...(oldData?.messages || []), optimisticUserMessage],
-        }),
-      );
+        queryClient.setQueryData(
+          [`conversation-messages`, conversationId],
+          (oldData: any) => ({
+            ...oldData,
+            messages: [...(oldData?.messages || []), optimisticUserMessage],
+          }),
+        );
 
-      // Add user message via Supabase function
-      await addMessage(conversationId, 'user', content);
+        // Try Supabase functions first, fallback to existing API
+        try {
+          // Add user message via Supabase function
+          await addMessage(conversationId, 'user', content);
 
-      // Get AI response from existing endpoint
-      const aiResponse = await apiRequest(
-        "POST",
-        `/api/chat/secure`,
-        {
-          conversationId,
-          message: content,
-        },
-      );
-      const aiData = await aiResponse.json();
+          // Get AI response from existing endpoint
+          const aiResponse = await apiRequest(
+            "POST",
+            `/api/chat/secure`,
+            {
+              conversationId,
+              message: content,
+            },
+          );
+          const aiData = await aiResponse.json();
 
-      // Add AI message via Supabase function
-      await addMessage(
-        conversationId,
-        'ai',
-        aiData.content,
-        aiData.english,
-        aiData.feedback,
-        aiData.suggestions,
-        aiData.vocabUsed,
-        aiData.grammarUsed
-      );
+          // Add AI message via Supabase function
+          await addMessage(
+            conversationId,
+            'ai',
+            aiData.content,
+            aiData.english,
+            aiData.feedback,
+            aiData.suggestions,
+            aiData.vocabUsed,
+            aiData.grammarUsed
+          );
 
-      // Refresh messages from Supabase
-      return await getConversationMessages(conversationId);
+          // Refresh messages from Supabase
+          return await getConversationMessages(conversationId);
+        } catch (supabaseError) {
+          console.error('Supabase functions error, falling back to API:', supabaseError);
+          // Fallback to existing API
+          const response = await apiRequest(
+            "POST",
+            `/api/conversations/${conversationId}/messages`,
+            { content },
+          );
+          return await response.json();
+        }
+      } catch (error) {
+        console.error('Send message error:', error);
+        throw error;
+      }
     },
     onSuccess: (messages) => {
-      // Update with fresh messages from Supabase
+      // Update with fresh messages
       queryClient.setQueryData(
         [`conversation-messages`, conversationId],
         (oldData: any) => ({
           ...oldData,
-          messages: messages || [],
+          messages: Array.isArray(messages) ? messages : messages?.messages || [],
         }),
       );
       setMessage("");
