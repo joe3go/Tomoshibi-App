@@ -18,7 +18,7 @@ export default function Login() {
   const { toast } = useToast();
   const { session, loading: authLoading, user } = useAuth();
   const isAuthenticated = !!session;
-  
+
   // Debug refs and state
   const renderCount = useRef(0);
   const authStateChanges = useRef(0);
@@ -37,7 +37,7 @@ export default function Login() {
   useEffect(() => {
     renderCount.current += 1;
     authStateChanges.current += 1;
-    
+
     console.log('🔄 Login Page Render:', {
       renderCount: renderCount.current,
       authLoading,
@@ -47,7 +47,7 @@ export default function Login() {
       userEmail: user?.email,
       timestamp: new Date().toISOString()
     });
-    
+
     setDebugInfo({
       renderCount: renderCount.current,
       authLoading,
@@ -60,24 +60,18 @@ export default function Login() {
     });
   }, [authLoading, isAuthenticated, session, user]);
 
-  // Redirect if already authenticated
+  // Redirect if authenticated (only after loading completes)
   useEffect(() => {
-    console.log('🔀 Login Redirect Check:', {
-      authLoading,
-      isAuthenticated,
-      willRedirect: !authLoading && isAuthenticated
-    });
-    
-    if (!authLoading && isAuthenticated) {
-      console.log('🚀 Redirecting to dashboard...');
+    if (!authLoading && !!session) {
+      console.log('✅ User authenticated, redirecting to dashboard');
       setLocation('/dashboard');
     }
-  }, [isAuthenticated, authLoading, setLocation]);
+  }, [authLoading, session, setLocation]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     console.log('🔐 Login attempt started:', {
       isLogin,
       email,
@@ -87,7 +81,7 @@ export default function Login() {
     try {
       if (isLogin) {
         console.log('📧 Attempting login with email/password...');
-        
+
         // Login with Supabase
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
@@ -122,7 +116,7 @@ export default function Login() {
         }
       } else {
         console.log('📝 Attempting registration...');
-        
+
         // Register with Supabase
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -268,7 +262,7 @@ export default function Login() {
               >
                 {isLoading ? "Loading..." : (isLogin ? "Sign In" : "Create Account")}
               </Button>
-              
+
               {/* Debug info in development */}
               {process.env.NODE_ENV === 'development' && (
                 <div className="mt-4 bg-gray-100 p-3 rounded text-xs space-y-1">
