@@ -439,21 +439,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('✅ UUID validation passed');
 
-      // Create conversation directly with Supabase
-      const insertData = {
-        user_id: userId,
-        persona_id: personaId,
-        scenario_id: scenarioId || null,
-        status: 'active'
-      };
-
-      console.log('📝 Inserting conversation data:', insertData);
-
+      // Create conversation directly with Supabase using RPC function
       const { data: conversation, error } = await supabase
-        .from('conversations')
-        .insert(insertData)
-        .select('*')
-        .single();
+        .rpc('create_conversation', {
+          user_id: userId,
+          persona_id: personaId, // This should be a UUID string
+          scenario_id: scenarioId || null,
+          title: 'New Conversation'
+        });
 
       if (error) {
         console.error('❌ Supabase error creating conversation:', error);

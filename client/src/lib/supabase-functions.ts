@@ -28,20 +28,41 @@ export async function createConversation(
     throw new Error(`Invalid scenario ID format: ${scenarioId}`);
   }
 
-  const { data, error } = await supabase.rpc('create_conversation', {
-    user_id: userId,
-    persona_id: personaId,
-    scenario_id: scenarioId,
-    title: title
-  });
+  // Create conversation directly using table insert instead of RPC
+  const { data: conversation, error } = await supabase
+    .from('conversations')
+    .insert({
+      user_id: userId,
+      persona_id: personaId,
+      scenario_id: scenarioId,
+      status: 'active',
+      title: title
+    })
+    .select('*')
+    .single();
 
   if (error) {
-    console.error('❌ RPC create_conversation error:', error);
+    console.error('❌ Error creating conversation:', error);
     throw error;
   }
+
+  // Add initial AI message
+  if (conversation) {
+    const { error: messageError } = await supabase
+      .from('messages')
+      .insert({
+        conversation_id: conversation.id,
+        sender: 'ai',
+        content: 'こんにちは！今日は何について話しましょうか？'
+      });
+
+    if (messageError) {
+      console.warn('Failed to add initial message:', messageError);
+    }
+  }
   
-  console.log('✅ RPC create_conversation success:', data);
-  return data;
+  console.log('✅ Conversation created successfully:', conversation);
+  return conversation.id;
 }
 
 export async function addMessage(
