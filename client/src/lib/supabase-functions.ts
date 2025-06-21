@@ -5,64 +5,60 @@ import { supabase } from '@/lib/supabase/client';
 export async function createConversation(
   userId: string,
   personaId: string,
-  scenarioId: string | null,
-  title: string
-) {
-  console.log('🎯 createConversation called with:', { 
-    userId, 
-    personaId, 
-    scenarioId, 
-    title,
-    personaIdType: typeof personaId,
-    scenarioIdType: typeof scenarioId
-  });
+  scenarioId: string | null = null,
+  title: string = 'New Conversation'
+): Promise<string> {
+  try {
+    console.log('🔄 Creating conversation in Supabase:', { userId, personaId, scenarioId, title });
 
-  // Validate UUID format
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  
-  if (!uuidRegex.test(personaId)) {
-    throw new Error(`Invalid persona ID format: ${personaId}`);
-  }
+    const { data, error } = await supabase
+      .from('conversations')
+      .insert({
+        user_id: userId,
+        persona_id: personaId,
+        scenario_id: scenarioId,
+        title,
+        status: 'active'
+      })
+      .select('id')
+      .single();
 
-  if (scenarioId && !uuidRegex.test(scenarioId)) {
-    throw new Error(`Invalid scenario ID format: ${scenarioId}`);
-  }
+    if (error) {
+      console.error('❌ Supabase conversation creation error:', error);
+      throw error;
+    }
 
-  // Create conversation directly using table insert instead of RPC
-  const { data: conversation, error } = await supabase
-    .from('conversations')
-    .insert({
-      user_id: userId,
-      persona_id: personaId,
-      scenario_id: scenarioId,
-      status: 'active',
-      title: title
-    })
-    .select('*')
-    .single();
+    console.log('✅ Conversation created with ID:', data.id);
 
-  if (error) {
-    console.error('❌ Error creating conversation:', error);
+    // Add initial greeting from persona
+    const { data: persona } = await supabase
+      .from('personas')
+      .select('name, system_prompt_hint')
+      .eq('id', personaId)
+      .single();
+
+    if (persona) {
+      const greeting = `こんにちは！私は${persona.name}です。今日は何について話しましょうか？`;
+
+      console.log('💬 Adding initial greeting:', greeting);
+      const { error: messageError } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: data.id,
+          sender: 'ai',
+          content: greeting
+        });
+
+      if (messageError) {
+        console.error('⚠️ Failed to add initial message:', messageError);
+      }
+    }
+
+    return data.id;
+  } catch (error) {
+    console.error('❌ Failed to create conversation:', error);
     throw error;
   }
-
-  // Add initial AI message
-  if (conversation) {
-    const { error: messageError } = await supabase
-      .from('messages')
-      .insert({
-        conversation_id: conversation.id,
-        sender: 'ai',
-        content: 'こんにちは！今日は何について話しましょうか？'
-      });
-
-    if (messageError) {
-      console.warn('Failed to add initial message:', messageError);
-    }
-  }
-  
-  console.log('✅ Conversation created successfully:', conversation);
-  return conversation.id;
 }
 
 export async function addMessage(

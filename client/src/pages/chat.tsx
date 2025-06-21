@@ -41,9 +41,7 @@ export default function Chat() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
 
-  const conversationId = params?.conversationId
-    ? parseInt(params.conversationId)
-    : 0;
+  const conversationId = params?.conversationId || null;
 
   // Redirect to login if not authenticated (only after loading is complete)
   useEffect(() => {
@@ -61,14 +59,34 @@ export default function Chat() {
     queryKey: [`conversation-messages`, conversationId],
     queryFn: async () => {
       if (!conversationId) return null;
-      const messages = await getConversationMessages(conversationId);
-      // Get conversation details from existing API for metadata
-      const conversationResponse = await apiRequest("GET", `/api/conversations/${conversationId}`);
-      const conversation = await conversationResponse.json();
-      return {
-        ...conversation,
-        messages: messages || []
-      };
+      
+      console.log('🔍 Fetching conversation data for ID:', conversationId, 'Type:', typeof conversationId);
+      
+      try {
+        // Get conversation details first
+        const conversationResponse = await apiRequest("GET", `/api/conversations/${conversationId}`);
+        
+        if (!conversationResponse.ok) {
+          const errorText = await conversationResponse.text();
+          console.error('❌ Conversation API error:', conversationResponse.status, errorText);
+          throw new Error(`Conversation not found: ${conversationResponse.status}`);
+        }
+        
+        const conversation = await conversationResponse.json();
+        console.log('✅ Conversation found:', conversation);
+        
+        // Get messages
+        const messages = await getConversationMessages(conversationId);
+        console.log('✅ Messages loaded:', messages?.length || 0);
+        
+        return {
+          ...conversation,
+          messages: messages || []
+        };
+      } catch (error) {
+        console.error('❌ Failed to load conversation:', error);
+        throw error;
+      }
     },
     enabled: !!conversationId,
   });
@@ -112,6 +130,8 @@ export default function Chat() {
         }),
       );
 
+      console.log('📤 Sending message to conversation:', conversationId, 'Type:', typeof conversationId);
+      
       // Add user message via Supabase function
       await addMessage(conversationId, 'user', content);
 
@@ -124,6 +144,13 @@ export default function Chat() {
           message: content,
         },
       );
+      
+      if (!aiResponse.ok) {
+        const errorText = await aiResponse.text();
+        console.error('❌ AI response error:', aiResponse.status, errorText);
+        throw new Error(`Failed to get AI response: ${aiResponse.status}`);
+      }
+      
       const aiData = await aiResponse.json();
 
       // Add AI message via Supabase function
@@ -184,6 +211,7 @@ export default function Chat() {
         throw new Error("No active session found. Please log in again.");
       }
 
+      console.log('🏁 Completing conversation:', conversationId);
       return await completeConversation(conversationId);
     },
     onSuccess: () => {

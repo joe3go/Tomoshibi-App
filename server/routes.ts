@@ -785,15 +785,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // New secure chat endpoint using dynamic prompts
   app.post('/api/chat/secure', authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const { tutorId, message, topic = 'general conversation', prefersEnglish = false } = req.body;
+      const { tutorId, message, topic = 'general conversation', prefersEnglish = false, conversationId } = req.body;
       const userId = req.userId!;
 
-      if (!tutorId || !message) {
-        return res.status(400).json({ message: 'Missing required fields: tutorId, message' });
+      console.log('🤖 Chat secure request:', { tutorId, conversationId, messageLength: message?.length });
+
+      if (!message) {
+        return res.status(400).json({ message: 'Missing required field: message' });
       }
 
       // Get user info for context
-      const { supabase } = await import('./db');
+      const config = getSupabaseConfig();
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(config.url, config.serviceKey);
+      
       const { data: user } = await supabase
         .from('users')
         .select('display_name')
@@ -802,15 +807,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const username = user?.display_name || 'Student';
 
-      // Get recent conversation history (last 10 messages)
-      const { data: recentMessages } = await supabase
-        .from('messages')
-        .select('sender, content')
-        .eq('conversation_id', req.body.conversationId || 0)
-        .order('created_at', { ascending: false })
-        .limit(10);
+      // Get recent conversation history (last 10 messages) - handle both UUID and integer IDs
+      let recentMessages = [];
+      if (conversationId) {
+        const { data } = await supabase
+          .from('messages')
+          .select('sender, content')
+          .eq('conversation_id', conversationId)
+          .order('created_at', { ascending: false })
+          .limit(10);
+        recentMessages = data || [];
+      }
 
-      const conversationHistory = (recentMessages || [])
+      const conversationHistory = recentMessages
         .reverse()
         .map((msg: any) => ({
           role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
@@ -820,7 +829,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate secure AI response using dynamic prompt
       const { generateSecureAIResponse } = await import('./openai');
       const aiResponse = await generateSecureAIResponse(
-        parseInt(tutorId),
+        tutorId ? parseInt(tutorId) : 1, // Default to persona 1 if no tutorId
         userId,
         username,
         message,
@@ -831,12 +840,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({
         content: aiResponse.content,
+        english: aiResponse.english,
+        feedback: aiResponse.feedback,
+        suggestions: aiResponse.suggestions,
+        vocabUsed: aiResponse.vocabUsed || [],
+        grammarUsed: aiResponse.grammarUsed || [],
         tutorId,
         timestamp: new Date().toISOString()
       });
 
     } catch (error) {
-      console.error('Secure chat error:', error);
+      console.error('❌ Secure chat error:', error);
       res.status(500).json({ message: 'Failed to generate AI response' });
     }
   });

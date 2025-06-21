@@ -126,12 +126,17 @@ export default function Dashboard() {
         throw new Error("User not authenticated");
       }
 
-      return await createConversation(user.id, personaId, null, title);
+      console.log('🎯 Creating conversation with persona:', personaId, 'title:', title);
+      const result = await createConversation(user.id, personaId, null, title);
+      console.log('✅ Conversation created with ID:', result, 'Type:', typeof result);
+      return result;
     },
     onSuccess: (conversationId) => {
+      console.log('🚀 Navigating to conversation:', conversationId);
       setLocation(`/chat/${conversationId}`);
     },
     onError: (error) => {
+      console.error('❌ Conversation creation failed:', error);
       toast({
         title: "Failed to start conversation",
         description: error.message,
@@ -189,7 +194,8 @@ export default function Dashboard() {
   };
 
   // Handle resume chat
-  const handleResumeChat = (conversationId: number) => {
+  const handleResumeChat = (conversationId: string | number) => {
+    console.log('🔄 Resuming chat with conversation ID:', conversationId, 'Type:', typeof conversationId);
     setLocation(`/chat/${conversationId}`);
   };
 
