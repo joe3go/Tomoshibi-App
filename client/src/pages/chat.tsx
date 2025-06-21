@@ -55,38 +55,30 @@ export default function Chat() {
     }
   }, [authLoading, session, setLocation, toast]);
 
-  const { data: conversationData, isLoading } = useQuery({
-    queryKey: [`conversation-messages`, conversationId],
+  // Fetch conversation data
+  const { data: conversationData, isLoading, error } = useQuery({
+    queryKey: ["conversation", conversationId],
     queryFn: async () => {
-      if (!conversationId) return null;
-      
       console.log('🔍 Fetching conversation data for ID:', conversationId, 'Type:', typeof conversationId);
-      
-      try {
-        // Get conversation details first
-        const conversationResponse = await apiRequest("GET", `/api/conversations/${conversationId}`);
-        
-        if (!conversationResponse.ok) {
-          const errorText = await conversationResponse.text();
-          console.error('❌ Conversation API error:', conversationResponse.status, errorText);
-          throw new Error(`Conversation not found: ${conversationResponse.status}`);
-        }
-        
-        const conversation = await conversationResponse.json();
-        console.log('✅ Conversation found:', conversation);
-        
-        // Get messages
-        const messages = await getConversationMessages(conversationId);
-        console.log('✅ Messages loaded:', messages?.length || 0);
-        
-        return {
-          ...conversation,
-          messages: messages || []
-        };
-      } catch (error) {
-        console.error('❌ Failed to load conversation:', error);
-        throw error;
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('❌ No auth token found');
+        throw new Error('Authentication required');
       }
+
+      const response = await fetch(`/api/conversations/${conversationId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.error(`❌ HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
     },
     enabled: !!conversationId,
   });
@@ -131,7 +123,7 @@ export default function Chat() {
       );
 
       console.log('📤 Sending message to conversation:', conversationId, 'Type:', typeof conversationId);
-      
+
       // Add user message via Supabase function
       await addMessage(conversationId, 'user', content);
 
@@ -144,13 +136,13 @@ export default function Chat() {
           message: content,
         },
       );
-      
+
       if (!aiResponse.ok) {
         const errorText = await aiResponse.text();
         console.error('❌ AI response error:', aiResponse.status, errorText);
         throw new Error(`Failed to get AI response: ${aiResponse.status}`);
       }
-      
+
       const aiData = await aiResponse.json();
 
       // Add AI message via Supabase function
