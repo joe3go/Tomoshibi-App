@@ -407,7 +407,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { createClient } = await import('@supabase/supabase-js');
       const supabase = createClient(config.url, config.serviceKey);
 
-      const { personaId, scenarioId } = req.body;
+      const { personaId, scenarioId, title = 'New Conversation' } = req.body;
       const userId = req.userId;
 
       console.log('🎯 Extracted values:', { 
@@ -439,14 +439,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('✅ UUID validation passed');
 
-      // Create conversation directly with Supabase using RPC function
+      // Create conversation directly with Supabase (avoid RPC for now)
       const { data: conversation, error } = await supabase
-        .rpc('create_conversation', {
+        .from('conversations')
+        .insert({
           user_id: userId,
-          persona_id: personaId, // This should be a UUID string
+          persona_id: personaId,
           scenario_id: scenarioId || null,
-          title: 'New Conversation'
-        });
+          title: title,
+          status: 'active'
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error('❌ Supabase error creating conversation:', error);
@@ -473,13 +477,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         console.log('💬 Adding initial message:', introduction);
 
-        await supabase
+        const { error: messageError } = await supabase
           .from('messages')
           .insert({
             conversation_id: conversation.id,
             sender: 'ai',
             content: introduction,
           });
+
+        if (messageError) {
+          console.error('Failed to add initial message:', messageError);
+        }
       }
 
       console.log('✅ Conversation created successfully:', conversation.id);
@@ -504,27 +512,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/conversations/:id', authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const conversationId = parseInt(req.params.id);
-      if (isNaN(conversationId)) {
-        return res.status(400).json({ message: 'Invalid conversation ID' });
-      }
-      const conversation = await storage.getConversation(conversationId);
+      const conversationId = req.params.id;
+      
+      // Use direct Supabase client for UUID-based conversations
+      const config = getSupabaseConfig();
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(config.url, config.serviceKey);
 
-      if (!conversation) {
+      // Get conversation directly from Supabase
+      const { data: conversation, error: convError } = await supabase
+        .from('conversations')
+        .select('*')
+        .eq('id', conversationId)
+        .eq('user_id', req.userId)
+        .single();
+
+      if (convError || !conversation) {
+        console.error('Conversation not found:', convError);
         return res.status(404).json({ message: 'Conversation not found' });
       }
 
-      // Handle UUID to integer mapping for userId comparison
-      const userUUID = req.userId;
-      const mappedUserId = uuidToInt(userUUID!);
+      // Get messages for this conversation
+      const { data: messages, error: msgError } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
 
-      if (conversation.userId !== mappedUserId) {
-        return res.status(404).json({ message: 'Conversation not found' });
+      if (msgError) {
+        console.error('Error fetching messages:', msgError);
+        return res.status(500).json({ message: 'Failed to get messages' });
       }
 
-      const messages = await storage.getConversationMessages(conversationId);
-
-      res.json({ conversation, messages });
+      res.json({ conversation, messages: messages || [] });
     } catch (error) {
       console.error('Get conversation error:', error);
       res.status(500).json({ message: 'Failed to get conversation' });
