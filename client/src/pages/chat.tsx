@@ -166,7 +166,7 @@ export default function Chat() {
           conversation_id: conversationId,
           role: 'ai',
           content: aiData.content,
-          english_translation: aiData.english,
+          english: aiData.english,
           feedback: aiData.feedback,
           suggestions: aiData.suggestions,
           vocab_used: aiData.vocabUsed,
@@ -547,14 +547,14 @@ export default function Chat() {
                   </MessageWithVocab>
                 </div>
 
-                {msg.role === "ai" && msg.english_translation && (
+                {msg.role === "ai" && msg.english && (
                   <div className="mt-2">
                     <details className="text-sm text-muted-foreground">
                       <summary className="cursor-pointer hover:text-foreground">
                         Show English translation
                       </summary>
                       <div className="mt-1 p-2 bg-muted/50 rounded-md">
-                        {msg.english_translation}
+                        {msg.english}
                       </div>
                     </details>
                   </div>

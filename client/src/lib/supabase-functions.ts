@@ -58,7 +58,7 @@ export async function createConversation(
           conversation_id: data.id,
           role: 'ai',
           content: greeting,
-          english_translation: englishTranslation,
+          english: englishTranslation,
           created_at: new Date().toISOString()
         });
 
