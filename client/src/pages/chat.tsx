@@ -55,32 +55,53 @@ export default function Chat() {
     }
   }, [authLoading, session, setLocation, toast]);
 
-  // Fetch conversation data
+  // Fetch conversation data using Supabase directly
   const { data: conversationData, isLoading, error } = useQuery({
     queryKey: ["conversation", conversationId],
     queryFn: async () => {
       console.log('🔍 Fetching conversation data for ID:', conversationId, 'Type:', typeof conversationId);
 
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.error('❌ No auth token found');
+      if (!session) {
+        console.error('❌ No Supabase session found');
         throw new Error('Authentication required');
       }
 
-      const response = await fetch(`/api/conversations/${conversationId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      // Get conversation directly from Supabase
+      const { data: conversation, error: convError } = await supabase
+        .from('conversations')
+        .select('*')
+        .eq('id', conversationId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (convError || !conversation) {
+        console.error('❌ Conversation not found:', convError);
+        throw new Error('Conversation not found or access denied');
+      }
+
+      // Get messages for this conversation
+      const { data: messages, error: msgError } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (msgError) {
+        console.error('❌ Error fetching messages:', msgError);
+        throw new Error('Failed to fetch messages');
+      }
+
+      console.log('✅ Conversation and messages loaded:', {
+        conversationId: conversation.id,
+        messageCount: messages?.length || 0
       });
 
-      if (!response.ok) {
-        console.error(`❌ HTTP error! status: ${response.status}`);
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
+      return {
+        conversation,
+        messages: messages || []
+      };
     },
-    enabled: !!conversationId,
+    enabled: !!conversationId && !!session && !!user,
   });
 
   const { data: personas = [] } = useQuery({
@@ -94,71 +115,83 @@ export default function Chat() {
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
       // Check session from auth hook
-      if (!session) {
+      if (!session || !user) {
         throw new Error("No active session found. Please log in again.");
       }
 
-      const user = await getCurrentUser();
-      if (!user) throw new Error("User not authenticated");
+      console.log('📤 Sending message to conversation:', conversationId);
 
-      // Optimistically add user message to UI
-      const optimisticUserMessage = {
-        id: Date.now(), // Temporary ID
-        content,
-        sender: 'user',
-        created_at: new Date().toISOString(),
-        vocab_used: [],
-        grammar_used: [],
-        english: null,
-        feedback: null,
-        suggestions: null
-      };
+      // Add user message directly to Supabase
+      const { error: userMsgError } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: conversationId,
+          sender: 'user',
+          content: content,
+          created_at: new Date().toISOString()
+        });
 
-      queryClient.setQueryData(
-        [`conversation-messages`, conversationId],
-        (oldData: any) => ({
-          ...oldData,
-          messages: [...(oldData?.messages || []), optimisticUserMessage],
-        }),
-      );
-
-      console.log('📤 Sending message to conversation:', conversationId, 'Type:', typeof conversationId);
-
-      // Add user message via Supabase function
-      await addMessage(conversationId, 'user', content);
-
-      // Get AI response from existing endpoint
-      const aiResponse = await apiRequest(
-        "POST",
-        `/api/chat/secure`,
-        {
-          conversationId,
-          message: content,
-        },
-      );
-
-      if (!aiResponse.ok) {
-        const errorText = await aiResponse.text();
-        console.error('❌ AI response error:', aiResponse.status, errorText);
-        throw new Error(`Failed to get AI response: ${aiResponse.status}`);
+      if (userMsgError) {
+        console.error('❌ Failed to add user message:', userMsgError);
+        throw new Error('Failed to send message');
       }
 
-      const aiData = await aiResponse.json();
+      // Get AI response using Supabase session token
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      
+      const response = await fetch('/api/chat/secure', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentSession?.access_token}`
+        },
+        body: JSON.stringify({
+          conversationId,
+          message: content,
+        })
+      });
 
-      // Add AI message via Supabase function
-      await addMessage(
-        conversationId,
-        'ai',
-        aiData.content,
-        aiData.english,
-        aiData.feedback,
-        aiData.suggestions,
-        aiData.vocabUsed,
-        aiData.grammarUsed
-      );
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ AI response error:', response.status, errorText);
+        throw new Error(`Failed to get AI response: ${response.status}`);
+      }
 
-      // Refresh messages from Supabase
-      return await getConversationMessages(conversationId);
+      const aiData = await response.json();
+
+      // Add AI message directly to Supabase
+      const { error: aiMsgError } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: conversationId,
+          sender: 'ai',
+          content: aiData.content,
+          english: aiData.english,
+          feedback: aiData.feedback,
+          suggestions: aiData.suggestions,
+          vocab_used: aiData.vocabUsed,
+          grammar_used: aiData.grammarUsed,
+          created_at: new Date().toISOString()
+        });
+
+      if (aiMsgError) {
+        console.error('❌ Failed to add AI message:', aiMsgError);
+        throw new Error('Failed to save AI response');
+      }
+
+      // Return updated messages
+      const { data: updatedMessages, error: fetchError } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (fetchError) {
+        console.error('❌ Failed to fetch updated messages:', fetchError);
+        throw new Error('Failed to refresh messages');
+      }
+
+      return updatedMessages || [];
     },
     onSuccess: (messages) => {
       // Update with fresh messages from Supabase
@@ -199,12 +232,28 @@ export default function Chat() {
   const completeConversationMutation = useMutation({
     mutationFn: async () => {
       // Check session from auth hook
-      if (!session) {
+      if (!session || !user) {
         throw new Error("No active session found. Please log in again.");
       }
 
       console.log('🏁 Completing conversation:', conversationId);
-      return await completeConversation(conversationId);
+      
+      // Update conversation status directly in Supabase
+      const { error } = await supabase
+        .from('conversations')
+        .update({ 
+          status: 'completed',
+          completed_at: new Date().toISOString()
+        })
+        .eq('id', conversationId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('❌ Failed to complete conversation:', error);
+        throw new Error('Failed to complete conversation');
+      }
+
+      return { success: true };
     },
     onSuccess: () => {
       // Invalidate multiple query keys to refresh all conversation lists

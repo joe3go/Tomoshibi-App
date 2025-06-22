@@ -34,8 +34,8 @@ interface AuthRequest extends Request {
   userId?: string;
 }
 
-// Middleware to verify JWT token
-const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) => {
+// Middleware to verify JWT token (supports both custom JWT and Supabase tokens)
+const authenticateToken = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -44,11 +44,31 @@ const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) 
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-    req.userId = decoded.userId || decoded.userUuid;
+    // First try to verify as custom JWT
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET) as any;
+      req.userId = decoded.userId || decoded.userUuid;
+      return next();
+    } catch (jwtError) {
+      console.log('Custom JWT verification failed, trying Supabase token...');
+    }
+
+    // If custom JWT fails, try Supabase token verification
+    const config = getSupabaseConfig();
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabase = createClient(config.url, config.serviceKey);
+    
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user) {
+      console.error('Supabase token verification error:', error);
+      return res.status(403).json({ message: 'Invalid or expired token' });
+    }
+
+    req.userId = user.id;
     next();
   } catch (err) {
-    console.error('JWT verification error:', err);
+    console.error('Token verification error:', err);
     return res.status(403).json({ message: 'Invalid or expired token' });
   }
 };
