@@ -126,7 +126,7 @@ export default function Chat() {
         .from('messages')
         .insert({
           conversation_id: conversationId,
-          sender: 'user',
+          role: 'user',
           content: content,
           created_at: new Date().toISOString()
         });
@@ -164,9 +164,9 @@ export default function Chat() {
         .from('messages')
         .insert({
           conversation_id: conversationId,
-          sender: 'ai',
+          role: 'ai',
           content: aiData.content,
-          english: aiData.english,
+          english_translation: aiData.english,
           feedback: aiData.feedback,
           suggestions: aiData.suggestions,
           vocab_used: aiData.vocabUsed,
@@ -492,10 +492,10 @@ export default function Chat() {
             <div
               key={msg.id}
               className={`chat-message-wrapper ${
-                msg.sender === "user" ? "chat-message-user" : "chat-message-ai"
+                msg.role === "user" ? "chat-message-user" : "chat-message-ai"
               }`}
             >
-              {msg.sender === "ai" && (
+              {msg.role === "ai" && (
                 <div className="chat-avatar chat-avatar-ai">
                   <img
                     src={getAvatarImage(persona)}
@@ -523,7 +523,7 @@ export default function Chat() {
 
               <div
                 className={`message-bubble ${
-                  msg.sender === "user" 
+                  msg.role === "user" 
                     ? "user" 
                     : persona?.bubble_class || "ai"
                 }`}
@@ -547,14 +547,14 @@ export default function Chat() {
                   </MessageWithVocab>
                 </div>
 
-                {msg.sender === "ai" && msg.english && (
+                {msg.role === "ai" && msg.english_translation && (
                   <div className="mt-2">
                     <details className="text-sm text-muted-foreground">
                       <summary className="cursor-pointer hover:text-foreground">
                         Show English translation
                       </summary>
                       <div className="mt-1 p-2 bg-muted/50 rounded-md">
-                        {msg.english}
+                        {msg.english_translation}
                       </div>
                     </details>
                   </div>
@@ -579,7 +579,7 @@ export default function Chat() {
                 )}
               </div>
 
-              {msg.sender === "user" && (
+              {msg.role === "user" && (
                 <div className="chat-avatar chat-avatar-user">
                   <span className="chat-avatar-user-text">
                     You

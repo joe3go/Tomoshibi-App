@@ -503,6 +503,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             conversation_id: conversation.id,
             role: 'ai',
             content: introduction,
+            english_translation: `Hello! I'm ${persona.name}. What would you like to talk about today?`,
             created_at: new Date().toISOString()
           });
 

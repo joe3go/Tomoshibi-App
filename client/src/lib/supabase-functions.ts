@@ -33,25 +33,40 @@ export async function createConversation(
     // Add initial greeting from persona
     const { data: persona } = await supabase
       .from('personas')
-      .select('name, system_prompt_hint')
+      .select('name, personality, speaking_style, type')
       .eq('id', personaId)
       .single();
 
     if (persona) {
-      const greeting = `こんにちは！私は${persona.name}です。今日は何について話しましょうか？`;
+      // Create personalized greeting based on tutor personality
+      let greeting;
+      let englishTranslation;
+      
+      if (persona.type === 'teacher') {
+        greeting = `こんにちは！私は${persona.name}先生です。今日は一緒に日本語を勉強しましょう。何について話したいですか？`;
+        englishTranslation = `Hello! I'm ${persona.name}-sensei. Today let's study Japanese together. What would you like to talk about?`;
+      } else {
+        greeting = `やあ、こんにちは！${persona.name}だよ。今日はどんなことを話そうか？何でも聞いてね！`;
+        englishTranslation = `Hey, hello! I'm ${persona.name}. What shall we talk about today? Ask me anything!`;
+      }
 
-      console.log('💬 Adding initial greeting:', greeting);
+      console.log('💬 Adding personalized greeting from', persona.name, ':', greeting);
+      
       const { error: messageError } = await supabase
         .from('messages')
         .insert({
           conversation_id: data.id,
           role: 'ai',
           content: greeting,
+          english_translation: englishTranslation,
           created_at: new Date().toISOString()
         });
 
       if (messageError) {
         console.error('⚠️ Failed to add initial message:', messageError);
+        throw new Error(`Failed to add initial message: ${messageError.message}`);
+      } else {
+        console.log('✅ Initial greeting message added successfully');
       }
     }
 
