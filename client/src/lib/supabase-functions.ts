@@ -45,7 +45,7 @@ export async function createConversation(
         .from('messages')
         .insert({
           conversation_id: data.id,
-          sender: 'ai',
+          role: 'ai',
           content: greeting,
           created_at: new Date().toISOString()
         });

@@ -501,7 +501,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .from('messages')
           .insert({
             conversation_id: conversation.id,
-            sender: 'ai',
+            role: 'ai',
             content: introduction,
             created_at: new Date().toISOString()
           });

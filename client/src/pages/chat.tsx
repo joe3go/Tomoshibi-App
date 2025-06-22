@@ -138,7 +138,7 @@ export default function Chat() {
 
       // Get AI response using Supabase session token
       const { data: { session: currentSession } } = await supabase.auth.getSession();
-      
+
       const response = await fetch('/api/chat/secure', {
         method: 'POST',
         headers: {
@@ -237,7 +237,7 @@ export default function Chat() {
       }
 
       console.log('🏁 Completing conversation:', conversationId);
-      
+
       // Update conversation status directly in Supabase
       const { error } = await supabase
         .from('conversations')
