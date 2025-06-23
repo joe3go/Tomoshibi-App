@@ -203,22 +203,27 @@ export default function Chat() {
         contentLength: aiData.content?.length,
       });
 
-      // Add AI message using the updated schema
+      // Prepare AI message data with proper types
+      const aiMessageData = {
+        conversation_id: conversationId,
+        content: aiData.content || '',
+        english_translation: aiData.english_translation || null,
+        tutor_feedback: aiData.feedback || null,
+        suggestions: Array.isArray(aiData.suggestions) ? aiData.suggestions : 
+                    aiData.suggestions ? [aiData.suggestions] : null,
+        vocab_used: Array.isArray(aiData.vocabUsed) ? aiData.vocabUsed : [],
+        grammar_used: Array.isArray(aiData.grammarUsed) ? aiData.grammarUsed : [],
+        sender_persona_id: validPersonaId, // AI messages have persona
+        sender_user_id: null, // AI messages don't have user
+        created_at: new Date().toISOString(),
+      };
+
+      console.log('🔍 AI message data before insert:', aiMessageData);
+
+      // Add AI message to database
       const { data: aiMessage, error: aiMsgError } = await supabase
-        .from("messages")
-        .insert({
-          conversation_id: conversationId,
-          sender_type: "ai",
-          content: aiData.content,
-          english_translation: aiData.english_translation,
-          tutor_feedback: aiData.feedback,
-          suggestions: Array.isArray(aiData.suggestions) ? aiData.suggestions : 
-                      (typeof aiData.suggestions === 'string' && aiData.suggestions.trim()) ? [aiData.suggestions] : null,
-          vocab_used: aiData.vocabUsed,
-          grammar_used: aiData.grammarUsed,
-          sender_persona_id: validPersonaId, // AI messages have persona
-          created_at: new Date().toISOString(),
-        })
+        .from('messages')
+        .insert(aiMessageData)
         .select()
         .single();
 
