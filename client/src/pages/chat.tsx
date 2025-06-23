@@ -1,145 +1,73 @@
 import { useState, useEffect, useRef } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle } from "lucide-react";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Input } from "@/components/ui/input";
+import { Toggle } from "@/components/ui/toggle";
+import { ArrowLeft, CheckCircle, Languages } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import FuriganaText from "@/components/furigana-text";
 import { MessageWithVocab } from "@/components/MessageWithVocab";
-import { Input } from "@/components/ui/input";
-import { Toggle } from "@/components/ui/toggle";
-import { Languages } from "lucide-react";
-import { bind, unbind, toHiragana } from "wanakana";
-import {
-  getConversationMessages,
-  addMessage,
-  completeConversation,
-  getCurrentUser,
-  extractPersonaFromTitle,
-} from "@/lib/supabase-functions";
+import { bind, unbind, toHiragana } from 'wanakana';
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/context/SupabaseAuthContext";
-import { isValidUUID } from "../../../shared/validation";
+import { extractPersonaFromTitle } from "@/lib/supabase-functions";
+// Import vocabulary tracking function from API
+const trackVocabularyUsage = async (text: string, source: 'user' | 'ai') => {
+  try {
+    await fetch('/api/vocab-tracker/increment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, source })
+    });
+  } catch (error) {
+    console.log("Vocabulary tracking failed:", error);
+  }
+};
 
-// Message Item Component for better rendering control
-function MessageItem({ message, showFurigana, persona }: { 
-  message: any, 
-  showFurigana: boolean,
-  persona: any
-}) {
-  const isUser = message.sender_type === "user";
-  const isAI = message.sender_type === "ai";
+interface Message {
+  id: string;
+  conversation_id: string;
+  sender_type: 'user' | 'ai';
+  content: string;
+  english_translation?: string;
+  tutor_feedback?: string;
+  suggestions?: string[];
+  vocab_used?: number[];
+  grammar_used?: number[];
+  sender_persona_id?: string;
+  created_at: string;
+}
 
-  const getAvatarImage = (persona: any) => {
-    return persona?.avatar_url || "/avatars/aoi.png";
-  };
+interface Conversation {
+  id: string;
+  title: string;
+  user_id: string;
+  status: string;
+  created_at: string;
+}
 
-  return (
-    <div
-      className={`chat-message-wrapper ${
-        isUser ? "chat-message-user" : "chat-message-ai"
-      }`}
-    >
-      {isAI && (
-        <div className="chat-avatar chat-avatar-ai">
-          <img
-            src={getAvatarImage(persona)}
-            alt={persona?.name || "AI"}
-            className="chat-avatar-image w-8 h-8 rounded-full object-cover"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.style.display = "none";
-              target.parentElement!.innerHTML = `
-                <div class="chat-avatar-fallback">
-                  <span class="chat-avatar-text">
-                    ${persona?.type === "teacher" ? "先" : "友"}
-                  </span>
-                </div>
-              `;
-            }}
-          />
-        </div>
-      )}
-
-      <div
-        className={`message-bubble ${
-          isUser ? "user" : persona?.bubble_class || "ai"
-        }`}
-      >
-        {(message.tutor_feedback || message.feedback) && (
-          <div className="chat-message-feedback">
-            <p className="chat-feedback-text">
-              ✨ {message.tutor_feedback || message.feedback}
-            </p>
-          </div>
-        )}
-
-        <div className="chat-message-content">
-          <MessageWithVocab
-            content={message.content}
-            className="vocab-enabled-message"
-          >
-            <FuriganaText
-              text={message.content}
-              showFurigana={showFurigana}
-              showToggleButton={false}
-            />
-          </MessageWithVocab>
-        </div>
-
-        {isAI && (message.english_translation || message.english) && (
-          <div className="mt-2">
-            <details className="text-sm text-muted-foreground">
-              <summary className="cursor-pointer hover:text-foreground">
-                Show English translation
-              </summary>
-              <div className="mt-1 p-2 bg-muted/50 rounded-md">
-                {message.english_translation || message.english}
-              </div>
-            </details>
-          </div>
-        )}
-
-        {message.suggestions && message.suggestions.length > 0 && (
-          <div className="mt-2">
-            <details className="text-sm">
-              <summary className="cursor-pointer text-blue-600 hover:text-blue-800">
-                💡 Learning suggestions ({message.suggestions.length})
-              </summary>
-              <div className="mt-1 p-2 bg-blue-50 dark:bg-blue-950/20 rounded-md">
-                {message.suggestions.map(
-                  (suggestion: string, index: number) => (
-                    <div
-                      key={index}
-                      className="flex items-start gap-2 text-blue-800 dark:text-blue-200"
-                    >
-                      <span>•</span>
-                      <span>{suggestion}</span>
-                    </div>
-                  ),
-                )}
-              </div>
-            </details>
-          </div>
-        )}
-      </div>
-
-      {isUser && (
-        <div className="chat-avatar chat-avatar-user">
-          <span className="chat-avatar-user-text">You</span>
-        </div>
-      )}
-    </div>
-  );
+interface Persona {
+  id: string;
+  name: string;
+  type: string;
+  avatar_url: string;
+  description: string;
 }
 
 export default function Chat() {
   const [, params] = useRoute("/chat/:conversationId");
   const [, setLocation] = useLocation();
-  const { user, loading: authLoading, session } = useAuth();
-  const isAuthenticated = !!session;
+  const { user, session } = useAuth();
+  const { toast } = useToast();
+  
+  const [conversation, setConversation] = useState<Conversation | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [personas, setPersonas] = useState<Persona[]>([]);
+  const [persona, setPersona] = useState<Persona | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  
   const [message, setMessage] = useState("");
   const [romajiMode, setRomajiMode] = useState(false);
   const [showFurigana, setShowFurigana] = useState(() => {
@@ -149,103 +77,120 @@ export default function Chat() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const tempIdRef = useRef<string | null>(null);
-  const { toast } = useToast();
-
   const conversationId = params?.conversationId || null;
 
-  // Redirect to login if not authenticated
+  // Load initial data
   useEffect(() => {
-    if (!authLoading && !session) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to access the chat",
-        variant: "destructive",
-      });
+    if (!session || !user || !conversationId) {
       setLocation("/login");
+      return;
     }
-  }, [authLoading, session, setLocation, toast]);
 
-  // Simplified conversation data query with combined fetch
-  const {
-    data: conversationData,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["conversation", conversationId],
-    queryFn: async () => {
-      if (!session || !user || !conversationId) return null;
+    loadConversationData();
+    loadPersonas();
+  }, [conversationId, session, user]);
 
-      console.log("🔍 Fetching conversation data for ID:", conversationId);
-
-      // Fetch conversation and messages in a single query
-      const { data: conversation, error: convError } = await supabase
+  const loadConversationData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load conversation
+      const { data: convData, error: convError } = await supabase
         .from("conversations")
         .select("*")
         .eq("id", conversationId)
-        .eq("user_id", user.id)
+        .eq("user_id", user?.id)
         .single();
 
-      if (convError || !conversation) {
-        console.error("❌ Conversation not found:", convError);
-        throw new Error("Conversation not found or access denied");
+      if (convError || !convData) {
+        toast({
+          title: "Conversation not found",
+          description: "This conversation doesn't exist or you don't have access to it.",
+          variant: "destructive",
+        });
+        setLocation("/dashboard");
+        return;
       }
 
-      // Get messages for this conversation
-      const { data: messages, error: msgError } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("conversation_id", conversationId)
-        .order("created_at", { ascending: true });
-
-      if (msgError) {
-        console.error("❌ Error fetching messages:", msgError);
-        throw new Error("Failed to fetch messages");
-      }
-
-      console.log("✅ Conversation and messages loaded:", {
-        conversationId: conversation.id,
-        messageCount: messages?.length || 0,
+      setConversation(convData);
+      
+      // Load messages
+      await loadMessages();
+      
+    } catch (error) {
+      console.error("Error loading conversation:", error);
+      toast({
+        title: "Error loading conversation",
+        description: "Please try again or return to dashboard.",
+        variant: "destructive",
       });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      return {
-        conversation,
-        messages: messages || [],
-      };
-    },
-    enabled: !!conversationId && !!session && !!user,
-    gcTime: 0, // Reduce cache issues
-    refetchOnWindowFocus: false,
-  });
+  const loadMessages = async () => {
+    const { data: msgData, error: msgError } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("conversation_id", conversationId)
+      .order("created_at", { ascending: true });
 
-  // Fetch personas directly from Supabase
-  const { data: personas = [] } = useQuery({
-    queryKey: ["personas-supabase"],
-    queryFn: async () => {
-      if (!session) return [];
+    if (msgError) {
+      console.error("Error loading messages:", msgError);
+      return;
+    }
 
-      const { data, error } = await supabase.from("personas").select("*");
+    setMessages(msgData || []);
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  };
 
-      if (error) {
-        console.error("Error fetching personas:", error);
-        return [];
-      }
+  const loadPersonas = async () => {
+    const { data, error } = await supabase.from("personas").select("*");
+    if (!error && data) {
+      setPersonas(data);
+    }
+  };
 
-      return data || [];
-    },
-    enabled: !!session,
-  });
+  // Set persona when conversation and personas are loaded
+  useEffect(() => {
+    if (conversation && personas.length > 0) {
+      const { personaId } = extractPersonaFromTitle(conversation.title || "");
+      const foundPersona = personas.find(p => p.id === personaId);
+      setPersona(foundPersona || null);
+    }
+  }, [conversation, personas]);
 
-  const { data: scenarios = [] } = useQuery({
-    queryKey: ["/api/scenarios"],
-  });
+  const getMessageBubbleStyles = (messageType: 'user' | 'ai', persona?: Persona | null) => {
+    if (messageType === 'user') {
+      return 'user-message-bubble bg-blue-500 text-white';
+    }
+    
+    // AI message bubble styling based on persona
+    if (persona?.name === 'Keiko') {
+      return 'ai-message-bubble keiko-theme bg-rose-100 text-rose-900 border border-rose-200';
+    } else if (persona?.name === 'Aoi') {
+      return 'ai-message-bubble aoi-theme bg-emerald-100 text-emerald-900 border border-emerald-200';
+    } else if (persona?.name === 'Haruki') {
+      return 'ai-message-bubble haruki-theme bg-orange-100 text-orange-900 border border-orange-200';
+    } else if (persona?.name === 'Satoshi') {
+      return 'ai-message-bubble satoshi-theme bg-blue-100 text-blue-900 border border-blue-200';
+    }
+    
+    // Default AI styling
+    return 'ai-message-bubble default-theme bg-gray-100 text-gray-900 border border-gray-200';
+  };
 
-  // Simplified message mutation with proper optimistic updates
-  const sendMessageMutation = useMutation({
-    mutationFn: async (content: string) => {
-      if (!session || !user) {
-        throw new Error("No active session found. Please log in again.");
-      }
+  const sendMessage = async () => {
+    if (!message.trim() || sending || !session || !user) return;
+
+    const finalMessage = romajiMode ? toHiragana(message.trim()) : message.trim();
+    
+    try {
+      setSending(true);
+      setMessage(""); // Clear input immediately
 
       console.log("📤 Sending message to conversation:", conversationId);
 
@@ -255,7 +200,7 @@ export default function Chat() {
         .insert({
           conversation_id: conversationId,
           sender_type: "user",
-          content: content,
+          content: finalMessage,
           sender_persona_id: null,
           created_at: new Date().toISOString(),
         })
@@ -263,188 +208,113 @@ export default function Chat() {
         .single();
 
       if (userMsgError) {
-        console.error("❌ Failed to add user message:", userMsgError);
-        throw new Error("Failed to send message");
+        throw new Error("Failed to save user message");
+      }
+
+      // Immediately add user message to UI
+      setMessages(prev => [...prev, userMessage]);
+
+      // Track vocabulary usage for user message
+      try {
+        await trackVocabularyUsage(finalMessage, 'user');
+      } catch (error) {
+        console.log("Vocabulary tracking failed:", error);
       }
 
       // Get AI response
-      const {
-        data: { session: currentSession },
-      } = await supabase.auth.getSession();
-
       const response = await fetch("/api/chat/secure", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${currentSession?.access_token}`,
+          "Authorization": `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          conversationId,
-          message: content,
-          tutorId: validPersonaId,
+          message: finalMessage,
+          conversationId: conversationId,
+          tutorId: persona?.id || "",
         }),
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ AI response error:", response.status, errorText);
-        throw new Error(`Failed to get AI response: ${response.status}`);
+        throw new Error("Failed to get AI response");
       }
 
       const aiData = await response.json();
 
-      if (!aiData || !aiData.content) {
-        console.error("❌ Invalid AI response structure:", aiData);
-        throw new Error("AI response is missing required content");
-      }
-
       // Add AI message
-      const aiMessageData = {
-        conversation_id: conversationId,
-        sender_type: 'ai',
-        content: aiData.content || '',
-        english_translation: aiData.english_translation || null,
-        tutor_feedback: aiData.feedback || null,
-        suggestions: Array.isArray(aiData.suggestions) ? aiData.suggestions : 
-                    aiData.suggestions ? [aiData.suggestions] : null,
-        vocab_used: Array.isArray(aiData.vocabUsed) ? aiData.vocabUsed : [],
-        grammar_used: Array.isArray(aiData.grammarUsed) ? aiData.grammarUsed : [],
-        sender_persona_id: validPersonaId,
-        created_at: new Date().toISOString(),
-      };
-
       const { data: aiMessage, error: aiMsgError } = await supabase
-        .from('messages')
-        .insert(aiMessageData)
+        .from("messages")
+        .insert({
+          conversation_id: conversationId,
+          sender_type: "ai",
+          content: aiData.content || '',
+          english_translation: aiData.english_translation || null,
+          tutor_feedback: aiData.feedback || null,
+          suggestions: Array.isArray(aiData.suggestions) ? aiData.suggestions : null,
+          vocab_used: Array.isArray(aiData.vocabUsed) ? aiData.vocabUsed : [],
+          grammar_used: Array.isArray(aiData.grammarUsed) ? aiData.grammarUsed : [],
+          sender_persona_id: persona?.id || null,
+          created_at: new Date().toISOString(),
+        })
         .select()
         .single();
 
       if (aiMsgError) {
-        console.error("❌ Failed to add AI message:", aiMsgError);
-        throw new Error("Failed to save AI response");
+        throw new Error("Failed to save AI message");
       }
 
-      console.log("✅ Messages added successfully");
+      // Immediately add AI message to UI
+      setMessages(prev => [...prev, aiMessage]);
 
-      return {
-        userMessage,
-        aiMessage
-      };
-    },
-    onMutate: async (content: string) => {
-      // Just clear the input immediately for better UX
-      setMessage("");
-      return { content };
-    },
-    onSuccess: async (data) => {
-      console.log("✅ Message mutation successful, forcing UI update");
-      
-      // Force immediate invalidation and refetch
-      await queryClient.invalidateQueries({
-        queryKey: ["conversation", conversationId],
-      });
-      
-      // Wait a moment for the refetch to complete
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      // Track vocabulary usage for AI message
+      try {
+        await trackVocabularyUsage(aiData.content || '', 'ai');
+      } catch (error) {
+        console.log("AI vocabulary tracking failed:", error);
+      }
+
       // Scroll to bottom
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    },
-    onError: (error, content, context) => {
-      console.error("❌ Message send failed:", error.message);
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
 
-      // Restore the message input on error
-      setMessage(context?.content || content);
-
-      // Handle specific error types
-      if (error.message.includes("session") || error.message.includes("authenticated")) {
-        toast({
-          title: "Authentication Error",
-          description: "Please log in again to continue",
-          variant: "destructive",
-        });
-        setLocation("/login");
-        return;
-      }
-
+    } catch (error) {
+      console.error("❌ Message send failed:", error);
+      setMessage(finalMessage); // Restore message on error
+      
       toast({
         title: "Failed to send message",
         description: "Please check your connection and try again.",
         variant: "destructive",
       });
-    },
-  });
-
-  const completeConversationMutation = useMutation({
-    mutationFn: async () => {
-      if (!session || !user) {
-        throw new Error("No active session found. Please log in again.");
-      }
-
-      const { error } = await supabase
-        .from("conversations")
-        .update({
-          status: "completed",
-          completed_at: new Date().toISOString(),
-        })
-        .eq("id", conversationId)
-        .eq("user_id", user.id);
-
-      if (error) {
-        throw new Error("Failed to complete conversation");
-      }
-
-      return { success: true };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
-      toast({
-        title: "Conversation completed!",
-        description: "Great job! This conversation has been moved to your transcripts.",
-      });
-      setLocation("/dashboard");
-    },
-    onError: (error) => {
-      toast({
-        title: "Failed to complete conversation",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Simple polling fallback for Supabase free tier (no Realtime)
-  useEffect(() => {
-    if (!conversationId || sendMessageMutation.isPending) return;
-
-    const interval = setInterval(() => {
-      // Only poll if user is not actively sending messages
-      if (!sendMessageMutation.isPending) {
-        queryClient.invalidateQueries({ queryKey: ["conversation", conversationId] });
-      }
-    }, 5000); // Poll every 5 seconds
-
-    return () => clearInterval(interval);
-  }, [conversationId, sendMessageMutation.isPending, queryClient]);
-
-  // Auto-scroll effect
-  useEffect(() => {
-    if (conversationData?.messages) {
-      console.log('📜 Messages updated, scrolling to bottom. Count:', conversationData.messages.length);
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [conversationData?.messages]);
-
-  const handleSendMessage = () => {
-    if (message.trim() && !sendMessageMutation.isPending) {
-      const finalMessage = romajiMode
-        ? toHiragana(message.trim())
-        : message.trim();
-      sendMessageMutation.mutate(finalMessage);
+    } finally {
+      setSending(false);
     }
   };
 
-  // Wanakana binding effect
+  const completeConversation = async () => {
+    try {
+      await supabase
+        .from("conversations")
+        .update({ status: "completed" })
+        .eq("id", conversationId);
+      
+      toast({
+        title: "Conversation completed",
+        description: "This conversation has been marked as completed.",
+      });
+      
+      setLocation("/dashboard");
+    } catch (error) {
+      toast({
+        title: "Failed to complete conversation",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Wanakana binding
   useEffect(() => {
     const element = textareaRef.current;
     if (romajiMode && element) {
@@ -462,255 +332,226 @@ export default function Chat() {
     };
   }, [romajiMode]);
 
-  const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMessage(e.target.value);
+  // Save furigana preference
+  useEffect(() => {
+    localStorage.setItem("furigana-visible", showFurigana.toString());
+  }, [showFurigana]);
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
   };
 
-  const handleFuriganaToggle = () => {
-    const newState = !showFurigana;
-    setShowFurigana(newState);
-    localStorage.setItem("furigana-visible", newState.toString());
+  const getAvatarImage = (persona: Persona | null) => {
+    if (!persona?.avatar_url) return "/avatars/default.png";
+    return persona.avatar_url.startsWith("/") ? persona.avatar_url : `/avatars/${persona.avatar_url}`;
   };
 
-  const getAvatarImage = (persona: any) => {
-    return persona?.avatar_url || "/avatars/aoi.png";
-  };
-
-  // Loading states
-  if (authLoading) {
+  if (loading) {
     return (
-      <div className="chat-loading-container">
-        <div className="chat-loading-card">
-          <div className="chat-loading-content">
-            <div className="chat-loading-spinner"></div>
-            <span className="chat-loading-text">Authenticating...</span>
-          </div>
+      <div className="chat-loading-container flex items-center justify-center h-screen">
+        <div className="loading-content text-center">
+          <div className="loading-spinner animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="loading-text mt-2 text-muted-foreground">Loading conversation...</p>
         </div>
       </div>
     );
   }
-
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  if (isLoading) {
-    return (
-      <div className="chat-loading-container">
-        <div className="chat-loading-card">
-          <div className="chat-loading-content">
-            <div className="chat-loading-spinner"></div>
-            <span className="chat-loading-text">Loading conversation...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!conversationData) {
-    return (
-      <div className="chat-error-container">
-        <Card className="chat-error-card">
-          <CardContent className="chat-error-content">
-            <h2 className="chat-error-title">Conversation Not Found</h2>
-            <p className="chat-error-description">
-              This conversation doesn't exist or you don't have access to it.
-            </p>
-            <Button
-              onClick={() => setLocation("/dashboard")}
-              className="chat-error-button"
-            >
-              Return to Dashboard
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const conversation = conversationData?.conversation;
-  const messages = conversationData?.messages || [];
 
   if (!conversation) {
     return (
-      <div className="chat-error-container">
-        <Card className="chat-error-card">
-          <h2 className="chat-error-title">Conversation Not Found</h2>
-          <p className="chat-error-description">
-            This conversation doesn't exist or you don't have access to it.
-          </p>
-          <Button
-            onClick={() => setLocation("/dashboard")}
-            className="chat-error-button"
-          >
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <p className="text-lg font-medium">Conversation not found</p>
+          <Button onClick={() => setLocation("/dashboard")} className="mt-4">
             Return to Dashboard
           </Button>
-        </Card>
+        </div>
       </div>
     );
   }
 
-  // Extract persona ID
-  const { personaId } = extractPersonaFromTitle(conversation?.title || "");
-  const validPersonaId = personaId && isValidUUID(personaId) ? personaId : null;
-
-  const persona = Array.isArray(personas)
-    ? personas.find((p: any) => p.id === validPersonaId)
-    : null;
-  const scenario = Array.isArray(scenarios)
-    ? scenarios.find((s: any) => s.id === conversation?.scenario_id)
-    : null;
-
   return (
-    <div className="chat-page-container">
-      {/* Chat Header */}
-      <header className="chat-header">
-        <div className="chat-header-navigation">
+    <div className="flex flex-col h-screen bg-background">
+      {/* Header */}
+      <header className="flex items-center justify-between p-4 border-b bg-card">
+        <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setLocation("/dashboard")}
-            className="chat-back-button"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div className="chat-header-info">
-            <div className="chat-persona-avatar">
-              <img
-                src={getAvatarImage(persona)}
-                alt={persona?.name || "Persona"}
-                className="chat-persona-image w-10 h-10 rounded-full object-cover"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = "none";
-                  target.parentElement!.innerHTML = `
-                    <div class="chat-persona-fallback">
-                      <span class="chat-persona-emoji">
-                        ${persona?.type === "teacher" ? "👩‍🏫" : "🧑‍🎤"}
-                      </span>
-                    </div>
-                  `;
-                }}
-              />
-            </div>
+          <div className="flex items-center gap-3">
+            <img
+              src={getAvatarImage(persona)}
+              alt={persona?.name || "Persona"}
+              className="w-10 h-10 rounded-full object-cover"
+            />
             <div>
-              <h3 className="chat-persona-name">{persona?.name || "AI"}</h3>
-              <p className="chat-scenario-title">
-                {scenario?.title ||
-                  conversation?.title.split("|")[0] ||
-                  "Conversation"}
+              <h3 className="font-medium">{persona?.name || "AI"}</h3>
+              <p className="text-sm text-muted-foreground">
+                {conversation.title.split("|")[0] || "Conversation"}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="chat-header-controls">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => completeConversationMutation.mutate()}
-            disabled={completeConversationMutation.isPending}
-            className="chat-complete-button"
-          >
-            <CheckCircle className="w-4 h-4" />
-            <span>Complete</span>
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={completeConversation}
+        >
+          <CheckCircle className="w-4 h-4 mr-2" />
+          Complete
+        </Button>
       </header>
 
-      {/* Chat Messages */}
-      <div className="chat-messages-container">
-        <div className="chat-messages-list">
-          {messages.map((msg: any) => (
-            <MessageItem 
-              key={msg.id} 
-              message={msg} 
-              showFurigana={showFurigana}
-              persona={persona}
-            />
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="max-w-4xl mx-auto space-y-4">
+          {messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={`flex items-start gap-3 ${msg.sender_type === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
+            >
+              {/* Avatar */}
+              <div className="flex-shrink-0">
+                {msg.sender_type === 'user' ? (
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                    You
+                  </div>
+                ) : (
+                  <img
+                    src={getAvatarImage(persona)}
+                    alt={persona?.name || "AI"}
+                    className="w-8 h-8 rounded-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = "/avatars/default.png";
+                    }}
+                  />
+                )}
+              </div>
+
+              {/* Message Bubble */}
+              <div
+                className={`message-bubble max-w-[70%] rounded-lg p-3 ${getMessageBubbleStyles(msg.sender_type, persona)}`}
+              >
+                <MessageWithVocab content={msg.content} className="vocab-enabled-message">
+                  <FuriganaText
+                    text={msg.content}
+                    showFurigana={showFurigana}
+                    showToggleButton={false}
+                  />
+                </MessageWithVocab>
+
+                {msg.sender_type === 'ai' && msg.english_translation && (
+                  <div className="mt-2">
+                    <details className="text-sm text-muted-foreground">
+                      <summary className="cursor-pointer hover:text-foreground">
+                        Show English translation
+                      </summary>
+                      <div className="mt-1 p-2 bg-muted/50 rounded-md">
+                        {msg.english_translation}
+                      </div>
+                    </details>
+                  </div>
+                )}
+
+                {msg.suggestions && msg.suggestions.length > 0 && (
+                  <div className="mt-2">
+                    <details className="text-sm">
+                      <summary className="cursor-pointer text-blue-600 hover:text-blue-800">
+                        💡 Learning suggestions ({msg.suggestions.length})
+                      </summary>
+                      <div className="mt-1 p-2 bg-blue-50 dark:bg-blue-950/20 rounded-md">
+                        {msg.suggestions.map((suggestion: string, index: number) => (
+                          <div key={index} className="flex items-start gap-2 text-blue-800 dark:text-blue-200">
+                            <span>•</span>
+                            <span>{suggestion}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  </div>
+                )}
+              </div>
+            </div>
           ))}
 
-          {/* Enhanced Typing Indicator */}
-          {sendMessageMutation.isPending && (
-            <div className="chat-message-wrapper chat-message-ai">
-              <div className="chat-avatar chat-avatar-ai">
+          {sending && (
+            <div className="flex items-start gap-3">
+              {/* AI Avatar for typing indicator */}
+              <div className="flex-shrink-0">
                 <img
                   src={getAvatarImage(persona)}
                   alt={persona?.name || "AI"}
-                  className="chat-avatar-image w-8 h-8 rounded-full object-cover"
+                  className="w-8 h-8 rounded-full object-cover"
                 />
               </div>
-              <div className="message-bubble ai">
-                <div className="chat-typing-indicator">
-                  <div className="chat-typing-dots">
-                    <div className="chat-typing-dot"></div>
-                    <div
-                      className="chat-typing-dot"
-                      style={{ animationDelay: "0.1s" }}
-                    ></div>
-                    <div
-                      className="chat-typing-dot"
-                      style={{ animationDelay: "0.2s" }}
-                    ></div>
+              
+              {/* Typing indicator bubble */}
+              <div className={`typing-indicator-bubble rounded-lg p-3 ${getMessageBubbleStyles('ai', persona)}`}>
+                <div className="flex items-center gap-2">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60"></div>
+                    <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '0.2s' }}></div>
                   </div>
-                  <span className="chat-typing-text">Thinking...</span>
+                  <span className="text-sm opacity-70">Thinking...</span>
                 </div>
               </div>
             </div>
           )}
+
           <div ref={messagesEndRef} />
         </div>
       </div>
 
-      {/* Chat Input */}
-      <div className="chat-input-container">
-        <div className="chat-input-wrapper">
-          <div className="chat-input-field-container">
-            <div className="chat-input-field">
-              <textarea
-                ref={textareaRef}
-                value={message}
-                onChange={handleMessageChange}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-                placeholder={romajiMode 
-                  ? "Type in romaji (converts to hiragana)..." 
-                  : "Type your response in Japanese... (English questions are welcome too!)"}
-                className="chat-textarea w-full p-3 border border-border rounded-md resize-none"
-                rows={1}
-                style={{ maxHeight: "120px" }}
-              />
-            </div>
-            <button
-              onClick={handleSendMessage}
-              disabled={!message.trim() || sendMessageMutation.isPending}
-              className="chat-send-button ml-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
-            >
-              Send
-            </button>
-          </div>
-
-          {/* Input Controls */}
-          <div className="mt-2 flex items-center gap-4">
+      {/* Input */}
+      <div className="border-t bg-card p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center gap-2 mb-2">
             <Toggle
               pressed={romajiMode}
               onPressedChange={setRomajiMode}
+              aria-label="Toggle romaji input"
               size="sm"
-              className="text-xs"
             >
-              <Languages className="w-3 h-3 mr-1" />
-              Hiragana
+              <Languages className="w-4 h-4" />
+              <span className="ml-1">Hiragana</span>
             </Toggle>
-            <button
-              onClick={handleFuriganaToggle}
-              className="text-sm text-muted-foreground hover:text-foreground"
+            <Toggle
+              pressed={showFurigana}
+              onPressedChange={setShowFurigana}
+              aria-label="Toggle furigana display"
+              size="sm"
             >
-              {showFurigana ? "Hide Furigana" : "Show Furigana"}
-            </button>
+              <span>振り仮名</span>
+            </Toggle>
+          </div>
+          
+          <div className="flex gap-2">
+            <textarea
+              ref={textareaRef}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={handleKeyPress}
+              placeholder="Type your message in Japanese..."
+              className="flex-1 min-h-[40px] max-h-[120px] p-2 border rounded-md resize-none"
+              disabled={sending}
+            />
+            <Button
+              onClick={sendMessage}
+              disabled={!message.trim() || sending}
+              className="self-end"
+            >
+              Send
+            </Button>
           </div>
         </div>
       </div>
