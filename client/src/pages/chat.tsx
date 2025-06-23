@@ -82,6 +82,9 @@ export default function Chat() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const conversationId = params?.conversationId || null;
 
+  // Use conversation mode hook
+  const { isGroup, isSolo } = useConversationMode(conversation);
+
   // Load initial data
   useEffect(() => {
     if (!session || !user || !conversationId) {
@@ -462,23 +465,29 @@ export default function Chat() {
       {/* Messages Container */}
       <div className="flex-1 overflow-y-auto p-4">
         <div className="max-w-4xl mx-auto space-y-4">
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex items-start gap-3 ${msg.sender_type === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
-            >
-              <div className="flex-shrink-0">
-                {msg.sender_type === 'user' ? (
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                    You
-                  </div>
-                ) : (
-                  <img
-                    src={getAvatarImage(persona)}
-                    alt={persona?.name || "AI"}
-                    className="w-8 h-8 rounded-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
+          {messages.map((msg) => {
+            // Resolve persona per message for group/solo mode
+            const senderPersona = isGroup
+              ? personas.find(p => p.id === msg.sender_persona_id) || null
+              : persona;
+
+            return (
+              <div
+                key={msg.id}
+                className={`flex items-start gap-3 ${msg.sender_type === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
+              >
+                <div className="flex-shrink-0">
+                  {msg.sender_type === 'user' ? (
+                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                      You
+                    </div>
+                  ) : (
+                    <img
+                      src={getAvatarImage(senderPersona)}
+                      alt={senderPersona?.name || "AI"}
+                      className="w-8 h-8 rounded-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
                       target.src = "/avatars/default.png";
                     }}
                   />
@@ -528,7 +537,8 @@ export default function Chat() {
                 )}
               </div>
             </div>
-          ))}
+          );
+          })}
 
           {sending && (
             <div className="flex items-start gap-3">
