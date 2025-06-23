@@ -918,7 +918,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate secure AI response using dynamic prompt
       const { generateSecureAIResponse } = await import('./openai');
       const aiResponse = await generateSecureAIResponse(
-        tutorId ? parseInt(tutorId) : 1, // Default to persona 1 if no tutorId
+        tutorId || "1", // Pass UUID string directly
         userId,
         username,
         message,

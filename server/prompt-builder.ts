@@ -90,7 +90,7 @@ Begin the conversation naturally as ${tutor.name}. Remember: you are helping ${s
 /**
  * Retrieves tutor data from Supabase with error handling
  */
-export async function getTutorById(tutorId: number): Promise<Tutor | null> {
+export async function getTutorById(tutorId: string): Promise<Tutor | null> {
   try {
     const { data: tutor, error } = await supabase
       .from('personas')
@@ -223,7 +223,7 @@ function getLanguageGuidance(policy: string): string {
 /**
  * Logs prompt usage for analytics while protecting sensitive data
  */
-export function logPromptUsage(tutorId: number, userId: string, topic: string): void {
+export function logPromptUsage(tutorId: string, userId: string, topic: string): void {
   // Log only non-sensitive metadata for analytics
   console.log(`Prompt generated - Tutor: ${tutorId}, User: ${userId.substring(0, 8)}..., Topic: ${topic.substring(0, 20)}...`);
 }
