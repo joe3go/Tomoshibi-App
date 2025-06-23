@@ -17,7 +17,6 @@ import MyVocabulary from "@/pages/my-vocabulary";
 import History from "@/pages/history";
 import Settings from "@/pages/settings";
 import PracticeGroups from "@/pages/practice-groups";
-import GroupChat from "@/pages/group-chat";
 import NotFound from "@/pages/not-found";
 
 // Create a single QueryClient instance
@@ -50,7 +49,6 @@ export default function App() {
             <Route path="/history" component={History} />
             <Route path="/settings" component={Settings} />
             <Route path="/practice-groups" component={PracticeGroups} />
-            <Route path="/group-chat/:conversationId" component={GroupChat} />
             <Route component={NotFound} />
           </Switch>
         </Router>

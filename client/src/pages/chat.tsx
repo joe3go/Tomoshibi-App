@@ -65,6 +65,8 @@ export default function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [persona, setPersona] = useState<Persona | null>(null);
+  const [conversationPersonas, setConversationPersonas] = useState<Persona[]>([]);
+  const [typingPersonas, setTypingPersonas] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   
@@ -114,6 +116,8 @@ export default function Chat() {
 
       setConversation(convData);
       
+      // Load conversation participants will be called after personas are loaded
+      
       // Load messages
       await loadMessages();
       
@@ -145,6 +149,48 @@ export default function Chat() {
     setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 100);
+  };
+
+  const loadConversationParticipants = async () => {
+    try {
+      // Check if conversation_participants table exists and has data
+      const { data: participantsData, error: participantsError } = await supabase
+        .from("conversation_participants")
+        .select("*, personas(*)")
+        .eq("conversation_id", conversationId);
+
+      if (!participantsError && participantsData && participantsData.length > 0) {
+        // Group chat: extract personas from participants
+        const groupPersonas = participantsData.map((p: any) => p.personas).filter(Boolean);
+        setConversationPersonas(groupPersonas);
+        console.log("Group chat detected with personas:", groupPersonas.map((p: any) => p.name));
+      } else {
+        // Single chat: find persona by extracting from conversation title
+        await loadSinglePersona();
+      }
+    } catch (error) {
+      console.log("No conversation_participants table found, using single persona mode");
+      // Fallback to single persona mode using conversation title
+      await loadSinglePersona();
+    }
+  };
+
+  const loadSinglePersona = async () => {
+    if (conversation?.title && personas.length > 0) {
+      // Extract persona name from title like "Chat with Aoi" or "Aoi | Scenario"
+      const titleParts = conversation.title.split('|')[0].trim();
+      const personaName = titleParts.replace(/^Chat with\s+/i, '').trim();
+      
+      const foundPersona = personas.find(p => 
+        p.name.toLowerCase() === personaName.toLowerCase()
+      );
+      
+      if (foundPersona) {
+        setConversationPersonas([foundPersona]);
+        setPersona(foundPersona);
+        console.log("Single chat with persona:", foundPersona.name);
+      }
+    }
   };
 
   const loadPersonas = async () => {
