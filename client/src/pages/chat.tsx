@@ -240,38 +240,21 @@ export default function Chat() {
     queryKey: ["/api/scenarios"],
   });
 
-  // Simplified message mutation with proper optimistic updates
+  // Streamlined message mutation for immediate UI updates
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
       if (!session || !user) {
         throw new Error("No active session found. Please log in again.");
       }
 
-      console.log("📤 Sending message to conversation:", conversationId);
+      console.log("📤 Sending message:", content.substring(0, 20) + "...");
 
-      // Add user message
-      const { data: userMessage, error: userMsgError } = await supabase
-        .from("messages")
-        .insert({
-          conversation_id: conversationId,
-          sender_type: "user",
-          content: content,
-          sender_persona_id: null,
-          created_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      if (userMsgError) {
-        console.error("❌ Failed to add user message:", userMsgError);
-        throw new Error("Failed to send message");
-      }
-
-      // Get AI response
+      // Get current session for API call
       const {
         data: { session: currentSession },
       } = await supabase.auth.getSession();
 
+      // Send to our API which handles both user message insertion and AI response
       const response = await fetch("/api/chat/secure", {
         method: "POST",
         headers: {
@@ -287,51 +270,19 @@ export default function Chat() {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("❌ AI response error:", response.status, errorText);
-        throw new Error(`Failed to get AI response: ${response.status}`);
+        console.error("❌ Chat API error:", response.status, errorText);
+        throw new Error(`Failed to send message: ${response.status}`);
       }
 
-      const aiData = await response.json();
+      const responseData = await response.json();
+      console.log("✅ Chat API response received");
 
-      if (!aiData || !aiData.content) {
-        console.error("❌ Invalid AI response structure:", aiData);
-        throw new Error("AI response is missing required content");
-      }
-
-      // Add AI message
-      const aiMessageData = {
-        conversation_id: conversationId,
-        sender_type: 'ai',
-        content: aiData.content || '',
-        english_translation: aiData.english_translation || null,
-        tutor_feedback: aiData.feedback || null,
-        suggestions: Array.isArray(aiData.suggestions) ? aiData.suggestions : 
-                    aiData.suggestions ? [aiData.suggestions] : null,
-        vocab_used: Array.isArray(aiData.vocabUsed) ? aiData.vocabUsed : [],
-        grammar_used: Array.isArray(aiData.grammarUsed) ? aiData.grammarUsed : [],
-        sender_persona_id: validPersonaId,
-        created_at: new Date().toISOString(),
-      };
-
-      const { data: aiMessage, error: aiMsgError } = await supabase
-        .from('messages')
-        .insert(aiMessageData)
-        .select()
-        .single();
-
-      if (aiMsgError) {
-        console.error("❌ Failed to add AI message:", aiMsgError);
-        throw new Error("Failed to save AI response");
-      }
-
-      console.log("✅ Messages added successfully");
-
-      return {
-        userMessage,
-        aiMessage
-      };
+      // The API should return the complete response structure
+      return responseData;
     },
     onMutate: async (content: string) => {
+      console.log("🚀 Starting optimistic update for:", content.substring(0, 20) + "...");
+      
       // Store temporary ID
       tempIdRef.current = `temp_${Date.now()}`;
       const tempId = tempIdRef.current;
@@ -347,7 +298,7 @@ export default function Chat() {
         conversationId,
       ]);
 
-      // Optimistic update - only add temporary user message
+      // Optimistic update - add user message immediately
       queryClient.setQueryData(["conversation", conversationId], (old: any) => {
         if (!old) return old;
 
@@ -364,6 +315,8 @@ export default function Chat() {
           created_at: new Date().toISOString(),
         };
 
+        console.log("➕ Adding optimistic user message to cache");
+
         return {
           ...old,
           messages: [...(old.messages || []), optimisticUserMessage],
@@ -372,31 +325,57 @@ export default function Chat() {
 
       return { previousData, tempId };
     },
-    onSuccess: (data, content, context) => {
-      console.log("✅ Message sent successfully, updating UI");
+    onSuccess: (responseData, content, context) => {
+      console.log("✅ Message sent successfully, updating UI immediately");
       setMessage("");
 
       const tempId = context?.tempId || tempIdRef.current;
 
-      // Replace temporary message with real messages
+      // Parse the response data to extract messages
+      let userMessage, aiMessage;
+      
+      if (responseData.messages && Array.isArray(responseData.messages)) {
+        // If API returns messages array
+        userMessage = responseData.messages.find((m: any) => m.sender_type === 'user');
+        aiMessage = responseData.messages.find((m: any) => m.sender_type === 'ai');
+      } else if (responseData.userMessage && responseData.aiMessage) {
+        // If API returns separate fields
+        userMessage = responseData.userMessage;
+        aiMessage = responseData.aiMessage;
+      } else {
+        console.error("❌ Unexpected response structure:", responseData);
+        return;
+      }
+
+      // Immediately update cache with real messages
       queryClient.setQueryData(["conversation", conversationId], (old: any) => {
         if (!old) return old;
 
-        // Remove temporary message and add real messages
+        // Remove temporary message
         const filteredMessages = (old.messages || []).filter((msg: any) => 
           msg.id !== tempId
         );
 
+        const newMessages = [];
+        if (userMessage) newMessages.push(userMessage);
+        if (aiMessage) newMessages.push(aiMessage);
+
+        console.log("🔄 Replacing optimistic message with real messages:", {
+          removedTempId: tempId,
+          addedCount: newMessages.length,
+          totalAfter: filteredMessages.length + newMessages.length
+        });
+
         return {
           ...old,
-          messages: [...filteredMessages, data.userMessage, data.aiMessage]
+          messages: [...filteredMessages, ...newMessages]
         };
       });
 
       // Force immediate scroll to bottom
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 0);
+      }, 50);
     },
     onError: (error, content, context) => {
       console.error("❌ Message send failed:", error.message);
@@ -468,63 +447,19 @@ export default function Chat() {
     },
   });
 
-  // Fixed realtime subscription
+  // Simplified realtime subscription - only for debugging
   useEffect(() => {
     if (!conversationId) return;
 
-    console.log('🔔 Setting up realtime subscription for conversation:', conversationId);
-
-    const channel = supabase.channel(`conversation-${conversationId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `conversation_id=eq.${conversationId}`
-        },
-        (payload) => {
-          console.log('📨 Realtime message received:', payload);
-
-          // Skip temporary messages
-          if (payload.new.id.toString().startsWith("temp_")) return;
-
-          queryClient.setQueryData(["conversation", conversationId], (old: any) => {
-            if (!old) return old;
-
-            const existingIds = old?.messages?.map((m: any) => m.id) || [];
-            if (existingIds.includes(payload.new.id)) return old;
-
-            return {
-              ...old,
-              messages: [...(old?.messages || []), payload.new]
-            };
-          });
-        }
-      )
-      .on("postgres_changes", {
-        event: "UPDATE",
-        schema: "public",
-        table: "messages",
-        filter: `conversation_id=eq.${conversationId}`
-      }, (payload) => {
-        queryClient.setQueryData(["conversation", conversationId], (old: any) => {
-          if (!old?.messages) return old;
-          return {
-            ...old,
-            messages: old.messages.map((msg: any) => 
-              msg.id === payload.new.id ? payload.new : msg
-            )
-          };
-        });
-      })
-      .subscribe();
-
+    console.log('🔔 Monitoring conversation:', conversationId);
+    
+    // For now, rely on optimistic updates and mutation success
+    // Realtime can be added back later if needed
+    
     return () => {
-      console.log('🔕 Cleaning up realtime subscription');
-      channel.unsubscribe();
+      console.log('🔕 Cleaning up conversation monitor');
     };
-  }, [conversationId, queryClient]);
+  }, [conversationId]);
 
   // Auto-scroll effect
   useEffect(() => {

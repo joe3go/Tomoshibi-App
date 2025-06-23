@@ -781,7 +781,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
 
-      res.json(updatedMessages || []);
+      // Return in format expected by frontend
+    const userMessage = updatedMessages.find(m => m.sender_type === 'user');
+    const aiMessage = updatedMessages.find(m => m.sender_type === 'ai');
+
+    return res.status(200).json({
+      success: true,
+      messages: updatedMessages,
+      userMessage,
+      aiMessage
+    });
     } catch (error) {
       console.error('Send message error:', error);
       res.status(500).json({ message: 'Failed to send message' });
