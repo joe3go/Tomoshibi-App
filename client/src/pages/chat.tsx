@@ -104,6 +104,8 @@ export default function Chat() {
       };
     },
     enabled: !!conversationId && !!session && !!user,
+    staleTime: 1000 * 60 * 5, // Keep cache fresh for 5 minutes
+    gcTime: 1000 * 60 * 10, // Keep in memory for 10 minutes
   });
 
   // Fetch personas directly from Supabase for consistency
@@ -230,28 +232,36 @@ export default function Chat() {
       // Snapshot the previous value
       const previousData = queryClient.getQueryData(["conversation", conversationId]);
 
-      // Optimistically update to show user message immediately with correct schema
-      queryClient.setQueryData(["conversation", conversationId], (old: any) => {
-        if (!old) return old;
-        
-        const optimisticUserMessage = {
-          id: `temp_${Date.now()}`,
-          sender_type: 'user',
-          content: content,
-          sender_persona_id: null,
-          english_translation: null,
-          tutor_feedback: null,
-          suggestions: null,
-          vocab_used: null,
-          grammar_used: null,
-          created_at: new Date().toISOString()
-        };
+      // Only do optimistic update if we have valid cache data
+      if (previousData) {
+        queryClient.setQueryData(["conversation", conversationId], (old: any) => {
+          if (!old) {
+            console.log('⚠️ Cache data missing during optimistic update');
+            return old;
+          }
+          
+          const optimisticUserMessage = {
+            id: `temp_${Date.now()}`,
+            sender_type: 'user',
+            content: content,
+            sender_persona_id: null,
+            english_translation: null,
+            tutor_feedback: null,
+            suggestions: null,
+            vocab_used: null,
+            grammar_used: null,
+            created_at: new Date().toISOString()
+          };
 
-        return {
-          ...old,
-          messages: [...(old.messages || []), optimisticUserMessage]
-        };
-      });
+          console.log('✅ Adding optimistic message to cache');
+          return {
+            ...old,
+            messages: [...(old.messages || []), optimisticUserMessage]
+          };
+        });
+      } else {
+        console.log('⚠️ No cache data available for optimistic update');
+      }
 
       return { previousData };
     },
@@ -259,10 +269,19 @@ export default function Chat() {
       console.log('🔄 Mutation success, updating cache with new messages...');
       console.log('📨 New messages received:', newMessages);
       
+      // Force refetch if cache is empty/corrupted
+      const currentCache = queryClient.getQueryData(["conversation", conversationId]);
+      if (!currentCache) {
+        console.log('🔄 Cache is empty, invalidating to trigger refetch...');
+        queryClient.invalidateQueries({ queryKey: ["conversation", conversationId] });
+        setMessage("");
+        return;
+      }
+      
       // Update cache by merging new messages (replace optimistic with real messages)
       queryClient.setQueryData(["conversation", conversationId], (old: any) => {
         if (!old) {
-          console.log('⚠️ No existing cache data found');
+          console.log('⚠️ Cache became null during update, skipping...');
           return old;
         }
 
@@ -285,10 +304,6 @@ export default function Chat() {
 
         return updatedData;
       });
-      
-      // Debug: Check current cache state
-      const currentCache = queryClient.getQueryData(["conversation", conversationId]);
-      console.log('🔍 CURRENT CACHE STATE:', currentCache);
       
       setMessage("");
     },
