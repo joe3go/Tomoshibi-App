@@ -14,7 +14,8 @@ import {
   ChevronRight,
   Play,
   Settings,
-  LogOut
+  LogOut,
+  X
 } from "lucide-react";
 import { useAuth } from "@/context/SupabaseAuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +29,7 @@ import {
 } from "@/lib/supabase-functions";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase/client";
+import { queryClient } from "@/lib/queryClient";
 
 // Helper function to get avatar image
 const getAvatarImage = (persona: any) => {
@@ -197,6 +199,53 @@ export default function Dashboard() {
   const handleResumeChat = (conversationId: string | number) => {
     console.log('🔄 Resuming chat with conversation ID:', conversationId, 'Type:', typeof conversationId);
     setLocation(`/chat/${conversationId}`);
+  };
+
+  // End conversation mutation
+  const endConversationMutation = useMutation({
+    mutationFn: async (conversationId: string | number) => {
+      if (!user?.id) {
+        throw new Error("User not authenticated");
+      }
+
+      console.log('🛑 Ending conversation:', conversationId);
+      
+      const { error } = await supabase
+        .from('conversations')
+        .update({ 
+          status: 'completed',
+          completed_at: new Date().toISOString()
+        })
+        .eq('id', conversationId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('❌ Failed to end conversation:', error);
+        throw new Error('Failed to end conversation');
+      }
+
+      return { success: true };
+    },
+    onSuccess: () => {
+      toast({
+        title: "Conversation ended",
+        description: "The conversation has been completed and moved to your transcripts.",
+      });
+      // Refresh conversations list
+      queryClient.invalidateQueries({ queryKey: ["conversations", user?.id] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to end conversation",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle end chat
+  const handleEndChat = (conversationId: string | number) => {
+    endConversationMutation.mutate(conversationId);
   };
 
   // Handle logout
@@ -478,14 +527,29 @@ export default function Dashboard() {
                             </p>
                           </div>
                         </div>
-                        <Button 
-                          size="sm" 
-                          onClick={() => handleResumeChat(conversation.id)}
-                          className="resume-btn"
-                        >
-                          Resume
-                          <ChevronRight className="w-4 h-4 ml-1" />
-                        </Button>
+                        <div className="conversation-actions">
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleResumeChat(conversation.id)}
+                            className="resume-btn"
+                            disabled={conversation.status === 'completed'}
+                          >
+                            Resume
+                            <ChevronRight className="w-4 h-4 ml-1" />
+                          </Button>
+                          {conversation.status === 'active' && (
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleEndChat(conversation.id)}
+                              className="end-chat-btn"
+                              disabled={endConversationMutation.isPending}
+                            >
+                              <X className="w-4 h-4" />
+                              End Chat
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
