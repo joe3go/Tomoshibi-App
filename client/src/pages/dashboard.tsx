@@ -153,7 +153,7 @@ export default function Dashboard() {
     streak: 7,
     newWordsThisWeek: 12,
     totalWords: 150,
-    activeConversations: Array.isArray(conversations) ? conversations.length : 0,
+    activeConversations: Array.isArray(conversations) ? conversations.filter((conv: any) => conv.status === 'active').length : 0,
     practiceTime: 155, // minutes
     upcomingGoal: "Learn 20 JLPT N5 words"
   };
@@ -474,9 +474,9 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="section-content">
-              {Array.isArray(conversations) && conversations.length > 0 ? (
+              {Array.isArray(conversations) && conversations.filter((conv: any) => conv.status === 'active').length > 0 ? (
                 <div className="conversations-list">
-                  {conversations.slice(0, 3).map((conversation: any) => {
+                  {conversations.filter((conv: any) => conv.status === 'active').slice(0, 3).map((conversation: any) => {
                     const persona = tutorsData.find((p: any) => p.id === conversation.persona_id);
                     return (
                       <div key={conversation.id} className="conversation-card">
@@ -488,7 +488,7 @@ export default function Dashboard() {
                           <div className="conversation-details">
                             <p className="conversation-tutor">{persona?.name || 'Unknown Tutor'}</p>
                             <p className="conversation-summary">
-                              {conversation.status === 'active' ? 'Active conversation' : 'Completed'}
+                              Active conversation
                             </p>
                           </div>
                         </div>
@@ -497,23 +497,20 @@ export default function Dashboard() {
                             size="sm" 
                             onClick={() => handleResumeChat(conversation.id)}
                             className="resume-btn"
-                            disabled={conversation.status === 'completed'}
                           >
                             Resume
                             <ChevronRight className="w-4 h-4 ml-1" />
                           </Button>
-                          {conversation.status === 'active' && (
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleEndChat(conversation.id)}
-                              className="end-chat-btn"
-                              disabled={endConversationMutation.isPending}
-                            >
-                              <X className="w-4 h-4" />
-                              End Chat
-                            </Button>
-                          )}
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleEndChat(conversation.id)}
+                            className="end-chat-btn"
+                            disabled={endConversationMutation.isPending}
+                          >
+                            <X className="w-4 h-4" />
+                            End Chat
+                          </Button>
                         </div>
                       </div>
                     );

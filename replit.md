@@ -113,7 +113,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### June 23, 2025 - Comprehensive Vocabulary System Implementation with Full 7,972 Entry Support
+### June 23, 2025 - Fixed Recent Conversations Display and Comprehensive Vocabulary System
+- **Fixed recent conversations filtering**:
+  - Completed conversations no longer appear in the dashboard's "Recent Conversations" section
+  - Only active conversations are displayed, improving user experience and dashboard clarity
+  - Updated analytics to accurately count only active conversations
+  - Simplified conversation controls since all displayed conversations are active
+- **Comprehensive Vocabulary System Implementation with Full 7,972 Entry Support**:
 - **Implemented comprehensive vocabulary API with chunked pagination**:
   - Created `client/src/lib/vocab-api.ts` with complete CRUD operations for all 7,972 vocabulary entries
   - Built `fetchAllVocabulary()` function using chunked pagination to bypass Supabase's 1,000 row default limit
