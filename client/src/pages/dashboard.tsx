@@ -18,7 +18,7 @@ import {
   X
 } from "lucide-react";
 import { useAuth } from "@/context/SupabaseAuthContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -530,6 +530,46 @@ export default function Dashboard() {
           </Card>
         </div>
 
+        {/* Practice Groups Section */}
+        <div className="practice-groups-section">
+          <Card className="section-card">
+            <CardHeader className="section-header">
+              <CardTitle className="section-title">
+                <Users className="w-5 h-5" />
+                Practice Groups
+              </CardTitle>
+              <CardDescription>
+                Join AI-powered group conversations with multiple tutors
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="section-content">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">3</div>
+                  <div className="text-sm text-muted-foreground">Available Groups</div>
+                </div>
+                <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">Multiple</div>
+                  <div className="text-sm text-muted-foreground">AI Participants</div>
+                </div>
+                <div className="text-center p-4 bg-rose-50 dark:bg-rose-900/20 rounded-lg">
+                  <div className="text-2xl font-bold text-rose-600 dark:text-rose-400">Real-time</div>
+                  <div className="text-sm text-muted-foreground">Conversations</div>
+                </div>
+              </div>
+              <div className="text-center">
+                <Button 
+                  onClick={() => setLocation('/practice-groups')}
+                  className="bg-gradient-to-r from-blue-600 to-rose-600 hover:from-blue-700 hover:to-rose-700"
+                >
+                  <Users className="w-4 h-4 mr-2" />
+                  Explore Practice Groups
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Meet Your Tutors Section */}
         <div className="tutors-section">
           <Card className="section-card">
@@ -538,6 +578,9 @@ export default function Dashboard() {
                 <Users className="w-5 h-5" />
                 Meet Your Tutors
               </CardTitle>
+              <CardDescription>
+                Start one-on-one conversations with AI tutors
+              </CardDescription>
             </CardHeader>
             <CardContent className="section-content">
               <div className="tutors-grid">

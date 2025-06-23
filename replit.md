@@ -113,6 +113,28 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### June 23, 2025 - Implemented Group Conversation Feature with Multi-Persona Support
+- **Complete group conversation system implementation**:
+  - Added conversation templates for Anime Club, Study Group, and Cafe Hangout scenarios
+  - Built template selector UI with difficulty badges and participant counts
+  - Created typing indicator component with animated dots for realistic group chat feel
+  - Implemented conversation prompt injection with variable replacement for personalization
+- **Mock data architecture for group conversations**:
+  - Created comprehensive type definitions in `shared/group-conversation-types.ts`
+  - Built mock conversation templates with predefined prompts and participant mappings
+  - Added localStorage-based group conversation storage for demo functionality
+  - Implemented participant management with persona ordering and role assignment
+- **Seamless dashboard integration**:
+  - Added Practice Groups section to dashboard with statistics and navigation
+  - Created dedicated `/practice-groups` route with template selection interface
+  - Maintained complete backward compatibility with existing solo chat functionality
+  - Added visual distinction between solo tutors and group practice options
+- **Enhanced user experience features**:
+  - Real-time typing simulation for multiple AI participants
+  - Group creation with automatic initial message generation
+  - Template-based conversation initialization with personalized greetings
+  - Responsive UI design with proper loading states and error handling
+
 ### June 23, 2025 - Fixed Recent Conversations Display and Tutor Labeling Issues
 - **Fixed recent conversations filtering**:
   - Completed conversations no longer appear in the dashboard's "Recent Conversations" section
