@@ -5,7 +5,7 @@ function encodePersonaInTitle(title: string, personaId: string): string {
   return `${title}|persona:${personaId}`;
 }
 
-function extractPersonaFromTitle(title: string): {
+export function extractPersonaFromTitle(title: string): {
   cleanTitle: string;
   personaId: string | null;
 } {
@@ -29,7 +29,6 @@ export async function createConversation(
       .from("conversations")
       .insert({
         user_id: userId,
-        persona_id: personaId,
         scenario_id: scenarioId,
         title: titleWithPersona,
         status: "active",

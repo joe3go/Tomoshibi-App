@@ -19,7 +19,8 @@ import {
   getConversationMessages, 
   addMessage, 
   completeConversation,
-  getCurrentUser 
+  getCurrentUser,
+  extractPersonaFromTitle
 } from "@/lib/supabase-functions";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/context/SupabaseAuthContext";
@@ -437,16 +438,18 @@ export default function Chat() {
     );
   }
 
+  // Extract persona ID from encoded title since persona_id column doesn't exist yet
+  const { personaId } = extractPersonaFromTitle(conversation?.title || "");
+  
   console.log('🔍 Chat page - conversation data:', {
     conversationId: conversation?.id,
-    personaId: conversation?.persona_id,
+    extractedPersonaId: personaId,
+    title: conversation?.title,
     scenarioId: conversation?.scenario_id,
-    personaIdType: typeof conversation?.persona_id,
-    scenarioIdType: typeof conversation?.scenario_id
   });
 
   const persona = Array.isArray(personas)
-    ? personas.find((p: any) => p.id === conversation?.persona_id)
+    ? personas.find((p: any) => p.id === personaId)
     : null;
   const scenario = Array.isArray(scenarios)
     ? scenarios.find((s: any) => s.id === conversation?.scenario_id)
