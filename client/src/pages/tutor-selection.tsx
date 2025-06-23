@@ -39,7 +39,7 @@ export default function TutorSelection() {
       console.log('🎯 Tutor selection - persona ID:', personaId, 'Type:', typeof personaId);
       
       // Import validation function
-      const { isValidUUID } = require("../../../shared/validation");
+      const { isValidUUID } = await import("../../../shared/validation");
       
       // Validate UUID format
       if (!personaId || !isValidUUID(personaId)) {

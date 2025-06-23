@@ -165,7 +165,7 @@ export default function Dashboard() {
       console.log('🎯 Starting new chat with persona ID:', personaId, 'Type:', typeof personaId);
 
       // Import validation function
-      const { isValidUUID } = require("../../../shared/validation");
+      const { isValidUUID } = await import("../../../shared/validation");
 
       if (!personaId || !isValidUUID(personaId)) {
         console.error('❌ Invalid persona ID:', personaId);
