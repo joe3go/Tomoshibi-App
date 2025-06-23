@@ -1,0 +1,99 @@
+Claim:
+You're returning rawContent directly as content, and leaving all structured fields like feedback, vocabUsed, etc., as empty.
+
+Your current code in generateSecureAIResponse:
+
+const rawContent = response?.choices?.[0]?.message?.content;
+return {
+  content: rawContent,
+  feedback: undefined,
+  vocabUsed: [],
+  grammarUsed: [],
+  suggestions: [],
+};
+
+✅ Confirmed: This is not parsed, so if the AI returns a JSON blob, the frontend receives just a string — breaking structure-dependent logic.
+✅ 2. Fix: Enforce response_format: "json_object"
+
+Claim:
+OpenAI needs to be told explicitly to return JSON format.
+
+You’re missing this in your generateSecureAIResponse:
+
+response_format: { type: "json_object" }
+
+✅ Confirmed: Adding this ensures GPT returns a parseable JSON object, not raw Markdown or text.
+✅ 3. Fix: Proper JSON Parsing
+
+Claim:
+You need to parse the structured response, fallback safely, and log if it fails.
+
+Suggested:
+
+let parsedResponse;
+try {
+  parsedResponse = JSON.parse(rawContent);
+} catch (e) {
+  console.error("❌ Failed to parse AI response:", rawContent);
+  throw new Error("Invalid AI response format");
+}
+
+✅ Confirmed: This is best practice. Your current code doesn’t attempt to parse anything — which breaks expectations for vocabUsed, grammarUsed, etc.
+✅ 4. Fix: Prompt Builder Must Include JSON Format Instruction
+
+Claim:
+You need to explicitly instruct the model to return structured data in a specific format, e.g.:
+
+Respond only in JSON with this structure:
+{
+  "response": "こんにちは！",
+  "english_translation": "Hello!",
+  "feedback": "Good job!",
+  "vocabUsed": [123],
+  "grammarUsed": [456],
+  "suggestions": ["Practice て-form."]
+}
+
+✅ Confirmed: Your buildDynamicPrompt() must include this format, otherwise the AI may not follow the intended structure even if response_format: json_object is set.
+✅ 5. Impact on Frontend Behavior
+
+Claim:
+Your frontend assumes a complete structure with vocabUsed, grammarUsed, feedback, etc. — but gets a flat string or malformed JSON. Hence:
+
+    Mutation appears successful (logs show ✅)
+
+    UI tries to access message.vocabUsed etc., but they're missing or undefined
+
+    Message state never re-renders properly = perpetual "Thinking..." issue
+
+✅ Confirmed: This is consistent with all symptoms you've logged, including:
+
+    Messages logged as “✅ Added”
+
+    Cache update occurs
+
+    No UI rendering
+
+✅ 6. Verification Steps Are Correct
+
+    Log parsed response:
+
+    console.log("🗣️ Parsed OpenAI Response:", parsedResponse);
+
+    Confirm structure with forced English (e.g. "Hello!") to verify JSON.
+
+    Use DevTools > Network > POST /api/chat/secure to confirm structured response.
+
+✅ Verdict
+
+Deepseek's advice is solid and entirely correct.
+
+You should immediately:
+
+    Enforce response_format: "json_object" in your OpenAI call
+
+    Add JSON parsing logic in generateSecureAIResponse
+
+    Update your system prompt to instruct GPT to reply in JSON
+
+    Adjust fallback values to avoid empty arrays or undefined fields

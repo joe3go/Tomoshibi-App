@@ -3,10 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  ArrowLeft,
-  CheckCircle,
-} from "lucide-react";
+import { ArrowLeft, CheckCircle } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import FuriganaText from "@/components/furigana-text";
@@ -14,13 +11,13 @@ import { MessageWithVocab } from "@/components/MessageWithVocab";
 import { Input } from "@/components/ui/input";
 import { Toggle } from "@/components/ui/toggle";
 import { Languages } from "lucide-react";
-import { bind, unbind, toHiragana } from 'wanakana';
-import { 
-  getConversationMessages, 
-  addMessage, 
+import { bind, unbind, toHiragana } from "wanakana";
+import {
+  getConversationMessages,
+  addMessage,
   completeConversation,
   getCurrentUser,
-  extractPersonaFromTitle
+  extractPersonaFromTitle,
 } from "@/lib/supabase-functions";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/context/SupabaseAuthContext";
@@ -53,54 +50,63 @@ export default function Chat() {
         description: "Please log in to access the chat",
         variant: "destructive",
       });
-      setLocation('/login');
+      setLocation("/login");
     }
   }, [authLoading, session, setLocation, toast]);
 
   // Fetch conversation data using Supabase directly
-  const { data: conversationData, isLoading, error } = useQuery({
+  const {
+    data: conversationData,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["conversation", conversationId],
     queryFn: async () => {
-      console.log('🔍 Fetching conversation data for ID:', conversationId, 'Type:', typeof conversationId);
+      console.log(
+        "🔍 Fetching conversation data for ID:",
+        conversationId,
+        "Type:",
+        typeof conversationId,
+      );
 
       if (!session) {
-        console.error('❌ No Supabase session found');
-        throw new Error('Authentication required');
+        console.error("❌ No Supabase session found");
+        throw new Error("Authentication required");
       }
 
       // Get conversation directly from Supabase
       const { data: conversation, error: convError } = await supabase
-        .from('conversations')
-        .select('*')
-        .eq('id', conversationId)
-        .eq('user_id', user.id)
+        .from("conversations")
+        .select("*")
+        .eq("id", conversationId)
+        .eq("user_id", user.id)
         .single();
 
       if (convError || !conversation) {
-        console.error('❌ Conversation not found:', convError);
-        throw new Error('Conversation not found or access denied');
+        console.error("❌ Conversation not found:", convError);
+        throw new Error("Conversation not found or access denied");
       }
 
       // Get messages for this conversation
       const { data: messages, error: msgError } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
+        .from("messages")
+        .select("*")
+        .eq("conversation_id", conversationId)
+        .order("created_at", { ascending: true });
 
       if (msgError) {
-        console.error('❌ Error fetching messages:', msgError);
-        throw new Error('Failed to fetch messages');
+        console.error("❌ Error fetching messages:", msgError);
+        throw new Error("Failed to fetch messages");
       }
 
-      console.log('✅ Conversation and messages loaded:', {
+      console.log("✅ Conversation and messages loaded:", {
         conversationId: conversation.id,
-        messageCount: messages?.length || 0
+        messageCount: messages?.length || 0,
       });
 
       return {
         conversation,
-        messages: messages || []
+        messages: messages || [],
       };
     },
     enabled: !!conversationId && !!session && !!user,
@@ -114,16 +120,14 @@ export default function Chat() {
     queryFn: async () => {
       if (!session) return [];
 
-      const { data, error } = await supabase
-        .from('personas')
-        .select('*');
+      const { data, error } = await supabase.from("personas").select("*");
 
       if (error) {
-        console.error('Error fetching personas:', error);
+        console.error("Error fetching personas:", error);
         return [];
       }
 
-      console.log('Personas fetched from Supabase:', data);
+      console.log("Personas fetched from Supabase:", data);
       return data || [];
     },
     enabled: !!session,
@@ -140,45 +144,47 @@ export default function Chat() {
         throw new Error("No active session found. Please log in again.");
       }
 
-      console.log('📤 Sending message to conversation:', conversationId);
+      console.log("📤 Sending message to conversation:", conversationId);
 
       // Add user message using the updated schema
       const { data: userMessage, error: userMsgError } = await supabase
-        .from('messages')
+        .from("messages")
         .insert({
           conversation_id: conversationId,
-          sender_type: 'user',
+          sender_type: "user",
           content: content,
           sender_persona_id: null, // User messages don't have persona
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
         })
         .select()
         .single();
 
       if (userMsgError) {
-        console.error('❌ Failed to add user message:', userMsgError);
-        throw new Error('Failed to send message');
+        console.error("❌ Failed to add user message:", userMsgError);
+        throw new Error("Failed to send message");
       }
 
       // Get AI response using Supabase session token
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      const {
+        data: { session: currentSession },
+      } = await supabase.auth.getSession();
 
-      const response = await fetch('/api/chat/secure', {
-        method: 'POST',
+      const response = await fetch("/api/chat/secure", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${currentSession?.access_token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${currentSession?.access_token}`,
         },
         body: JSON.stringify({
           conversationId,
           message: content,
-          tutorId: validPersonaId
-        })
+          tutorId: validPersonaId,
+        }),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ AI response error:', response.status, errorText);
+        console.error("❌ AI response error:", response.status, errorText);
         throw new Error(`Failed to get AI response: ${response.status}`);
       }
 
@@ -186,23 +192,23 @@ export default function Chat() {
 
       // Validate AI response structure
       if (!aiData || !aiData.content) {
-        console.error('❌ Invalid AI response structure:', aiData);
-        throw new Error('AI response is missing required content');
+        console.error("❌ Invalid AI response structure:", aiData);
+        throw new Error("AI response is missing required content");
       }
 
-      console.log('✅ Valid AI response received:', {
+      console.log("✅ Valid AI response received:", {
         hasContent: !!aiData.content,
         hasTranslation: !!aiData.english_translation,
         hasFeedback: !!aiData.feedback,
-        contentLength: aiData.content?.length
+        contentLength: aiData.content?.length,
       });
 
       // Add AI message using the updated schema
       const { data: aiMessage, error: aiMsgError } = await supabase
-        .from('messages')
+        .from("messages")
         .insert({
           conversation_id: conversationId,
-          sender_type: 'ai',
+          sender_type: "ai",
           content: aiData.content,
           english_translation: aiData.english_translation,
           tutor_feedback: aiData.feedback,
@@ -210,113 +216,156 @@ export default function Chat() {
           vocab_used: aiData.vocabUsed,
           grammar_used: aiData.grammarUsed,
           sender_persona_id: validPersonaId, // AI messages have persona
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
         })
         .select()
         .single();
 
       if (aiMsgError) {
-        console.error('❌ Failed to add AI message:', aiMsgError);
-        throw new Error('Failed to save AI response');
+        console.error("❌ Failed to add AI message:", aiMsgError);
+        throw new Error("Failed to save AI response");
       }
 
-      console.log('✅ Messages added successfully:', { user: userMessage.id, ai: aiMessage.id });
+      console.log("✅ Messages added successfully:", {
+        user: userMessage.id,
+        ai: aiMessage.id,
+      });
 
       // Return the new messages
       return [userMessage, aiMessage];
     },
     onMutate: async (content: string) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ["conversation", conversationId] });
+      await queryClient.cancelQueries({
+        queryKey: ["conversation", conversationId],
+      });
 
-      // Snapshot the previous value
-      const previousData = queryClient.getQueryData(["conversation", conversationId]);
-
-      // Only do optimistic update if we have valid cache data
-      if (previousData) {
-        queryClient.setQueryData(["conversation", conversationId], (old: any) => {
-          if (!old) {
-            console.log('⚠️ Cache data missing during optimistic update');
-            return old;
-          }
-          
-          const optimisticUserMessage = {
-            id: `temp_${Date.now()}`,
-            sender_type: 'user',
-            content: content,
-            sender_persona_id: null,
-            english_translation: null,
-            tutor_feedback: null,
-            suggestions: null,
-            vocab_used: null,
-            grammar_used: null,
-            created_at: new Date().toISOString()
-          };
-
-          console.log('✅ Adding optimistic message to cache');
-          return {
-            ...old,
-            messages: [...(old.messages || []), optimisticUserMessage]
-          };
-        });
-      } else {
-        console.log('⚠️ No cache data available for optimistic update');
+      // Ensure cache structure exists before optimistic update
+      const existingCache = queryClient.getQueryData([
+        "conversation",
+        conversationId,
+      ]);
+      if (!existingCache) {
+        console.log("🔧 Initializing cache structure before optimistic update");
+        // Initialize with minimal structure - this will be filled by the query if not already present
+        const initData = {
+          conversation: { id: conversationId },
+          messages: [],
+        };
+        queryClient.setQueryData(["conversation", conversationId], initData);
       }
+
+      // Snapshot the previous value (now guaranteed to exist)
+      const previousData = queryClient.getQueryData([
+        "conversation",
+        conversationId,
+      ]);
+
+      // Perform optimistic update
+      queryClient.setQueryData(["conversation", conversationId], (old: any) => {
+        if (!old) {
+          console.log(
+            "⚠️ Cache unexpectedly null during update - using fallback",
+          );
+          return {
+            conversation: { id: conversationId },
+            messages: [
+              {
+                id: `temp_${Date.now()}`,
+                sender_type: "user",
+                content: content,
+                sender_persona_id: null,
+                english_translation: null,
+                tutor_feedback: null,
+                suggestions: null,
+                vocab_used: null,
+                grammar_used: null,
+                created_at: new Date().toISOString(),
+              },
+            ],
+          };
+        }
+
+        const optimisticUserMessage = {
+          id: `temp_${Date.now()}`,
+          sender_type: "user",
+          content: content,
+          sender_persona_id: null,
+          english_translation: null,
+          tutor_feedback: null,
+          suggestions: null,
+          vocab_used: null,
+          grammar_used: null,
+          created_at: new Date().toISOString(),
+        };
+
+        console.log("✅ Adding optimistic message to cache");
+        return {
+          ...old,
+          messages: [...(old.messages || []), optimisticUserMessage],
+        };
+      });
 
       return { previousData };
     },
     onSuccess: (newMessages) => {
-      console.log('🔄 Mutation success, updating cache with new messages...');
-      console.log('📨 New messages received:', newMessages);
-      
-      // Force refetch if cache is empty/corrupted
-      const currentCache = queryClient.getQueryData(["conversation", conversationId]);
-      if (!currentCache) {
-        console.log('🔄 Cache is empty, invalidating to trigger refetch...');
-        queryClient.invalidateQueries({ queryKey: ["conversation", conversationId] });
-        setMessage("");
-        return;
-      }
-      
-      // Update cache by merging new messages (replace optimistic with real messages)
+      console.log("🔄 Mutation success, updating cache with new messages...");
+      console.log("📨 New messages received:", newMessages);
+
+      // Always update cache, don't force refetch which clears the data
       queryClient.setQueryData(["conversation", conversationId], (old: any) => {
         if (!old) {
-          console.log('⚠️ Cache became null during update, skipping...');
-          return old;
+          console.log("🔧 Creating new cache structure with received messages");
+          return {
+            conversation: { id: conversationId },
+            messages: newMessages.sort(
+              (a, b) =>
+                new Date(a.created_at).getTime() -
+                new Date(b.created_at).getTime(),
+            ),
+          };
         }
 
         // Remove temporary messages and add real ones
-        const existingMessages = (old.messages || []).filter((msg: any) => 
-          !msg.id.toString().startsWith('temp_')
+        const existingMessages = (old.messages || []).filter(
+          (msg: any) => !msg.id.toString().startsWith("temp_"),
         );
-        
+
         const updatedData = {
           ...old,
-          messages: [...existingMessages, ...newMessages].sort((a, b) => 
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          )
+          messages: [...existingMessages, ...newMessages].sort(
+            (a, b) =>
+              new Date(a.created_at).getTime() -
+              new Date(b.created_at).getTime(),
+          ),
         };
 
-        console.log('📋 Updated cache data:', {
+        console.log("📋 Updated cache data:", {
           totalMessages: updatedData.messages.length,
-          newMessagesAdded: newMessages.length
+          newMessagesAdded: newMessages.length,
         });
 
         return updatedData;
       });
-      
+
       setMessage("");
     },
     onError: (error, content, context) => {
       // Revert to previous data on error
       if (context?.previousData) {
-        queryClient.setQueryData(["conversation", conversationId], context.previousData);
+        queryClient.setQueryData(
+          ["conversation", conversationId],
+          context.previousData,
+        );
       }
 
       // Handle auth errors
-      if (error.message.includes("session") || error.message.includes("authenticated")) {
-        localStorage.removeItem('token');
-        setLocation('/login');
+      if (
+        error.message.includes("session") ||
+        error.message.includes("authenticated")
+      ) {
+        localStorage.removeItem("token");
+        setLocation("/login");
         return;
       }
 
@@ -335,21 +384,21 @@ export default function Chat() {
         throw new Error("No active session found. Please log in again.");
       }
 
-      console.log('🏁 Completing conversation:', conversationId);
+      console.log("🏁 Completing conversation:", conversationId);
 
       // Update conversation status directly in Supabase
       const { error } = await supabase
-        .from('conversations')
-        .update({ 
-          status: 'completed',
-          completed_at: new Date().toISOString()
+        .from("conversations")
+        .update({
+          status: "completed",
+          completed_at: new Date().toISOString(),
         })
-        .eq('id', conversationId)
-        .eq('user_id', user.id);
+        .eq("id", conversationId)
+        .eq("user_id", user.id);
 
       if (error) {
-        console.error('❌ Failed to complete conversation:', error);
-        throw new Error('Failed to complete conversation');
+        console.error("❌ Failed to complete conversation:", error);
+        throw new Error("Failed to complete conversation");
       }
 
       return { success: true };
@@ -357,8 +406,12 @@ export default function Chat() {
     onSuccess: () => {
       // Invalidate multiple query keys to refresh all conversation lists
       queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/conversations/completed"] });
-      queryClient.invalidateQueries({ queryKey: [`conversation-messages`, conversationId] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/conversations/completed"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [`conversation-messages`, conversationId],
+      });
 
       toast({
         title: "Conversation completed!",
@@ -380,66 +433,126 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [(conversationData as any)?.messages]);
 
+  // Add cache validation to detect inconsistencies
+  useEffect(() => {
+    if (!conversationId || !session) return;
+
+    const validateCache = async () => {
+      try {
+        const { data: dbMessages } = await supabase
+          .from("messages")
+          .select("id")
+          .eq("conversation_id", conversationId);
+
+        const cacheData = queryClient.getQueryData([
+          "conversation",
+          conversationId,
+        ]) as any;
+        const dbCount = dbMessages?.length || 0;
+        const cacheCount = cacheData?.messages?.length || 0;
+
+        if (dbCount > 0 && cacheCount === 0) {
+          console.warn(
+            "🔄 Cache mismatch detected - DB has messages but cache is empty, refetching...",
+          );
+          queryClient.invalidateQueries({
+            queryKey: ["conversation", conversationId],
+          });
+        }
+      } catch (error) {
+        console.log("Cache validation skipped due to error:", error);
+      }
+    };
+
+    // Validate cache after a short delay to allow initial load
+    const timer = setTimeout(validateCache, 1000);
+    return () => clearTimeout(timer);
+  }, [conversationId, session, queryClient]);
+
   // Add realtime subscription for new messages
   useEffect(() => {
     if (!conversationId || !session) return;
 
-    console.log('🔔 Setting up realtime subscription for conversation:', conversationId);
-    
+    console.log(
+      "🔔 Setting up realtime subscription for conversation:",
+      conversationId,
+    );
+
     const channel = supabase
       .channel(`conversation-messages-${conversationId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `conversation_id=eq.${conversationId}`
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
-          console.log('📨 Realtime message received:', payload.new);
-          
+          console.log("📨 Realtime message received:", payload.new);
+
           // Update cache with new message, avoiding duplicates
-          queryClient.setQueryData(["conversation", conversationId], (old: any) => {
-            if (!old) {
-              console.log('⚠️ No cache data available for realtime update');
-              return old;
-            }
-            
-            const newMessage = payload.new;
-            const messageExists = old.messages?.some((msg: any) => msg.id === newMessage.id);
-            
-            if (!messageExists) {
-              console.log('✅ Adding realtime message to cache:', newMessage.id);
-              const updatedMessages = [...(old.messages || []), newMessage].sort((a, b) => 
-                new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          queryClient.setQueryData(
+            ["conversation", conversationId],
+            (old: any) => {
+              if (!old) {
+                console.log("🔧 Creating cache structure for realtime message");
+                return {
+                  conversation: { id: conversationId },
+                  messages: [payload.new],
+                };
+              }
+
+              const newMessage = payload.new;
+              const messageExists = old.messages?.some(
+                (msg: any) => msg.id === newMessage.id,
               );
-              
-              return {
-                ...old,
-                messages: updatedMessages
-              };
-            } else {
-              console.log('⏭️ Message already exists in cache:', newMessage.id);
-            }
-            
-            return old;
-          });
-        }
+
+              if (!messageExists) {
+                console.log(
+                  "✅ Adding realtime message to cache:",
+                  newMessage.id,
+                );
+                const updatedMessages = [
+                  ...(old.messages || []),
+                  newMessage,
+                ].sort(
+                  (a, b) =>
+                    new Date(a.created_at).getTime() -
+                    new Date(b.created_at).getTime(),
+                );
+
+                return {
+                  ...old,
+                  messages: updatedMessages,
+                };
+              } else {
+                console.log(
+                  "⏭️ Message already exists in cache:",
+                  newMessage.id,
+                );
+              }
+
+              return old;
+            },
+          );
+        },
       )
       .subscribe((status) => {
-        console.log('📡 Realtime subscription status:', status);
+        console.log("📡 Realtime subscription status:", status);
       });
 
     return () => {
-      console.log('🔕 Cleaning up realtime subscription');
+      console.log("🔕 Cleaning up realtime subscription");
       supabase.removeChannel(channel);
     };
   }, [conversationId, session, queryClient]);
 
   const handleSendMessage = () => {
     if (message.trim() && !sendMessageMutation.isPending) {
-      const finalMessage = romajiMode ? toHiragana(message.trim()) : message.trim();
+      const finalMessage = romajiMode
+        ? toHiragana(message.trim())
+        : message.trim();
       sendMessageMutation.mutate(finalMessage);
       setMessage("");
     }
@@ -449,8 +562,8 @@ export default function Chat() {
   useEffect(() => {
     const element = textareaRef.current;
     if (romajiMode && element) {
-      bind(element, { IMEMode: 'toHiragana' });
-      console.log('Wanakana bound to textarea');
+      bind(element, { IMEMode: "toHiragana" });
+      console.log("Wanakana bound to textarea");
     }
 
     return () => {
@@ -458,7 +571,7 @@ export default function Chat() {
         try {
           unbind(element);
         } catch (e) {
-          console.log('Unbind cleanup completed');
+          console.log("Unbind cleanup completed");
         }
       }
     };
@@ -469,17 +582,15 @@ export default function Chat() {
     setMessage(value);
   };
 
-
-
   const handleFuriganaToggle = () => {
     const newState = !showFurigana;
-    console.log('Furigana toggle:', showFurigana, '->', newState);
+    console.log("Furigana toggle:", showFurigana, "->", newState);
     setShowFurigana(newState);
     localStorage.setItem("furigana-visible", newState.toString());
   };
 
   const getAvatarImage = (persona: any) => {
-    return persona?.avatar_url || '/avatars/aoi.png'; // Use database avatar URL or fallback
+    return persona?.avatar_url || "/avatars/aoi.png"; // Use database avatar URL or fallback
   };
 
   // Show loading while auth is being determined
@@ -519,9 +630,7 @@ export default function Chat() {
       <div className="chat-error-container">
         <Card className="chat-error-card">
           <CardContent className="chat-error-content">
-            <h2 className="chat-error-title">
-              Conversation Not Found
-            </h2>
+            <h2 className="chat-error-title">Conversation Not Found</h2>
             <p className="chat-error-description">
               This conversation doesn't exist or you don't have access to it.
             </p>
@@ -545,9 +654,7 @@ export default function Chat() {
     return (
       <div className="chat-error-container">
         <Card className="chat-error-card">
-          <h2 className="chat-error-title">
-            Conversation Not Found
-          </h2>
+          <h2 className="chat-error-title">Conversation Not Found</h2>
           <p className="chat-error-description">
             This conversation doesn't exist or you don't have access to it.
           </p>
@@ -568,7 +675,7 @@ export default function Chat() {
   // Validate extracted persona ID
   const validPersonaId = personaId && isValidUUID(personaId) ? personaId : null;
 
-  console.log('🔍 Chat page - conversation data:', {
+  console.log("🔍 Chat page - conversation data:", {
     conversationId: conversation?.id,
     extractedPersonaId: personaId,
     validPersonaId,
@@ -583,7 +690,12 @@ export default function Chat() {
     ? scenarios.find((s: any) => s.id === conversation?.scenario_id)
     : null;
 
-  console.log('🔍 Found persona:', persona?.name, 'Found scenario:', scenario?.title);
+  console.log(
+    "🔍 Found persona:",
+    persona?.name,
+    "Found scenario:",
+    scenario?.title,
+  );
 
   return (
     <div className="chat-page-container">
@@ -623,11 +735,11 @@ export default function Chat() {
               />
             </div>
             <div>
-              <h3 className="chat-persona-name">
-                {persona?.name || "AI"}
-              </h3>
+              <h3 className="chat-persona-name">{persona?.name || "AI"}</h3>
               <p className="chat-scenario-title">
-                {scenario?.title || conversation?.title.split("|")[0] || "Conversation"}
+                {scenario?.title ||
+                  conversation?.title.split("|")[0] ||
+                  "Conversation"}
               </p>
             </div>
           </div>
@@ -653,7 +765,7 @@ export default function Chat() {
           {messages.map((msg: any) => {
             const isUser = msg.sender_type === "user";
             const isAI = msg.sender_type === "ai";
-            
+
             return (
               <div
                 key={msg.id}
@@ -689,14 +801,14 @@ export default function Chat() {
 
                 <div
                   className={`message-bubble ${
-                    isUser 
-                      ? "user" 
-                      : persona?.bubble_class || "ai"
+                    isUser ? "user" : persona?.bubble_class || "ai"
                   }`}
                 >
                   {(msg.tutor_feedback || msg.feedback) && (
                     <div className="chat-message-feedback">
-                      <p className="chat-feedback-text">✨ {msg.tutor_feedback || msg.feedback}</p>
+                      <p className="chat-feedback-text">
+                        ✨ {msg.tutor_feedback || msg.feedback}
+                      </p>
                     </div>
                   )}
 
@@ -733,12 +845,17 @@ export default function Chat() {
                           💡 Learning suggestions ({msg.suggestions.length})
                         </summary>
                         <div className="mt-1 p-2 bg-blue-50 dark:bg-blue-950/20 rounded-md">
-                          {msg.suggestions.map((suggestion: string, index: number) => (
-                            <div key={index} className="flex items-start gap-2 text-blue-800 dark:text-blue-200">
-                              <span>•</span>
-                              <span>{suggestion}</span>
-                            </div>
-                          ))}
+                          {msg.suggestions.map(
+                            (suggestion: string, index: number) => (
+                              <div
+                                key={index}
+                                className="flex items-start gap-2 text-blue-800 dark:text-blue-200"
+                              >
+                                <span>•</span>
+                                <span>{suggestion}</span>
+                              </div>
+                            ),
+                          )}
                         </div>
                       </details>
                     </div>
@@ -747,9 +864,7 @@ export default function Chat() {
 
                 {isUser && (
                   <div className="chat-avatar chat-avatar-user">
-                    <span className="chat-avatar-user-text">
-                      You
-                    </span>
+                    <span className="chat-avatar-user-text">You</span>
                   </div>
                 )}
               </div>
@@ -795,9 +910,7 @@ export default function Chat() {
                       style={{ animationDelay: "0.2s" }}
                     ></div>
                   </div>
-                  <span className="chat-typing-text">
-                    Thinking...
-                  </span>
+                  <span className="chat-typing-text">Thinking...</span>
                 </div>
               </div>
             </div>
