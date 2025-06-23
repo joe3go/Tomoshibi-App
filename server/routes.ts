@@ -956,7 +956,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const supabase = createClient(config.url, config.key);
 
       const { data: directData, error: directError } = await supabase
-        .from('jlpt_vocab')
+        .from('vocab_library')
         .select('jlpt_level')
         .limit(5);
 

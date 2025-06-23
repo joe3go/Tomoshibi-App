@@ -120,7 +120,7 @@ export default function VocabTracker() {
       const supabase = createClient(supabaseUrl, anonKey);
       
       const { data, error } = await supabase
-        .from('jlpt_vocab')
+        .from('vocab_library')
         .select('jlpt_level');
       
       if (error) {
