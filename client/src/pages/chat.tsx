@@ -332,85 +332,29 @@ export default function Chat() {
       };
     },
     onMutate: async (content: string) => {
-      // Store temporary ID
-      tempIdRef.current = `temp_${Date.now()}`;
-      const tempId = tempIdRef.current;
-
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({
-        queryKey: ["conversation", conversationId],
-      });
-
-      // Get previous data
-      const previousData = queryClient.getQueryData([
-        "conversation",
-        conversationId,
-      ]);
-
-      // Optimistic update - only add temporary user message
-      queryClient.setQueryData(["conversation", conversationId], (old: any) => {
-        if (!old) return old;
-
-        const optimisticUserMessage = {
-          id: tempId,
-          sender_type: "user",
-          content: content,
-          sender_persona_id: null,
-          english_translation: null,
-          tutor_feedback: null,
-          suggestions: null,
-          vocab_used: null,
-          grammar_used: null,
-          created_at: new Date().toISOString(),
-        };
-
-        return {
-          ...old,
-          messages: [...(old.messages || []), optimisticUserMessage],
-        };
-      });
-
-      return { previousData, tempId };
+      // Just clear the input immediately for better UX
+      setMessage("");
+      return { content };
     },
     onSuccess: async (data) => {
-      setMessage("");
-
-      // Immediately update cache with real messages from server response
-      queryClient.setQueryData(["conversation", conversationId], (old: any) => {
-        if (!old) return old;
-
-        // Remove temporary message and add real messages
-        const messagesWithoutTemp = (old.messages || []).filter(
-          (msg: any) => !msg.id.toString().startsWith('temp_')
-        );
-
-        return {
-          ...old,
-          messages: [
-            ...messagesWithoutTemp,
-            data.userMessage,
-            data.aiMessage
-          ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-        };
+      console.log("✅ Message mutation successful, forcing UI update");
+      
+      // Force immediate invalidation and refetch
+      await queryClient.invalidateQueries({
+        queryKey: ["conversation", conversationId],
       });
-
-      // Scroll to bottom after immediate update
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
+      
+      // Wait a moment for the refetch to complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Scroll to bottom
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     },
     onError: (error, content, context) => {
       console.error("❌ Message send failed:", error.message);
 
-      const tempId = context?.tempId || tempIdRef.current;
-
-      // Remove optimistic message on error
-      if (context?.previousData) {
-        queryClient.setQueryData(
-          ["conversation", conversationId],
-          context.previousData,
-        );
-      }
+      // Restore the message input on error
+      setMessage(context?.content || content);
 
       // Handle specific error types
       if (error.message.includes("session") || error.message.includes("authenticated")) {
