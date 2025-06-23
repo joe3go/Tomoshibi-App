@@ -49,9 +49,15 @@ export async function generateSecureAIResponse(
   prefersEnglish: boolean = false,
 ): Promise<AIResponse> {
   try {
-    const tutor = await getTutorById(tutorId);
+    // Import validation functions
+    const { validateTutorId } = await import("../shared/validation");
+    
+    // Validate tutorId format before proceeding
+    const validTutorId = validateTutorId(tutorId);
+    
+    const tutor = await getTutorById(validTutorId);
     if (!tutor) {
-      throw new Error(`Tutor with ID ${tutorId} not found`);
+      throw new Error(`Tutor with ID ${validTutorId} not found`);
     }
 
     const userContext = await buildUserContext(

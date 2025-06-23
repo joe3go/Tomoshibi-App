@@ -38,10 +38,13 @@ export default function TutorSelection() {
     try {
       console.log('🎯 Tutor selection - persona ID:', personaId, 'Type:', typeof personaId);
       
+      // Import validation function
+      const { isValidUUID } = require("../../../shared/validation");
+      
       // Validate UUID format
-      if (!personaId || typeof personaId !== 'string' || personaId.length < 32) {
+      if (!personaId || !isValidUUID(personaId)) {
         console.error('❌ Invalid persona ID in tutor selection:', personaId);
-        throw new Error('Invalid tutor ID');
+        throw new Error('Invalid tutor ID format');
       }
 
       // Create a new conversation with the selected tutor

@@ -882,6 +882,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Missing required field: message' });
       }
 
+      // Import validation functions
+      const { validateTutorId, getDefaultTutorId } = await import("../shared/validation");
+      
+      // Validate or use default tutorId
+      let validTutorId: string;
+      try {
+        validTutorId = tutorId ? validateTutorId(tutorId) : getDefaultTutorId();
+      } catch (error) {
+        console.error('❌ Invalid tutorId provided:', tutorId);
+        return res.status(400).json({ message: 'Invalid tutor ID format' });
+      }
+
       // Get user info for context
       const config = getSupabaseConfig();
       const { createClient } = await import('@supabase/supabase-js');
@@ -917,7 +929,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate secure AI response using dynamic prompt
       const { generateSecureAIResponse } = await import('./openai');
       const aiResponse = await generateSecureAIResponse(
-        tutorId || "1", // Pass UUID string directly
+        validTutorId, // Use validated UUID
         userId,
         username,
         message,
@@ -933,7 +945,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         suggestions: aiResponse.suggestions,
         vocabUsed: aiResponse.vocabUsed || [],
         grammarUsed: aiResponse.grammarUsed || [],
-        tutorId,
+        tutorId: validTutorId,
         timestamp: new Date().toISOString()
       });
 

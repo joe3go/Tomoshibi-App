@@ -162,27 +162,14 @@ export default function Dashboard() {
   // Handle tutor selection for new chat
   const handleStartNewChat = async (personaId: string, tutorName: string) => {
     try {
-      if (!user?.id) {
-        toast({
-          title: "Authentication Required",
-          description: "Please log in to start a conversation",
-          variant: "destructive",
-        });
-        setLocation('/login');
-        return;
-      }
-
       console.log('🎯 Starting new chat with persona ID:', personaId, 'Type:', typeof personaId);
 
-      // Ensure we have a valid UUID
-      if (!personaId || typeof personaId !== 'string' || personaId.length < 32) {
+      // Import validation function
+      const { isValidUUID } = require("../../../shared/validation");
+
+      if (!personaId || !isValidUUID(personaId)) {
         console.error('❌ Invalid persona ID:', personaId);
-        toast({
-          title: "Error",
-          description: "Invalid tutor selected. Please try again.",
-          variant: "destructive",
-        });
-        return;
+        throw new Error('Invalid tutor ID format');
       }
 
       const title = `Chat with ${tutorName}`;
@@ -604,7 +591,7 @@ export default function Dashboard() {
                           <p className="tutor-preview-description">
                             {persona.description || 'Available for conversation practice'}
                           </p>
-                          
+
                           {/* Personality Info */}
                           {persona.personality && (
                             <div className="mb-2">

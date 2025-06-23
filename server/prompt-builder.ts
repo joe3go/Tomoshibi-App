@@ -92,6 +92,14 @@ Begin the conversation naturally as ${tutor.name}. Remember: you are helping ${s
  */
 export async function getTutorById(tutorId: string): Promise<Tutor | null> {
   try {
+    // Import validation functions
+    const { isValidUUID } = await import("../shared/validation");
+    
+    if (!isValidUUID(tutorId)) {
+      console.error('❌ Invalid tutorId UUID format:', tutorId);
+      return null;
+    }
+
     const { data: tutor, error } = await supabase
       .from('personas')
       .select('*')

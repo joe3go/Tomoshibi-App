@@ -441,15 +441,22 @@ export default function Chat() {
   // Extract persona ID from encoded title since persona_id column doesn't exist yet
   const { personaId } = extractPersonaFromTitle(conversation?.title || "");
 
+  // Import validation function
+  const { isValidUUID } = require("../../../shared/validation");
+
+  // Validate extracted persona ID
+  const validPersonaId = personaId && isValidUUID(personaId) ? personaId : null;
+
   console.log('🔍 Chat page - conversation data:', {
     conversationId: conversation?.id,
     extractedPersonaId: personaId,
+    validPersonaId,
     title: conversation?.title,
     scenarioId: conversation?.scenario_id,
   });
 
   const persona = Array.isArray(personas)
-    ? personas.find((p: any) => p.id === personaId)
+    ? personas.find((p: any) => p.id === validPersonaId)
     : null;
   const scenario = Array.isArray(scenarios)
     ? scenarios.find((s: any) => s.id === conversation?.scenario_id)
