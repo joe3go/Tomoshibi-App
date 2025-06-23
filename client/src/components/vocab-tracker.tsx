@@ -69,39 +69,15 @@ export default function VocabTracker() {
     },
   });
 
-  const { data: vocabStats = [] } = useQuery({
-    queryKey: ['vocab-stats-direct'],
+  const { data: vocabStatsResult } = useQuery({
+    queryKey: ['vocab-stats-comprehensive'],
     queryFn: async () => {
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_DEV_URL || 'https://gsnnydemkpllycgzmalv.supabase.co';
-      const anonKey = import.meta.env.VITE_SUPABASE_DEV_ANON_KEY;
-      
-      if (!anonKey) {
-        console.error('Missing Supabase anon key');
-        return [];
-      }
-      
-      const supabase = createClient(supabaseUrl, anonKey);
-      
-      const { data, error } = await supabase
-        .from('vocab_library')
-        .select('jlpt_level')
-        .range(0, 9999);
-      
-      if (error) {
-        console.error('Error fetching vocab stats:', error);
-        return [];
-      }
-      
-      const counts: Record<string, number> = {};
-      data.forEach((item: { jlpt_level: number }) => {
-        const level = `N${item.jlpt_level}`;
-        counts[level] = (counts[level] || 0) + 1;
-      });
-      
-      return Object.entries(counts).map(([level, count]) => ({ level, count }));
+      const { fetchVocabStats } = await import('@/lib/vocab-api');
+      return fetchVocabStats();
     },
   });
+
+  const vocabStats = vocabStatsResult?.data || [];
 
   const { data: userVocabStats = [] } = useQuery<UserVocabStat[]>({
     queryKey: ['user-vocab-stats-direct'],

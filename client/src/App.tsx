@@ -12,6 +12,7 @@ import Chat from "@/pages/chat";
 import TutorSelection from "@/pages/tutor-selection";
 import ScenarioSelection from "@/pages/scenario-selection";
 import Vocabulary from "@/pages/vocabulary";
+import VocabularyComprehensive from "@/pages/vocabulary-comprehensive";
 import MyVocabulary from "@/pages/my-vocabulary";
 import History from "@/pages/history";
 import Settings from "@/pages/settings";
