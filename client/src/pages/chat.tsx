@@ -104,8 +104,25 @@ export default function Chat() {
     enabled: !!conversationId && !!session && !!user,
   });
 
+  // Fetch personas directly from Supabase for consistency
   const { data: personas = [] } = useQuery({
-    queryKey: ["/api/personas"],
+    queryKey: ["personas-supabase"],
+    queryFn: async () => {
+      if (!session) return [];
+      
+      const { data, error } = await supabase
+        .from('personas')
+        .select('*');
+      
+      if (error) {
+        console.error('Error fetching personas:', error);
+        return [];
+      }
+      
+      console.log('Personas fetched from Supabase:', data);
+      return data || [];
+    },
+    enabled: !!session,
   });
 
   const { data: scenarios = [] } = useQuery({
