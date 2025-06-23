@@ -110,8 +110,8 @@ export default function Chat() {
       };
     },
     enabled: !!conversationId && !!session && !!user,
-    staleTime: 1000 * 60 * 5, // Keep cache fresh for 5 minutes
-    gcTime: 1000 * 60 * 10, // Keep in memory for 10 minutes
+    staleTime: 1000 * 10, // Consider data stale after 10 seconds
+    gcTime: 1000 * 60 * 5, // Keep in memory for 5 minutes
   });
 
   // Fetch personas directly from Supabase for consistency
@@ -459,7 +459,7 @@ export default function Chat() {
     return () => clearTimeout(timer);
   }, [conversationId, session, queryClient]);
 
-  // Add realtime subscription for new messages
+  // Add realtime subscription for new messages with polling fallback
   useEffect(() => {
     if (!conversationId) return;
 
@@ -467,6 +467,8 @@ export default function Chat() {
 
     // Create a unique channel name to avoid conflicts
     const channelName = `conversation-${conversationId}-${Date.now()}`;
+    let isSubscribed = false;
+    let pollInterval: NodeJS.Timeout | null = null;
 
     const channel = supabase.channel(channelName)
       .on(
@@ -486,11 +488,50 @@ export default function Chat() {
         console.log('📡 Realtime subscription status:', status);
         if (status === 'SUBSCRIBED') {
           console.log('✅ Realtime connection established');
+          isSubscribed = true;
+          // Clear polling if realtime works
+          if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+          }
+        } else if (status === 'TIMED_OUT' || status === 'CLOSED') {
+          console.log('⚠️ Realtime connection failed, starting polling fallback');
+          isSubscribed = false;
+          // Start polling as fallback
+          if (!pollInterval) {
+            pollInterval = setInterval(() => {
+              if (!isSubscribed) {
+                console.log('🔄 Polling for new messages...');
+                queryClient.invalidateQueries({ 
+                  queryKey: ['conversation', conversationId],
+                  exact: true 
+                });
+              }
+            }, 3000); // Poll every 3 seconds
+          }
         }
       });
 
+    // Also start polling after a delay if realtime doesn't connect
+    const fallbackTimer = setTimeout(() => {
+      if (!isSubscribed && !pollInterval) {
+        console.log('⏰ Starting polling fallback due to timeout');
+        pollInterval = setInterval(() => {
+          console.log('🔄 Polling for new messages...');
+          queryClient.invalidateQueries({ 
+            queryKey: ['conversation', conversationId],
+            exact: true 
+          });
+        }, 3000);
+      }
+    }, 5000);
+
     return () => {
-      console.log('🔕 Cleaning up realtime subscription');
+      console.log('🔕 Cleaning up realtime subscription and polling');
+      clearTimeout(fallbackTimer);
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
       channel.unsubscribe();
       supabase.removeChannel(channel);
     };
