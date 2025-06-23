@@ -182,6 +182,19 @@ export default function Chat() {
 
       const aiData = await response.json();
 
+      // Validate AI response structure
+      if (!aiData || !aiData.content) {
+        console.error('❌ Invalid AI response structure:', aiData);
+        throw new Error('AI response is missing required content');
+      }
+
+      console.log('✅ Valid AI response received:', {
+        hasContent: !!aiData.content,
+        hasTranslation: !!aiData.english_translation,
+        hasFeedback: !!aiData.feedback,
+        contentLength: aiData.content?.length
+      });
+
       // Add AI message using the updated schema
       const { data: aiMessage, error: aiMsgError } = await supabase
         .from('messages')
@@ -207,11 +220,8 @@ export default function Chat() {
 
       console.log('✅ Messages added successfully:', { user: userMessage.id, ai: aiMessage.id });
 
-      // Return the new messages with role property for rendering
-      return [
-        { ...userMessage, role: 'user' },
-        { ...aiMessage, role: 'ai' }
-      ];
+      // Return the new messages
+      return [userMessage, aiMessage];
     },
     onMutate: async (content: string) => {
       // Cancel any outgoing refetches
@@ -228,7 +238,7 @@ export default function Chat() {
           id: `temp_${Date.now()}`,
           sender_type: 'user',
           content: content,
-          role: 'user',
+          sender_persona_id: null,
           created_at: new Date().toISOString()
         };
 
@@ -240,14 +250,21 @@ export default function Chat() {
 
       return { previousData };
     },
-    onSuccess: async (newMessages) => {
-      console.log('🔄 Mutation success, invalidating queries...');
+    onSuccess: (newMessages) => {
+      console.log('🔄 Mutation success, updating cache with new messages...');
       
-      // Clear the current cache data completely
-      queryClient.removeQueries({ queryKey: ["conversation", conversationId] });
-      
-      // Force refetch with fresh data
-      await queryClient.refetchQueries({ queryKey: ["conversation", conversationId] });
+      // Update cache by merging new messages
+      queryClient.setQueryData(["conversation", conversationId], (old: any) => {
+        if (!old) return old;
+
+        // Remove temporary messages and add real ones
+        const existingMessages = (old.messages || []).filter((msg: any) => !msg.id.toString().startsWith('temp_'));
+        
+        return {
+          ...old,
+          messages: [...existingMessages, ...newMessages]
+        };
+      });
       
       setMessage("");
     },
@@ -323,6 +340,51 @@ export default function Chat() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [(conversationData as any)?.messages]);
+
+  // Add realtime subscription for new messages
+  useEffect(() => {
+    if (!conversationId || !session) return;
+
+    console.log('🔔 Setting up realtime subscription for conversation:', conversationId);
+    
+    const channel = supabase
+      .channel('messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${conversationId}`
+        },
+        (payload) => {
+          console.log('📨 Realtime message received:', payload);
+          
+          // Update cache with new message
+          queryClient.setQueryData(["conversation", conversationId], (old: any) => {
+            if (!old) return old;
+            
+            const newMessage = payload.new;
+            const messageExists = old.messages?.some((msg: any) => msg.id === newMessage.id);
+            
+            if (!messageExists) {
+              return {
+                ...old,
+                messages: [...(old.messages || []), newMessage]
+              };
+            }
+            
+            return old;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('🔕 Cleaning up realtime subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [conversationId, session, queryClient]);
 
   const handleSendMessage = () => {
     if (message.trim() && !sendMessageMutation.isPending) {
@@ -538,8 +600,8 @@ export default function Chat() {
       <div className="chat-messages-container">
         <div className="chat-messages-list">
           {messages.map((msg: any) => {
-            const isUser = msg.sender_type === "user" || msg.role === "user";
-            const isAI = msg.sender_type === "ai" || msg.role === "ai";
+            const isUser = msg.sender_type === "user";
+            const isAI = msg.sender_type === "ai";
             
             return (
               <div
