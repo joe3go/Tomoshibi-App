@@ -378,6 +378,9 @@ export default function Chat() {
       // Force refetch from Supabase for accurate and up-to-date messages
       await queryClient.invalidateQueries(["conversation", conversationId]);
 
+      // Fallback cache invalidation to ensure UI updates
+      queryClient.invalidateQueries(["conversation", conversationId]);
+
       // Optional: Scroll to bottom after data refresh
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -453,7 +456,46 @@ export default function Chat() {
     },
   });
 
-  // Realtime subscription removed to avoid race conditions with manual cache refresh
+  // Realtime subscription for live message updates
+  useEffect(() => {
+    if (!conversationId) return;
+
+    console.log('🔔 Setting up realtime subscription for conversation:', conversationId);
+
+    const channel = supabase.channel(`conversation-${conversationId}`)
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "messages",
+        filter: `conversation_id=eq.${conversationId}`
+      }, (payload) => {
+        console.log('📨 Realtime message received:', payload.new);
+
+        // Skip if it's a temp optimistic message
+        if (payload.new.id.toString().startsWith("temp_")) return;
+
+        // Force cache update with new reference (React requires this)
+        queryClient.setQueryData(["conversation", conversationId], (old: any) => {
+          if (!old || !old.messages) return old;
+
+          const alreadyExists = old.messages.some((m: any) => m.id === payload.new.id);
+          if (alreadyExists) return old;
+
+          return {
+            ...old,
+            messages: [...old.messages, payload.new],
+          };
+        });
+      })
+      .subscribe();
+
+    console.log("✅ Realtime subscription active for", conversationId);
+
+    return () => {
+      console.log('🔕 Cleaning up realtime subscription');
+      channel.unsubscribe();
+    };
+  }, [conversationId, queryClient]);
 
   // Auto-scroll effect
   useEffect(() => {
