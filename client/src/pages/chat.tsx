@@ -206,6 +206,7 @@ export default function Chat() {
       // Prepare AI message data with proper types
       const aiMessageData = {
         conversation_id: conversationId,
+        sender_type: 'ai', // Required field for database constraint
         content: aiData.content || '',
         english_translation: aiData.english_translation || null,
         tutor_feedback: aiData.feedback || null,
@@ -214,7 +215,6 @@ export default function Chat() {
         vocab_used: Array.isArray(aiData.vocabUsed) ? aiData.vocabUsed : [],
         grammar_used: Array.isArray(aiData.grammarUsed) ? aiData.grammarUsed : [],
         sender_persona_id: validPersonaId, // AI messages have persona
-        sender_user_id: null, // AI messages don't have user
         created_at: new Date().toISOString(),
       };
 
