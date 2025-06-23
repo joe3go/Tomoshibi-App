@@ -140,21 +140,19 @@ export default function TutorSelection() {
                   {/* Name & Title */}
                   <div className="tutor-info-section">
                     <h3 className="tutor-name">
-                      {persona.type === "teacher"
-                        ? "Aoi (葵) - Teacher"
-                        : "Haruki (陽輝) - Friend"}
+                      {persona.name}
                     </h3>
 
                     <span
                       className={`tutor-type-badge ${
-                        persona.type === "teacher"
+                        persona.type === "tutor"
                           ? "tutor-type-teacher"
                           : "tutor-type-friend"
                       }`}
                     >
-                      {persona.type === "teacher"
-                        ? "Formal Teacher"
-                        : "Friendly Tutor"}
+                      {persona.type === "tutor"
+                        ? "Formal Tutor"
+                        : "Study Buddy"}
                     </span>
                   </div>
 

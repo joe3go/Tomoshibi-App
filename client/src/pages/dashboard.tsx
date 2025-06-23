@@ -557,7 +557,7 @@ export default function Dashboard() {
                         <div className="tutor-preview-info">
                           <h4 className="tutor-preview-name">{persona.name}</h4>
                           <Badge variant="secondary" className="tutor-preview-type">
-                            {persona.type === 'teacher' ? 'Teacher' : 'Friend'}
+                            {persona.type === 'tutor' ? 'Tutor' : 'Study Buddy'}
                           </Badge>
                           <p className="tutor-preview-description">
                             {persona.description || 'Available for conversation practice'}

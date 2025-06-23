@@ -113,12 +113,21 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### June 23, 2025 - Fixed Recent Conversations Display and Comprehensive Vocabulary System
+### June 23, 2025 - Fixed Recent Conversations Display and Tutor Labeling Issues
 - **Fixed recent conversations filtering**:
   - Completed conversations no longer appear in the dashboard's "Recent Conversations" section
   - Only active conversations are displayed, improving user experience and dashboard clarity
   - Updated analytics to accurately count only active conversations
   - Simplified conversation controls since all displayed conversations are active
+  - Enhanced cache invalidation for immediate UI updates when conversations are ended
+- **Fixed tutor labeling inconsistencies**:
+  - Updated tutor selection page to display actual tutor names instead of hardcoded labels
+  - Fixed dashboard tutor previews to show correct types: "Tutor" for formal tutors, "Study Buddy" for peer tutors
+  - Aligned UI labels with database persona types (tutor/peer) for consistent user experience
+- **Identified conversations table schema issue**:
+  - Database missing `persona_id` column required for UUID-based conversation system
+  - Created SQL fix file (`SUPABASE_CONVERSATIONS_FIX.sql`) for manual table recreation
+  - Conversation creation currently fails until schema is updated in Supabase dashboard
 - **Comprehensive Vocabulary System Implementation with Full 7,972 Entry Support**:
 - **Implemented comprehensive vocabulary API with chunked pagination**:
   - Created `client/src/lib/vocab-api.ts` with complete CRUD operations for all 7,972 vocabulary entries
