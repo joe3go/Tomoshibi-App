@@ -241,18 +241,8 @@ export default function Chat() {
       return { previousData };
     },
     onSuccess: (newMessages) => {
-      // Update with fresh messages from the mutation
-      queryClient.setQueryData(["conversation", conversationId], (old: any) => {
-        if (!old) return old;
-
-        // Remove any temporary messages and add the real ones
-        const existingMessages = (old.messages || []).filter((msg: any) => !msg.id.toString().startsWith('temp_'));
-        
-        return {
-          ...old,
-          messages: [...existingMessages, ...newMessages]
-        };
-      });
+      // Invalidate and refetch the conversation to get the latest state
+      queryClient.invalidateQueries({ queryKey: ["conversation", conversationId] });
       setMessage("");
     },
     onError: (error, content, context) => {
