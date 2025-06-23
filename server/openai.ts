@@ -1,4 +1,4 @@
-// openai.ts (updated with UUID fix for tutorId and improved error handling)
+// openai.ts (updated with system prompt logic)
 
 import OpenAI from "openai";
 import type { Persona, Scenario, JlptVocab, JlptGrammar } from "@shared/schema";
@@ -37,7 +37,7 @@ export interface AIResponse {
 }
 
 export async function generateSecureAIResponse(
-  tutorId: string, // ✅ UUID fix
+  tutorId: string,
   userId: string,
   username: string,
   userMessage: string,
@@ -200,6 +200,22 @@ function isEnglishMessage(text: string): boolean {
 }
 
 function buildSystemPrompt(context: ConversationContext): string {
-  // (Unchanged for now - if you'd like this reviewed too, just let me know)
-  return "";
+  return buildDynamicPrompt(
+    {
+      id: context.persona.id,
+      name: context.persona.name,
+      type: context.persona.type,
+      personality: context.persona.personality,
+      speaking_style: context.persona.speaking_style,
+    },
+    {
+      userId: "temp", // override if needed
+      username: "temp", // override if needed
+      topic: context.scenario.title,
+      prefersEnglish: isEnglishMessage(context.userMessage),
+      vocab: context.targetVocab,
+      grammar: context.targetGrammar,
+      history: context.conversationHistory,
+    },
+  );
 }
