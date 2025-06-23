@@ -43,6 +43,7 @@ export default function App() {
             <Route path="/scenarios" component={ScenarioSelection} />
             <Route path="/scenario-selection" component={ScenarioSelection} />
             <Route path="/vocabulary" component={Vocabulary} />
+            <Route path="/vocabulary-comprehensive" component={VocabularyComprehensive} />
             <Route path="/my-vocabulary" component={MyVocabulary} />
             <Route path="/history" component={History} />
             <Route path="/settings" component={Settings} />

@@ -68,7 +68,7 @@ export default function VocabularyBrowser() {
 
   const wordTypes = useMemo(() => {
     if (!allVocabData?.data) return [];
-    const types = new Set(allVocabData.data.map(item => item.word_type).filter(Boolean));
+    const types = new Set(allVocabData.data.map(item => item.word_type).filter((type): type is string => Boolean(type)));
     return Array.from(types).sort();
   }, [allVocabData]);
 
