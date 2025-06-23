@@ -113,21 +113,24 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### June 20, 2025 - Chat System Fully Operational with Dual Database Setup
-- **Successfully resolved all chat functionality issues**:
-  - Fixed UUID to integer mapping for database compatibility
-  - Resolved authentication token issues with correct JWT secret configuration
-  - Updated database schema queries to use proper column names (created_at vs timestamp)
-  - All conversation creation and access now working properly
-- **Restored dynamic dual database configuration**:
-  - Development: Uses VITE_SUPABASE_DEV_URL and VITE_SUPABASE_DEV_ANON_KEY
-  - Production: Uses VITE_SUPABASE_PROD_URL and VITE_SUPABASE_PROD_ANON_KEY
-  - Automatic environment-based switching via NODE_ENV
-- **Complete chat system functionality**:
-  - All 4 tutors (Aoi, Haruki, Yuki, Ren) visible on dashboard
-  - Working "Start Chat" buttons for conversation creation
-  - Individual conversation access and message retrieval working
-  - Proper user authentication and authorization for chat access
+### June 20, 2025 - Complete Chat System and Vocabulary Data Accuracy
+- **Fixed chat display issues and added conversation management**:
+  - Updated chat component to fetch personas directly from Supabase for consistency
+  - Fixed persona lookup that was showing "AI" instead of actual tutor names like "Aoi"
+  - Added "End Chat" functionality to dashboard's recent conversations section
+  - Active conversations now show both "Resume" and "End Chat" options
+  - Completed conversations show only "Resume" (disabled state)
+- **Corrected vocabulary data discrepancies**:
+  - Fixed hardcoded vocabulary counts that didn't match Supabase reality
+  - Updated dashboard to show authentic counts: N5 (718), N4 (281), N3 (1), N2 (0), N1 (0)
+  - Created VocabularyStatsCard component that fetches real data from Supabase
+  - Updated vocabulary page to use authentic counts instead of placeholder values
+  - Progress bars now scale correctly based on actual vocabulary data
+- **Implemented comprehensive message tracking RPC**:
+  - Created `create_message_with_tracking` function for accurate usage analytics
+  - Fixed vocab_tracker to support all JLPT vocabulary entries (not just 1000 subset)
+  - Added proper foreign key constraints and performance indexes
+  - Integrated vocabulary and grammar usage tracking in single transaction
 
 ### June 17, 2025 - Complete Supabase Database Migration with Full JLPT Vocabulary
 - **Successfully completed comprehensive Supabase migration**:

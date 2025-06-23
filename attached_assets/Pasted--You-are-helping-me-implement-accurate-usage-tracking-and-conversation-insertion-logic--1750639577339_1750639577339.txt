@@ -1,0 +1,47 @@
+-- 👋 You are helping me implement accurate usage tracking and conversation insertion logic.
+
+-- 🧩 I want to do two things in this prompt:
+-- (1) Create an RPC called `create_message_with_tracking`
+-- (2) Fix an issue in the `vocab_tracker` where it currently only tracks a subset (about 1000 words) of total JLPT vocabulary – it must support all available words from `jlpt_vocab`.
+
+-- --- PART 1: Create Message & Usage Tracker RPC ---
+
+-- ✳️ Function name: create_message_with_tracking
+-- 🔒 SECURITY DEFINER
+
+-- 📥 Inputs:
+--   _conversation_id INTEGER
+--   _sender_type TEXT
+--   _content TEXT
+--   _vocab_used INTEGER[] (optional)
+--   _grammar_used INTEGER[] (optional)
+--   _english_translation TEXT (optional)
+--   _tutor_feedback TEXT (optional)
+--   _suggestions TEXT[] (optional)
+
+-- 📌 Behavior:
+--   1. Insert a new message into the `messages` table with the provided inputs.
+--   2. Lookup `user_id` from `conversations` based on `_conversation_id`.
+--   3. For each item in `_vocab_used`:
+--       - If an entry exists in `vocab_tracker` for (user_id, word_id), increment `user_usage_count`.
+--       - Else, insert with `user_usage_count = 1`.
+--       - Ensure all words from `jlpt_vocab` can be tracked (not limited to 1000).
+--   4. For each item in `_grammar_used`:
+--       - Same logic in `grammar_tracker`: upsert and increment `frequency`.
+--   5. Return the inserted message row.
+
+-- 🧪 Notes:
+-- - If arrays are empty or null, skip upsert steps.
+-- - Default optional fields to NULL if not provided.
+-- - All updates should happen in a single transaction.
+
+-- --- PART 2: Vocab Tracker Fix ---
+
+-- 🔧 Please ensure that the `vocab_tracker` table can accept and track ALL vocab IDs that exist in `jlpt_vocab`, not just a limited list of 1000 entries.
+-- ✅ Cross-check FK relationship between `vocab_tracker.word_id` and `jlpt_vocab.id`
+-- ✅ Check for any triggers, limits, or bad indexes that would prevent full vocab tracking.
+
+-- 🧠 Please double-check types, FK constraints, and error handling.
+-- ✅ Output only the FUNCTION definition and any ALTERs or fixes required for `vocab_tracker`.
+
+-- ⚠️ Do NOT return any unrelated metadata or summaries.
