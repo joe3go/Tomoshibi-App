@@ -458,33 +458,40 @@ export default function Chat() {
 
     const channel = supabase.channel(`conversation-${conversationId}`)
       .on("postgres_changes", {
-        event: "INSERT",
+        event: "*", // Listen to all events for debugging
         schema: "public",
-        table: "messages",
+        table: "messages", 
         filter: `conversation_id=eq.${conversationId}`
       }, async (payload) => {
-        console.log('📨 Realtime message received:', payload.new);
+        console.log('📨 Realtime event received:', {
+          eventType: payload.eventType,
+          new: payload.new,
+          old: payload.old,
+          table: payload.table
+        });
+
+        // Only handle INSERT events for new messages
+        if (payload.eventType !== 'INSERT') {
+          console.log('⏭️ Skipping non-INSERT event:', payload.eventType);
+          return;
+        }
 
         // Skip if it's a temp optimistic message
-        if (payload.new.id.toString().startsWith("temp_")) {
+        if (payload.new?.id?.toString().startsWith("temp_")) {
           console.log('⏭️ Skipping temp message:', payload.new.id);
           return;
         }
 
-        console.log('🔄 Forcing cache eviction and immediate refetch for message:', payload.new.id);
+        console.log('🔄 New message detected, invalidating cache for message:', payload.new?.id);
         
-        // Nuclear option: Remove from cache completely and refetch
-        queryClient.removeQueries({ queryKey: ["conversation", conversationId] });
+        // Simple invalidation approach
+        queryClient.invalidateQueries({ queryKey: ["conversation", conversationId] });
         
-        // Force immediate refetch with fresh data
-        await queryClient.refetchQueries({ 
-          queryKey: ["conversation", conversationId],
-          type: 'active'
-        });
-        
-        console.log('✅ Cache evicted and refetched for new message');
+        console.log('✅ Cache invalidated for new message');
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Realtime subscription status:', status);
+      });
 
     console.log("✅ Realtime subscription active for", conversationId);
 
