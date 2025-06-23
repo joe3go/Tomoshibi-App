@@ -24,6 +24,7 @@ import {
 } from "@/lib/supabase-functions";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/context/SupabaseAuthContext";
+import { isValidUUID } from "../../../shared/validation";
 // Avatar images are now served from /avatars/ directory as SVG files
 
 export default function Chat() {
@@ -440,9 +441,6 @@ export default function Chat() {
 
   // Extract persona ID from encoded title since persona_id column doesn't exist yet
   const { personaId } = extractPersonaFromTitle(conversation?.title || "");
-
-  // Import validation function
-  const { isValidUUID } = require("../../../shared/validation");
 
   // Validate extracted persona ID
   const validPersonaId = personaId && isValidUUID(personaId) ? personaId : null;
