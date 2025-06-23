@@ -85,7 +85,8 @@ export default function VocabTracker() {
       
       const { data, error } = await supabase
         .from('vocab_library')
-        .select('jlpt_level');
+        .select('jlpt_level')
+        .range(0, 9999);
       
       if (error) {
         console.error('Error fetching vocab stats:', error);

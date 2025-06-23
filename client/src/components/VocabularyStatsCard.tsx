@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen } from "lucide-react";
-import { supabase } from "@/lib/supabase/client";
+import { fetchVocabStats } from "@/lib/vocab-api";
 
 interface VocabCount {
   level: string;
@@ -10,48 +10,12 @@ interface VocabCount {
 }
 
 export default function VocabularyStatsCard() {
-  const { data: vocabCounts = [], isLoading } = useQuery({
+  const { data: vocabStats, isLoading } = useQuery({
     queryKey: ["vocab-counts"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('vocab_library')
-        .select('jlpt_level');
-      
-      if (error) {
-        console.error('Error fetching vocabulary counts:', error);
-        return [];
-      }
-      
-      const counts: Record<string, number> = {};
-      data.forEach((item: { jlpt_level: number }) => {
-        const level = `N${item.jlpt_level}`;
-        counts[level] = (counts[level] || 0) + 1;
-      });
-      
-      // Create level data based on actual database content
-      const levelData: VocabCount[] = [];
-      
-      // Add entries for levels that actually exist in the database
-      if (counts.N1) levelData.push({ level: 'N1', count: counts.N1, color: 'bg-red-500' });
-      if (counts.N2) levelData.push({ level: 'N2', count: counts.N2, color: 'bg-orange-500' });
-      if (counts.N3) levelData.push({ level: 'N3', count: counts.N3, color: 'bg-yellow-500' });
-      if (counts.N4) levelData.push({ level: 'N4', count: counts.N4, color: 'bg-blue-500' });
-      if (counts.N5) levelData.push({ level: 'N5', count: counts.N5, color: 'bg-green-500' });
-      
-      // If no standard JLPT levels found, show what we actually have
-      if (levelData.length === 0) {
-        Object.keys(counts).sort().forEach(level => {
-          levelData.push({
-            level: level,
-            count: counts[level],
-            color: level === 'N1' ? 'bg-red-500' : 'bg-blue-500'
-          });
-        });
-      }
-      
-      return levelData;
-    },
+    queryFn: fetchVocabStats,
   });
+
+  const vocabCounts = vocabStats?.data || [];
 
   const maxCount = Math.max(...vocabCounts.map(item => item.count), 1);
 
