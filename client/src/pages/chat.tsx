@@ -375,8 +375,8 @@ export default function Chat() {
     onSuccess: async () => {
       setMessage("");
 
-      // Force refetch from Supabase for accurate and up-to-date messages
-      await queryClient.invalidateQueries(["conversation", conversationId]);
+      // Force immediate refetch from Supabase for accurate and up-to-date messages
+      await queryClient.refetchQueries({ queryKey: ["conversation", conversationId] });
 
       // Scroll to bottom after data refresh
       setTimeout(() => {
