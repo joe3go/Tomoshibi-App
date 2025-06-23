@@ -386,15 +386,15 @@ export default function Chat() {
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div className="chat-header-info flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <img
               src={getAvatarImage(persona)}
               alt={persona?.name || "Persona"}
-              className="persona-avatar w-10 h-10 rounded-full object-cover"
+              className="w-10 h-10 rounded-full object-cover"
             />
             <div>
-              <h3 className="persona-name font-medium">{persona?.name || "AI"}</h3>
-              <p className="conversation-title text-sm text-muted-foreground">
+              <h3 className="font-medium">{persona?.name || "AI"}</h3>
+              <p className="text-sm text-muted-foreground">
                 {conversation.title.split("|")[0] || "Conversation"}
               </p>
             </div>
@@ -418,19 +418,18 @@ export default function Chat() {
           {messages.map((msg) => (
             <div
               key={msg.id}
-              className={`message-row flex items-start gap-3 ${msg.sender_type === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
+              className={`flex items-start gap-3 ${msg.sender_type === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
             >
-              {/* Message Avatar */}
-              <div className="message-avatar flex-shrink-0">
+              <div className="flex-shrink-0">
                 {msg.sender_type === 'user' ? (
-                  <div className="user-avatar w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
                     You
                   </div>
                 ) : (
                   <img
                     src={getAvatarImage(persona)}
                     alt={persona?.name || "AI"}
-                    className="ai-avatar w-8 h-8 rounded-full object-cover"
+                    className="w-8 h-8 rounded-full object-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.src = "/avatars/default.png";
@@ -439,11 +438,10 @@ export default function Chat() {
                 )}
               </div>
 
-              {/* Message Content */}
               <div
-                className={`message-content max-w-[70%] rounded-lg p-3 ${getMessageBubbleStyles(msg.sender_type, persona)}`}
+                className={`max-w-[70%] rounded-lg p-3 ${getMessageBubbleStyles(msg.sender_type, persona)}`}
               >
-                <MessageWithVocab content={msg.content} className="vocab-content">
+                <MessageWithVocab content={msg.content}>
                   <FuriganaText
                     text={msg.content}
                     showFurigana={showFurigana}
@@ -452,12 +450,12 @@ export default function Chat() {
                 </MessageWithVocab>
 
                 {msg.sender_type === 'ai' && msg.english_translation && (
-                  <div className="translation-section mt-2">
+                  <div className="mt-2">
                     <details className="text-sm text-muted-foreground">
-                      <summary className="translation-toggle cursor-pointer hover:text-foreground">
+                      <summary className="cursor-pointer hover:text-foreground">
                         Show English translation
                       </summary>
-                      <div className="translation-content mt-1 p-2 bg-muted/50 rounded-md">
+                      <div className="mt-1 p-2 bg-muted/50 rounded-md">
                         {msg.english_translation}
                       </div>
                     </details>
@@ -465,14 +463,14 @@ export default function Chat() {
                 )}
 
                 {msg.suggestions && msg.suggestions.length > 0 && (
-                  <div className="suggestions-section mt-2">
+                  <div className="mt-2">
                     <details className="text-sm">
-                      <summary className="suggestions-toggle cursor-pointer text-blue-600 hover:text-blue-800">
+                      <summary className="cursor-pointer text-blue-600 hover:text-blue-800">
                         Learning suggestions ({msg.suggestions.length})
                       </summary>
-                      <div className="suggestions-content mt-1 p-2 bg-blue-50 dark:bg-blue-950/20 rounded-md">
+                      <div className="mt-1 p-2 bg-blue-50 dark:bg-blue-950/20 rounded-md">
                         {msg.suggestions.map((suggestion: string, index: number) => (
-                          <div key={index} className="suggestion-item flex items-start gap-2 text-blue-800 dark:text-blue-200">
+                          <div key={index} className="flex items-start gap-2 text-blue-800 dark:text-blue-200">
                             <span>•</span>
                             <span>{suggestion}</span>
                           </div>
@@ -486,23 +484,23 @@ export default function Chat() {
           ))}
 
           {sending && (
-            <div className="typing-indicator flex items-start gap-3">
-              <div className="message-avatar flex-shrink-0">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
                 <img
                   src={getAvatarImage(persona)}
                   alt={persona?.name || "AI"}
-                  className="ai-avatar w-8 h-8 rounded-full object-cover"
+                  className="w-8 h-8 rounded-full object-cover"
                 />
               </div>
               
-              <div className={`typing-bubble rounded-lg p-3 ${getMessageBubbleStyles('ai', persona)}`}>
-                <div className="typing-content flex items-center gap-2">
-                  <div className="typing-dots flex space-x-1">
-                    <div className="typing-dot w-2 h-2 bg-current rounded-full animate-bounce opacity-60"></div>
-                    <div className="typing-dot w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="typing-dot w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '0.2s' }}></div>
+              <div className={`rounded-lg p-3 ${getMessageBubbleStyles('ai', persona)}`}>
+                <div className="flex items-center gap-2">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60"></div>
+                    <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '0.2s' }}></div>
                   </div>
-                  <span className="typing-text text-sm opacity-70">Thinking...</span>
+                  <span className="text-sm opacity-70">Thinking...</span>
                 </div>
               </div>
             </div>
@@ -513,15 +511,14 @@ export default function Chat() {
       </div>
 
       {/* Input Section */}
-      <div className="chat-input-section border-t bg-card p-4">
-        <div className="input-wrapper max-w-4xl mx-auto">
-          <div className="input-controls flex items-center gap-2 mb-2">
+      <div className="border-t bg-card p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center gap-2 mb-2">
             <Toggle
               pressed={romajiMode}
               onPressedChange={setRomajiMode}
               aria-label="Toggle romaji input"
               size="sm"
-              className="romaji-toggle"
             >
               <Languages className="w-4 h-4" />
               <span className="ml-1">Hiragana</span>
@@ -531,26 +528,25 @@ export default function Chat() {
               onPressedChange={setShowFurigana}
               aria-label="Toggle furigana display"
               size="sm"
-              className="furigana-toggle"
             >
               <span>振り仮名</span>
             </Toggle>
           </div>
           
-          <div className="input-row flex gap-2">
+          <div className="flex gap-2">
             <textarea
               ref={textareaRef}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyPress}
               placeholder="Type your message in Japanese..."
-              className="message-input flex-1 min-h-[40px] max-h-[120px] p-2 border rounded-md resize-none"
+              className="flex-1 min-h-[40px] max-h-[120px] p-2 border rounded-md resize-none"
               disabled={sending}
             />
             <Button
               onClick={sendMessage}
               disabled={!message.trim() || sending}
-              className="send-btn self-end"
+              className="self-end"
             >
               Send
             </Button>
