@@ -1,0 +1,47 @@
+Please review and update our project to align with recent Supabase schema changes (UUID-based IDs, support for multiple vocab/grammar sources, and group AI persona chat). These schema updates are already applied to the Supabase **development** environment and will be mirrored in **production**.
+
+⚠️ IMPORTANT:
+- Do **not break any existing functionality**.
+- Do **not alter any UI or frontend design elements**.
+- Assume that this **Dev environment reflects the future Prod schema** — use it as the correct source of truth.
+
+✅ Focus Areas:
+
+1. **Supabase Schema & Migrations**:
+   - Confirm UUIDs are used throughout relevant tables: `users`, `messages`, `conversations`, `jlpt_vocab` (now `vocab_library`), `jlpt_grammar`, and `vocab_sources`.
+   - Foreign keys and indexes must match the updated schema.
+   - Ensure multi-persona support via the `conversation_participants` table and `messages.sender_persona_id`.
+
+2. **RPC and SQL Functions**:
+   - In files like `create_message_with_tracking.sql` and `supabase-message-tracking-setup.sql`, check that:
+     - Input/output types match the new UUID-based schema.
+     - `vocab_used`, `grammar_used` now accept UUID arrays.
+     - Proper joins are used for `vocab_tracker` and `grammar_tracker`.
+
+3. **Backend API**:
+   - In `server/` and `utils/supabase/`, update all Supabase queries and inserts to use UUIDs for all `id`, `user_id`, `word_id`, `conversation_id`, `grammar_id`, etc.
+   - Confirm vocab/grammar tracking logic reflects new source-aware table structure.
+
+4. **Frontend Hooks & Calls**:
+   - In `client/api/` and other hooks:
+     - Ensure UUIDs are passed when calling Supabase functions.
+     - Group chat (`mode = 'group'` or `conversation_participants`) support should be handled correctly.
+     - Do **not** introduce any UI layout/design changes.
+
+5. **Testing**:
+   - Test both single- and multi-persona chat flows.
+   - Confirm that tracked vocabulary and grammar usage correctly updates user progress and statistics.
+   - Validate RPCs like `create_message_with_tracking` and any vocabulary/grammar stats fetches.
+
+🧠 Context:
+- We now support **multiple vocab and grammar libraries**, so check that all queries use `vocab_library` and `vocab_sources` appropriately.
+- This update also prepares for **AI group chat** (multi-persona conversations), so all message inserts must attribute messages to a persona via `sender_persona_id`.
+
+🔧 Configuration:
+- This is implemented in the **Dev environment**, which is the reference config for Prod. Do **not** override Prod.
+- Keep all environmental differences and secrets intact (do not hardcode or leak sensitive env values).
+
+Please:
+- List any files changed.
+- Summarize updates made.
+- Warn if you detect any runtime or logic mismatch due to schema drift.
