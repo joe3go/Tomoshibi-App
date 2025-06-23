@@ -481,13 +481,10 @@ export default function Chat() {
 
     console.log('🔔 Setting up realtime subscription for conversation:', conversationId);
 
-    const channel = supabase.channel(`conversation-${conversationId}`, {
-      config: {
-        presence: { key: conversationId },
-        broadcast: { self: false },
-        timeout: 30000 // 30 seconds instead of default 10
-      }
-    })
+    // Create a unique channel name to avoid conflicts
+    const channelName = `conversation-${conversationId}-${Date.now()}`;
+    
+    const channel = supabase.channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -505,22 +502,12 @@ export default function Chat() {
         console.log('📡 Realtime subscription status:', status);
         if (status === 'SUBSCRIBED') {
           console.log('✅ Realtime connection established');
-          // Manually trigger a cache check
-          queryClient.invalidateQueries({ queryKey: ['conversation', conversationId] });
         }
       });
 
-    // Add auto-reconnect logic
-    const reconnectInterval = setInterval(() => {
-      if (channel.state !== 'joined') {
-        console.log('♻️ Reconnecting realtime...');
-        channel.subscribe();
-      }
-    }, 5000);
-
     return () => {
       console.log('🔕 Cleaning up realtime subscription');
-      clearInterval(reconnectInterval);
+      channel.unsubscribe();
       supabase.removeChannel(channel);
     };
   }, [conversationId, queryClient]);
