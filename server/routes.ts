@@ -459,12 +459,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('✅ UUID validation passed');
 
-      // Create conversation directly with Supabase (avoid RPC for now)
+      // Create conversation directly with Supabase
       const { data: conversation, error } = await supabase
         .from('conversations')
         .insert({
           user_id: userId,
-          persona_id: personaId,
           scenario_id: scenarioId || null,
           title: title,
           status: 'active'
@@ -485,6 +484,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('✅ Conversation created:', conversation);
 
+      // Add persona to conversation participants
+      const { error: participantError } = await supabase
+        .from('conversation_participants')
+        .insert({
+          conversation_id: conversation.id,
+          persona_id: personaId,
+          role: 'tutor',
+          order_in_convo: 1
+        });
+
+      if (participantError) {
+        console.error('Failed to add conversation participant:', participantError);
+      }
+
       // Get persona for initial message
       const { data: persona } = await supabase
         .from('personas')
@@ -501,9 +514,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .from('messages')
           .insert({
             conversation_id: conversation.id,
-            role: 'ai',
+            sender_type: 'ai',
+            sender_persona_id: personaId,
             content: introduction,
-            english: `Hello! I'm ${persona.name}. What would you like to talk about today?`,
+            english_translation: `Hello! I'm ${persona.name}. What would you like to talk about today?`,
             created_at: new Date().toISOString()
           });
 
@@ -616,66 +630,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Message routes
   app.post('/api/conversations/:id/messages', authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const conversationId = parseInt(req.params.id);
-      const { content } = req.body;
+      const conversationId = req.params.id; // Keep as UUID string
+      const { content, sender_persona_id } = req.body;
+
+      // Use direct Supabase client for UUID-based conversations
+      const config = getSupabaseConfig();
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(config.url, config.serviceKey);
 
       // Verify conversation belongs to user
-      const conversation = await storage.getConversation(conversationId);
-      if (!conversation || conversation.userId !== req.userId) {
+      const { data: conversation, error: convError } = await supabase
+        .from('conversations')
+        .select('*')
+        .eq('id', conversationId)
+        .eq('user_id', req.userId)
+        .single();
+
+      if (convError || !conversation) {
         return res.status(404).json({ message: 'Conversation not found' });
       }
 
-      // Create user message
-      const userMessage = await storage.createMessage({
-        conversationId,
-        sender: 'user',
-        content,
-      });
+      // Use create_message_with_tracking RPC function for user message
+      const { data: userMessage, error: userMsgError } = await supabase
+        .rpc('create_message_with_tracking', {
+          _conversation_id: conversationId,
+          _sender_type: 'user',
+          _content: content,
+          _sender_persona_id: null, // User messages don't have persona
+          _vocab_used: null,
+          _grammar_used: null
+        });
 
-      // Get context for AI response
-      const persona = await storage.getPersona(conversation.personaId!);
-      const scenario = await storage.getScenario(conversation.scenarioId!);
-      const messages = await storage.getConversationMessages(conversationId);
-      const targetVocab = await storage.getAllVocab(); // Simplified - should filter by scenario
-      const targetGrammar = await storage.getAllGrammar(); // Simplified - should filter by scenario
+      if (userMsgError) {
+        console.error('Error creating user message:', userMsgError);
+        return res.status(400).json({ message: 'Failed to create message' });
+      }
 
-      if (persona && scenario) {
-        // Build conversation history
-        const conversationHistory = messages
-          .filter(m => m.id !== userMessage.id)
-          .map(m => ({
-            role: m.sender === 'user' ? 'user' as const : 'assistant' as const,
-            content: m.content,
+      // Get conversation participants to determine AI persona
+      const { data: participants } = await supabase
+        .from('conversation_participants')
+        .select('persona_id, personas(name, personality, speaking_style)')
+        .eq('conversation_id', conversationId)
+        .eq('role', 'tutor');
+
+      if (participants && participants.length > 0) {
+        const aiPersonaId = participants[0].persona_id;
+        
+        // Generate AI response (using existing logic)
+        const { generateSecureAIResponse } = await import('./openai');
+        
+        // Get recent conversation history
+        const { data: recentMessages } = await supabase
+          .from('messages')
+          .select('sender_type, content')
+          .eq('conversation_id', conversationId)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        const conversationHistory = (recentMessages || [])
+          .reverse()
+          .map((msg: any) => ({
+            role: msg.sender_type === 'user' ? 'user' as const : 'assistant' as const,
+            content: msg.content
           }));
 
-        // Generate AI response
-        const aiResponse = await generateAIResponse({
-          persona,
-          scenario,
+        const aiResponse = await generateSecureAIResponse(
+          aiPersonaId,
+          req.userId!,
+          'Student',
+          content,
+          'general conversation',
           conversationHistory,
-          userMessage: content,
-          targetVocab: targetVocab.slice(0, 20), // Limit for context
-          targetGrammar: targetGrammar.slice(0, 10), // Limit for context
-        });
+          false
+        );
 
-        // Create AI message
-        await storage.createMessage({
-          conversationId,
-          sender: 'ai',
-          content: aiResponse.content,
-          feedback: aiResponse.feedback,
-          vocabUsed: aiResponse.vocabUsed || [],
-          grammarUsed: aiResponse.grammarUsed || [],
-        });
+        // Create AI message using RPC
+        const { data: aiMessage, error: aiMsgError } = await supabase
+          .rpc('create_message_with_tracking', {
+            _conversation_id: conversationId,
+            _sender_type: 'ai',
+            _content: aiResponse.content,
+            _sender_persona_id: aiPersonaId,
+            _vocab_used: aiResponse.vocabUsed || null,
+            _grammar_used: aiResponse.grammarUsed || null,
+            _english_translation: aiResponse.feedback || null,
+            _tutor_feedback: aiResponse.feedback || null,
+            _suggestions: aiResponse.suggestions || null
+          });
 
-        // Track vocabulary from both user and AI messages
-        await trackVocabularyFromMessage(req.userId!, content, 'user');
-        await trackVocabularyFromMessage(req.userId!, aiResponse.content, 'ai');
+        if (aiMsgError) {
+          console.error('Error creating AI message:', aiMsgError);
+        }
       }
 
       // Return updated messages
-      const updatedMessages = await storage.getConversationMessages(conversationId);
-      res.json(updatedMessages);
+      const { data: updatedMessages } = await supabase
+        .from('messages')
+        .select(`
+          id,
+          sender_type,
+          content,
+          english_translation,
+          tutor_feedback,
+          suggestions,
+          vocab_used,
+          grammar_used,
+          sender_persona_id,
+          created_at,
+          personas(name, bubble_class)
+        `)
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      res.json(updatedMessages || []);
     } catch (error) {
       console.error('Send message error:', error);
       res.status(500).json({ message: 'Failed to send message' });
@@ -737,9 +804,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('RPC Error:', rpcError.message);
       }
 
-      // Fallback to manual aggregation
+      // Fallback to manual aggregation using vocab_library
       const { data, error } = await supabase
-        .from('jlpt_vocab')
+        .from('vocab_library')
         .select('jlpt_level')
         .range(0, 19999);
 

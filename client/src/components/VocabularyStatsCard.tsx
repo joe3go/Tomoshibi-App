@@ -14,7 +14,7 @@ export default function VocabularyStatsCard() {
     queryKey: ["vocab-counts"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('jlpt_vocab')
+        .from('vocab_library')
         .select('jlpt_level');
       
       if (error) {
