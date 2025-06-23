@@ -471,82 +471,53 @@ export default function Chat() {
 
   // Add realtime subscription for new messages
   useEffect(() => {
-    if (!conversationId || !session) return;
+    if (!conversationId) return;
 
-    console.log(
-      "🔔 Setting up realtime subscription for conversation:",
-      conversationId,
-    );
+    console.log('🔔 Setting up realtime subscription for conversation:', conversationId);
 
-    const channel = supabase
-      .channel(`conversation-messages-${conversationId}`)
+    const channel = supabase.channel(`conversation-${conversationId}`, {
+      config: {
+        presence: { key: conversationId },
+        broadcast: { self: false },
+        timeout: 30000 // 30 seconds instead of default 10
+      }
+    })
       .on(
-        "postgres_changes",
+        'postgres_changes',
         {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
-          console.log("📨 Realtime message received:", payload.new);
-
-          // Update cache with new message, avoiding duplicates
-          queryClient.setQueryData(
-            ["conversation", conversationId],
-            (old: any) => {
-              if (!old) {
-                console.log("🔧 Creating cache structure for realtime message");
-                return {
-                  conversation: { id: conversationId },
-                  messages: [payload.new],
-                };
-              }
-
-              const newMessage = payload.new;
-              const messageExists = old.messages?.some(
-                (msg: any) => msg.id === newMessage.id,
-              );
-
-              if (!messageExists) {
-                console.log(
-                  "✅ Adding realtime message to cache:",
-                  newMessage.id,
-                );
-                const updatedMessages = [
-                  ...(old.messages || []),
-                  newMessage,
-                ].sort(
-                  (a, b) =>
-                    new Date(a.created_at).getTime() -
-                    new Date(b.created_at).getTime(),
-                );
-
-                return {
-                  ...old,
-                  messages: updatedMessages,
-                };
-              } else {
-                console.log(
-                  "⏭️ Message already exists in cache:",
-                  newMessage.id,
-                );
-              }
-
-              return old;
-            },
-          );
-        },
+          console.log('📨 Realtime message received:', payload);
+          queryClient.invalidateQueries({ queryKey: ['conversation', conversationId] });
+        }
       )
       .subscribe((status) => {
-        console.log("📡 Realtime subscription status:", status);
+        console.log('📡 Realtime subscription status:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Realtime connection established');
+          // Manually trigger a cache check
+          queryClient.invalidateQueries({ queryKey: ['conversation', conversationId] });
+        }
       });
 
+    // Add auto-reconnect logic
+    const reconnectInterval = setInterval(() => {
+      if (channel.state !== 'joined') {
+        console.log('♻️ Reconnecting realtime...');
+        channel.subscribe();
+      }
+    }, 5000);
+
     return () => {
-      console.log("🔕 Cleaning up realtime subscription");
+      console.log('🔕 Cleaning up realtime subscription');
+      clearInterval(reconnectInterval);
       supabase.removeChannel(channel);
     };
-  }, [conversationId, session, queryClient]);
+  }, [conversationId, queryClient]);
 
   const handleSendMessage = () => {
     if (message.trim() && !sendMessageMutation.isPending) {

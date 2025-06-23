@@ -75,6 +75,14 @@ export async function generateSecureAIResponse(
       { role: "user" as const, content: userMessage },
     ];
 
+    console.log("🔄 OpenAI Request Debug:", {
+      model: "gpt-4o",
+      messageCount: messages.length,
+      systemPromptLength: systemPrompt.length,
+      hasJsonInPrompt: systemPrompt.toLowerCase().includes('json'),
+      lastUserMessage: userMessage.substring(0, 50)
+    });
+
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages,
@@ -97,8 +105,16 @@ export async function generateSecureAIResponse(
       parsedResponse = JSON.parse(rawContent);
       console.log("🗣️ Parsed OpenAI Response:", parsedResponse);
     } catch (e) {
-      console.error("❌ Failed to parse AI response:", rawContent);
-      throw new Error("Invalid AI response format");
+      console.error("⚠️ OpenAI Response Not Structured:", rawContent);
+      // Return fallback response instead of throwing
+      return {
+        content: rawContent.includes("すみません") ? rawContent : "すみません、もう一度言ってください。",
+        english_translation: "System is processing your request",
+        feedback: undefined,
+        vocabUsed: [],
+        grammarUsed: [],
+        suggestions: [],
+      };
     }
 
     // Return structured response with fallbacks
