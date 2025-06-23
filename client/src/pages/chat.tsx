@@ -331,7 +331,7 @@ export default function Chat() {
     },
     onError: (error, content, context) => {
       console.error("❌ Message send failed:", error.message);
-      
+
       // Revert to previous data on error
       if (context?.previousData) {
         queryClient.setQueryData(
