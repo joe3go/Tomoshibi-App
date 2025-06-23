@@ -375,9 +375,6 @@ export default function Chat() {
     onSuccess: async () => {
       setMessage("");
 
-      // Force immediate refetch from Supabase for accurate and up-to-date messages
-      await queryClient.refetchQueries({ queryKey: ["conversation", conversationId] });
-
       // Scroll to bottom after data refresh
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -474,9 +471,29 @@ export default function Chat() {
           return;
         }
 
-        // Force query invalidation to trigger a fresh fetch and UI update
-        console.log('🔄 Invalidating cache to trigger UI update for message:', payload.new.id);
-        queryClient.invalidateQueries({ queryKey: ["conversation", conversationId] });
+        // Force immediate cache update and UI re-render
+        console.log('🔄 Forcing immediate cache update for message:', payload.new.id);
+        queryClient.setQueryData(["conversation", conversationId], (old: any) => {
+          if (!old) {
+            console.log('⚠️ No existing cache data, refetching instead');
+            queryClient.refetchQueries({ queryKey: ["conversation", conversationId] });
+            return old;
+          }
+
+          const alreadyExists = old.messages.some((m: any) => m.id === payload.new.id);
+          if (alreadyExists) {
+            console.log('🔄 Message already exists in cache:', payload.new.id);
+            return old;
+          }
+
+          console.log('✅ Adding new message to cache via realtime:', payload.new.id);
+          
+          // Create completely new object to force React re-render
+          return {
+            ...old,
+            messages: [...old.messages, { ...payload.new }],
+          };
+        });
       })
       .subscribe();
 
