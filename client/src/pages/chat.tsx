@@ -462,7 +462,7 @@ export default function Chat() {
         schema: "public",
         table: "messages",
         filter: `conversation_id=eq.${conversationId}`
-      }, (payload) => {
+      }, async (payload) => {
         console.log('📨 Realtime message received:', payload.new);
 
         // Skip if it's a temp optimistic message
@@ -471,29 +471,18 @@ export default function Chat() {
           return;
         }
 
-        // Force immediate cache update and UI re-render
-        console.log('🔄 Forcing immediate cache update for message:', payload.new.id);
-        queryClient.setQueryData(["conversation", conversationId], (old: any) => {
-          if (!old) {
-            console.log('⚠️ No existing cache data, refetching instead');
-            queryClient.refetchQueries({ queryKey: ["conversation", conversationId] });
-            return old;
-          }
-
-          const alreadyExists = old.messages.some((m: any) => m.id === payload.new.id);
-          if (alreadyExists) {
-            console.log('🔄 Message already exists in cache:', payload.new.id);
-            return old;
-          }
-
-          console.log('✅ Adding new message to cache via realtime:', payload.new.id);
-          
-          // Create completely new object to force React re-render
-          return {
-            ...old,
-            messages: [...old.messages, { ...payload.new }],
-          };
+        console.log('🔄 Forcing cache eviction and immediate refetch for message:', payload.new.id);
+        
+        // Nuclear option: Remove from cache completely and refetch
+        queryClient.removeQueries({ queryKey: ["conversation", conversationId] });
+        
+        // Force immediate refetch with fresh data
+        await queryClient.refetchQueries({ 
+          queryKey: ["conversation", conversationId],
+          type: 'active'
         });
+        
+        console.log('✅ Cache evicted and refetched for new message');
       })
       .subscribe();
 
