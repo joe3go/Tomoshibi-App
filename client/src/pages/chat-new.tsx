@@ -163,6 +163,26 @@ export default function ChatNew() {
     }
   }, [conversation, personas]);
 
+  const getBubbleStyle = (messageType: 'user' | 'ai', persona?: Persona | null) => {
+    if (messageType === 'user') {
+      return 'bg-blue-500 text-white ml-12';
+    }
+    
+    // AI message bubble styling based on persona
+    if (persona?.name === 'Keiko') {
+      return 'bg-rose-100 text-rose-900 border border-rose-200 mr-12';
+    } else if (persona?.name === 'Aoi') {
+      return 'bg-emerald-100 text-emerald-900 border border-emerald-200 mr-12';
+    } else if (persona?.name === 'Haruki') {
+      return 'bg-orange-100 text-orange-900 border border-orange-200 mr-12';
+    } else if (persona?.name === 'Satoshi') {
+      return 'bg-blue-100 text-blue-900 border border-blue-200 mr-12';
+    }
+    
+    // Default AI styling
+    return 'bg-gray-100 text-gray-900 border border-gray-200 mr-12';
+  };
+
   const sendMessage = async () => {
     if (!message.trim() || sending || !session || !user) return;
 
@@ -396,14 +416,30 @@ export default function ChatNew() {
           {messages.map((msg) => (
             <div
               key={msg.id}
-              className={`flex ${msg.sender_type === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex items-start gap-3 ${msg.sender_type === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
             >
+              {/* Avatar */}
+              <div className="flex-shrink-0">
+                {msg.sender_type === 'user' ? (
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                    You
+                  </div>
+                ) : (
+                  <img
+                    src={getAvatarImage(persona)}
+                    alt={persona?.name || "AI"}
+                    className="w-8 h-8 rounded-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = "/avatars/default.png";
+                    }}
+                  />
+                )}
+              </div>
+
+              {/* Message Bubble */}
               <div
-                className={`max-w-[80%] rounded-lg p-3 ${
-                  msg.sender_type === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted'
-                }`}
+                className={`max-w-[70%] rounded-lg p-3 ${getBubbleStyle(msg.sender_type, persona)}`}
               >
                 <MessageWithVocab content={msg.content} className="vocab-enabled-message">
                   <FuriganaText
@@ -448,15 +484,25 @@ export default function ChatNew() {
           ))}
 
           {sending && (
-            <div className="flex justify-start">
-              <div className="bg-muted rounded-lg p-3">
+            <div className="flex items-start gap-3">
+              {/* AI Avatar for typing indicator */}
+              <div className="flex-shrink-0">
+                <img
+                  src={getAvatarImage(persona)}
+                  alt={persona?.name || "AI"}
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              </div>
+              
+              {/* Typing indicator bubble */}
+              <div className={`rounded-lg p-3 ${getBubbleStyle('ai', persona)}`}>
                 <div className="flex items-center gap-2">
                   <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60"></div>
+                    <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '0.2s' }}></div>
                   </div>
-                  <span className="text-sm text-muted-foreground">Thinking...</span>
+                  <span className="text-sm opacity-70">Thinking...</span>
                 </div>
               </div>
             </div>
