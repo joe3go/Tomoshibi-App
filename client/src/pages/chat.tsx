@@ -200,10 +200,12 @@ export default function Chat() {
     }
   };
 
-  // Load conversation participants when conversation and personas are loaded
+  // Set persona when conversation and personas are loaded
   useEffect(() => {
     if (conversation && personas.length > 0) {
-      loadConversationParticipants();
+      const { personaId } = extractPersonaFromTitle(conversation.title || "");
+      const foundPersona = personas.find(p => p.id === personaId);
+      setPersona(foundPersona || null);
     }
   }, [conversation, personas]);
 
@@ -265,39 +267,7 @@ export default function Chat() {
         console.log("Vocabulary tracking failed:", error);
       }
 
-      // Handle AI responses - single or multiple based on conversation type
-      if (conversationPersonas.length > 1) {
-        // Group chat: send multiple AI responses
-        await handleGroupAIResponses(finalMessage);
-      } else {
-        // Single chat: send one AI response
-        await handleSingleAIResponse(finalMessage);
-      }
-
-      // Scroll to bottom
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
-
-    } catch (error) {
-      console.error("❌ Message send failed:", error);
-      setMessage(finalMessage); // Restore message on error
-      
-      toast({
-        title: "Failed to send message",
-        description: "Please check your connection and try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setSending(false);
-    }
-  };
-
-  const handleSingleAIResponse = async (userMessage: string) => {
-    const currentPersona = conversationPersonas[0] || persona;
-    if (!currentPersona) return;
-
-    try {
+      // Get AI response
       const response = await fetch("/api/chat/secure", {
         method: "POST",
         headers: {
@@ -305,9 +275,9 @@ export default function Chat() {
           "Authorization": `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          message: userMessage,
+          message: finalMessage,
           conversationId: conversationId,
-          tutorId: currentPersona.id,
+          tutorId: persona?.id || "",
         }),
       });
 
@@ -329,7 +299,7 @@ export default function Chat() {
           suggestions: Array.isArray(aiData.suggestions) ? aiData.suggestions : null,
           vocab_used: Array.isArray(aiData.vocabUsed) ? aiData.vocabUsed : [],
           grammar_used: Array.isArray(aiData.grammarUsed) ? aiData.grammarUsed : [],
-          sender_persona_id: currentPersona.id,
+          sender_persona_id: persona?.id || null,
           created_at: new Date().toISOString(),
         })
         .select()
@@ -348,86 +318,23 @@ export default function Chat() {
       } catch (error) {
         console.log("AI vocabulary tracking failed:", error);
       }
+
+      // Scroll to bottom
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+
     } catch (error) {
-      console.error("Single AI response error:", error);
-    }
-  };
-
-  const handleGroupAIResponses = async (userMessage: string) => {
-    // Show typing indicators for group personas
-    const personaNames = conversationPersonas.map(p => p.name);
-    setTypingPersonas(personaNames);
-
-    try {
-      // Send AI responses for each persona in sequence
-      for (let i = 0; i < conversationPersonas.length; i++) {
-        const persona = conversationPersonas[i];
-        
-        // Add delay between responses to simulate natural conversation flow
-        if (i > 0) {
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-
-        // Remove current persona from typing indicators
-        setTypingPersonas(prev => prev.filter(name => name !== persona.name));
-
-        try {
-          const response = await fetch("/api/chat/secure", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${session.access_token}`,
-            },
-            body: JSON.stringify({
-              message: userMessage,
-              conversationId: conversationId,
-              tutorId: persona.id,
-            }),
-          });
-
-          if (!response.ok) {
-            console.error(`Failed to get AI response from ${persona.name}`);
-            continue;
-          }
-
-          const aiData = await response.json();
-
-          // Add AI message
-          const { data: aiMessage, error: aiMsgError } = await supabase
-            .from("messages")
-            .insert({
-              conversation_id: conversationId,
-              sender_type: "ai",
-              content: aiData.content || '',
-              english_translation: aiData.english_translation || null,
-              tutor_feedback: aiData.feedback || null,
-              suggestions: Array.isArray(aiData.suggestions) ? aiData.suggestions : null,
-              vocab_used: Array.isArray(aiData.vocabUsed) ? aiData.vocabUsed : [],
-              grammar_used: Array.isArray(aiData.grammarUsed) ? aiData.grammarUsed : [],
-              sender_persona_id: persona.id,
-              created_at: new Date().toISOString(),
-            })
-            .select()
-            .single();
-
-          if (!aiMsgError && aiMessage) {
-            // Immediately add AI message to UI
-            setMessages(prev => [...prev, aiMessage]);
-
-            // Track vocabulary usage for AI message
-            try {
-              await trackVocabularyUsage(aiData.content || '', 'ai');
-            } catch (error) {
-              console.log("AI vocabulary tracking failed:", error);
-            }
-          }
-        } catch (error) {
-          console.error(`Error getting response from ${persona.name}:`, error);
-        }
-      }
+      console.error("❌ Message send failed:", error);
+      setMessage(finalMessage); // Restore message on error
+      
+      toast({
+        title: "Failed to send message",
+        description: "Please check your connection and try again.",
+        variant: "destructive",
+      });
     } finally {
-      // Clear all typing indicators
-      setTypingPersonas([]);
+      setSending(false);
     }
   };
 
@@ -565,119 +472,22 @@ export default function Chat() {
                     You
                   </div>
                 ) : (
-                  (() => {
-                    // Find the persona for this message using sender_persona_id
-                    const messagePersona = msg.sender_persona_id 
-                      ? conversationPersonas.find(p => p.id === msg.sender_persona_id) || personas.find(p => p.id === msg.sender_persona_id)
-                      : persona;
-                    
-                    return (
-                      <img
-                        src={getAvatarImage(messagePersona)}
-                        alt={messagePersona?.name || "AI"}
-                        className="w-8 h-8 rounded-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = "/avatars/default.png";
-                        }}
-                      />
-                    );
-                  })()
+                  <img
+                    src={getAvatarImage(persona)}
+                    alt={persona?.name || "AI"}
+                    className="w-8 h-8 rounded-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = "/avatars/default.png";
+                    }}
+                  />
                 )}
               </div>
 
-              <div className="flex-1">
-                {/* Show persona name in group chats */}
-                {msg.sender_type === 'ai' && conversationPersonas.length > 1 && (() => {
-                  const messagePersona = msg.sender_persona_id 
-                    ? conversationPersonas.find(p => p.id === msg.sender_persona_id) || personas.find(p => p.id === msg.sender_persona_id)
-                    : persona;
-                  
-                  if (messagePersona) {
-                    return (
-                      <div className="text-xs text-muted-foreground mb-1 font-medium">
-                        {messagePersona.name}
-                      </div>
-                    );
-                  }
-                  return null;
-                })()}
-                
-                <div
-                  className={`max-w-[70%] rounded-lg p-3 ${(() => {
-                    if (msg.sender_type === 'user') return 'bg-blue-500 text-white';
-                    
-                    // Get persona for this message
-                    const messagePersona = msg.sender_persona_id 
-                      ? conversationPersonas.find(p => p.id === msg.sender_persona_id) || personas.find(p => p.id === msg.sender_persona_id)
-                      : persona;
-                    
-                    return getMessageBubbleStyles('ai', messagePersona || null);
-                  })()}`}
-                >
-                  <MessageWithVocab content={msg.content}>
-                    <FuriganaText
-                      text={msg.content}
-                      showFurigana={showFurigana}
-                      showToggleButton={false}
-                    />
-                  </MessageWithVocab>
-
-                  {msg.sender_type === 'ai' && msg.english_translation && (
-                    <div className="mt-2">
-                      <details className="text-sm text-muted-foreground">
-                        <summary className="cursor-pointer hover:text-foreground">
-                          Show English translation
-                        </summary>
-                        <div className="mt-1 p-2 bg-muted/50 rounded-md">
-                          {msg.english_translation}
-                        </div>
-                      </details>
-                    </div>
-                  )}
-
-                  {msg.suggestions && msg.suggestions.length > 0 && (
-                    <div className="mt-2">
-                      <details className="text-sm">
-                        <summary className="cursor-pointer text-blue-600 hover:text-blue-800">
-                          Learning suggestions ({msg.suggestions.length})
-                        </summary>
-                        <div className="mt-1 p-2 bg-blue-50 dark:bg-blue-950/20 rounded-md">
-                          {msg.suggestions.map((suggestion: string, index: number) => (
-                            <div key={index} className="mb-1 last:mb-0">
-                              • {suggestion}
-                            </div>
-                          ))}
-                        </div>
-                      </details>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-
-          {sending && (
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0">
-                <img
-                  src={getAvatarImage(persona)}
-                  alt={persona?.name || "AI"}
-                  className="w-8 h-8 rounded-full object-cover"
-                />
-              </div>
-              
-              <div className={`rounded-lg p-3 ${getMessageBubbleStyles('ai', persona)}`}>
-                <div className="flex items-center gap-2">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60"></div>
-                    <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '0.2s' }}></div>
-                  </div>
-                  <span className="text-sm opacity-70">Thinking...</span>
-                </div>
-              </div>
-            </div>
+              <div
+                className={`max-w-[70%] rounded-lg p-3 ${getMessageBubbleStyles(msg.sender_type, persona)}`}
+              >
+                <MessageWithVocab content={msg.content}>
                   <FuriganaText
                     text={msg.content}
                     showFurigana={showFurigana}
@@ -739,42 +549,6 @@ export default function Chat() {
                   <span className="text-sm opacity-70">Thinking...</span>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* Group typing indicators */}
-          {typingPersonas.length > 0 && (
-            <div className="space-y-2">
-              {typingPersonas.map(personaName => {
-                const typingPersona = conversationPersonas.find(p => p.name === personaName);
-                return (
-                  <div key={personaName} className="flex items-start gap-3">
-                    <div className="flex-shrink-0">
-                      <img
-                        src={getAvatarImage(typingPersona)}
-                        alt={typingPersona?.name || "AI"}
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                    </div>
-                    
-                    <div className="flex-1">
-                      <div className="text-xs text-muted-foreground mb-1">
-                        {personaName}
-                      </div>
-                      <div className={`rounded-lg p-3 max-w-[70%] ${getMessageBubbleStyles('ai', typingPersona)}`}>
-                        <div className="flex items-center gap-2">
-                          <div className="flex space-x-1">
-                            <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60"></div>
-                            <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '0.1s' }}></div>
-                            <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '0.2s' }}></div>
-                          </div>
-                          <span className="text-sm opacity-70">typing...</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
             </div>
           )}
 
