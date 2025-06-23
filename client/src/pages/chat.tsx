@@ -141,7 +141,7 @@ export default function Chat() {
       console.log('📤 Sending message to conversation:', conversationId);
 
       // Add user message using the updated schema
-      const { error: userMsgError } = await supabase
+      const { data: userMessage, error: userMsgError } = await supabase
         .from('messages')
         .insert({
           conversation_id: conversationId,
@@ -149,7 +149,9 @@ export default function Chat() {
           content: content,
           sender_persona_id: null, // User messages don't have persona
           created_at: new Date().toISOString()
-        });
+        })
+        .select()
+        .single();
 
       if (userMsgError) {
         console.error('❌ Failed to add user message:', userMsgError);
@@ -168,6 +170,7 @@ export default function Chat() {
         body: JSON.stringify({
           conversationId,
           message: content,
+          tutorId: validPersonaId
         })
       });
 
@@ -180,72 +183,83 @@ export default function Chat() {
       const aiData = await response.json();
 
       // Add AI message using the updated schema
-      const { error: aiMsgError } = await supabase
+      const { data: aiMessage, error: aiMsgError } = await supabase
         .from('messages')
         .insert({
           conversation_id: conversationId,
           sender_type: 'ai',
           content: aiData.content,
-          english_translation: aiData.english,
+          english_translation: aiData.english_translation,
           tutor_feedback: aiData.feedback,
           suggestions: aiData.suggestions,
           vocab_used: aiData.vocabUsed,
           grammar_used: aiData.grammarUsed,
-          sender_persona_id: aiData.tutorId, // AI messages have persona
+          sender_persona_id: validPersonaId, // AI messages have persona
           created_at: new Date().toISOString()
-        });
+        })
+        .select()
+        .single();
 
       if (aiMsgError) {
         console.error('❌ Failed to add AI message:', aiMsgError);
         throw new Error('Failed to save AI response');
       }
 
-      // Return updated messages with persona information
-      const { data: updatedMessages, error: fetchError } = await supabase
-        .from('messages')
-        .select(`
-          id,
-          sender_type,
-          content,
-          english_translation,
-          tutor_feedback,
-          suggestions,
-          vocab_used,
-          grammar_used,
-          sender_persona_id,
-          created_at,
-          personas(name, bubble_class)
-        `)
-        .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
+      console.log('✅ Messages added successfully:', { user: userMessage.id, ai: aiMessage.id });
 
-      if (fetchError) {
-        console.error('❌ Failed to fetch updated messages:', fetchError);
-        throw new Error('Failed to refresh messages');
-      }
-
-      return updatedMessages || [];
+      // Return the new messages with role property for rendering
+      return [
+        { ...userMessage, role: 'user' },
+        { ...aiMessage, role: 'ai' }
+      ];
     },
-    onSuccess: (messages) => {
-      // Update with fresh messages from Supabase
-      queryClient.setQueryData(
-        [`conversation-messages`, conversationId],
-        (oldData: any) => ({
-          ...oldData,
-          messages: messages || [],
-        }),
-      );
+    onMutate: async (content: string) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["conversation", conversationId] });
+
+      // Snapshot the previous value
+      const previousData = queryClient.getQueryData(["conversation", conversationId]);
+
+      // Optimistically update to show user message immediately
+      queryClient.setQueryData(["conversation", conversationId], (old: any) => {
+        if (!old) return old;
+        
+        const optimisticUserMessage = {
+          id: `temp_${Date.now()}`,
+          sender_type: 'user',
+          content: content,
+          role: 'user',
+          created_at: new Date().toISOString()
+        };
+
+        return {
+          ...old,
+          messages: [...(old.messages || []), optimisticUserMessage]
+        };
+      });
+
+      return { previousData };
+    },
+    onSuccess: (newMessages) => {
+      // Update with fresh messages from the mutation
+      queryClient.setQueryData(["conversation", conversationId], (old: any) => {
+        if (!old) return old;
+
+        // Remove any temporary messages and add the real ones
+        const existingMessages = (old.messages || []).filter((msg: any) => !msg.id.toString().startsWith('temp_'));
+        
+        return {
+          ...old,
+          messages: [...existingMessages, ...newMessages]
+        };
+      });
       setMessage("");
     },
-    onError: (error) => {
-      // Remove the optimistic user message on error
-      queryClient.setQueryData(
-        [`conversation-messages`, conversationId],
-        (oldData: any) => ({
-          ...oldData,
-          messages: oldData?.messages?.slice(0, -1) || [],
-        }),
-      );
+    onError: (error, content, context) => {
+      // Revert to previous data on error
+      if (context?.previousData) {
+        queryClient.setQueryData(["conversation", conversationId], context.previousData);
+      }
 
       // Handle auth errors
       if (error.message.includes("session") || error.message.includes("authenticated")) {
@@ -527,106 +541,111 @@ export default function Chat() {
       {/* Chat Messages */}
       <div className="chat-messages-container">
         <div className="chat-messages-list">
-          {messages.map((msg: any) => (
-            <div
-              key={msg.id}
-              className={`chat-message-wrapper ${
-                msg.role === "user" ? "chat-message-user" : "chat-message-ai"
-              }`}
-            >
-              {msg.role === "ai" && (
-                <div className="chat-avatar chat-avatar-ai">
-                  <img
-                    src={getAvatarImage(persona)}
-                    alt={persona?.name || "AI"}
-                    className="chat-avatar-image w-8 h-8 rounded-full object-cover"
-                    onError={(e) => {
-                      // Fallback to text avatar if image fails
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = "none";
-                      target.parentElement!.innerHTML = `
-                        <div class="chat-avatar-fallback ${
-                          persona?.type === "teacher"
-                            ? "chat-avatar-teacher"
-                            : "chat-avatar-friend"
-                        }">
-                          <span class="chat-avatar-text">
-                            ${persona?.type === "teacher" ? "先" : "友"}
-                          </span>
-                        </div>
-                      `;
-                    }}
-                  />
-                </div>
-              )}
-
+          {messages.map((msg: any) => {
+            const isUser = msg.sender_type === "user" || msg.role === "user";
+            const isAI = msg.sender_type === "ai" || msg.role === "ai";
+            
+            return (
               <div
-                className={`message-bubble ${
-                  msg.role === "user" 
-                    ? "user" 
-                    : persona?.bubble_class || "ai"
+                key={msg.id}
+                className={`chat-message-wrapper ${
+                  isUser ? "chat-message-user" : "chat-message-ai"
                 }`}
               >
-                {msg.feedback && (
-                  <div className="chat-message-feedback">
-                    <p className="chat-feedback-text">✨ {msg.feedback}</p>
+                {isAI && (
+                  <div className="chat-avatar chat-avatar-ai">
+                    <img
+                      src={getAvatarImage(persona)}
+                      alt={persona?.name || "AI"}
+                      className="chat-avatar-image w-8 h-8 rounded-full object-cover"
+                      onError={(e) => {
+                        // Fallback to text avatar if image fails
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = "none";
+                        target.parentElement!.innerHTML = `
+                          <div class="chat-avatar-fallback ${
+                            persona?.type === "teacher"
+                              ? "chat-avatar-teacher"
+                              : "chat-avatar-friend"
+                          }">
+                            <span class="chat-avatar-text">
+                              ${persona?.type === "teacher" ? "先" : "友"}
+                            </span>
+                          </div>
+                        `;
+                      }}
+                    />
                   </div>
                 )}
 
-                <div className="chat-message-content">
-                  <MessageWithVocab
-                    content={msg.content}
-                    className="vocab-enabled-message"
-                  >
-                    <FuriganaText
-                      text={msg.content}
-                      showFurigana={showFurigana}
-                      showToggleButton={false}
-                    />
-                  </MessageWithVocab>
+                <div
+                  className={`message-bubble ${
+                    isUser 
+                      ? "user" 
+                      : persona?.bubble_class || "ai"
+                  }`}
+                >
+                  {(msg.tutor_feedback || msg.feedback) && (
+                    <div className="chat-message-feedback">
+                      <p className="chat-feedback-text">✨ {msg.tutor_feedback || msg.feedback}</p>
+                    </div>
+                  )}
+
+                  <div className="chat-message-content">
+                    <MessageWithVocab
+                      content={msg.content}
+                      className="vocab-enabled-message"
+                    >
+                      <FuriganaText
+                        text={msg.content}
+                        showFurigana={showFurigana}
+                        showToggleButton={false}
+                      />
+                    </MessageWithVocab>
+                  </div>
+
+                  {isAI && (msg.english_translation || msg.english) && (
+                    <div className="mt-2">
+                      <details className="text-sm text-muted-foreground">
+                        <summary className="cursor-pointer hover:text-foreground">
+                          Show English translation
+                        </summary>
+                        <div className="mt-1 p-2 bg-muted/50 rounded-md">
+                          {msg.english_translation || msg.english}
+                        </div>
+                      </details>
+                    </div>
+                  )}
+
+                  {msg.suggestions && msg.suggestions.length > 0 && (
+                    <div className="mt-2">
+                      <details className="text-sm">
+                        <summary className="cursor-pointer text-blue-600 hover:text-blue-800">
+                          💡 Learning suggestions ({msg.suggestions.length})
+                        </summary>
+                        <div className="mt-1 p-2 bg-blue-50 dark:bg-blue-950/20 rounded-md">
+                          {msg.suggestions.map((suggestion: string, index: number) => (
+                            <div key={index} className="flex items-start gap-2 text-blue-800 dark:text-blue-200">
+                              <span>•</span>
+                              <span>{suggestion}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    </div>
+                  )}
                 </div>
 
-                {msg.role === "ai" && msg.english && (
-                  <div className="mt-2">
-                    <details className="text-sm text-muted-foreground">
-                      <summary className="cursor-pointer hover:text-foreground">
-                        Show English translation
-                      </summary>
-                      <div className="mt-1 p-2 bg-muted/50 rounded-md">
-                        {msg.english}
-                      </div>
-                    </details>
-                  </div>
-                )}
-
-                {msg.suggestions && msg.suggestions.length > 0 && (
-                  <div className="mt-2">
-                    <details className="text-sm">
-                      <summary className="cursor-pointer text-blue-600 hover:text-blue-800">
-                        💡 Learning suggestions ({msg.suggestions.length})
-                      </summary>
-                      <div className="mt-1 p-2 bg-blue-50 dark:bg-blue-950/20 rounded-md">
-                        {msg.suggestions.map((suggestion: string, index: number) => (
-                          <div key={index} className="flex items-start gap-2 text-blue-800 dark:text-blue-200">
-                            <span>•</span>
-                            <span>{suggestion}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </details>
+                {isUser && (
+                  <div className="chat-avatar chat-avatar-user">
+                    <span className="chat-avatar-user-text">
+                      You
+                    </span>
                   </div>
                 )}
               </div>
-
-              {msg.role === "user" && (
-                <div className="chat-avatar chat-avatar-user">
-                  <span className="chat-avatar-user-text">
-                    You
-                  </span>
-                </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
 
           {/* Enhanced Typing Indicator */}
           {sendMessageMutation.isPending && (
