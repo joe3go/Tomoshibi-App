@@ -34,12 +34,12 @@ const getSupabaseConfig = () => {
   if (isDevelopment) {
     return {
       url: 'https://gsnnydemkpllycgzmalv.supabase.co',
-      key: process.env.VITE_SUPABASE_DEV_SERVICE_KEY || ''
+      serviceKey: process.env.VITE_SUPABASE_DEV_SERVICE_KEY || ''
     };
   } else {
     return {
       url: 'https://oyawpeylvdqfkhysnjsq.supabase.co',
-      key: process.env.VITE_SUPABASE_PROD_SERVICE_KEY || ''
+      serviceKey: process.env.VITE_SUPABASE_PROD_SERVICE_KEY || ''
     };
   }
 };
@@ -48,7 +48,7 @@ const config = getSupabaseConfig();
 console.log('🔧 Server Supabase Environment:', isDevelopment ? 'development' : 'production');
 console.log('🔧 Using Supabase URL for Auth:', config.url);
 
-const supabase = createClient(config.url, config.key);
+const supabase = createClient(config.url, config.serviceKey);
 import { eq, desc, and, like, or, inArray, sql } from "drizzle-orm";
 import { db } from "./db";
 

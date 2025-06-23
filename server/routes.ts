@@ -240,7 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(config.url, config.key);
+      const supabase = createClient(config.url, config.serviceKey);
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -328,7 +328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (token_hash && type) {
         const config = getSupabaseConfig();
         const { createClient } = await import('@supabase/supabase-js');
-        const supabase = createClient(config.url, config.key);
+        const supabase = createClient(config.url, config.serviceKey);
 
         const { data, error } = await supabase.auth.verifyOtp({
           token_hash: token_hash as string,
@@ -765,7 +765,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const config = getSupabaseConfig();
       const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(config.url, config.key);
+      const supabase = createClient(config.url, config.serviceKey);
 
       console.log('🔍 Fetching vocabulary statistics from Supabase using RPC...');
 
@@ -953,7 +953,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Also test direct Supabase connection
       const config = getSupabaseConfig();
       const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(config.url, config.key);
+      const supabase = createClient(config.url, config.serviceKey);
 
       const { data: directData, error: directError } = await supabase
         .from('vocab_library')
