@@ -124,7 +124,8 @@ export async function generateSecureAIResponse(
       feedback: parsedResponse.feedback,
       vocabUsed: parsedResponse.vocabUsed || [],
       grammarUsed: parsedResponse.grammarUsed || [],
-      suggestions: parsedResponse.suggestions || [],
+      suggestions: Array.isArray(parsedResponse.suggestions) ? parsedResponse.suggestions : 
+                  parsedResponse.suggestions ? [parsedResponse.suggestions] : [],
     };
   } catch (error: any) {
     console.error("❌ OpenAI error:", error?.response?.data || error);

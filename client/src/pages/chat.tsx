@@ -212,7 +212,8 @@ export default function Chat() {
           content: aiData.content,
           english_translation: aiData.english_translation,
           tutor_feedback: aiData.feedback,
-          suggestions: aiData.suggestions,
+          suggestions: Array.isArray(aiData.suggestions) ? aiData.suggestions : 
+                      aiData.suggestions ? [aiData.suggestions] : null,
           vocab_used: aiData.vocabUsed,
           grammar_used: aiData.grammarUsed,
           sender_persona_id: validPersonaId, // AI messages have persona
