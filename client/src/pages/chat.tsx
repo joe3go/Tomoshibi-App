@@ -474,30 +474,9 @@ export default function Chat() {
           return;
         }
 
-        // Force cache update with proper object cloning to trigger React re-render
-        queryClient.setQueryData(["conversation", conversationId], (old: any) => {
-          if (!old || !old.messages) {
-            console.log('⚠️ No existing cache data, skipping realtime update');
-            return old;
-          }
-
-          const alreadyExists = old.messages.some((m: any) => m.id === payload.new.id);
-          if (alreadyExists) {
-            console.log('🔄 Message already exists in cache:', payload.new.id);
-            return old;
-          }
-
-          console.log('✅ Adding new message to cache via realtime:', payload.new.id);
-          
-          // Create completely new objects to ensure React detects the change
-          const newMessage = { ...payload.new };
-          const newMessages = [...old.messages, newMessage];
-          
-          return {
-            ...old,
-            messages: newMessages,
-          };
-        });
+        // Force query invalidation to trigger a fresh fetch and UI update
+        console.log('🔄 Invalidating cache to trigger UI update for message:', payload.new.id);
+        queryClient.invalidateQueries({ queryKey: ["conversation", conversationId] });
       })
       .subscribe();
 
