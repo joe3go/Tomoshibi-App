@@ -51,10 +51,10 @@ export async function generateSecureAIResponse(
   try {
     // Import validation functions
     const { validateTutorId } = await import("../shared/validation");
-    
+
     // Validate tutorId format before proceeding
     const validTutorId = validateTutorId(tutorId);
-    
+
     const tutor = await getTutorById(validTutorId);
     if (!tutor) {
       throw new Error(`Tutor with ID ${validTutorId} not found`);
@@ -80,20 +80,35 @@ export async function generateSecureAIResponse(
       messages,
       max_tokens: 300,
       temperature: 0.8,
+      response_format: { type: "json_object" }
     });
 
     const rawContent = response?.choices?.[0]?.message?.content;
+
     if (!rawContent) {
-      console.error("❌ OpenAI response missing content:", response);
-      throw new Error("AI response was empty. Please try again.");
+      throw new Error("No response received from AI");
     }
 
+    console.log("🗣️ Raw AI Response:", rawContent);
+
+    // Parse the JSON response
+    let parsedResponse;
+    try {
+      parsedResponse = JSON.parse(rawContent);
+      console.log("🗣️ Parsed OpenAI Response:", parsedResponse);
+    } catch (e) {
+      console.error("❌ Failed to parse AI response:", rawContent);
+      throw new Error("Invalid AI response format");
+    }
+
+    // Return structured response with fallbacks
     return {
-      content: rawContent,
-      feedback: undefined,
-      vocabUsed: [],
-      grammarUsed: [],
-      suggestions: [],
+      content: parsedResponse.response || parsedResponse.content || rawContent,
+      english_translation: parsedResponse.english_translation || parsedResponse.english,
+      feedback: parsedResponse.feedback,
+      vocabUsed: parsedResponse.vocabUsed || [],
+      grammarUsed: parsedResponse.grammarUsed || [],
+      suggestions: parsedResponse.suggestions || [],
     };
   } catch (error: any) {
     console.error("❌ OpenAI error:", error?.response?.data || error);

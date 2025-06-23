@@ -34,7 +34,7 @@ export function buildSystemPrompt(tutor: Tutor, user: UserContext): string {
   const sanitizedTopic = sanitizeInput(user.topic);
   const sanitizedGrammar = user.knownGrammar.map(g => sanitizeInput(g)).join(', ') || 'basic beginner level';
   const sanitizedUsername = sanitizeInput(user.username);
-  
+
   // Default values for optional fields
   const tone = tutor.tone || (tutor.type === 'teacher' ? 'polite and encouraging' : 'casual and friendly');
   const level = tutor.level || 'N5';
@@ -94,7 +94,7 @@ export async function getTutorById(tutorId: string): Promise<Tutor | null> {
   try {
     // Import validation functions
     const { isValidUUID } = await import("../shared/validation");
-    
+
     if (!isValidUUID(tutorId)) {
       console.error('❌ Invalid tutorId UUID format:', tutorId);
       return null;
@@ -186,7 +186,7 @@ export async function buildUserContext(
  */
 function sanitizeInput(input: string): string {
   if (!input || typeof input !== 'string') return '';
-  
+
   return input
     .replace(/[<>]/g, '') // Remove potential HTML/XML tags
     .replace(/\n\s*system:/gi, ' ') // Remove potential system prompt injection
