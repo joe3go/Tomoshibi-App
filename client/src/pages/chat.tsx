@@ -382,7 +382,7 @@ export default function Chat() {
             variant="ghost"
             size="sm"
             onClick={() => setLocation("/dashboard")}
-            className="back-btn"
+            className="back-button"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -405,7 +405,7 @@ export default function Chat() {
           variant="ghost"
           size="sm"
           onClick={completeConversation}
-          className="complete-btn"
+          className="complete-button"
         >
           <CheckCircle className="w-4 h-4 mr-2" />
           Complete

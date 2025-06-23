@@ -713,7 +713,7 @@
   }
 
   .tutor-preview-avatar {
-    @apply w-12 h-12 mx-auto;
+    @apply w-16 h-16 mx-auto;
   }
 
   .tutor-preview-info {
