@@ -200,12 +200,10 @@ export default function Chat() {
     }
   };
 
-  // Set persona when conversation and personas are loaded
+  // Load conversation participants when conversation and personas are loaded
   useEffect(() => {
     if (conversation && personas.length > 0) {
-      const { personaId } = extractPersonaFromTitle(conversation.title || "");
-      const foundPersona = personas.find(p => p.id === personaId);
-      setPersona(foundPersona || null);
+      loadConversationParticipants();
     }
   }, [conversation, personas]);
 
@@ -267,7 +265,39 @@ export default function Chat() {
         console.log("Vocabulary tracking failed:", error);
       }
 
-      // Get AI response
+      // Handle AI responses - single or multiple based on conversation type
+      if (conversationPersonas.length > 1) {
+        // Group chat: send multiple AI responses
+        await handleGroupAIResponses(finalMessage);
+      } else {
+        // Single chat: send one AI response
+        await handleSingleAIResponse(finalMessage);
+      }
+
+      // Scroll to bottom
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+
+    } catch (error) {
+      console.error("❌ Message send failed:", error);
+      setMessage(finalMessage); // Restore message on error
+      
+      toast({
+        title: "Failed to send message",
+        description: "Please check your connection and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleSingleAIResponse = async (userMessage: string) => {
+    const currentPersona = conversationPersonas[0] || persona;
+    if (!currentPersona) return;
+
+    try {
       const response = await fetch("/api/chat/secure", {
         method: "POST",
         headers: {
@@ -275,9 +305,9 @@ export default function Chat() {
           "Authorization": `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          message: finalMessage,
+          message: userMessage,
           conversationId: conversationId,
-          tutorId: persona?.id || "",
+          tutorId: currentPersona.id,
         }),
       });
 
@@ -299,7 +329,7 @@ export default function Chat() {
           suggestions: Array.isArray(aiData.suggestions) ? aiData.suggestions : null,
           vocab_used: Array.isArray(aiData.vocabUsed) ? aiData.vocabUsed : [],
           grammar_used: Array.isArray(aiData.grammarUsed) ? aiData.grammarUsed : [],
-          sender_persona_id: persona?.id || null,
+          sender_persona_id: currentPersona.id,
           created_at: new Date().toISOString(),
         })
         .select()
@@ -318,23 +348,86 @@ export default function Chat() {
       } catch (error) {
         console.log("AI vocabulary tracking failed:", error);
       }
-
-      // Scroll to bottom
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
-
     } catch (error) {
-      console.error("❌ Message send failed:", error);
-      setMessage(finalMessage); // Restore message on error
-      
-      toast({
-        title: "Failed to send message",
-        description: "Please check your connection and try again.",
-        variant: "destructive",
-      });
+      console.error("Single AI response error:", error);
+    }
+  };
+
+  const handleGroupAIResponses = async (userMessage: string) => {
+    // Show typing indicators for group personas
+    const personaNames = conversationPersonas.map(p => p.name);
+    setTypingPersonas(personaNames);
+
+    try {
+      // Send AI responses for each persona in sequence
+      for (let i = 0; i < conversationPersonas.length; i++) {
+        const persona = conversationPersonas[i];
+        
+        // Add delay between responses to simulate natural conversation flow
+        if (i > 0) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+
+        // Remove current persona from typing indicators
+        setTypingPersonas(prev => prev.filter(name => name !== persona.name));
+
+        try {
+          const response = await fetch("/api/chat/secure", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({
+              message: userMessage,
+              conversationId: conversationId,
+              tutorId: persona.id,
+            }),
+          });
+
+          if (!response.ok) {
+            console.error(`Failed to get AI response from ${persona.name}`);
+            continue;
+          }
+
+          const aiData = await response.json();
+
+          // Add AI message
+          const { data: aiMessage, error: aiMsgError } = await supabase
+            .from("messages")
+            .insert({
+              conversation_id: conversationId,
+              sender_type: "ai",
+              content: aiData.content || '',
+              english_translation: aiData.english_translation || null,
+              tutor_feedback: aiData.feedback || null,
+              suggestions: Array.isArray(aiData.suggestions) ? aiData.suggestions : null,
+              vocab_used: Array.isArray(aiData.vocabUsed) ? aiData.vocabUsed : [],
+              grammar_used: Array.isArray(aiData.grammarUsed) ? aiData.grammarUsed : [],
+              sender_persona_id: persona.id,
+              created_at: new Date().toISOString(),
+            })
+            .select()
+            .single();
+
+          if (!aiMsgError && aiMessage) {
+            // Immediately add AI message to UI
+            setMessages(prev => [...prev, aiMessage]);
+
+            // Track vocabulary usage for AI message
+            try {
+              await trackVocabularyUsage(aiData.content || '', 'ai');
+            } catch (error) {
+              console.log("AI vocabulary tracking failed:", error);
+            }
+          }
+        } catch (error) {
+          console.error(`Error getting response from ${persona.name}:`, error);
+        }
+      }
     } finally {
-      setSending(false);
+      // Clear all typing indicators
+      setTypingPersonas([]);
     }
   };
 
@@ -472,21 +565,56 @@ export default function Chat() {
                     You
                   </div>
                 ) : (
-                  <img
-                    src={getAvatarImage(persona)}
-                    alt={persona?.name || "AI"}
-                    className="w-8 h-8 rounded-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = "/avatars/default.png";
-                    }}
-                  />
+                  (() => {
+                    // Find the persona for this message using sender_persona_id
+                    const messagePersona = msg.sender_persona_id 
+                      ? conversationPersonas.find(p => p.id === msg.sender_persona_id) || personas.find(p => p.id === msg.sender_persona_id)
+                      : persona;
+                    
+                    return (
+                      <img
+                        src={getAvatarImage(messagePersona)}
+                        alt={messagePersona?.name || "AI"}
+                        className="w-8 h-8 rounded-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "/avatars/default.png";
+                        }}
+                      />
+                    );
+                  })()
                 )}
               </div>
 
-              <div
-                className={`max-w-[70%] rounded-lg p-3 ${getMessageBubbleStyles(msg.sender_type, persona)}`}
-              >
+              <div className="flex-1">
+                {msg.sender_type === 'ai' && (() => {
+                  // Show persona name in group chats
+                  const messagePersona = msg.sender_persona_id 
+                    ? conversationPersonas.find(p => p.id === msg.sender_persona_id) || personas.find(p => p.id === msg.sender_persona_id)
+                    : persona;
+                  
+                  if (conversationPersonas.length > 1 && messagePersona) {
+                    return (
+                      <div className="text-xs text-muted-foreground mb-1">
+                        {messagePersona.name}
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+                
+                <div
+                  className={`max-w-[70%] rounded-lg p-3 ${(() => {
+                    if (msg.sender_type === 'user') return 'bg-blue-500 text-white';
+                    
+                    // Get persona for this message
+                    const messagePersona = msg.sender_persona_id 
+                      ? conversationPersonas.find(p => p.id === msg.sender_persona_id) || personas.find(p => p.id === msg.sender_persona_id)
+                      : persona;
+                    
+                    return getMessageBubbleStyles('ai', messagePersona || null);
+                  })()}`}
+                >
                 <MessageWithVocab content={msg.content}>
                   <FuriganaText
                     text={msg.content}
@@ -549,6 +677,42 @@ export default function Chat() {
                   <span className="text-sm opacity-70">Thinking...</span>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Group typing indicators */}
+          {typingPersonas.length > 0 && (
+            <div className="space-y-2">
+              {typingPersonas.map(personaName => {
+                const typingPersona = conversationPersonas.find(p => p.name === personaName);
+                return (
+                  <div key={personaName} className="flex items-start gap-3">
+                    <div className="flex-shrink-0">
+                      <img
+                        src={getAvatarImage(typingPersona)}
+                        alt={typingPersona?.name || "AI"}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    </div>
+                    
+                    <div className="flex-1">
+                      <div className="text-xs text-muted-foreground mb-1">
+                        {personaName}
+                      </div>
+                      <div className={`rounded-lg p-3 max-w-[70%] ${getMessageBubbleStyles('ai', typingPersona)}`}>
+                        <div className="flex items-center gap-2">
+                          <div className="flex space-x-1">
+                            <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60"></div>
+                            <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '0.1s' }}></div>
+                            <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '0.2s' }}></div>
+                          </div>
+                          <span className="text-sm opacity-70">typing...</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
 
