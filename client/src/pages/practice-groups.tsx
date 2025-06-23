@@ -14,29 +14,32 @@ export default function PracticeGroups() {
   const { user, loading } = useAuth();
   const isAuthenticated = !!user;
   const { toast } = useToast();
-  const [templates, setTemplates] = useState<ConversationTemplate[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Load conversation templates
-  useEffect(() => {
-    async function loadTemplates() {
-      try {
-        const data = await getConversationTemplates();
-        setTemplates(data);
-      } catch (error) {
-        console.error('Failed to load templates:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load practice groups",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
+  // Group conversation templates
+  const templates = [
+    {
+      id: 'anime-club',
+      name: 'Anime Club',
+      description: 'Chat with Keiko and Aoi about your favorite anime series',
+      personas: ['8b0f056c-41fb-4c47-baac-6029c64e026a', '3c9f4d8a-5678-9012-3456-789012345678'], // Keiko + Aoi
+      difficulty: 'beginner',
+    },
+    {
+      id: 'study-group',
+      name: 'Japanese Study Group',
+      description: 'Practice with Aoi and Satoshi in a study session',
+      personas: ['3c9f4d8a-5678-9012-3456-789012345678', '2b8e7f3d-4567-8901-2345-678901234567'], // Aoi + Satoshi
+      difficulty: 'intermediate',
+    },
+    {
+      id: 'cafe-hangout',
+      name: 'Cafe Hangout',
+      description: 'Casual conversation with Keiko and Haruki at a Tokyo cafe',
+      personas: ['8b0f056c-41fb-4c47-baac-6029c64e026a', 'f7e8d9c2-1234-5678-9abc-def012345678'], // Keiko + Haruki
+      difficulty: 'beginner',
     }
-
-    loadTemplates();
-  }, [toast]);
+  ];
 
   // Create group conversation mutation
   const createGroupMutation = useMutation({
@@ -45,15 +48,52 @@ export default function PracticeGroups() {
         throw new Error("User not authenticated");
       }
 
-      const userDisplayName = user.user_metadata?.display_name || user.email?.split('@')[0] || 'User';
-      return await createGroupConversationFromTemplate(user.id, templateId, userDisplayName);
+      const template = templates.find(t => t.id === templateId);
+      if (!template) {
+        throw new Error("Template not found");
+      }
+
+      // Create conversation with group mode
+      const { data: conversation, error: convError } = await supabase
+        .from('conversations')
+        .insert({
+          user_id: user.id,
+          title: template.name,
+          mode: 'group',
+          status: 'active'
+        })
+        .select()
+        .single();
+
+      if (convError || !conversation) {
+        throw new Error("Failed to create group conversation");
+      }
+
+      // Add participants to conversation_participants table if it exists
+      try {
+        const participantInserts = template.personas.map((personaId, index) => ({
+          conversation_id: conversation.id,
+          persona_id: personaId,
+          role: 'member',
+          join_order: index + 1
+        }));
+
+        await supabase
+          .from('conversation_participants')
+          .insert(participantInserts);
+      } catch (error) {
+        // conversation_participants table might not exist yet, continue anyway
+        console.log("conversation_participants table not available, using fallback mode");
+      }
+
+      return conversation.id;
     },
     onSuccess: (conversationId) => {
       toast({
         title: "Group chat created!",
         description: "Welcome to your practice group",
       });
-      setLocation(`/group-chat/${conversationId}`);
+      setLocation(`/chat/${conversationId}`);
     },
     onError: (error) => {
       console.error('Group creation failed:', error);

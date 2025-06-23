@@ -2,10 +2,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users, MessageCircle, BookOpen } from "lucide-react";
-import { ConversationTemplate } from "@/../../shared/group-conversation-types";
+
+interface Template {
+  id: string;
+  name: string;
+  description: string;
+  personas: string[];
+  difficulty: string;
+}
 
 interface TemplateSelectorProps {
-  templates: ConversationTemplate[];
+  templates: Template[];
   onSelectTemplate: (templateId: string) => void;
   isLoading?: boolean;
 }
@@ -20,11 +27,11 @@ export function TemplateSelector({ templates, onSelectTemplate, isLoading }: Tem
     }
   };
 
-  const getTopicIcon = (topic: string) => {
-    switch (topic) {
-      case 'anime_discussion': return <MessageCircle className="w-4 h-4" />;
-      case 'grammar_practice': return <BookOpen className="w-4 h-4" />;
-      case 'daily_life': return <MessageCircle className="w-4 h-4" />;
+  const getTopicIcon = (templateId: string) => {
+    switch (templateId) {
+      case 'anime-club': return <MessageCircle className="w-4 h-4" />;
+      case 'study-group': return <BookOpen className="w-4 h-4" />;
+      case 'cafe-hangout': return <MessageCircle className="w-4 h-4" />;
       default: return <MessageCircle className="w-4 h-4" />;
     }
   };
@@ -54,7 +61,7 @@ export function TemplateSelector({ templates, onSelectTemplate, isLoading }: Tem
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg flex items-center gap-2">
-                {getTopicIcon(template.topic)}
+                {getTopicIcon(template.id)}
                 {template.name}
               </CardTitle>
               <Badge className={getDifficultyColor(template.difficulty)}>
@@ -69,7 +76,7 @@ export function TemplateSelector({ templates, onSelectTemplate, isLoading }: Tem
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1 text-sm text-muted-foreground">
                 <Users className="w-4 h-4" />
-                <span>{template.participant_count + 1} participants</span>
+                <span>{template.personas.length + 1} participants</span>
               </div>
               <Button 
                 onClick={() => onSelectTemplate(template.id)}

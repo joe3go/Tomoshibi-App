@@ -438,7 +438,7 @@ export default function Dashboard() {
                   {['N5', 'N4', 'N3', 'N2', 'N1'].map(level => (
                     <div key={level} className="text-center">
                       <div className="text-2xl font-bold text-primary">
-                        {vocabStats[level] || 0}
+                        {vocabStats[level.toLowerCase() as keyof typeof vocabStats] || 0}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {level} Words
