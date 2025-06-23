@@ -16,6 +16,7 @@ import VocabularyComprehensive from "@/pages/vocabulary-comprehensive";
 import MyVocabulary from "@/pages/my-vocabulary";
 import History from "@/pages/history";
 import Settings from "@/pages/settings";
+import PracticeGroups from "@/pages/practice-groups";
 import NotFound from "@/pages/not-found";
 
 // Create a single QueryClient instance
@@ -47,6 +48,7 @@ export default function App() {
             <Route path="/my-vocabulary" component={MyVocabulary} />
             <Route path="/history" component={History} />
             <Route path="/settings" component={Settings} />
+            <Route path="/practice-groups" component={PracticeGroups} />
             <Route component={NotFound} />
           </Switch>
         </Router>

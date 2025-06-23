@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { TemplateSelector } from "@/components/group-chat/TemplateSelector";
-import { useSupabaseAuth } from "@/lib/supabase/auth";
+import { useAuth } from "@/context/SupabaseAuthContext";
 import { getConversationTemplates, createGroupConversationFromTemplate } from "@/lib/group-conversation-mock";
 import { ConversationTemplate } from "@/../../shared/group-conversation-types";
 
 export default function PracticeGroups() {
   const [, setLocation] = useLocation();
-  const { user, isAuthenticated } = useSupabaseAuth();
+  const { user, loading } = useAuth();
+  const isAuthenticated = !!user;
   const { toast } = useToast();
   const [templates, setTemplates] = useState<ConversationTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
