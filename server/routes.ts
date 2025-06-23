@@ -704,6 +704,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           false
         );
 
+        // Validate UUIDs before creating AI message
+        const { isValidUUID } = await import("../shared/validation");
+        
+        // Filter out invalid UUIDs from vocab and grammar arrays
+        const validVocabUsed = Array.isArray(aiResponse.vocabUsed) ? 
+          aiResponse.vocabUsed.filter(id => typeof id === 'string' && isValidUUID(id)) : [];
+        const validGrammarUsed = Array.isArray(aiResponse.grammarUsed) ? 
+          aiResponse.grammarUsed.filter(id => typeof id === 'string' && isValidUUID(id)) : [];
+
+        console.log('🔍 Filtered vocab/grammar UUIDs:', { 
+          original: { vocab: aiResponse.vocabUsed, grammar: aiResponse.grammarUsed },
+          filtered: { vocab: validVocabUsed, grammar: validGrammarUsed }
+        });
+
         // Create AI message using RPC
         const { data: aiMessage, error: aiMsgError } = await supabase
           .rpc('create_message_with_tracking', {
@@ -711,11 +725,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             _sender_type: 'ai',
             _content: aiResponse.content,
             _sender_persona_id: aiPersonaId,
-            _vocab_used: aiResponse.vocabUsed || null,
-            _grammar_used: aiResponse.grammarUsed || null,
-            _english_translation: aiResponse.feedback || null,
+            _vocab_used: validVocabUsed.length > 0 ? validVocabUsed : null,
+            _grammar_used: validGrammarUsed.length > 0 ? validGrammarUsed : null,
+            _english_translation: aiResponse.english_translation || null,
             _tutor_feedback: aiResponse.feedback || null,
-            _suggestions: aiResponse.suggestions || null
+            _suggestions: Array.isArray(aiResponse.suggestions) ? aiResponse.suggestions : null
           });
 
         if (aiMsgError) {

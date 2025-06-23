@@ -11,6 +11,11 @@ import {
   type UserContext,
 } from "./prompt-builder";
 
+// UUID validation helper
+function isValidUUID(val: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+}
+
 const openai = new OpenAI({
   apiKey:
     process.env.OPENAI_API_KEY ||
@@ -105,25 +110,27 @@ export async function generateSecureAIResponse(
       parsedResponse = JSON.parse(rawContent);
       console.log("🗣️ Parsed OpenAI Response:", parsedResponse);
     } catch (e) {
-      console.error("⚠️ OpenAI Response Not Structured:", rawContent);
-      // Return fallback response instead of throwing
+      console.error("⚠️ Failed to parse OpenAI JSON:", rawContent);
+      // Return fallback response with proper structure
       return {
         content: rawContent.includes("すみません") ? rawContent : "すみません、もう一度言ってください。",
-        english_translation: "System is processing your request",
-        feedback: undefined,
+        english_translation: "I'm sorry, could you please say that again?",
+        feedback: "System encountered a parsing error",
         vocabUsed: [],
         grammarUsed: [],
-        suggestions: [],
+        suggestions: ["Try rephrasing your message", "Use simpler Japanese"],
       };
     }
 
-    // Return structured response with fallbacks
+    // Validate and return structured response
     return {
-      content: parsedResponse.response || parsedResponse.content || rawContent,
-      english_translation: parsedResponse.english_translation || parsedResponse.english,
-      feedback: parsedResponse.feedback,
-      vocabUsed: parsedResponse.vocabUsed || [],
-      grammarUsed: parsedResponse.grammarUsed || [],
+      content: parsedResponse.response || parsedResponse.content || "すみません、もう一度言ってください。",
+      english_translation: parsedResponse.english_translation || parsedResponse.english || "I'm sorry, could you please say that again?",
+      feedback: parsedResponse.feedback || null,
+      vocabUsed: Array.isArray(parsedResponse.vocabUsed) ? 
+        parsedResponse.vocabUsed.filter((id: any) => typeof id === 'string' && isValidUUID(id)) : [],
+      grammarUsed: Array.isArray(parsedResponse.grammarUsed) ? 
+        parsedResponse.grammarUsed.filter((id: any) => typeof id === 'string' && isValidUUID(id)) : [],
       suggestions: Array.isArray(parsedResponse.suggestions) ? parsedResponse.suggestions : 
                   (typeof parsedResponse.suggestions === 'string') ? [parsedResponse.suggestions] : [],
     };

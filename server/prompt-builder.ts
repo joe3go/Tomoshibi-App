@@ -83,7 +83,20 @@ Prefers English explanations: ${user.prefersEnglish ? 'Yes' : 'No'}
 
 ${tutor.system_prompt_hint ? `\n💡 SPECIAL INSTRUCTION: ${sanitizeInput(tutor.system_prompt_hint)}` : ''}
 
-Begin the conversation naturally as ${tutor.name}. Remember: you are helping ${sanitizedUsername} practice Japanese conversation about "${sanitizedTopic}".`;
+Begin the conversation naturally as ${tutor.name}. Remember: you are helping ${sanitizedUsername} practice Japanese conversation about "${sanitizedTopic}".
+
+🔧 RESPONSE FORMAT:
+You MUST respond with valid JSON in exactly this format:
+{
+  "response": "Your Japanese reply here",
+  "english_translation": "English translation of your reply",
+  "feedback": "Brief constructive feedback on student's Japanese (optional)",
+  "vocabUsed": [],
+  "grammarUsed": [],
+  "suggestions": ["helpful phrase suggestion 1", "helpful phrase suggestion 2"]
+}
+
+CRITICAL: Your entire response must be valid JSON. Do not include any text outside the JSON structure.`;
 
   return prompt.trim();
 }

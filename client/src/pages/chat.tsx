@@ -483,7 +483,7 @@ export default function Chat() {
 
     // Create a unique channel name to avoid conflicts
     const channelName = `conversation-${conversationId}-${Date.now()}`;
-    
+
     const channel = supabase.channel(channelName)
       .on(
         'postgres_changes',
