@@ -65,7 +65,7 @@ export function MessageWithVocab({ content, className, children }: MessageWithVo
   const [popup, setPopup] = useState<PopupState | null>(null);
   const [isHovering, setIsHovering] = useState(false);
   const messageRef = useRef<HTMLDivElement>(null);
-  const { dictionary, isLoading, error } = useVocabDictionary();
+  const { isLoading, error, findLongestMatch } = useVocabDictionary();
 
   // If vocabulary loading fails, just render children without vocab features
   if (error) {
