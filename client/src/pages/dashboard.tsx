@@ -30,6 +30,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase/client";
 import { queryClient } from "@/lib/queryClient";
+import VocabularyStatsCard from "@/components/VocabularyStatsCard";
 
 // Helper function to get avatar image
 const getAvatarImage = (persona: any) => {
@@ -461,43 +462,7 @@ export default function Dashboard() {
         </div>
 
         {/* JLPT Vocabulary Usage Card */}
-        <div className="vocab-analytics-section">
-          <Card className="section-card">
-            <CardHeader className="section-header">
-              <CardTitle className="section-title">
-                <BookOpen className="w-5 h-5" />
-                JLPT Vocabulary Usage
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="section-content">
-              <div className="vocab-levels-grid">
-                {[
-                  { level: 'N5', count: 550, color: 'bg-green-500' },
-                  { level: 'N4', count: 450, color: 'bg-blue-500' },
-                  { level: 'N3', count: 350, color: 'bg-yellow-500' },
-                  { level: 'N2', count: 250, color: 'bg-orange-500' },
-                  { level: 'N1', count: 150, color: 'bg-red-500' }
-                ].map((levelData) => (
-                  <div key={levelData.level} className="vocab-level-card">
-                    <div className="vocab-level-header">
-                      <span className={`vocab-level-badge ${levelData.color}`}>
-                        {levelData.level}
-                      </span>
-                      <span className="vocab-level-count">{levelData.count}</span>
-                    </div>
-                    <div className="vocab-level-bar-container">
-                      <div 
-                        className={`vocab-level-bar ${levelData.color}`}
-                        style={{ width: `${(levelData.count / 550) * 100}%` }}
-                      ></div>
-                    </div>
-                    <p className="vocab-level-label">words available</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <VocabularyStatsCard />
 
         {/* Recent Conversations Section */}
         <div className="recent-conversations-section">
