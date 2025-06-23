@@ -587,15 +587,15 @@ export default function Chat() {
               </div>
 
               <div className="flex-1">
-                {msg.sender_type === 'ai' && (() => {
-                  // Show persona name in group chats
+                {/* Show persona name in group chats */}
+                {msg.sender_type === 'ai' && conversationPersonas.length > 1 && (() => {
                   const messagePersona = msg.sender_persona_id 
                     ? conversationPersonas.find(p => p.id === msg.sender_persona_id) || personas.find(p => p.id === msg.sender_persona_id)
                     : persona;
                   
-                  if (conversationPersonas.length > 1 && messagePersona) {
+                  if (messagePersona) {
                     return (
-                      <div className="text-xs text-muted-foreground mb-1">
+                      <div className="text-xs text-muted-foreground mb-1 font-medium">
                         {messagePersona.name}
                       </div>
                     );
@@ -615,7 +615,69 @@ export default function Chat() {
                     return getMessageBubbleStyles('ai', messagePersona || null);
                   })()}`}
                 >
-                <MessageWithVocab content={msg.content}>
+                  <MessageWithVocab content={msg.content}>
+                    <FuriganaText
+                      text={msg.content}
+                      showFurigana={showFurigana}
+                      showToggleButton={false}
+                    />
+                  </MessageWithVocab>
+
+                  {msg.sender_type === 'ai' && msg.english_translation && (
+                    <div className="mt-2">
+                      <details className="text-sm text-muted-foreground">
+                        <summary className="cursor-pointer hover:text-foreground">
+                          Show English translation
+                        </summary>
+                        <div className="mt-1 p-2 bg-muted/50 rounded-md">
+                          {msg.english_translation}
+                        </div>
+                      </details>
+                    </div>
+                  )}
+
+                  {msg.suggestions && msg.suggestions.length > 0 && (
+                    <div className="mt-2">
+                      <details className="text-sm">
+                        <summary className="cursor-pointer text-blue-600 hover:text-blue-800">
+                          Learning suggestions ({msg.suggestions.length})
+                        </summary>
+                        <div className="mt-1 p-2 bg-blue-50 dark:bg-blue-950/20 rounded-md">
+                          {msg.suggestions.map((suggestion: string, index: number) => (
+                            <div key={index} className="mb-1 last:mb-0">
+                              • {suggestion}
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {sending && (
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <img
+                  src={getAvatarImage(persona)}
+                  alt={persona?.name || "AI"}
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              </div>
+              
+              <div className={`rounded-lg p-3 ${getMessageBubbleStyles('ai', persona)}`}>
+                <div className="flex items-center gap-2">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60"></div>
+                    <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '0.2s' }}></div>
+                  </div>
+                  <span className="text-sm opacity-70">Thinking...</span>
+                </div>
+              </div>
+            </div>
                   <FuriganaText
                     text={msg.content}
                     showFurigana={showFurigana}
