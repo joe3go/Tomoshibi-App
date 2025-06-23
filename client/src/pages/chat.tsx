@@ -213,7 +213,7 @@ export default function Chat() {
           english_translation: aiData.english_translation,
           tutor_feedback: aiData.feedback,
           suggestions: Array.isArray(aiData.suggestions) ? aiData.suggestions : 
-                      aiData.suggestions ? [aiData.suggestions] : null,
+                      (typeof aiData.suggestions === 'string' && aiData.suggestions.trim()) ? [aiData.suggestions] : null,
           vocab_used: aiData.vocabUsed,
           grammar_used: aiData.grammarUsed,
           sender_persona_id: validPersonaId, // AI messages have persona

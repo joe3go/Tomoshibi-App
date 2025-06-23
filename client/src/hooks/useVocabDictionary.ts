@@ -19,7 +19,7 @@ class VocabDictionary {
     console.log('🔍 Loading vocabulary dictionary from Supabase...');
     try {
       const { data: vocab, error } = await supabase
-        .from('jlpt_vocab')
+        .from('vocab_library')
         .select('hiragana, english_meaning, kanji, word_type, jlpt_level');
 
       if (error) {
@@ -29,10 +29,10 @@ class VocabDictionary {
 
       if (vocab) {
         console.log('📚 Processing', vocab.length, 'vocabulary entries from Supabase...');
-        
+
         // Track counts by level for verification
         const levelCounts: Record<string, number> = {};
-        
+
         vocab.forEach(item => {
           const word = item.kanji || item.hiragana;
           const entry: DictionaryEntry = {
@@ -47,11 +47,11 @@ class VocabDictionary {
           if (item.kanji && item.kanji !== item.hiragana) {
             this.supabaseData.set(item.hiragana, entry);
           }
-          
+
           // Track level counts
           levelCounts[item.jlpt_level] = (levelCounts[item.jlpt_level] || 0) + 1;
         });
-        
+
         console.log('📊 Vocabulary loaded by JLPT level:', levelCounts);
       }
 
@@ -86,7 +86,7 @@ class VocabDictionary {
     for (let length = 1; length <= Math.min(8, text.length - startIndex); length++) {
       const candidate = text.substring(startIndex, startIndex + length);
       const entry = this.lookupWord(candidate);
-      
+
       if (entry) {
         longestMatch = { word: candidate, entry };
       }

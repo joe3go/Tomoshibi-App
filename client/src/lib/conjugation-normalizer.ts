@@ -1,3 +1,8 @@
+// Browser-compatible path operations
+const path = {
+  join: (...parts: string[]) => parts.join('/').replace(/\/+/g, '/'),
+  resolve: (p: string) => p
+};
 // @ts-ignore - Kuroshiro types not available
 import Kuroshiro from 'kuroshiro';
 // @ts-ignore - Kuromoji analyzer types not available
@@ -47,7 +52,7 @@ class ConjugationNormalizer {
     try {
       // Get morphological analysis
       const tokens = await this.kuroshiro.util.tokenize(word);
-      
+
       if (tokens.length === 0) {
         return {
           originalForm: word,

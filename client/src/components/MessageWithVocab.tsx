@@ -29,7 +29,7 @@ function isJapanese(char: string): boolean {
 // Enhanced word detection for Japanese text
 function detectWordAtPosition(text: string, position: number): { word: string; start: number; end: number } | null {
   if (!text || position < 0 || position >= text.length) return null;
-  
+
   const char = text[position];
   if (!isJapanese(char)) return null;
 
@@ -65,7 +65,13 @@ export function MessageWithVocab({ content, className, children }: MessageWithVo
   const [popup, setPopup] = useState<PopupState | null>(null);
   const [isHovering, setIsHovering] = useState(false);
   const messageRef = useRef<HTMLDivElement>(null);
-  const { findLongestMatch, isLoading } = useVocabDictionary();
+  const { dictionary, isLoading, error } = useVocabDictionary();
+
+  // If vocabulary loading fails, just render children without vocab features
+  if (error) {
+    console.warn('Vocabulary features disabled due to loading error:', error);
+    return <>{children}</>;
+  }
 
   // Track vocabulary usage when message is rendered
   useEffect(() => {
@@ -84,7 +90,7 @@ export function MessageWithVocab({ content, className, children }: MessageWithVo
 
     const target = event.target as HTMLElement;
     let textContent = target.textContent || '';
-    
+
     // If clicking on a child element, get the full message content
     if (!textContent || textContent.length < content.length / 2) {
       textContent = content;
@@ -96,14 +102,14 @@ export function MessageWithVocab({ content, className, children }: MessageWithVo
 
     const clickedText = range.startContainer.textContent;
     const clickPosition = range.startOffset;
-    
+
     // Find word at click position
     const wordInfo = detectWordAtPosition(clickedText, clickPosition);
     if (!wordInfo) return;
 
     // Try to find dictionary match starting from the detected word position
     let bestMatch = findLongestMatch(clickedText, wordInfo.start);
-    
+
     // If no match found with longest match, try with the detected word
     if (!bestMatch && wordInfo.word.length >= 1) {
       const simpleEntry = findLongestMatch(wordInfo.word, 0);
@@ -156,7 +162,7 @@ export function MessageWithVocab({ content, className, children }: MessageWithVo
       >
         {children || content}
       </div>
-      
+
       {popup && (
         <VocabPopup
           word={popup.word}
