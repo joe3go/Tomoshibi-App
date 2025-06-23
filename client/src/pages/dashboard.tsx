@@ -59,7 +59,7 @@ export default function Dashboard() {
   const { toast } = useToast();
 
   // Fetch conversations from Supabase
-  const { data: conversations = [], isLoading: conversationsLoading } = useQuery({
+  const { data: conversations = [], isLoading: conversationsLoading, refetch: refetchConversations } = useQuery({
     queryKey: ["conversations", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
@@ -77,6 +77,8 @@ export default function Dashboard() {
       return data || [];
     },
     enabled: !!user?.id,
+    staleTime: 0, // Always consider data stale to ensure fresh fetches
+    gcTime: 1000 * 60 * 5, // Keep in cache for 5 minutes
   });
 
   // Fetch tutors from Supabase
@@ -232,8 +234,9 @@ export default function Dashboard() {
         title: "Conversation ended",
         description: "The conversation has been completed and moved to your transcripts.",
       });
-      // Refresh conversations list
+      // Force immediate refresh of conversations list
       queryClient.invalidateQueries({ queryKey: ["conversations", user?.id] });
+      refetchConversations();
     },
     onError: (error) => {
       toast({
