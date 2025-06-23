@@ -1,6 +1,19 @@
 // Import the centralized Supabase client to avoid multiple instances
 import { supabase } from '@/lib/supabase/client';
 
+// Helper functions for temporary persona storage workaround
+function encodePersonaInTitle(title: string, personaId: string): string {
+  return `${title}|persona:${personaId}`;
+}
+
+function extractPersonaFromTitle(title: string): { cleanTitle: string; personaId: string | null } {
+  if (title.includes('|persona:')) {
+    const [cleanTitle, personaPart] = title.split('|persona:');
+    return { cleanTitle, personaId: personaPart };
+  }
+  return { cleanTitle: title, personaId: null };
+}
+
 // Conversation management functions
 export async function createConversation(
   userId: string,
@@ -11,13 +24,15 @@ export async function createConversation(
   try {
     console.log('🔄 Creating conversation in Supabase:', { userId, personaId, scenarioId, title });
 
+    // Temporary workaround: Store persona_id in title until schema is fixed
+    const titleWithPersona = `${title}|persona:${personaId}`;
+
     const { data, error } = await supabase
       .from('conversations')
       .insert({
         user_id: userId,
-        persona_id: personaId,
         scenario_id: scenarioId,
-        title,
+        title: titleWithPersona,
         status: 'active'
       })
       .select('id')
