@@ -372,28 +372,13 @@ export default function Chat() {
 
       return { previousData, tempId };
     },
-    onSuccess: (data, content, context) => {
-      console.log("✅ Message sent successfully, updating UI");
+    onSuccess: async () => {
       setMessage("");
 
-      const tempId = context?.tempId || tempIdRef.current;
+      // Force refetch from Supabase for accurate and up-to-date messages
+      await queryClient.invalidateQueries(["conversation", conversationId]);
 
-      // Replace temporary message with real messages
-      queryClient.setQueryData(["conversation", conversationId], (old: any) => {
-        if (!old) return old;
-
-        // Remove temporary message and add real messages
-        const filteredMessages = (old.messages || []).filter((msg: any) => 
-          msg.id !== tempId
-        );
-
-        return {
-          ...old,
-          messages: [...filteredMessages, data.userMessage, data.aiMessage]
-        };
-      });
-
-      // Force immediate scroll to bottom
+      // Optional: Scroll to bottom after data refresh
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 0);
@@ -468,63 +453,7 @@ export default function Chat() {
     },
   });
 
-  // Fixed realtime subscription
-  useEffect(() => {
-    if (!conversationId) return;
-
-    console.log('🔔 Setting up realtime subscription for conversation:', conversationId);
-
-    const channel = supabase.channel(`conversation-${conversationId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `conversation_id=eq.${conversationId}`
-        },
-        (payload) => {
-          console.log('📨 Realtime message received:', payload);
-
-          // Skip temporary messages
-          if (payload.new.id.toString().startsWith("temp_")) return;
-
-          queryClient.setQueryData(["conversation", conversationId], (old: any) => {
-            if (!old) return old;
-
-            const existingIds = old?.messages?.map((m: any) => m.id) || [];
-            if (existingIds.includes(payload.new.id)) return old;
-
-            return {
-              ...old,
-              messages: [...(old?.messages || []), payload.new]
-            };
-          });
-        }
-      )
-      .on("postgres_changes", {
-        event: "UPDATE",
-        schema: "public",
-        table: "messages",
-        filter: `conversation_id=eq.${conversationId}`
-      }, (payload) => {
-        queryClient.setQueryData(["conversation", conversationId], (old: any) => {
-          if (!old?.messages) return old;
-          return {
-            ...old,
-            messages: old.messages.map((msg: any) => 
-              msg.id === payload.new.id ? payload.new : msg
-            )
-          };
-        });
-      })
-      .subscribe();
-
-    return () => {
-      console.log('🔕 Cleaning up realtime subscription');
-      channel.unsubscribe();
-    };
-  }, [conversationId, queryClient]);
+  // Realtime subscription removed to avoid race conditions with manual cache refresh
 
   // Auto-scroll effect
   useEffect(() => {
