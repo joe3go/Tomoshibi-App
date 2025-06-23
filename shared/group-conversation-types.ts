@@ -27,17 +27,29 @@ export interface ConversationParticipant {
   persona_name?: string;
   persona_type?: string;
   avatar_url?: string;
+  is_active?: boolean;
 }
 
 export interface GroupConversation {
   id: string;
   user_id: string;
   template_id: string;
+  template_name: string;
   mode: 'solo' | 'group';
   title: string;
   status: 'active' | 'completed';
   created_at: string;
   participants: ConversationParticipant[];
+  messages: GroupMessage[];
+}
+
+export interface GroupMessage {
+  id: string;
+  content: string;
+  sender_type: 'user' | 'ai';
+  sender_name: string;
+  persona_id: string | null;
+  created_at: string;
 }
 
 export interface TypingIndicator {

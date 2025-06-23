@@ -1,5 +1,5 @@
 // Mock data and functions for group conversations
-import { ConversationTemplate, ConversationPrompt, ConversationParticipant, injectPromptVariables } from '@/../../shared/group-conversation-types';
+import { ConversationTemplate, ConversationPrompt, ConversationParticipant, GroupConversation, GroupMessage, injectPromptVariables } from '@/../../shared/group-conversation-types';
 
 // Mock conversation templates
 export const mockConversationTemplates: ConversationTemplate[] = [
@@ -165,4 +165,31 @@ export async function createGroupConversationFromTemplate(
   localStorage.setItem(`groupMessages-${conversationId}`, JSON.stringify(initialMessages));
 
   return conversationId;
+}
+
+// Function to get a group conversation by ID
+export async function getGroupConversation(conversationId: string): Promise<GroupConversation | null> {
+  const existingGroupChats = JSON.parse(localStorage.getItem('groupConversations') || '[]');
+  const conversation = existingGroupChats.find((c: any) => c.id === conversationId);
+  
+  if (!conversation) return null;
+
+  // Get messages for this conversation
+  const messages = JSON.parse(localStorage.getItem(`groupMessages-${conversationId}`) || '[]');
+  
+  // Get template name
+  const template = mockConversationTemplates.find(t => t.id === conversation.template_id);
+  
+  return {
+    ...conversation,
+    template_name: template?.name || 'Unknown Template',
+    messages: messages
+  };
+}
+
+// Function to add a message to a group conversation
+export async function addMessageToGroupConversation(conversationId: string, message: GroupMessage): Promise<void> {
+  const existingMessages = JSON.parse(localStorage.getItem(`groupMessages-${conversationId}`) || '[]');
+  existingMessages.push(message);
+  localStorage.setItem(`groupMessages-${conversationId}`, JSON.stringify(existingMessages));
 }
