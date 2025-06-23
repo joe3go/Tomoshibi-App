@@ -113,6 +113,27 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### June 23, 2025 - Complete Chat System Overhaul with Enhanced UI and Real-time Updates
+- **Rebuilt chat system from scratch with direct state management**:
+  - Replaced complex cache management with React state for immediate UI updates
+  - Eliminated Realtime subscription dependencies that required paid Supabase tier
+  - Implemented direct database operations with instant UI state synchronization
+  - Fixed persistent message display issues that required page refreshes
+- **Enhanced visual design with persona-specific styling**:
+  - Added colored chat bubbles: Keiko (rose), Aoi (emerald), Haruki (orange), Satoshi (blue)
+  - Implemented proper avatar positioning for both user and AI messages
+  - Created persona-specific typing indicators with themed styling
+  - Updated all class names to be semantic and descriptive following dashboard patterns
+- **Integrated all core features seamlessly**:
+  - Furigana toggle functionality with persistent user preferences
+  - Wanakana romaji-to-hiragana conversion with proper binding/unbinding
+  - Vocabulary tracking for both user and AI messages
+  - English translations and learning suggestions in collapsible sections
+- **File structure improvements**:
+  - Renamed chat-new.tsx to chat.tsx and moved old system to chat-old.tsx
+  - Updated routing to use the new chat system throughout the application
+  - Maintained backward compatibility with existing conversation data
+
 ### June 23, 2025 - Implemented Group Conversation Feature with Multi-Persona Support
 - **Complete group conversation system implementation**:
   - Added conversation templates for Anime Club, Study Group, and Cafe Hangout scenarios
