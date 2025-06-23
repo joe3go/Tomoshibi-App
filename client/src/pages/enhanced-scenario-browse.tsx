@@ -69,9 +69,9 @@ export default function EnhancedScenarioBrowse() {
       title: "Great job!",
       description: `You completed ${feedback.completedGoals}/${feedback.totalGoals} goals and earned ${feedback.overallScore} XP!`,
     });
-    
+
     setViewMode('completion');
-    
+
     // Navigate back to dashboard after a delay
     setTimeout(() => {
       setLocation('/dashboard');
@@ -177,7 +177,7 @@ export default function EnhancedScenarioBrowse() {
               {/* Tutor Selection */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-foreground text-center">Choose Your Learning Style</h3>
-                
+
                 <div className="grid md:grid-cols-2 gap-6">
                   {(personas as any[]).map((persona: any) => (
                     <EnhancedCard
@@ -199,12 +199,26 @@ export default function EnhancedScenarioBrowse() {
                             {persona.type === "teacher" ? "Formal Teacher Style" : "Casual Friend Style"}
                           </p>
                         </div>
-                        <p className="text-sm text-foreground">
+                        <p className="text-sm text-gray-600 mb-2">
                           {persona.description ||
                             (persona.type === "teacher"
                               ? "Structured learning with cultural context and formal Japanese"
                               : "Relaxed conversation practice with friendly encouragement")}
                         </p>
+
+                        {/* Personality & Speaking Style */}
+                        {persona.personality && (
+                          <div className="mb-2">
+                            <span className="text-xs font-medium text-gray-500">Personality:</span>
+                            <span className="text-xs text-gray-700 ml-1">{persona.personality}</span>
+                          </div>
+                        )}
+                        {persona.speaking_style && (
+                          <div className="mb-4">
+                            <span className="text-xs font-medium text-gray-500">Style:</span>
+                            <span className="text-xs text-gray-700 ml-1">{persona.speaking_style}</span>
+                          </div>
+                        )}
                         <div className="flex justify-between pt-2">
                           <EnhancedButton
                             onClick={(e) => {

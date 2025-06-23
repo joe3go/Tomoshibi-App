@@ -57,9 +57,9 @@ const authenticateToken = async (req: AuthRequest, res: Response, next: NextFunc
     const config = getSupabaseConfig();
     const { createClient } = await import('@supabase/supabase-js');
     const supabase = createClient(config.url, config.serviceKey);
-    
+
     const { data: { user }, error } = await supabase.auth.getUser(token);
-    
+
     if (error || !user) {
       console.error('Supabase token verification error:', error);
       return res.status(403).json({ message: 'Invalid or expired token' });
@@ -421,7 +421,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/conversations', authenticateToken, async (req: AuthRequest, res) => {
     try {
       console.log('🔄 Creating conversation with raw body:', req.body);
-      
+
       // Use direct Supabase client since we're working with UUIDs now
       const config = getSupabaseConfig();
       const { createClient } = await import('@supabase/supabase-js');
@@ -446,7 +446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate UUID format
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-      
+
       if (!uuidRegex.test(personaId)) {
         console.error('❌ Invalid persona UUID format:', personaId);
         return res.status(400).json({ message: 'Invalid persona ID format' });
@@ -549,7 +549,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/conversations/:id', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const conversationId = req.params.id;
-      
+
       // Use direct Supabase client for UUID-based conversations
       const config = getSupabaseConfig();
       const { createClient } = await import('@supabase/supabase-js');
@@ -675,10 +675,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (participants && participants.length > 0) {
         const aiPersonaId = participants[0].persona_id;
-        
+
         // Generate AI response (using existing logic)
         const { generateSecureAIResponse } = await import('./openai');
-        
+
         // Get recent conversation history
         const { data: recentMessages } = await supabase
           .from('messages')
@@ -848,8 +848,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }, {});
 
       const result = ['N1', 'N2', 'N3', 'N4', 'N5'].map(level => ({
-        level,
-        count: levelCounts[level] || 0
+        level,        count: levelCounts[level] || 0
       }));
 
       console.log('📊 Vocabulary counts by level (from Supabase manual aggregation):', result);
@@ -887,7 +886,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const config = getSupabaseConfig();
       const { createClient } = await import('@supabase/supabase-js');
       const supabase = createClient(config.url, config.serviceKey);
-      
+
       const { data: user } = await supabase
         .from('users')
         .select('display_name')

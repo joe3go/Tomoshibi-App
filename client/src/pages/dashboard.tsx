@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -63,7 +62,7 @@ export default function Dashboard() {
     queryKey: ["conversations", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      
+
       const { data, error } = await supabase
         .from('conversations')
         .select('*')
@@ -174,7 +173,7 @@ export default function Dashboard() {
       }
 
       console.log('🎯 Starting new chat with persona ID:', personaId, 'Type:', typeof personaId);
-      
+
       // Ensure we have a valid UUID
       if (!personaId || typeof personaId !== 'string' || personaId.length < 32) {
         console.error('❌ Invalid persona ID:', personaId);
@@ -212,7 +211,7 @@ export default function Dashboard() {
       }
 
       console.log('🛑 Ending conversation:', conversationId);
-      
+
       const { error } = await supabase
         .from('conversations')
         .update({ 
@@ -605,6 +604,20 @@ export default function Dashboard() {
                           <p className="tutor-preview-description">
                             {persona.description || 'Available for conversation practice'}
                           </p>
+                          
+                          {/* Personality Info */}
+                          {persona.personality && (
+                            <div className="mb-2">
+                              <span className="text-xs font-medium text-teal-600">Personality:</span>
+                              <span className="text-xs text-gray-700 ml-1">{persona.personality}</span>
+                            </div>
+                          )}
+                          {persona.speaking_style && (
+                            <div className="mb-4">
+                              <span className="text-xs font-medium text-teal-600">Speaking Style:</span>
+                              <span className="text-xs text-gray-700 ml-1">{persona.speaking_style}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                       <Button 

@@ -110,16 +110,16 @@ export default function Chat() {
     queryKey: ["personas-supabase"],
     queryFn: async () => {
       if (!session) return [];
-      
+
       const { data, error } = await supabase
         .from('personas')
         .select('*');
-      
+
       if (error) {
         console.error('Error fetching personas:', error);
         return [];
       }
-      
+
       console.log('Personas fetched from Supabase:', data);
       return data || [];
     },
@@ -440,7 +440,7 @@ export default function Chat() {
 
   // Extract persona ID from encoded title since persona_id column doesn't exist yet
   const { personaId } = extractPersonaFromTitle(conversation?.title || "");
-  
+
   console.log('🔍 Chat page - conversation data:', {
     conversationId: conversation?.id,
     extractedPersonaId: personaId,

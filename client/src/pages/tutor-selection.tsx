@@ -161,17 +161,43 @@ export default function TutorSelection() {
                     {persona.description}
                   </p>
 
-                  {/* Teaching Style */}
-                  <div className="tutor-teaching-style">
-                    <h4 className="tutor-teaching-style-title">
-                      Teaching Style:
-                    </h4>
-                    <p className="tutor-teaching-style-description">
-                      {persona.type === "teacher"
-                        ? "Focuses on proper grammar, cultural context, and formal expressions. Perfect for building strong foundations."
-                        : "Emphasizes natural conversation flow, casual expressions, and practical communication. Great for building confidence."}
-                    </p>
-                  </div>
+                  {/* Personality */}
+                  {persona.personality && (
+                    <div className="tutor-teaching-style">
+                      <h4 className="tutor-teaching-style-title">
+                        Personality:
+                      </h4>
+                      <p className="tutor-teaching-style-description">
+                        {persona.personality}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Speaking Style */}
+                  {persona.speaking_style && (
+                    <div className="tutor-teaching-style">
+                      <h4 className="tutor-teaching-style-title">
+                        Speaking Style:
+                      </h4>
+                      <p className="tutor-teaching-style-description">
+                        {persona.speaking_style}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Default Teaching Style (fallback) */}
+                  {!persona.personality && !persona.speaking_style && (
+                    <div className="tutor-teaching-style">
+                      <h4 className="tutor-teaching-style-title">
+                        Teaching Style:
+                      </h4>
+                      <p className="tutor-teaching-style-description">
+                        {persona.type === "teacher"
+                          ? "Focuses on proper grammar, cultural context, and formal expressions. Perfect for building strong foundations."
+                          : "Emphasizes natural conversation flow, casual expressions, and practical communication. Great for building confidence."}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Select Button */}
                   <Button

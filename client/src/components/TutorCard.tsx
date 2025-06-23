@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,8 @@ interface TutorCardProps {
   jlpt_level?: string;
   onSelect?: (id: number) => void;
   onChat?: (id: number) => void;
+  personality?: string;
+  speaking_style?: string;
 }
 
 export default function TutorCard({
@@ -24,7 +25,9 @@ export default function TutorCard({
   description,
   jlpt_level = 'N5',
   onSelect,
-  onChat
+  onChat,
+  personality,
+  speaking_style
 }: TutorCardProps) {
   return (
     <Card className="tutor-card cursor-pointer hover:shadow-lg transition-shadow">
@@ -42,9 +45,9 @@ export default function TutorCard({
             </div>
           )}
         </div>
-        
+
         <CardTitle className="text-lg">{name}</CardTitle>
-        
+
         <div className="flex gap-2 justify-center">
           <Badge variant="secondary">
             {type === 'teacher' ? 'Teacher' : type === 'friend' ? 'Friend' : type}
@@ -52,12 +55,25 @@ export default function TutorCard({
           <Badge variant="outline">{jlpt_level}</Badge>
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground line-clamp-3">
           {description}
         </p>
-        
+
+        {personality && (
+          <div className="mb-2">
+            <span className="text-xs font-medium text-gray-500">Personality:</span>
+            <p className="text-xs text-gray-700">{personality}</p>
+          </div>
+        )}
+        {speaking_style && (
+          <div className="mb-3">
+            <span className="text-xs font-medium text-gray-500">Speaking Style:</span>
+            <p className="text-xs text-gray-700">{speaking_style}</p>
+          </div>
+        )}
+
         <div className="flex gap-2">
           {onSelect && (
             <Button
@@ -68,7 +84,7 @@ export default function TutorCard({
               Select Tutor
             </Button>
           )}
-          
+
           {onChat && (
             <Button
               onClick={() => onChat(id)}
