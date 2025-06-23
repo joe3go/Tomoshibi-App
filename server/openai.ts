@@ -18,6 +18,7 @@ export interface ConversationContext {
 
 export interface AIResponse {
   content: string;
+  english_translation?: string;
   feedback?: string;
   vocabUsed: number[];
   grammarUsed: number[];
@@ -99,6 +100,7 @@ export async function generateAIResponse(context: ConversationContext): Promise<
     
     return {
       content: result.response || "すみません、もう一度言ってください。",
+      english_translation: result.english_translation,
       feedback: result.feedback,
       vocabUsed: Array.isArray(result.vocabUsed) ? result.vocabUsed.filter((id: any) => typeof id === 'number') : [],
       grammarUsed: Array.isArray(result.grammarUsed) ? result.grammarUsed.filter((id: any) => typeof id === 'number') : [],

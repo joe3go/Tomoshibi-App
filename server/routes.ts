@@ -929,7 +929,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({
         content: aiResponse.content,
-        english: aiResponse.english,
+        english_translation: aiResponse.english_translation,
         feedback: aiResponse.feedback,
         suggestions: aiResponse.suggestions,
         vocabUsed: aiResponse.vocabUsed || [],

@@ -73,7 +73,7 @@ export async function createConversation(
           conversation_id: data.id,
           role: 'ai',
           content: greeting,
-          english: englishTranslation,
+          english_translation: englishTranslation,
           created_at: new Date().toISOString()
         });
 
@@ -96,7 +96,7 @@ export async function addMessage(
   conversationId: number,
   sender: 'user' | 'ai',
   content: string,
-  english?: string,
+  englishTranslation?: string,
   feedback?: string,
   suggestions?: string[],
   vocabUsed?: number[],
@@ -106,7 +106,7 @@ export async function addMessage(
     conversation_id: conversationId,
     sender: sender,
     content: content,
-    english: english || null,
+    english_translation: englishTranslation || null,
     feedback: feedback || null,
     suggestions: suggestions || null,
     vocab_used: vocabUsed || null,
