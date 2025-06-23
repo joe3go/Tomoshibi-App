@@ -230,7 +230,7 @@ export default function Chat() {
       // Snapshot the previous value
       const previousData = queryClient.getQueryData(["conversation", conversationId]);
 
-      // Optimistically update to show user message immediately
+      // Optimistically update to show user message immediately with correct schema
       queryClient.setQueryData(["conversation", conversationId], (old: any) => {
         if (!old) return old;
         
@@ -239,6 +239,11 @@ export default function Chat() {
           sender_type: 'user',
           content: content,
           sender_persona_id: null,
+          english_translation: null,
+          tutor_feedback: null,
+          suggestions: null,
+          vocab_used: null,
+          grammar_used: null,
           created_at: new Date().toISOString()
         };
 
@@ -252,19 +257,38 @@ export default function Chat() {
     },
     onSuccess: (newMessages) => {
       console.log('🔄 Mutation success, updating cache with new messages...');
+      console.log('📨 New messages received:', newMessages);
       
-      // Update cache by merging new messages
+      // Update cache by merging new messages (replace optimistic with real messages)
       queryClient.setQueryData(["conversation", conversationId], (old: any) => {
-        if (!old) return old;
+        if (!old) {
+          console.log('⚠️ No existing cache data found');
+          return old;
+        }
 
         // Remove temporary messages and add real ones
-        const existingMessages = (old.messages || []).filter((msg: any) => !msg.id.toString().startsWith('temp_'));
+        const existingMessages = (old.messages || []).filter((msg: any) => 
+          !msg.id.toString().startsWith('temp_')
+        );
         
-        return {
+        const updatedData = {
           ...old,
-          messages: [...existingMessages, ...newMessages]
+          messages: [...existingMessages, ...newMessages].sort((a, b) => 
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          )
         };
+
+        console.log('📋 Updated cache data:', {
+          totalMessages: updatedData.messages.length,
+          newMessagesAdded: newMessages.length
+        });
+
+        return updatedData;
       });
+      
+      // Debug: Check current cache state
+      const currentCache = queryClient.getQueryData(["conversation", conversationId]);
+      console.log('🔍 CURRENT CACHE STATE:', currentCache);
       
       setMessage("");
     },
@@ -348,7 +372,7 @@ export default function Chat() {
     console.log('🔔 Setting up realtime subscription for conversation:', conversationId);
     
     const channel = supabase
-      .channel('messages')
+      .channel(`conversation-messages-${conversationId}`)
       .on(
         'postgres_changes',
         {
@@ -358,27 +382,39 @@ export default function Chat() {
           filter: `conversation_id=eq.${conversationId}`
         },
         (payload) => {
-          console.log('📨 Realtime message received:', payload);
+          console.log('📨 Realtime message received:', payload.new);
           
-          // Update cache with new message
+          // Update cache with new message, avoiding duplicates
           queryClient.setQueryData(["conversation", conversationId], (old: any) => {
-            if (!old) return old;
+            if (!old) {
+              console.log('⚠️ No cache data available for realtime update');
+              return old;
+            }
             
             const newMessage = payload.new;
             const messageExists = old.messages?.some((msg: any) => msg.id === newMessage.id);
             
             if (!messageExists) {
+              console.log('✅ Adding realtime message to cache:', newMessage.id);
+              const updatedMessages = [...(old.messages || []), newMessage].sort((a, b) => 
+                new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+              );
+              
               return {
                 ...old,
-                messages: [...(old.messages || []), newMessage]
+                messages: updatedMessages
               };
+            } else {
+              console.log('⏭️ Message already exists in cache:', newMessage.id);
             }
             
             return old;
           });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Realtime subscription status:', status);
+      });
 
     return () => {
       console.log('🔕 Cleaning up realtime subscription');
@@ -576,7 +612,7 @@ export default function Chat() {
                 {persona?.name || "AI"}
               </h3>
               <p className="chat-scenario-title">
-                {scenario?.title || "Conversation"}
+                {scenario?.title || conversation?.title.split("|")[0] || "Conversation"}
               </p>
             </div>
           </div>
