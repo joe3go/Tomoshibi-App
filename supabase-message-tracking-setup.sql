@@ -3,25 +3,27 @@
 
 -- 1. Create the main RPC function for message tracking
 CREATE OR REPLACE FUNCTION create_message_with_tracking(
-    _conversation_id INTEGER,
+    _conversation_id UUID,
     _sender_type TEXT,
     _content TEXT,
-    _vocab_used INTEGER[] DEFAULT NULL,
-    _grammar_used INTEGER[] DEFAULT NULL,
+    _vocab_used UUID[] DEFAULT NULL,
+    _grammar_used UUID[] DEFAULT NULL,
     _english_translation TEXT DEFAULT NULL,
     _tutor_feedback TEXT DEFAULT NULL,
-    _suggestions TEXT[] DEFAULT NULL
+    _suggestions TEXT[] DEFAULT NULL,
+    _sender_persona_id UUID DEFAULT NULL
 )
 RETURNS TABLE (
-    id INTEGER,
-    conversation_id INTEGER,
+    id UUID,
+    conversation_id UUID,
     sender_type TEXT,
     content TEXT,
-    vocab_used INTEGER[],
-    grammar_used INTEGER[],
+    vocab_used UUID[],
+    grammar_used UUID[],
     english_translation TEXT,
     tutor_feedback TEXT,
     suggestions TEXT[],
+    sender_persona_id UUID,
     created_at TIMESTAMPTZ
 )
 LANGUAGE plpgsql
@@ -29,9 +31,9 @@ SECURITY DEFINER
 AS $$
 DECLARE
     _user_id UUID;
-    _message_id INTEGER;
-    _vocab_id INTEGER;
-    _grammar_id INTEGER;
+    _message_id UUID;
+    _vocab_id UUID;
+    _grammar_id UUID;
 BEGIN
     -- Get user_id from conversation
     SELECT user_id INTO _user_id
@@ -52,6 +54,7 @@ BEGIN
         english_translation,
         tutor_feedback,
         suggestions,
+        sender_persona_id,
         created_at
     )
     VALUES (
@@ -63,6 +66,7 @@ BEGIN
         _english_translation,
         _tutor_feedback,
         _suggestions,
+        _sender_persona_id,
         NOW()
     )
     RETURNING messages.id INTO _message_id;
@@ -71,8 +75,8 @@ BEGIN
     IF _vocab_used IS NOT NULL AND array_length(_vocab_used, 1) > 0 THEN
         FOREACH _vocab_id IN ARRAY _vocab_used
         LOOP
-            -- Verify the vocab word exists in jlpt_vocab
-            IF EXISTS (SELECT 1 FROM jlpt_vocab WHERE jlpt_vocab.id = _vocab_id) THEN
+            -- Verify the vocab word exists in vocab_library
+            IF EXISTS (SELECT 1 FROM vocab_library WHERE vocab_library.id = _vocab_id) THEN
                 -- Upsert vocab tracking entry
                 INSERT INTO vocab_tracker (user_id, word_id, user_usage_count, last_seen_at)
                 VALUES (_user_id, _vocab_id, 1, NOW())

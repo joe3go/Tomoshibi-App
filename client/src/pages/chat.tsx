@@ -138,13 +138,14 @@ export default function Chat() {
 
       console.log('📤 Sending message to conversation:', conversationId);
 
-      // Add user message directly to Supabase
+      // Add user message using the updated schema
       const { error: userMsgError } = await supabase
         .from('messages')
         .insert({
           conversation_id: conversationId,
-          role: 'user',
+          sender_type: 'user',
           content: content,
+          sender_persona_id: null, // User messages don't have persona
           created_at: new Date().toISOString()
         });
 
@@ -176,18 +177,19 @@ export default function Chat() {
 
       const aiData = await response.json();
 
-      // Add AI message directly to Supabase
+      // Add AI message using the updated schema
       const { error: aiMsgError } = await supabase
         .from('messages')
         .insert({
           conversation_id: conversationId,
-          role: 'ai',
+          sender_type: 'ai',
           content: aiData.content,
-          english: aiData.english,
-          feedback: aiData.feedback,
+          english_translation: aiData.english,
+          tutor_feedback: aiData.feedback,
           suggestions: aiData.suggestions,
           vocab_used: aiData.vocabUsed,
           grammar_used: aiData.grammarUsed,
+          sender_persona_id: aiData.tutorId, // AI messages have persona
           created_at: new Date().toISOString()
         });
 
@@ -196,10 +198,22 @@ export default function Chat() {
         throw new Error('Failed to save AI response');
       }
 
-      // Return updated messages
+      // Return updated messages with persona information
       const { data: updatedMessages, error: fetchError } = await supabase
         .from('messages')
-        .select('*')
+        .select(`
+          id,
+          sender_type,
+          content,
+          english_translation,
+          tutor_feedback,
+          suggestions,
+          vocab_used,
+          grammar_used,
+          sender_persona_id,
+          created_at,
+          personas(name, bubble_class)
+        `)
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
 
