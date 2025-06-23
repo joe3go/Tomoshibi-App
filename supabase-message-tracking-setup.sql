@@ -95,12 +95,12 @@ BEGIN
             -- Verify the grammar pattern exists in jlpt_grammar
             IF EXISTS (SELECT 1 FROM jlpt_grammar WHERE jlpt_grammar.id = _grammar_id) THEN
                 -- Upsert grammar tracking entry
-                INSERT INTO grammar_tracker (user_id, grammar_id, frequency, last_used_at)
+                INSERT INTO grammar_tracker (user_id, grammar_id, frequency, last_seen_at)
                 VALUES (_user_id, _grammar_id, 1, NOW())
                 ON CONFLICT (user_id, grammar_id)
                 DO UPDATE SET
                     frequency = grammar_tracker.frequency + 1,
-                    last_used_at = NOW();
+                    last_seen_at = NOW();
             END IF;
         END LOOP;
     END IF;
@@ -117,6 +117,7 @@ BEGIN
         m.english_translation,
         m.tutor_feedback,
         m.suggestions,
+        m.sender_persona_id,
         m.created_at
     FROM messages m
     WHERE m.id = _message_id;
@@ -130,7 +131,7 @@ $$;
 CREATE TABLE IF NOT EXISTS vocab_tracker (
     id SERIAL PRIMARY KEY,
     user_id UUID NOT NULL,
-    word_id INTEGER NOT NULL,
+    word_id UUID NOT NULL,
     user_usage_count INTEGER DEFAULT 0,
     ai_encounter_count INTEGER DEFAULT 0,
     frequency INTEGER DEFAULT 0,
@@ -146,9 +147,9 @@ CREATE TABLE IF NOT EXISTS vocab_tracker (
 CREATE TABLE IF NOT EXISTS grammar_tracker (
     id SERIAL PRIMARY KEY,
     user_id UUID NOT NULL,
-    grammar_id INTEGER NOT NULL,
+    grammar_id UUID NOT NULL,
     frequency INTEGER DEFAULT 0,
-    last_used_at TIMESTAMPTZ,
+    last_seen_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(user_id, grammar_id)
 );
@@ -156,7 +157,7 @@ CREATE TABLE IF NOT EXISTS grammar_tracker (
 -- Drop and recreate foreign key constraints to ensure they support all vocab
 ALTER TABLE vocab_tracker DROP CONSTRAINT IF EXISTS vocab_tracker_word_id_fkey;
 ALTER TABLE vocab_tracker ADD CONSTRAINT vocab_tracker_word_id_fkey 
-    FOREIGN KEY (word_id) REFERENCES jlpt_vocab(id) ON DELETE CASCADE;
+    FOREIGN KEY (word_id) REFERENCES vocab_library(id) ON DELETE CASCADE;
 
 ALTER TABLE grammar_tracker DROP CONSTRAINT IF EXISTS grammar_tracker_grammar_id_fkey;
 ALTER TABLE grammar_tracker ADD CONSTRAINT grammar_tracker_grammar_id_fkey 

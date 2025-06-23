@@ -113,6 +113,29 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### June 23, 2025 - Complete UUID-Based Schema Migration with Multi-Persona Support
+- **Successfully migrated entire Supabase schema to UUID-based architecture**:
+  - Updated all database tables to use UUID primary keys: conversations, messages, personas, scenarios, vocab_library, jlpt_grammar
+  - Replaced integer-based IDs with UUIDs throughout the system for improved scalability and distributed database support
+  - Migrated from `jlpt_vocab` to `vocab_library` table with proper source tracking via `vocab_sources`
+- **Implemented comprehensive multi-persona conversation support**:
+  - Added `conversation_participants` table to support group chats with multiple AI personas
+  - Updated `messages` table with `sender_persona_id` for proper persona attribution
+  - Enhanced message schema with `sender_type`, `english_translation`, `tutor_feedback`, and `suggestions` fields
+- **Updated all database functions and API endpoints**:
+  - Completely rebuilt `create_message_with_tracking` RPC function with UUID parameters
+  - Updated server routes in `server/routes.ts` to handle UUID conversation and message IDs
+  - Fixed all Supabase client calls to use UUID strings instead of integers
+  - Updated vocabulary tracking to reference `vocab_library` instead of `jlpt_vocab`
+- **Enhanced frontend components for UUID compatibility**:
+  - Updated chat component to use new message schema with persona information
+  - Modified VocabularyStatsCard to fetch from `vocab_library` table
+  - Enhanced message queries to include persona data for proper bubble styling and attribution
+- **Maintained data integrity and existing functionality**:
+  - All existing features continue to work with new UUID-based schema
+  - Vocabulary tracking and progress analytics properly updated for new table structure
+  - Authentication and user management seamlessly integrated with UUID system
+
 ### June 20, 2025 - Complete Chat System and Vocabulary Data Accuracy
 - **Fixed chat display issues and added conversation management**:
   - Updated chat component to fetch personas directly from Supabase for consistency
