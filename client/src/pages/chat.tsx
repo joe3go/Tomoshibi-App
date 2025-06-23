@@ -437,15 +437,42 @@ export default function Chat() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex items-center gap-3">
-            <img
-              src={getAvatarImage(persona)}
-              alt={persona?.name || "Persona"}
-              className="w-10 h-10 rounded-full object-cover"
-            />
+            {isGroup ? (
+              <div className="flex -space-x-2">
+                {conversationPersonas.slice(0, 3).map((p, index) => (
+                  <img
+                    key={p.id}
+                    src={getAvatarImage(p)}
+                    alt={p.name}
+                    className="w-10 h-10 rounded-full object-cover border-2 border-background"
+                    style={{ zIndex: conversationPersonas.length - index }}
+                  />
+                ))}
+                {conversationPersonas.length > 3 && (
+                  <div className="w-10 h-10 rounded-full bg-muted border-2 border-background flex items-center justify-center text-xs font-medium">
+                    +{conversationPersonas.length - 3}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <img
+                src={getAvatarImage(persona)}
+                alt={persona?.name || "Persona"}
+                className="w-10 h-10 rounded-full object-cover"
+              />
+            )}
             <div>
-              <h3 className="font-medium">{persona?.name || "AI"}</h3>
+              <h3 className="font-medium">
+                {isGroup 
+                  ? `Group Chat (${conversationPersonas.length} participants)`
+                  : persona?.name || "AI"
+                }
+              </h3>
               <p className="text-sm text-muted-foreground">
-                {conversation.title.split("|")[0] || "Conversation"}
+                {isGroup 
+                  ? conversationPersonas.map(p => p.name).join(", ")
+                  : conversation.title.split("|")[0] || "Conversation"
+                }
               </p>
             </div>
           </div>
@@ -495,8 +522,15 @@ export default function Chat() {
               </div>
 
               <div
-                className={`max-w-[70%] rounded-lg p-3 ${getMessageBubbleStyles(msg.sender_type, persona)}`}
+                className={`max-w-[70%] rounded-lg p-3 ${getMessageBubbleStyles(msg.sender_type, senderPersona)}`}
               >
+                {/* Show persona name in group mode */}
+                {isGroup && msg.sender_type === 'ai' && senderPersona && (
+                  <div className="text-xs font-medium mb-1 opacity-80">
+                    {senderPersona.name}
+                  </div>
+                )}
+                
                 <MessageWithVocab content={msg.content}>
                   <FuriganaText
                     text={msg.content}
@@ -538,7 +572,7 @@ export default function Chat() {
               </div>
             </div>
           );
-          })}
+        })}
 
           {sending && (
             <div className="flex items-start gap-3">

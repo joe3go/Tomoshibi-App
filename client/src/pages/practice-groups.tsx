@@ -7,8 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { TemplateSelector } from "@/components/group-chat/TemplateSelector";
 import { useAuth } from "@/context/SupabaseAuthContext";
-import { getConversationTemplates, createGroupConversationFromTemplate } from "@/lib/group-conversation-mock";
-import { ConversationTemplate } from "@/../../shared/group-conversation-types";
+import { supabase } from "@/lib/supabase/client";
 
 export default function PracticeGroups() {
   const [, setLocation] = useLocation();
