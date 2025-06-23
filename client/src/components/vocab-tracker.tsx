@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookOpen, TrendingUp, Clock, Filter, User } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/context/SupabaseAuthContext';
 // Avatar images are now served from /avatars/ directory as SVG files
 
 interface VocabTrackerEntry {
@@ -104,19 +104,37 @@ export default function VocabTracker() {
     },
   });
 
-  // Get total vocabulary counts from database
+  // Get total vocabulary counts from Supabase directly
   const { data: totalVocabStats = [] } = useQuery<{ level: string; count: number }[]>({
-    queryKey: ['/api/vocab/stats'],
+    queryKey: ['vocab-total-counts'],
     queryFn: async () => {
-      const response = await fetch('/api/vocab/stats', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch vocab stats');
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_DEV_URL || 'https://gsnnydemkpllycgzmalv.supabase.co';
+      const anonKey = import.meta.env.VITE_SUPABASE_DEV_ANON_KEY;
+      
+      if (!anonKey) {
+        console.error('Missing Supabase anon key');
+        return [];
       }
-      return response.json();
+      
+      const supabase = createClient(supabaseUrl, anonKey);
+      
+      const { data, error } = await supabase
+        .from('jlpt_vocab')
+        .select('jlpt_level');
+      
+      if (error) {
+        console.error('Error fetching vocab counts:', error);
+        return [];
+      }
+      
+      const counts: Record<string, number> = {};
+      data.forEach((item: { jlpt_level: number }) => {
+        const level = `N${item.jlpt_level}`;
+        counts[level] = (counts[level] || 0) + 1;
+      });
+      
+      return Object.entries(counts).map(([level, count]) => ({ level, count }));
     },
   });
 
@@ -153,9 +171,9 @@ export default function VocabTracker() {
 
   const stats = calculateStats();
 
-  // Convert vocab stats from API to proper JLPT level totals
-  const levelTotals = (vocabStats as any[]).reduce((acc: Record<string, number>, stat: any) => {
-    acc[stat.level] = parseInt(stat.count.toString());
+  // Convert vocab stats from Supabase to proper JLPT level totals
+  const levelTotals = totalVocabStats.reduce((acc: Record<string, number>, stat: { level: string; count: number }) => {
+    acc[stat.level] = stat.count;
     return acc;
   }, { N5: 0, N4: 0, N3: 0, N2: 0, N1: 0 });
 
@@ -167,7 +185,7 @@ export default function VocabTracker() {
     return acc;
   }, { total: 0, byLevel: {} });
 
-  const totalVocabCount = vocabStats.reduce((sum, stat) => sum + stat.count, 0);
+  const totalVocabCount = totalVocabStats.reduce((sum: number, stat: { level: string; count: number }) => sum + stat.count, 0);
 
   // Filter and sort data
   const filteredData = (vocabData as VocabTrackerEntry[])
