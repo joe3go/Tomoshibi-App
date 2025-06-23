@@ -321,13 +321,34 @@ export default function Chat() {
       // Clear the input immediately
       setMessage("");
 
-      // Force a clean refresh of conversation data
+      // Immediately update cache with new messages for instant UI update
+      if (newMessages && Array.isArray(newMessages)) {
+        queryClient.setQueryData(["conversation", conversationId], (old: any) => {
+          if (!old) return old;
+          
+          // Add the new messages to the existing messages
+          const existingMessages = old.messages || [];
+          const newIds = newMessages.map((msg: any) => msg.id);
+          
+          // Filter out any temporary messages and duplicates
+          const filteredExisting = existingMessages.filter((msg: any) => 
+            !msg.id.toString().startsWith('temp_') && !newIds.includes(msg.id)
+          );
+          
+          return {
+            ...old,
+            messages: [...filteredExisting, ...newMessages]
+          };
+        });
+      }
+
+      // Also force a clean refresh as backup
       queryClient.invalidateQueries({ 
         queryKey: ["conversation", conversationId],
         exact: true 
       });
 
-      console.log("🔄 Cache invalidated, fresh data will be fetched");
+      console.log("🔄 Cache updated immediately and invalidated for fresh data");
     },
     onError: (error, content, context) => {
       console.error("❌ Message send failed:", error.message);
@@ -507,7 +528,7 @@ export default function Chat() {
                   exact: true 
                 });
               }
-            }, 3000); // Poll every 3 seconds
+            }, 1000); // Poll every 1 second for faster updates
           }
         }
       });
@@ -522,7 +543,7 @@ export default function Chat() {
             queryKey: ['conversation', conversationId],
             exact: true 
           });
-        }, 3000);
+        }, 1000); // Poll every 1 second
       }
     }, 5000);
 
