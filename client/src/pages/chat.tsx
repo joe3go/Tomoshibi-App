@@ -372,10 +372,29 @@ export default function Chat() {
 
       return { previousData, tempId };
     },
-    onSuccess: async () => {
+    onSuccess: async (data) => {
       setMessage("");
 
-      // Scroll to bottom after data refresh
+      // Immediately update cache with real messages from server response
+      queryClient.setQueryData(["conversation", conversationId], (old: any) => {
+        if (!old) return old;
+
+        // Remove temporary message and add real messages
+        const messagesWithoutTemp = (old.messages || []).filter(
+          (msg: any) => !msg.id.toString().startsWith('temp_')
+        );
+
+        return {
+          ...old,
+          messages: [
+            ...messagesWithoutTemp,
+            data.userMessage,
+            data.aiMessage
+          ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+        };
+      });
+
+      // Scroll to bottom after immediate update
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 100);
@@ -450,56 +469,19 @@ export default function Chat() {
     },
   });
 
-  // Realtime subscription for live message updates
+  // Simple polling fallback for Supabase free tier (no Realtime)
   useEffect(() => {
-    if (!conversationId) return;
+    if (!conversationId || sendMessageMutation.isPending) return;
 
-    console.log('🔔 Setting up realtime subscription for conversation:', conversationId);
-
-    const channel = supabase.channel(`conversation-${conversationId}`)
-      .on("postgres_changes", {
-        event: "*", // Listen to all events for debugging
-        schema: "public",
-        table: "messages", 
-        filter: `conversation_id=eq.${conversationId}`
-      }, async (payload) => {
-        console.log('📨 Realtime event received:', {
-          eventType: payload.eventType,
-          new: payload.new,
-          old: payload.old,
-          table: payload.table
-        });
-
-        // Only handle INSERT events for new messages
-        if (payload.eventType !== 'INSERT') {
-          console.log('⏭️ Skipping non-INSERT event:', payload.eventType);
-          return;
-        }
-
-        // Skip if it's a temp optimistic message
-        if (payload.new?.id?.toString().startsWith("temp_")) {
-          console.log('⏭️ Skipping temp message:', payload.new.id);
-          return;
-        }
-
-        console.log('🔄 New message detected, invalidating cache for message:', payload.new?.id);
-        
-        // Simple invalidation approach
+    const interval = setInterval(() => {
+      // Only poll if user is not actively sending messages
+      if (!sendMessageMutation.isPending) {
         queryClient.invalidateQueries({ queryKey: ["conversation", conversationId] });
-        
-        console.log('✅ Cache invalidated for new message');
-      })
-      .subscribe((status) => {
-        console.log('📡 Realtime subscription status:', status);
-      });
+      }
+    }, 5000); // Poll every 5 seconds
 
-    console.log("✅ Realtime subscription active for", conversationId);
-
-    return () => {
-      console.log('🔕 Cleaning up realtime subscription');
-      channel.unsubscribe();
-    };
-  }, [conversationId, queryClient]);
+    return () => clearInterval(interval);
+  }, [conversationId, sendMessageMutation.isPending, queryClient]);
 
   // Auto-scroll effect
   useEffect(() => {
