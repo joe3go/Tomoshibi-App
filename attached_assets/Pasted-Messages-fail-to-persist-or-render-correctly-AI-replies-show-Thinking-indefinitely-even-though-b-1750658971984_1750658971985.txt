@@ -1,0 +1,104 @@
+Messages fail to persist or render correctly. AI replies show “Thinking…” indefinitely even though backend shows successful insertions.
+✅ Required Fixes (Combined Implementation)
+1. ✅ Fix Optimistic Updates (Match DB Schema)
+
+When creating optimistic messages:
+
+// Before (incorrect):
+{ role: 'user', content: message }
+
+// After (correct):
+{ 
+  sender_type: 'user', 
+  sender_persona_id: null, 
+  content: message, 
+  created_at: new Date().toISOString() 
+}
+
+2. ✅ Fix React Query Cache Merge Logic
+
+Update cache without overwriting old messages:
+
+onSuccess: (newMessages) => {
+  queryClient.setQueryData(
+    ["conversation", conversationId],
+    (old: { conversation: any; messages: any[] }) => ({
+      ...old,
+      messages: [...(old?.messages || []), ...newMessages]
+    })
+  );
+  setMessage("");
+};
+
+3. ✅ Fix Timestamp Format for Sorting
+
+When inserting messages, use:
+
+created_at: new Date().toISOString()
+
+When querying messages from Supabase:
+
+.order('created_at', { ascending: true })
+
+4. ✅ Add Real-Time Message Subscription
+
+Enable real-time updates from Supabase:
+
+useEffect(() => {
+  if (!conversationId) return;
+
+  const channel = supabase
+    .channel('conversation-messages')
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `conversation_id=eq.${conversationId}`
+      },
+      (payload) => {
+        queryClient.setQueryData(
+          ["conversation", conversationId],
+          (old: any) => old ? {
+            ...old,
+            messages: [...old.messages, payload.new]
+          } : old
+        );
+      }
+    )
+    .subscribe();
+
+  return () => {
+    channel.unsubscribe();
+  };
+}, [conversationId]);
+
+5. ✅ Fix Scenario Fallback If Null
+
+Handle cases where scenario is undefined:
+
+{(scenario as any)?.title || conversation?.title.split("|")[0] || "Conversation"}
+
+6. ✅ Debugging & Validation
+
+    After setQueryData, add:
+
+    console.log('CURRENT CACHE:', queryClient.getQueryData(["conversation", conversationId]));
+
+    Check Supabase logs for message inserts.
+
+    Confirm /rest/v1/messages?conversation_id=eq.xyz returns new messages.
+
+7. ✅ Replit Setup (if needed)
+
+    Install dependency:
+
+    npm install @supabase/realtime-js
+
+    Enable replication:
+    Supabase → Database → Replication → Start replicating messages table.
+
+✅ Goal
+
+Messages persist and render without refresh. New replies appear instantly via real-time updates. Optimistic messages work, and cache stays consistent with DB.
