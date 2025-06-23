@@ -9,6 +9,7 @@ import Landing from "@/pages/landing";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import Chat from "@/pages/chat";
+import ChatNew from "@/pages/chat-new";
 import TutorSelection from "@/pages/tutor-selection";
 import ScenarioSelection from "@/pages/scenario-selection";
 import Vocabulary from "@/pages/vocabulary";
@@ -38,8 +39,7 @@ export default function App() {
             <Route path="/" component={Landing} />
             <Route path="/login" component={Login} />
             <Route path="/dashboard" component={Dashboard} />
-            <Route path="/chat/:conversationId" component={Chat} />
-            <Route path="/group-chat/:conversationId" component={Chat} />
+            <Route path="/chat/:conversationId" component={ChatNew} />
             <Route path="/tutors" component={TutorSelection} />
             <Route path="/tutor-selection" component={TutorSelection} />
             <Route path="/scenarios" component={ScenarioSelection} />
