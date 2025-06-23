@@ -12,6 +12,7 @@ import { bind, unbind, toHiragana } from 'wanakana';
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/context/SupabaseAuthContext";
 import { extractPersonaFromTitle } from "@/lib/supabase-functions";
+import { useConversationMode } from "@/hooks/useConversationMode";
 // Import vocabulary tracking function from API
 const trackVocabularyUsage = async (text: string, source: 'user' | 'ai') => {
   try {
