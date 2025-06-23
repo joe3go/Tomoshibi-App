@@ -506,9 +506,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .single();
 
       if (persona) {
-        let introduction = `こんにちは！私は${persona.name}です。今日は何について話しましょうか？`;
+        // Create more natural, persona-specific introduction
+        const personalizedIntros = {
+          'Aoi': `こんにちは！私は${persona.name}先生です。日本語の勉強を一緒に頑張りましょう！今日は何を学びたいですか？`,
+          'Keiko': `やあ！${persona.name}だよ。よろしく！今日は何について話そうか？`,
+          'Ren': `こんにちは！${persona.name}です。日本語の練習、楽しくやりましょうね！`,
+          'Yuki': `こんにちは。${persona.name}と申します。どうぞよろしくお願いします。`,
+          'Satoshi': `おはよう！${persona.name}だ。今日も元気に日本語を勉強しよう！`,
+          'Haruki': `こんにちは！${persona.name}です。一緒に日本語を楽しく学びましょう！`
+        };
 
-        console.log('💬 Adding initial message:', introduction);
+        const introduction = personalizedIntros[persona.name] || 
+          `こんにちは！私は${persona.name}です。今日は何について話しましょうか？`;
+
+        const englishTranslations = {
+          'Aoi': `Hello! I'm Teacher ${persona.name}. Let's work hard on studying Japanese together! What would you like to learn today?`,
+          'Keiko': `Hey! I'm ${persona.name}. Nice to meet you! What should we talk about today?`,
+          'Ren': `Hello! I'm ${persona.name}. Let's make Japanese practice fun!`,
+          'Yuki': `Hello. My name is ${persona.name}. Please treat me favorably.`,
+          'Satoshi': `Good morning! I'm ${persona.name}. Let's study Japanese energetically today!`,
+          'Haruki': `Hello! I'm ${persona.name}. Let's enjoy learning Japanese together!`
+        };
+
+        const englishTranslation = englishTranslations[persona.name] || 
+          `Hello! I'm ${persona.name}. What would you like to talk about today?`;
+
+        console.log('💬 Adding personalized initial message for:', persona.name);
 
         const { error: messageError } = await supabase
           .from('messages')
@@ -517,12 +540,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             sender_type: 'ai',
             sender_persona_id: personaId,
             content: introduction,
-            english_translation: `Hello! I'm ${persona.name}. What would you like to talk about today?`,
+            english: englishTranslation,
             created_at: new Date().toISOString()
           });
 
         if (messageError) {
           console.error('Failed to add initial message:', messageError);
+        } else {
+          console.log('✅ Initial greeting message added successfully');
         }
       }
 
@@ -706,7 +731,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Validate UUIDs before creating AI message
         const { isValidUUID } = await import("../shared/validation");
-        
+
         // Filter out invalid UUIDs from vocab and grammar arrays
         const validVocabUsed = Array.isArray(aiResponse.vocabUsed) ? 
           aiResponse.vocabUsed.filter(id => typeof id === 'string' && isValidUUID(id)) : [];
@@ -898,7 +923,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Import validation functions
       const { validateTutorId, getDefaultTutorId } = await import("../shared/validation");
-      
+
       // Validate or use default tutorId
       let validTutorId: string;
       try {

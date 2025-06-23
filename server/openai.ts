@@ -102,23 +102,31 @@ export async function generateSecureAIResponse(
       throw new Error("No response received from AI");
     }
 
-    console.log("🗣️ Raw AI Response:", rawContent);
+    console.log("🗣️ Raw AI Response:", rawContent.substring(0, 200) + "...");
 
-    // Parse the JSON response
+    // Parse the JSON response with better error handling
     let parsedResponse;
     try {
-      parsedResponse = JSON.parse(rawContent);
-      console.log("🗣️ Parsed OpenAI Response:", parsedResponse);
+      // Clean the response first - remove any markdown formatting
+      const cleanedContent = rawContent.replace(/```json\s*|\s*```/g, '').trim();
+      parsedResponse = JSON.parse(cleanedContent);
+      console.log("✅ Successfully parsed OpenAI JSON response");
     } catch (e) {
-      console.error("⚠️ Failed to parse OpenAI JSON:", rawContent);
-      // Return fallback response with proper structure
+      console.error("❌ Failed to parse OpenAI JSON:", e.message);
+      console.error("❌ Raw content that failed:", rawContent);
+      
+      // Try to extract content manually if JSON parsing fails
+      const fallbackContent = rawContent.includes("こんにちは") || rawContent.includes("すみません") 
+        ? rawContent.substring(0, 100) 
+        : "すみません、もう一度言ってください。";
+      
       return {
-        content: rawContent.includes("すみません") ? rawContent : "すみません、もう一度言ってください。",
+        content: fallbackContent,
         english_translation: "I'm sorry, could you please say that again?",
-        feedback: "System encountered a parsing error",
+        feedback: "Please try rephrasing your message",
         vocabUsed: [],
         grammarUsed: [],
-        suggestions: ["Try rephrasing your message", "Use simpler Japanese"],
+        suggestions: ["Try using simpler Japanese", "Ask me about basic topics"],
       };
     }
 

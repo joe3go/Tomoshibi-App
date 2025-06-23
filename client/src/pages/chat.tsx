@@ -315,48 +315,23 @@ export default function Chat() {
       return { previousData };
     },
     onSuccess: (newMessages) => {
-      console.log("🔄 Mutation success, updating cache with new messages...");
-      console.log("📨 New messages received:", newMessages);
+      console.log("✅ Message sent successfully, updating UI...");
+      console.log("📨 New messages received:", newMessages?.length || 0);
 
-      // Always update cache, don't force refetch which clears the data
-      queryClient.setQueryData(["conversation", conversationId], (old: any) => {
-        if (!old) {
-          console.log("🔧 Creating new cache structure with received messages");
-          return {
-            conversation: { id: conversationId },
-            messages: newMessages.sort(
-              (a, b) =>
-                new Date(a.created_at).getTime() -
-                new Date(b.created_at).getTime(),
-            ),
-          };
-        }
+      // Clear the input immediately
+      setMessage("");
 
-        // Remove temporary messages and add real ones
-        const existingMessages = (old.messages || []).filter(
-          (msg: any) => !msg.id.toString().startsWith("temp_"),
-        );
-
-        const updatedData = {
-          ...old,
-          messages: [...existingMessages, ...newMessages].sort(
-            (a, b) =>
-              new Date(a.created_at).getTime() -
-              new Date(b.created_at).getTime(),
-          ),
-        };
-
-        console.log("📋 Updated cache data:", {
-          totalMessages: updatedData.messages.length,
-          newMessagesAdded: newMessages.length,
-        });
-
-        return updatedData;
+      // Force a clean refresh of conversation data
+      queryClient.invalidateQueries({ 
+        queryKey: ["conversation", conversationId],
+        exact: true 
       });
 
-      setMessage("");
+      console.log("🔄 Cache invalidated, fresh data will be fetched");
     },
     onError: (error, content, context) => {
+      console.error("❌ Message send failed:", error.message);
+      
       // Revert to previous data on error
       if (context?.previousData) {
         queryClient.setQueryData(
@@ -365,21 +340,30 @@ export default function Chat() {
         );
       }
 
-      // Handle auth errors
-      if (
-        error.message.includes("session") ||
-        error.message.includes("authenticated")
-      ) {
-        localStorage.removeItem("token");
+      // Handle specific error types
+      if (error.message.includes("session") || error.message.includes("authenticated")) {
+        toast({
+          title: "Authentication Error",
+          description: "Please log in again to continue",
+          variant: "destructive",
+        });
         setLocation("/login");
         return;
       }
 
-      toast({
-        title: "Failed to send message",
-        description: error.message,
-        variant: "destructive",
-      });
+      if (error.message.includes("AI response")) {
+        toast({
+          title: "AI Response Error", 
+          description: "The tutor is having trouble responding. Please try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Failed to send message",
+          description: "Please check your connection and try again.",
+          variant: "destructive",
+        });
+      }
     },
   });
 
