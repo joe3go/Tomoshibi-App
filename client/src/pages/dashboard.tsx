@@ -55,6 +55,7 @@ export default function Dashboard() {
   const isAuthenticated = !!session;
   const [tutorsData, setTutorsData] = useState<any[]>([]);
   const [tutorsLoading, setTutorsLoading] = useState(true);
+  const [groupConversations, setGroupConversations] = useState<any[]>([]);
   const { toast } = useToast();
 
   // Fetch conversations from Supabase

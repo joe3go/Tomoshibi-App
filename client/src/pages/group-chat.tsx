@@ -18,6 +18,7 @@ export default function GroupChat() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [typingPersonas, setTypingPersonas] = useState<string[]>([]);
+  const [inputMessage, setInputMessage] = useState('');
 
   // Load group conversation
   useEffect(() => {
@@ -63,14 +64,18 @@ export default function GroupChat() {
       setMessages(updatedMessages);
 
       // Simulate AI responses with typing indicators
-      const activePersonas = conversation.participants.filter(p => p.is_active);
+      const activePersonas = conversation.participants.filter(p => p.is_active || p.role === 'member');
       
       // Show typing indicators for random personas
       const respondingPersonas = activePersonas
         .sort(() => 0.5 - Math.random())
         .slice(0, Math.floor(Math.random() * 2) + 1);
 
-      setTypingPersonas(respondingPersonas.map(p => p.persona_name));
+      const personaNames = respondingPersonas
+        .map(p => p.persona_name)
+        .filter((name): name is string => name !== undefined);
+      
+      setTypingPersonas(personaNames);
 
       // Simulate AI responses after delays
       for (let i = 0; i < respondingPersonas.length; i++) {
@@ -83,9 +88,9 @@ export default function GroupChat() {
           // Add AI response
           const aiMessage: GroupMessage = {
             id: `msg-${Date.now()}-${i}`,
-            content: `${persona.persona_name}の返事: こんにちは！${content}について話しましょう。`,
+            content: `${persona.persona_name || 'AI'}の返事: こんにちは！${content}について話しましょう。`,
             sender_type: 'ai',
-            sender_name: persona.persona_name,
+            sender_name: persona.persona_name || 'AI',
             persona_id: persona.persona_id,
             created_at: new Date().toISOString()
           };
@@ -104,6 +109,14 @@ export default function GroupChat() {
       console.error('Failed to send message:', error);
     } finally {
       setIsSending(false);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (inputMessage.trim() && !isSending) {
+      handleSendMessage(inputMessage.trim());
+      setInputMessage('');
     }
   };
 
@@ -166,13 +179,13 @@ export default function GroupChat() {
         <div className="bg-card border-b border-border p-4">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm text-muted-foreground">Participants:</span>
-            {conversation.participants.filter(p => p.is_active).map(participant => (
+            {conversation.participants.filter(p => p.is_active || p.role === 'member').map(participant => (
               <div key={participant.persona_id} className="flex items-center gap-1">
                 <Avatar className="w-6 h-6">
-                  <AvatarImage src={`/avatars/${participant.persona_name.toLowerCase()}.png`} />
-                  <AvatarFallback>{participant.persona_name[0]}</AvatarFallback>
+                  <AvatarImage src={`/avatars/${participant.persona_name?.toLowerCase()}.png`} />
+                  <AvatarFallback>{participant.persona_name?.[0] || 'AI'}</AvatarFallback>
                 </Avatar>
-                <span className="text-sm">{participant.persona_name}</span>
+                <span className="text-sm">{participant.persona_name || 'AI'}</span>
               </div>
             ))}
           </div>
@@ -205,17 +218,55 @@ export default function GroupChat() {
           
           {/* Typing Indicators */}
           {typingPersonas.length > 0 && (
-            <GroupTypingIndicator personas={typingPersonas} />
+            <div className="flex items-center gap-2 p-3 bg-muted rounded-lg max-w-xs">
+              <div className="flex -space-x-2">
+                {typingPersonas.map(persona => (
+                  <Avatar key={persona} className="w-6 h-6 border-2 border-background">
+                    <AvatarImage src={`/avatars/${persona.toLowerCase()}.png`} />
+                    <AvatarFallback className="text-xs">{persona[0]}</AvatarFallback>
+                  </Avatar>
+                ))}
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-sm text-muted-foreground">
+                  {typingPersonas.length === 1 ? `${typingPersonas[0]} is` : `${typingPersonas.length} people are`} typing
+                </span>
+                <div className="flex gap-0.5">
+                  <div className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                </div>
+              </div>
+            </div>
           )}
         </div>
 
         {/* Input */}
         <div className="bg-card border-t border-border p-4">
-          <GroupChatInput 
-            onSendMessage={handleSendMessage}
-            disabled={isSending}
-            placeholder="Type your message to the group..."
-          />
+          <form onSubmit={handleSubmit} className="flex gap-2">
+            <Textarea
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              placeholder="Type your message to the group..."
+              disabled={isSending}
+              className="flex-1 min-h-[40px] max-h-[120px]"
+              rows={1}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
+            />
+            <Button 
+              type="submit" 
+              disabled={!inputMessage.trim() || isSending}
+              size="sm"
+              className="self-end"
+            >
+              <Send className="w-4 h-4" />
+            </Button>
+          </form>
         </div>
       </div>
     </div>
