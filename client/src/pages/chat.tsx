@@ -378,13 +378,10 @@ export default function Chat() {
       // Force refetch from Supabase for accurate and up-to-date messages
       await queryClient.invalidateQueries(["conversation", conversationId]);
 
-      // Fallback cache invalidation to ensure UI updates
-      queryClient.invalidateQueries(["conversation", conversationId]);
-
-      // Optional: Scroll to bottom after data refresh
+      // Scroll to bottom after data refresh
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 0);
+      }, 100);
     },
     onError: (error, content, context) => {
       console.error("❌ Message send failed:", error.message);
@@ -472,18 +469,33 @@ export default function Chat() {
         console.log('📨 Realtime message received:', payload.new);
 
         // Skip if it's a temp optimistic message
-        if (payload.new.id.toString().startsWith("temp_")) return;
+        if (payload.new.id.toString().startsWith("temp_")) {
+          console.log('⏭️ Skipping temp message:', payload.new.id);
+          return;
+        }
 
-        // Force cache update with new reference (React requires this)
+        // Force cache update with proper object cloning to trigger React re-render
         queryClient.setQueryData(["conversation", conversationId], (old: any) => {
-          if (!old || !old.messages) return old;
+          if (!old || !old.messages) {
+            console.log('⚠️ No existing cache data, skipping realtime update');
+            return old;
+          }
 
           const alreadyExists = old.messages.some((m: any) => m.id === payload.new.id);
-          if (alreadyExists) return old;
+          if (alreadyExists) {
+            console.log('🔄 Message already exists in cache:', payload.new.id);
+            return old;
+          }
 
+          console.log('✅ Adding new message to cache via realtime:', payload.new.id);
+          
+          // Create completely new objects to ensure React detects the change
+          const newMessage = { ...payload.new };
+          const newMessages = [...old.messages, newMessage];
+          
           return {
             ...old,
-            messages: [...old.messages, payload.new],
+            messages: newMessages,
           };
         });
       })
@@ -499,7 +511,10 @@ export default function Chat() {
 
   // Auto-scroll effect
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (conversationData?.messages) {
+      console.log('📜 Messages updated, scrolling to bottom. Count:', conversationData.messages.length);
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [conversationData?.messages]);
 
   const handleSendMessage = () => {
