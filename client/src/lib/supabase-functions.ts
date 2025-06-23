@@ -29,6 +29,7 @@ export async function createConversation(
       .from("conversations")
       .insert({
         user_id: userId,
+        persona_id: personaId,
         scenario_id: scenarioId,
         title: titleWithPersona,
         status: "active",
