@@ -240,9 +240,15 @@ export default function Chat() {
 
       return { previousData };
     },
-    onSuccess: (newMessages) => {
-      // Invalidate and refetch the conversation to get the latest state
-      queryClient.invalidateQueries({ queryKey: ["conversation", conversationId] });
+    onSuccess: async (newMessages) => {
+      console.log('🔄 Mutation success, invalidating queries...');
+      
+      // Clear the current cache data completely
+      queryClient.removeQueries({ queryKey: ["conversation", conversationId] });
+      
+      // Force refetch with fresh data
+      await queryClient.refetchQueries({ queryKey: ["conversation", conversationId] });
+      
       setMessage("");
     },
     onError: (error, content, context) => {
