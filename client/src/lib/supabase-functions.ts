@@ -25,7 +25,7 @@ export async function createConversation(
     console.log('🔄 Creating conversation in Supabase:', { userId, personaId, scenarioId, title });
 
     // Temporary workaround: Store persona_id in title until schema is fixed
-    const titleWithPersona = `${title}|persona:${personaId}`;
+    const titleWithPersona = encodePersonaInTitle(title, personaId);
 
     const { data, error } = await supabase
       .from('conversations')
