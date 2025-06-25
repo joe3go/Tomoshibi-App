@@ -92,23 +92,9 @@ export default function FuriganaText({
               key={i}
               className="jt-ruby inline-block mr-1 hover:bg-blue-100 cursor-pointer rounded px-1 transition-colors"
               onClick={(e) => handleClick(e, t)}
-              style={{ 
-                rubyAlign: 'center',
-                lineHeight: '1.8'
-              }}
             >
-              <rb style={{ display: 'inline-block' }}>{t.kanji}</rb>
-              <rt 
-                className="jt-rt text-xs leading-none text-blue-600 font-medium"
-                style={{ 
-                  display: 'block',
-                  textAlign: 'center',
-                  fontSize: '0.75rem',
-                  lineHeight: '1',
-                  color: '#2563eb',
-                  marginBottom: '2px'
-                }}
-              >
+              {t.kanji}
+              <rt className="text-xs text-blue-600 font-medium">
                 {t.reading}
               </rt>
             </ruby>
