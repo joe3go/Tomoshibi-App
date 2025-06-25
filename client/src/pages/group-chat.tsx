@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/SupabaseAuthContext";
 import { supabase } from "@/lib/supabase/client";
 import { bind, unbind, toHiragana } from "wanakana";
-import FuriganaText from "@/components/furigana-text";
+import EnhancedFuriganaText from "@/components/enhanced-furigana-text";
 
 interface GroupMessage {
   id: string;
@@ -640,10 +640,11 @@ export default function GroupChat() {
                     </div>
                   )}
                   
-                  <FuriganaText
+                  <EnhancedFuriganaText
                     text={msg.content}
                     showFurigana={showFurigana}
                     showToggleButton={false}
+                    enableWordHover={true}
                     className="text-sm leading-relaxed"
                   />
 
