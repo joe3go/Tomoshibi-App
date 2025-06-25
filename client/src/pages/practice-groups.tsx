@@ -119,7 +119,7 @@ export default function PracticeGroups() {
         title: "Group chat created!",
         description: "Welcome to your practice group",
       });
-      setLocation(`/chat/${conversationId}`);
+      setLocation(`/group-chat/${conversationId}`);
     },
     onError: (error) => {
       console.error('Group creation failed:', error);
