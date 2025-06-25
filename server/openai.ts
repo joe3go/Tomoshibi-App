@@ -173,18 +173,12 @@ export async function generateAIResponse(
 ): Promise<AIResponse> {
   try {
     // Create enhanced context with group information
-  const enhancedContext: ConversationContext = {
-    persona,
-    scenario: null,
-    conversationHistory,
-    userMessage,
-    targetVocab: [],
-    targetGrammar: [],
-    conversationTopic: topic,
-    groupPromptSuffix: groupContext,
-    isGroupConversation: isGroupConversation || false,
-    allPersonas: allParticipants || [],
-  };
+    const enhancedContext: ConversationContext = {
+      ...context,
+      groupPromptSuffix: context.groupPromptSuffix,
+      isGroupConversation: context.isGroupConversation || false,
+      allPersonas: context.allPersonas || [],
+    };
 
   const systemPrompt = buildSystemPrompt(enhancedContext);
     
@@ -303,7 +297,7 @@ function buildSystemPrompt(context: ConversationContext): string {
 - Background: ${persona.background || 'Experienced Japanese language instructor'}
 
 You are helping a Japanese language learner practice conversation. Your goal is to:
-1. Respond naturally in Japanese using vocabulary and grammar appropriate for ${context.persona.level || 'the user\'s current level'}
+1. Respond naturally in Japanese using vocabulary and grammar appropriate for ${persona.level || 'the user\'s current level'}
 2. Be encouraging and supportive  
 3. Use vocabulary from the target list when possible
 4. Keep responses conversational and engaging
@@ -352,11 +346,9 @@ Recent AI conversation: ${lastThreeAIMessages || 'None yet'}
 - Show emotions that fit your character
 - Sometimes interrupt or add quick reactions
 - Keep the energy positive and encouraging`;
-      basePrompt += `\n\nOther AI participants in this conversation: ${otherPersonas.map(p => `${p.name} (${p.description})`).join(', ')}`;
-      basePrompt += `\nYou are responding as ${persona.name}. Keep your response natural and in character. Focus on helping the human learner while maintaining the group conversation atmosphere.`;
-    }
-  }
-
+    
+    basePrompt += `\n\nOther AI participants in this conversation: ${otherPersonas.map(p => `${p.name} (${p.personality || p.description || 'AI participant'})`).join(', ')}`;
+    basePrompt += `\nYou are responding as ${persona.name}. Keep your response natural and in character. Focus on helping the human learner while maintaining the group conversation atmosphere.`;
   }
 
   basePrompt += `
