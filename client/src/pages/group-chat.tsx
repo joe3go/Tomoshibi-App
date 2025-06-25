@@ -167,7 +167,8 @@ export default function GroupChat() {
         .single();
 
       if (userError) {
-        throw new Error("Failed to save user message");
+        console.error("User message error:", userError);
+        throw new Error(`Failed to save user message: ${userError.message}`);
       }
 
       // Add user message to UI immediately
@@ -254,7 +255,12 @@ export default function GroupChat() {
         .select()
         .single();
 
-      if (!aiError && aiMessage) {
+      if (aiError) {
+        console.error("AI message error:", aiError);
+        throw new Error(`Failed to save AI message: ${aiError.message}`);
+      }
+
+      if (aiMessage) {
         setMessages(prev => [...prev, aiMessage]);
       }
 
