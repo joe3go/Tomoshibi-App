@@ -68,14 +68,11 @@ export async function generateSecureAIResponse(
       throw new Error(`Tutor with ID ${validTutorId} not found`);
     }
 
-    const userContext = await buildUserContext(
-      userId,
-      username,
-      topic,
-      prefersEnglish,
-    );
+    const userContext = await buildUserContext(userId, username, topic, prefersEnglish);
     const systemPrompt = buildDynamicPrompt(tutor, userContext);
-    logPromptUsage(tutorId, userId, topic);
+
+    // Log prompt usage for analytics
+    logPromptUsage(validTutorId, userId, topic);
 
     const messages = [
       { role: "system" as const, content: systemPrompt },
@@ -117,12 +114,12 @@ export async function generateSecureAIResponse(
     } catch (e) {
       console.error("❌ Failed to parse OpenAI JSON:", e.message);
       console.error("❌ Raw content that failed:", rawContent);
-      
+
       // Try to extract content manually if JSON parsing fails
       const fallbackContent = rawContent.includes("こんにちは") || rawContent.includes("すみません") 
         ? rawContent.substring(0, 100) 
         : "すみません、もう一度言ってください。";
-      
+
       return {
         content: fallbackContent,
         english_translation: "I'm sorry, could you please say that again?",
@@ -257,7 +254,7 @@ function isEnglishMessage(text: string): boolean {
 
 function buildSystemPrompt(context: ConversationContext): string {
   const { persona, scenario, targetVocab, targetGrammar, groupPromptSuffix, isGroupConversation, allPersonas } = context;
-  
+
   let basePrompt = `You are ${persona.name}, ${persona.description}. ${persona.personality}
 
 Speaking Style: ${persona.speaking_style}
@@ -276,7 +273,7 @@ ${scenario ? `Scenario: ${scenario.title} - ${scenario.description}` : 'Have a n
   // Add group conversation context if applicable
   if (isGroupConversation && groupPromptSuffix) {
     basePrompt += `\n\nGroup Conversation Context: ${groupPromptSuffix}`;
-    
+
     if (allPersonas && allPersonas.length > 1) {
       const otherPersonas = allPersonas.filter(p => p.id !== persona.id);
       basePrompt += `\n\nOther participants in this conversation: ${otherPersonas.map(p => `${p.name} (${p.description})`).join(', ')}`;
@@ -285,7 +282,7 @@ ${scenario ? `Scenario: ${scenario.title} - ${scenario.description}` : 'Have a n
   }
 
   basePrompt += `\n\nImportant: Always respond in character as ${persona.name}. Keep responses natural and conversational.
-  
+
 RESPONSE FORMAT: Return valid JSON with: {"response": "Japanese text", "english_translation": "English", "feedback": "Learning tip", "vocabUsed": [], "grammarUsed": [], "suggestions": ["phrase1", "phrase2"]}`;
 
   return basePrompt;

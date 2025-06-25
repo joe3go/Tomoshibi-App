@@ -29,7 +29,7 @@ export interface UserContext {
  * Builds a secure, tutor-specific system prompt that prevents prompt injection
  * and maintains character consistency for Japanese language learning
  */
-export function buildSystemPrompt(tutor: Tutor, user: UserContext): string {
+export function buildSystemPrompt(tutor: Tutor, user: UserContext, groupPersonas?: any[]): string {
   // Sanitize inputs to prevent prompt injection
   const sanitizedTopic = sanitizeInput(user.topic);
   const sanitizedGrammar = user.knownGrammar.map(g => sanitizeInput(g)).join(', ') || 'basic beginner level';
@@ -43,7 +43,21 @@ export function buildSystemPrompt(tutor: Tutor, user: UserContext): string {
   const correctionStyle = tutor.correction_style || 'gentle';
   const languagePolicy = tutor.language_policy || 'mixed';
 
+  // Check if this is a group conversation
+  const isGroupConversation = groupPersonas && groupPersonas.length > 0;
+
   const prompt = `You are ${tutor.name}, a Japanese tutor in the Tomoshibi language learning app.
+
+${isGroupConversation ? `
+🎭 GROUP CONVERSATION MODE:
+You are participating in a group conversation with other AI personas: ${groupPersonas.map(p => p.name).join(', ')}.
+Each persona has their own personality and should respond naturally in character.
+You should respond AS ${tutor.name} with your specific personality and speaking style.
+Other personas in this conversation:
+${groupPersonas.filter(p => p.id !== tutor.id).map(p => `- ${p.name}: ${p.personality || 'friendly personality'}`).join('\n')}
+
+IMPORTANT: You are specifically ${tutor.name}. Respond only as yourself, not as other personas.
+` : ''}
 
 🎭 PERSONA IDENTITY:
 You are ${tutor.name}, ${tutor.description || 'a dedicated Japanese language tutor'}.
