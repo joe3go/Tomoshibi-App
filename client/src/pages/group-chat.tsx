@@ -393,8 +393,25 @@ export default function GroupChat() {
   const getNextAISpeaker = (): string => {
     if (groupPersonas.length === 0) return "";
 
+    // Check if user mentioned a specific persona by name
+    const lastUserMessage = groupMessages[groupMessages.length - 1];
+    if (lastUserMessage?.sender_type === 'user') {
+      const userMessage = lastUserMessage.content.toLowerCase();
+      for (const persona of groupPersonas) {
+        const name = persona.name.toLowerCase();
+        // Check for name mentions with Japanese particles
+        if (userMessage.includes(name) || 
+            userMessage.includes(`${name}さん`) || 
+            userMessage.includes(`${name}は`) ||
+            userMessage.includes(`${name}が`)) {
+          console.log(`🎯 User mentioned ${persona.name}, they will respond next`);
+          return persona.id;
+        }
+      }
+    }
+
     // Find the last AI message to determine next speaker
-    const lastAIMessage = messages
+    const lastAIMessage = groupMessages
       .filter(msg => msg.sender_type === 'ai' && msg.sender_persona_id)
       .pop();
 
@@ -403,15 +420,17 @@ export default function GroupChat() {
       return groupPersonas[0].id;
     }
 
-    // Find current speaker and get next one (round-robin)
-    const currentIndex = groupPersonas.findIndex(p => p.id === lastAIMessage.sender_persona_id);
-    if (currentIndex >= 0) {
-      const nextIndex = (currentIndex + 1) % groupPersonas.length;
-      return groupPersonas[nextIndex].id;
+    // Use round-robin with some randomness
+    const lastSpeakerIndex = groupPersonas.findIndex(p => p.id === lastAIMessage.sender_persona_id);
+    const nextIndex = (lastSpeakerIndex + 1) % groupPersonas.length;
+    
+    // Add 20% chance of random speaker for natural flow
+    if (Math.random() < 0.2) {
+      const randomIndex = Math.floor(Math.random() * groupPersonas.length);
+      return groupPersonas[randomIndex].id;
     }
-
-    // Fallback to first persona
-    return groupPersonas[0].id;
+    
+    return groupPersonas[nextIndex].id;
   };
 
   const updateGroupChatState = (personaId: string) => {

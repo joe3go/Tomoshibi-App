@@ -254,6 +254,23 @@ Preferred communication style: Simple, everyday language.
   - WanaKana romaji-to-hiragana conversion preserved
   - Vocabulary tracking and progress analytics intact
 
+### June 25, 2025 - Fixed Furigana Display and Enhanced Group Chat Responsiveness
+- **Restored Furigana functionality across all chat interfaces**:
+  - Fixed FuriganaText component rendering with proper ruby text display
+  - Updated CSS styling to use opacity transitions for smooth toggle effect
+  - Applied fixes to both solo chat and group chat message rendering
+  - Maintained persistent user preferences and toggle controls
+- **Enhanced group chat persona targeting and responsiveness**:
+  - Implemented intelligent persona targeting when user mentions specific names
+  - Added Japanese particle support for natural name detection (けいこさん, あおいは)
+  - Reduced response cooldown to 5 seconds for faster group conversation flow
+  - Bypasses throttling completely when user directly addresses a persona
+- **Improved anime discussion context and AI behavior**:
+  - Updated OpenAI prompts to focus on actual anime series discussion (Naruto, Attack on Titan, etc.)
+  - Enhanced persona responsiveness to direct questions and name mentions
+  - Modified group prompt suffix to encourage natural anime conversation flow
+  - AI now shares specific anime preferences and responds immediately when addressed
+
 ### June 25, 2025 - Complete Group Chat Functionality Implementation with Persona Attribution
 - **Implemented complete group conversation system with database integration**:
   - Created `conversation_templates` table with group chat templates including prompt suffixes
