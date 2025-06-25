@@ -8,38 +8,63 @@ import { useToast } from "@/hooks/use-toast";
 import { TemplateSelector } from "@/components/group-chat/TemplateSelector";
 import { useAuth } from "@/context/SupabaseAuthContext";
 import { supabase } from "@/lib/supabase/client";
+import { useQuery } from '@tanstack/react-query';
 
 export default function PracticeGroups() {
   const [, setLocation] = useLocation();
   const { user, loading } = useAuth();
   const isAuthenticated = !!user;
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Group conversation templates
-  const templates = [
-    {
-      id: 'anime-club',
-      name: 'Anime Club',
-      description: 'Chat with Keiko and Aoi about your favorite anime series',
-      personas: ['8b0f056c-41fb-4c47-baac-6029c64e026a', '3c9f4d8a-5678-9012-3456-789012345678'], // Keiko + Aoi
-      difficulty: 'beginner',
-    },
-    {
-      id: 'study-group',
-      name: 'Japanese Study Group',
-      description: 'Practice with Aoi and Satoshi in a study session',
-      personas: ['3c9f4d8a-5678-9012-3456-789012345678', '2b8e7f3d-4567-8901-2345-678901234567'], // Aoi + Satoshi
-      difficulty: 'intermediate',
-    },
-    {
-      id: 'cafe-hangout',
-      name: 'Cafe Hangout',
-      description: 'Casual conversation with Keiko and Haruki at a Tokyo cafe',
-      personas: ['8b0f056c-41fb-4c47-baac-6029c64e026a', 'f7e8d9c2-1234-5678-9abc-def012345678'], // Keiko + Haruki
-      difficulty: 'beginner',
+  // Fetch group conversation templates from Supabase
+  const { data: templates = [], isLoading } = useQuery({
+    queryKey: ['conversation-templates', 'group'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('conversation_templates')
+        .select('id, title, description, default_personas, group_prompt_suffix, difficulty, topic, participant_count')
+        .eq('mode', 'group')
+        .order('title');
+      
+      if (error) {
+        console.error('Failed to fetch conversation templates:', error);
+        // Return fallback templates if database query fails
+        return [
+          {
+            id: 'anime-club-fallback',
+            title: 'Anime Club',
+            description: 'Chat with Keiko and Aoi about your favorite anime series',
+            default_personas: ['8b0f056c-41fb-4c47-baac-6029c64e026a', '3c9f4d8a-5678-9012-3456-789012345678'],
+            difficulty: 'beginner',
+            group_prompt_suffix: 'This is a group conversation about anime.',
+            topic: 'anime_discussion',
+            participant_count: 2
+          },
+          {
+            id: 'study-group-fallback',
+            title: 'Japanese Study Group',
+            description: 'Practice with Aoi and Satoshi in a study session',
+            default_personas: ['3c9f4d8a-5678-9012-3456-789012345678', '2b8e7f3d-4567-8901-2345-678901234567'],
+            difficulty: 'intermediate',
+            group_prompt_suffix: 'This is a study group session.',
+            topic: 'grammar_practice',
+            participant_count: 2
+          },
+          {
+            id: 'cafe-hangout-fallback',
+            title: 'Cafe Hangout',
+            description: 'Casual conversation with Keiko and Haruki at a Tokyo cafe',
+            default_personas: ['8b0f056c-41fb-4c47-baac-6029c64e026a', 'f7e8d9c2-1234-5678-9abc-def012345678'],
+            difficulty: 'beginner',
+            group_prompt_suffix: 'This is a casual cafe conversation.',
+            topic: 'daily_life',
+            participant_count: 2
+          }
+        ];
+      }
+      
+      return data;
     }
-  ];
+  });
 
   // Create group conversation mutation
   const createGroupMutation = useMutation({
@@ -58,7 +83,7 @@ export default function PracticeGroups() {
         .from('conversations')
         .insert({
           user_id: user.id,
-          title: template.name,
+          title: template.title,
           mode: 'group',
           status: 'active'
         })
@@ -66,24 +91,25 @@ export default function PracticeGroups() {
         .single();
 
       if (convError || !conversation) {
+        console.error('Conversation creation error:', convError);
         throw new Error("Failed to create group conversation");
       }
 
-      // Add participants to conversation_participants table if it exists
-      try {
-        const participantInserts = template.personas.map((personaId, index) => ({
-          conversation_id: conversation.id,
-          persona_id: personaId,
-          role: 'member',
-          join_order: index + 1
-        }));
+      // Add participants to conversation_participants table
+      const participantInserts = template.default_personas.map((personaId, index) => ({
+        conversation_id: conversation.id,
+        persona_id: personaId,
+        role: 'ai',
+        order_in_convo: index + 1
+      }));
 
-        await supabase
-          .from('conversation_participants')
-          .insert(participantInserts);
-      } catch (error) {
-        // conversation_participants table might not exist yet, continue anyway
-        console.log("conversation_participants table not available, using fallback mode");
+      const { error: participantsError } = await supabase
+        .from('conversation_participants')
+        .insert(participantInserts);
+
+      if (participantsError) {
+        console.error('Participants insertion error:', participantsError);
+        // Don't fail the whole operation, just log the error
       }
 
       return conversation.id;

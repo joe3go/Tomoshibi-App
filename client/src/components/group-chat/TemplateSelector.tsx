@@ -5,10 +5,12 @@ import { Users, MessageCircle, BookOpen } from "lucide-react";
 
 interface Template {
   id: string;
-  name: string;
+  title: string;
   description: string;
-  personas: string[];
+  default_personas: string[];
   difficulty: string;
+  topic?: string;
+  participant_count?: number;
 }
 
 interface TemplateSelectorProps {
@@ -61,8 +63,8 @@ export function TemplateSelector({ templates, onSelectTemplate, isLoading }: Tem
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg flex items-center gap-2">
-                {getTopicIcon(template.id)}
-                {template.name}
+                {getTopicIcon(template.topic || template.id)}
+                {template.title}
               </CardTitle>
               <Badge className={getDifficultyColor(template.difficulty)}>
                 {template.difficulty}
@@ -76,7 +78,7 @@ export function TemplateSelector({ templates, onSelectTemplate, isLoading }: Tem
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1 text-sm text-muted-foreground">
                 <Users className="w-4 h-4" />
-                <span>{template.personas.length + 1} participants</span>
+                <span>{template.participant_count || template.default_personas.length + 1} participants</span>
               </div>
               <Button 
                 onClick={() => onSelectTemplate(template.id)}
