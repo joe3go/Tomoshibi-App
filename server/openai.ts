@@ -33,6 +33,7 @@ export interface ConversationContext {
   groupPromptSuffix?: string;
   isGroupConversation?: boolean;
   allPersonas?: Persona[];
+  conversationTopic?: string;
 }
 
 export interface AIResponse {
@@ -256,6 +257,7 @@ function isEnglishMessage(text: string): boolean {
 }
 
 function buildSystemPrompt(context: ConversationContext): string {
+  const topic = context.conversationTopic || 'general conversation';
   const { persona, scenario, targetVocab, targetGrammar, groupPromptSuffix, isGroupConversation, allPersonas } = context;
   
   let basePrompt = `You are ${persona.name}, ${persona.description}. ${persona.personality}

@@ -754,9 +754,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
             totalParticipants: participants.length,
             hasGroupSuffix: !!groupPromptSuffix
           });
-        } else {
-          console.log('No participants found for group conversation:', conversationId);
+      }
+
+      // Add function to determine next AI speaker in group conversations
+      function getNextAISpeaker(participants: any[], recentMessages: any[]): string {
+        if (!participants || participants.length === 0) return participants[0]?.persona_id;
+        
+        // Find the last AI message to determine who spoke last
+        const lastAIMessage = recentMessages?.reverse().find(msg => msg.sender_type === 'ai' && msg.sender_persona_id);
+        
+        if (!lastAIMessage?.sender_persona_id) {
+          // No previous AI speaker, use first participant
+          return participants[0].persona_id;
         }
+        
+        // Find current speaker index and get next one
+        const currentIndex = participants.findIndex(p => p.persona_id === lastAIMessage.sender_persona_id);
+        const nextIndex = (currentIndex + 1) % participants.length;
+        
+        return participants[nextIndex].persona_id;
       }
 
       if (aiPersonaId) {

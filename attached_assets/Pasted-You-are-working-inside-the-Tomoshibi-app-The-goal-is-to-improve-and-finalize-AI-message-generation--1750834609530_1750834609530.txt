@@ -1,0 +1,63 @@
+You are working inside the Tomoshibi app. The goal is to improve and finalize AI message generation and prompt orchestration with a focus on group chat stability and topic accuracy.
+
+🧩 Context:
+This is a multi-persona Japanese learning chat app using Supabase and React.
+
+Group chats are powered by conversation_templates, and each one has assigned personas.
+
+The backend calls OpenAI via generateSecureAIResponse() (in openai.ts).
+
+Group prompts use groupPromptSuffix from the template and inject multiple persona contexts.
+
+✅ Your Tasks:
+1. Fix the Chat Topic Bug
+
+Right now, the topic being passed to the AI is always 'general conversation'.
+
+Update the logic in the secure AI generation (likely in chat.tsx or chat-api.ts) to:
+
+Pass the correct topic dynamically using:
+
+conversation.template_id → lookup the title from conversation_templates
+
+If unavailable, fallback to scenario.title
+
+Otherwise fallback to 'general conversation'
+
+2. Validate and Improve Group Chat Turn Logic (as-is for now)
+
+Confirm that allPersonas, isGroupConversation, and groupPromptSuffix are correctly passed to buildSystemPrompt.
+
+Ensure the system prompt includes other AI participants clearly and directs one persona to reply at a time (even if we add turn-taking later).
+
+3. Add Token Limit Handling (Future-Proofing)
+
+Truncate conversationHistory if it exceeds 12 messages (optional cap) to prevent OpenAI context overflows.
+
+Example logic:
+
+ts
+Copy
+Edit
+const limitedHistory = conversationHistory.slice(-12);
+4. Add Typing Delay Simulation (Optional UI)
+
+(Optional) In group mode, simulate a short delay (e.g. 800ms) before rendering the AI’s message to mimic typing.
+
+This helps prevent jarring instant replies and aligns with multi-agent experience.
+
+5. Streaming (Optional Enhancement)
+
+Consider using OpenAI's streaming response feature (stream: true) and piping token chunks to frontend.
+
+This can wait until core bugs are fixed, but lay groundwork if easy.
+
+🧠 Tips:
+Use existing app structure and shared types like Persona, ConversationContext, etc.
+
+Do not hardcode tutorId — always resolve from conversation_participants if in group mode.
+
+Maintain JSON output format from AI: { "response": "...", "english_translation": "...", "feedback": "...", ... }
+
+Do not break solo chat logic while modifying group logic.
+
