@@ -1655,7 +1655,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         console.log('✅ AI message created successfully with persona:', aiPersonaId);
 
-        // Immediately fetch the created message to return        const { data: newMessage } = await supabase
+        // Immediately fetch the created message to return with proper data
+        const { data: newMessage } = await supabase
           .from('messages')
           .select('*')
           .eq('conversation_id', conversationId)
