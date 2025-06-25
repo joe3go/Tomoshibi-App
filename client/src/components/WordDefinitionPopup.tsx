@@ -1,15 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { X, BookOpen } from 'lucide-react';
+import { X, BookOpen, Plus } from 'lucide-react';
+import { useAuth } from "@/context/SupabaseAuthContext";
+import { supabase } from "@/lib/supabase/client";
 
 interface WordDefinitionPopupProps {
   word: string;
   reading?: string;
-  position?: { x: number; y: number };
+  x: number;
+  y: number;
   onClose: () => void;
-  onSaveToVocab?: (word: string, reading?: string) => void;
+  onSave?: (word: string, reading?: string) => void;
 }
 
 interface DefinitionData {
@@ -21,16 +24,19 @@ interface DefinitionData {
   error?: string;
 }
 
-export const WordDefinitionPopup: React.FC<WordDefinitionPopupProps> = ({
+export default function WordDefinitionPopup({
   word,
   reading,
-  position,
+  x,
+  y,
   onClose,
-  onSaveToVocab
-}) => {
+  onSave
+}: WordDefinitionPopupProps) {
   const [definition, setDefinition] = useState<DefinitionData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const { session } = useAuth();
 
   useEffect(() => {
     const fetchDefinition = async () => {
@@ -38,6 +44,7 @@ export const WordDefinitionPopup: React.FC<WordDefinitionPopupProps> = ({
       setError(null);
       
       try {
+        // Use existing word definition API
         const response = await fetch(`/api/word-definition/${encodeURIComponent(word)}`);
         
         if (!response.ok) {
@@ -66,28 +73,61 @@ export const WordDefinitionPopup: React.FC<WordDefinitionPopupProps> = ({
     }
   }, [word]);
 
-  const handleSaveToVocab = () => {
-    if (onSaveToVocab && word) {
-      onSaveToVocab(word, reading);
+  const handleSaveToVocab = async () => {
+    if (!session?.user?.id || !definition) return;
+    
+    setIsSaving(true);
+    try {
+      // Save to user's personal vocabulary in Supabase
+      const { error: insertError } = await supabase
+        .from('user_vocab')
+        .insert({
+          user_id: session.user.id,
+          word: definition.word,
+          reading: definition.reading || reading,
+          meaning: definition.meanings.join('; '),
+          jlpt_level: definition.jlpt_level,
+          pos: definition.pos?.join(', '),
+          source: 'chat_lookup'
+        });
+
+      if (insertError) {
+        console.error('Error saving to vocab:', insertError);
+        return;
+      }
+
+      // Track vocabulary usage
+      await fetch('/api/vocab-tracker/increment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          word: definition.word,
+          source: 'lookup'
+        })
+      });
+
+      // Call parent callback if provided
+      if (onSave) {
+        onSave(definition.word, definition.reading || reading);
+      }
+
+      onClose();
+    } catch (error) {
+      console.error('Failed to save word:', error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const getPositionStyles = (): React.CSSProperties => {
-    if (!position) {
-      return {
-        position: 'fixed',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        zIndex: 1000
-      };
-    }
-
     return {
-      position: 'fixed',
-      top: Math.min(position.y + 10, window.innerHeight - 300),
-      left: Math.min(position.x, window.innerWidth - 320),
-      zIndex: 1000,
+      position: 'absolute',
+      top: Math.min(y + 8, window.innerHeight - 300),
+      left: Math.min(x, window.innerWidth - 320),
+      zIndex: 50,
       maxWidth: '300px'
     };
   };
@@ -103,120 +143,117 @@ export const WordDefinitionPopup: React.FC<WordDefinitionPopupProps> = ({
     }
   };
 
-  const getJLPTLevelLabel = (level?: number): string => {
-    if (!level) return 'Unknown';
-    return `N${level}`;
-  };
-
   return (
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black bg-opacity-20 z-999"
+        className="fixed inset-0 bg-transparent z-40"
         onClick={onClose}
       />
       
       {/* Popup */}
-      <Card 
-        className="shadow-lg border-2 bg-white dark:bg-gray-800"
+      <div
+        className="jt-popup"
         style={getPositionStyles()}
       >
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-blue-600" />
-              <span className="font-bold text-xl">{word}</span>
-              {reading && reading !== word && (
-                <span className="text-base text-gray-600 dark:text-gray-300">
-                  ({reading})
-                </span>
-              )}
-            </CardTitle>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={onClose}
-              className="h-8 w-8 p-0"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="pt-0">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-4">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-              <span className="ml-2 text-sm text-gray-600 dark:text-gray-300">
-                Looking up...
-              </span>
-            </div>
-          ) : error ? (
-            <div className="text-center py-4">
-              <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
-              <p className="text-xs text-gray-500 mt-1">
-                Try the word in its dictionary form
-              </p>
-            </div>
-          ) : definition ? (
-            <div className="space-y-3">
-              {/* Part of Speech and JLPT Level */}
-              <div className="flex items-center gap-2 flex-wrap">
-                {definition.pos?.map((pos, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs">
-                    {pos}
-                  </Badge>
-                ))}
-                {definition.jlpt_level && (
-                  <Badge 
-                    variant="outline" 
-                    className={`text-xs ${getJLPTLevelColor(definition.jlpt_level)}`}
-                  >
-                    {getJLPTLevelLabel(definition.jlpt_level)}
-                  </Badge>
+        <Card className="jt-popup-box shadow-lg border-2 bg-white dark:bg-gray-800">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-blue-600" />
+                <span className="jt-popup-word font-bold text-xl">{word}</span>
+                {reading && reading !== word && (
+                  <span className="text-base text-gray-600 dark:text-gray-300">
+                    ({reading})
+                  </span>
                 )}
+              </CardTitle>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={onClose}
+                className="h-8 w-8 p-0"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          
+          <CardContent className="pt-0">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <span className="ml-2 text-sm text-gray-600 dark:text-gray-300">
+                  Looking up...
+                </span>
               </div>
-
-              {/* Meanings */}
-              <div>
-                <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-1">
-                  Meanings:
-                </h4>
-                <ul className="space-y-1">
-                  {definition.meanings.map((meaning, index) => (
-                    <li key={index} className="text-sm text-gray-800 dark:text-gray-200">
-                      • {meaning}
-                    </li>
+            ) : error ? (
+              <div className="text-center py-4">
+                <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Try the word in its dictionary form
+                </p>
+              </div>
+            ) : definition ? (
+              <div className="space-y-3">
+                {/* Part of Speech and JLPT Level */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {definition.pos?.map((pos, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {pos}
+                    </Badge>
                   ))}
-                </ul>
-              </div>
+                  {definition.jlpt_level && (
+                    <Badge 
+                      variant="outline" 
+                      className={`text-xs ${getJLPTLevelColor(definition.jlpt_level)}`}
+                    >
+                      N{definition.jlpt_level}
+                    </Badge>
+                  )}
+                </div>
 
-              {/* Actions */}
-              <div className="flex gap-2 pt-2">
-                {onSaveToVocab && (
+                {/* Meanings */}
+                <div>
+                  <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-1">
+                    Meanings:
+                  </h4>
+                  <ul className="space-y-1">
+                    {definition.meanings.map((meaning, index) => (
+                      <li key={index} className="text-sm text-gray-800 dark:text-gray-200">
+                        • {meaning}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Actions */}
+                <div className="jt-popup-actions flex gap-2 pt-2">
+                  {session && (
+                    <Button 
+                      size="sm" 
+                      onClick={handleSaveToVocab}
+                      disabled={isSaving}
+                      className="jt-btn jt-btn-save text-xs"
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      {isSaving ? 'Saving...' : 'Save to Vocab'}
+                    </Button>
+                  )}
                   <Button 
                     size="sm" 
-                    onClick={handleSaveToVocab}
-                    className="text-xs"
+                    variant="outline" 
+                    onClick={onClose}
+                    className="jt-btn text-xs"
                   >
-                    Save to Vocab
+                    Close
                   </Button>
-                )}
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={onClose}
-                  className="text-xs"
-                >
-                  Close
-                </Button>
+                </div>
               </div>
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
+            ) : null}
+          </CardContent>
+        </Card>
+      </div>
     </>
   );
-};
-
-export default WordDefinitionPopup;
+}

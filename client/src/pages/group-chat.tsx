@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/SupabaseAuthContext";
 import { supabase } from "@/lib/supabase/client";
 import { bind, unbind, toHiragana } from "wanakana";
-import FuriganaText from "@/components/furigana-text";
+import FuriganaText from "@/components/FuriganaText";
 
 interface GroupMessage {
   id: string;

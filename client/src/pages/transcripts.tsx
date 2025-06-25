@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Calendar, User, MessageSquare } from "lucide-react";
-import FuriganaText from "@/components/furigana-text";
+import FuriganaText from "@/components/FuriganaText";
 
 export default function Transcripts() {
   const [, setLocation] = useLocation();

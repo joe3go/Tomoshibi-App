@@ -1,0 +1,226 @@
+Build a complete Japanese text rendering component with furigana and word lookup functionality. This includes:
+
+✅ Toggleable Furigana Display
+
+✅ Word Definition Popups on Click
+
+✅ Short, Descriptive Class Names
+
+✅ Parser Utility to Split Text into Furigana + Plain Tokens
+
+✅ Popup Component for Definitions and Save-to-Vocab
+
+✅ Everything fully integrated and styled
+
+
+Use the code below to implement three components:
+
+FuriganaText.tsx
+
+japanese-parser.ts (utility)
+
+WordDefinitionPopup.tsx
+
+
+Please wire it up using Tailwind with the concise class names as shown.
+
+
+
+
+---
+
+🧩 FuriganaText.tsx
+
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Eye, EyeOff } from "lucide-react";
+import { parseJapaneseTextWithFurigana, ParsedToken } from "@/utils/japanese-parser";
+import WordDefinitionPopup from "./WordDefinitionPopup";
+
+interface FuriganaTextProps {
+  text: string;
+  className?: string;
+  showToggleButton?: boolean;
+  showFurigana?: boolean;
+  onToggleFurigana?: (show: boolean) => void;
+  enableWordLookup?: boolean;
+  onSaveToVocab?: (word: string, reading?: string) => void;
+}
+
+export default function FuriganaText({
+  text,
+  className = "",
+  showToggleButton = true,
+  showFurigana: externalShowFurigana,
+  onToggleFurigana,
+  enableWordLookup = true,
+  onSaveToVocab,
+}: FuriganaTextProps) {
+  const [showFurigana, setShowFurigana] = useState(true);
+  const [tokens, setTokens] = useState<ParsedToken[]>([]);
+  const [popupData, setPopupData] = useState<{ word: string; x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    const parsed = parseJapaneseTextWithFurigana(text);
+    setTokens(parsed);
+  }, [text]);
+
+  const handleToggle = () => {
+    setShowFurigana(prev => !prev);
+    onToggleFurigana?.(!showFurigana);
+  };
+
+  const handleClick = (e: React.MouseEvent, word: string) => {
+    if (!enableWordLookup) return;
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    setPopupData({ word, x: rect.left, y: rect.bottom + window.scrollY });
+  };
+
+  return (
+    <div className={`jt-wrap ${className}`}>
+      {showToggleButton && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="jt-toggle"
+          onClick={handleToggle}
+        >
+          {showFurigana ? <EyeOff size={16} /> : <Eye size={16} />}
+        </Button>
+      )}
+
+      <div className="jt-body">
+        {tokens.map((t, i) =>
+          t.type === "text" ? (
+            <span key={i} className="jt-text">{t.content}</span>
+          ) : showFurigana ? (
+            <ruby
+              key={i}
+              className="jt-ruby"
+              onClick={(e) => handleClick(e, t.kanji ?? "")}
+            >
+              {t.kanji}
+              <rt className="jt-rt">{t.reading}</rt>
+            </ruby>
+          ) : (
+            <span
+              key={i}
+              className="jt-kanji"
+              onClick={(e) => handleClick(e, t.kanji ?? "")}
+            >
+              {t.kanji}
+            </span>
+          )
+        )}
+      </div>
+
+      {popupData && (
+        <WordDefinitionPopup
+          word={popupData.word}
+          x={popupData.x}
+          y={popupData.y}
+          onClose={() => setPopupData(null)}
+          onSave={onSaveToVocab}
+        />
+      )}
+    </div>
+  );
+}
+
+
+---
+
+🛠 japanese-parser.ts
+
+export interface ParsedToken {
+  type: "text" | "furigana";
+  content?: string;
+  kanji?: string;
+  reading?: string;
+}
+
+// Example logic — replace with real tokenizer or external API if needed
+export function parseJapaneseTextWithFurigana(input: string): ParsedToken[] {
+  const tokens: ParsedToken[] = [];
+
+  const regex = /(.+?)\|(.+?)/g; // Format: [漢字|読み]
+  let lastIndex = 0;
+  let match;
+
+  while ((match = regex.exec(input)) !== null) {
+    if (match.index > lastIndex) {
+      tokens.push({ type: "text", content: input.slice(lastIndex, match.index) });
+    }
+    tokens.push({ type: "furigana", kanji: match[1], reading: match[2] });
+    lastIndex = regex.lastIndex;
+  }
+
+  if (lastIndex < input.length) {
+    tokens.push({ type: "text", content: input.slice(lastIndex) });
+  }
+
+  return tokens;
+}
+
+
+---
+
+📚 WordDefinitionPopup.tsx
+
+import React from "react";
+
+interface Props {
+  word: string;
+  x: number;
+  y: number;
+  onClose: () => void;
+  onSave?: (word: string) => void;
+}
+
+export default function WordDefinitionPopup({ word, x, y, onClose, onSave }: Props) {
+  return (
+    <div
+      className="jt-popup"
+      style={{ top: y + 8, left: x, position: "absolute", zIndex: 50 }}
+    >
+      <div className="jt-popup-box">
+        <p className="jt-popup-word">{word}</p>
+        <div className="jt-popup-actions">
+          <button onClick={onClose} className="jt-btn">Close</button>
+          {onSave && (
+            <button
+              onClick={() => onSave(word)}
+              className="jt-btn jt-btn-save"
+            >
+              Save
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+---
+
+🎨 Suggested Tailwind Styles
+
+Use Tailwind or extend your CSS with the following class names:
+
+Class Name	Purpose
+
+jt-wrap	Outer wrapper
+jt-toggle	Toggle furigana button
+jt-body	Rendered sentence container
+jt-text	Plain text portion
+jt-ruby	Kanji + Furigana <ruby>
+jt-rt	Furigana <rt>
+jt-kanji	Kanji when furigana hidden
+jt-popup	Popup positioning container
+jt-popup-box	Popup box container
+jt-popup-word	Word display inside popup
+jt-popup-actions	Button row
+jt-btn	Generic button
+jt-btn-save	Save-to-vocab action button
+

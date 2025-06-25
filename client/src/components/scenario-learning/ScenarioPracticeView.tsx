@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Toggle } from "@/components/ui/toggle";
 import { EnhancedCard } from "../EnhancedCard";
 import { EnhancedButton } from "../EnhancedButton";
-import FuriganaText from "../furigana-text";
+import FuriganaText from "../FuriganaText";
 import { MessageWithVocab } from "../MessageWithVocab";
 import { ScenarioProgressManager } from "../../lib/scenario-learning/progress-manager";
 import { Scenario, ScenarioPracticeSession, GoalCompletion } from "../../../../shared/scenario-types";
