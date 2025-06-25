@@ -37,7 +37,7 @@ export function buildSystemPrompt(tutor: Tutor, user: UserContext): string {
 
   // Default values for optional fields
   const tone = tutor.tone || (tutor.type === 'teacher' ? 'polite and encouraging' : 'casual and friendly');
-  const level = tutor.level || 'N5';
+  const level = user.vocabLevel || 'N5'; // Use user's actual JLPT level, not tutor's
   const origin = tutor.origin || 'Japan';
   const quirks = tutor.quirks || 'none';
   const correctionStyle = tutor.correction_style || 'gentle';
@@ -57,6 +57,7 @@ Unique traits: ${quirks}
 👩‍🏫 TEACHING APPROACH:
 Correction method: ${getCorrectionGuidance(correctionStyle)}
 Language usage: ${getLanguageGuidance(languagePolicy)}
+Target difficulty: JLPT ${level} (match user's current level)
 Focus topic: "${sanitizedTopic}"
 
 📚 STUDENT PROFILE:
@@ -144,6 +145,13 @@ export async function buildUserContext(
   prefersEnglish: boolean = false
 ): Promise<UserContext> {
   try {
+    // Get user's profile including their JLPT goal level
+    const { data: userProfile } = await supabase
+      .from('users')
+      .select('jlpt_goal_level, prefers_english')
+      .eq('id', userId)
+      .single();
+
     // Get user's known grammar and vocabulary level from progress tracking
     const { data: userProgress } = await supabase
       .from('user_progress')
@@ -158,9 +166,11 @@ export async function buildUserContext(
       .order('encounter_count', { ascending: false })
       .limit(100);
 
-    // Determine user's vocabulary level based on most encountered words
-    let vocabLevel = 'N5'; // Default
-    if (vocabStats && vocabStats.length > 0) {
+    // Use user's JLPT goal level from profile, fallback to vocab analysis
+    let vocabLevel = userProfile?.jlpt_goal_level || 'N5';
+    
+    // If no goal level set, determine from vocabulary usage
+    if (!userProfile?.jlpt_goal_level && vocabStats && vocabStats.length > 0) {
       const levelCounts = vocabStats.reduce((acc: any, stat: any) => {
         acc[stat.jlpt_level] = (acc[stat.jlpt_level] || 0) + 1;
         return acc;
@@ -169,6 +179,9 @@ export async function buildUserContext(
         levelCounts[a] > levelCounts[b] ? a : b
       );
     }
+
+    // Use user's English preference from profile if available
+    const userPrefersEnglish = userProfile?.prefers_english ?? prefersEnglish;
 
     // Mock known grammar for now - in production, this would come from user progress
     const knownGrammar = userProgress?.completed_grammar || [
@@ -180,7 +193,7 @@ export async function buildUserContext(
       knownGrammar,
       vocabLevel,
       topic,
-      prefersEnglish,
+      prefersEnglish: userPrefersEnglish,
       userId
     };
   } catch (error) {
