@@ -464,13 +464,13 @@ export default function Chat() {
             <div>
               <h3 className="font-medium">
                 {isGroup 
-                  ? `Group Chat (${conversationPersonas.length} participants)`
+                  ? conversation.title
                   : persona?.name || "AI"
                 }
               </h3>
               <p className="text-sm text-muted-foreground">
                 {isGroup 
-                  ? conversationPersonas.map(p => p.name).join(", ")
+                  ? `Group Chat • ${conversationPersonas.map(p => p.name).join(", ")}`
                   : conversation.title.split("|")[0] || "Conversation"
                 }
               </p>

@@ -756,11 +756,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           filtered: { vocab: validVocabUsed, grammar: validGrammarUsed }
         });
 
-        // Create AI message using RPC
+        // Create AI message using RPC with proper persona attribution
         const { data: aiMessage, error: aiMsgError } = await supabase
           .rpc('create_message_with_tracking', {
-            _conversation_id: conversationId,
-            _sender_type: 'ai',
+            p_conversation_id: conversationId,
+            p_sender_type: 'ai',
             _content: aiResponse.content,
             _sender_persona_id: aiPersonaId,
             _vocab_used: validVocabUsed.length > 0 ? validVocabUsed : null,

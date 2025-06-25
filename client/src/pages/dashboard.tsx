@@ -467,18 +467,23 @@ export default function Dashboard() {
               {Array.isArray(conversations) && conversations.filter((conv: any) => conv.status === 'active').length > 0 ? (
                 <div className="conversations-list">
                   {conversations.filter((conv: any) => conv.status === 'active').slice(0, 3).map((conversation: any) => {
+                    // Handle both solo and group conversations
+                    const isGroupConv = conversation.mode === 'group';
                     const persona = tutorsData.find((p: any) => p.id === conversation.persona_id);
+                    
                     return (
                       <div key={conversation.id} className="conversation-card">
                         <div className="conversation-info">
                           <Avatar className="conversation-avatar">
-                            <AvatarImage src={getAvatarImage(persona)} alt={persona?.name} />
-                            <AvatarFallback>{persona?.name?.[0] || 'T'}</AvatarFallback>
+                            <AvatarImage src={getAvatarImage(persona)} alt={persona?.name || (isGroupConv ? 'Group' : 'Tutor')} />
+                            <AvatarFallback>{isGroupConv ? 'G' : (persona?.name?.[0] || 'T')}</AvatarFallback>
                           </Avatar>
                           <div className="conversation-details">
-                            <p className="conversation-tutor">{persona?.name || 'Unknown Tutor'}</p>
+                            <p className="conversation-tutor">
+                              {isGroupConv ? conversation.title : (persona?.name || 'Unknown Tutor')}
+                            </p>
                             <p className="conversation-summary">
-                              Active conversation
+                              {isGroupConv ? 'Group conversation' : 'Active conversation'}
                             </p>
                           </div>
                         </div>
