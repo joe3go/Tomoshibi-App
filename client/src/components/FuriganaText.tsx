@@ -79,7 +79,7 @@ export default function FuriganaText({
           onClick={handleToggle}
         >
           {showFurigana ? <EyeOff size={16} /> : <Eye size={16} />}
-          <span className="ml-1">{showFurigana ? "Hide" : "Show"} Furigana</span>
+          <span className="ml-1">{showFurigana ? "Hide" : "Show"} Reading Guides</span>
         </Button>
       )}
 
@@ -92,9 +92,25 @@ export default function FuriganaText({
               key={i}
               className="jt-ruby inline-block mr-1 hover:bg-blue-100 cursor-pointer rounded px-1 transition-colors"
               onClick={(e) => handleClick(e, t)}
+              style={{ 
+                rubyAlign: 'center',
+                lineHeight: '1.8'
+              }}
             >
-              {t.kanji}
-              <rt className="jt-rt text-xs">{t.reading}</rt>
+              <rb style={{ display: 'inline-block' }}>{t.kanji}</rb>
+              <rt 
+                className="jt-rt text-xs leading-none text-blue-600 font-medium"
+                style={{ 
+                  display: 'block',
+                  textAlign: 'center',
+                  fontSize: '0.75rem',
+                  lineHeight: '1',
+                  color: '#2563eb',
+                  marginBottom: '2px'
+                }}
+              >
+                {t.reading}
+              </rt>
             </ruby>
           ) : (
             <span
