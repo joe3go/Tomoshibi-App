@@ -696,29 +696,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let aiPersonaId = conversation.persona_id; // Default for solo conversations
 
       if (isGroupConversation) {
-        // Get conversation participants for group conversations
-        const { data: participants } = await supabase
-          .from('conversation_participants')
-          .select(`
-            conversation_id,
-            persona_id,
-            role,
-            order_in_convo,
-            personas(*)
-          `)
-          .eq('conversation_id', conversationId)
-          .eq('role', 'ai')
-          .order('order_in_convo');
+        // Get conversation participants and template data for group conversations
+        const [participantsResult, templateResult] = await Promise.all([
+          supabase
+            .from('conversation_participants')
+            .select(`
+              conversation_id,
+              persona_id,
+              role,
+              order_in_convo,
+              personas(*)
+            `)
+            .eq('conversation_id', conversationId)
+            .eq('role', 'ai')
+            .order('order_in_convo'),
+          supabase
+            .from('conversations')
+            .select(`
+              template_id,
+              conversation_templates(group_prompt_suffix)
+            `)
+            .eq('id', conversationId)
+            .single()
+        ]);
+
+        participants = participantsResult.data;
+        const templateData = templateResult.data;
 
         if (participants && participants.length > 0) {
-          // For group conversations, select which AI should respond
-          // Simple approach: random selection or round-robin
-          const respondingParticipant = participants[Math.floor(Math.random() * participants.length)];
-          aiPersonaId = respondingParticipant.persona_id;
-          console.log('Selected AI persona for group response:', {
+          // Get the last AI message to determine next speaker using round-robin
+          const { data: lastAIMessage } = await supabase
+            .from('messages')
+            .select('sender_persona_id')
+            .eq('conversation_id', conversationId)
+            .eq('sender_type', 'ai')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+          // Determine next AI speaker using round-robin
+          function getNextAISpeaker(personas: any[], lastSpeakerId: string | null) {
+            if (!lastSpeakerId) return personas[0];
+            const index = personas.findIndex(p => p.persona_id === lastSpeakerId);
+            return personas[(index + 1) % personas.length];
+          }
+
+          const nextSpeaker = getNextAISpeaker(participants, lastAIMessage?.sender_persona_id || null);
+          aiPersonaId = nextSpeaker.persona_id;
+
+          // Store group prompt suffix for OpenAI context
+          groupPromptSuffix = templateData?.conversation_templates?.group_prompt_suffix || null;
+
+          console.log('Selected next AI speaker for group conversation:', {
             personaId: aiPersonaId,
-            personaName: respondingParticipant.personas?.name,
-            totalParticipants: participants.length
+            personaName: nextSpeaker.personas?.name,
+            lastSpeaker: lastAIMessage?.sender_persona_id,
+            totalParticipants: participants.length,
+            hasGroupSuffix: !!groupPromptSuffix
           });
         } else {
           console.log('No participants found for group conversation:', conversationId);
@@ -727,7 +761,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (aiPersonaId) {
 
-        // Generate AI response (using existing logic)
+        // Generate AI response with group context
         const { generateSecureAIResponse } = await import('./openai');
 
         // Get recent conversation history
