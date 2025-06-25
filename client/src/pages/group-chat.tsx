@@ -183,7 +183,23 @@ export default function GroupChat() {
       // Determine next AI speaker (round-robin)
       const nextSpeakerId = getNextAISpeaker();
       
-      // Generate AI response using the chat/secure endpoint
+      // Get conversation template to pass group context
+      const { data: conversation, error: convError } = await supabase
+        .from("conversations")
+        .select(`
+          title,
+          conversation_templates (
+            title,
+            group_prompt_suffix
+          )
+        `)
+        .eq("id", conversationId)
+        .single();
+
+      const groupTopic = conversation?.conversation_templates?.title || conversation?.title || "group conversation";
+      const groupContext = conversation?.conversation_templates?.group_prompt_suffix || "";
+
+      // Generate AI response using the chat/secure endpoint with group context
       const response = await fetch("/api/chat/secure", {
         method: "POST",
         headers: {
@@ -194,6 +210,10 @@ export default function GroupChat() {
           tutorId: nextSpeakerId,
           conversationId: conversationId,
           message: finalMessage,
+          groupTopic: groupTopic,
+          groupContext: groupContext,
+          isGroupConversation: true,
+          allParticipants: participants.map(p => ({ id: p.persona_id, name: p.name }))
         }),
       });
 
