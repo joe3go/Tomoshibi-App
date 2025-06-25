@@ -119,18 +119,27 @@ export async function generateSecureAIResponse(
       console.error("❌ Failed to parse OpenAI JSON:", e.message);
       console.error("❌ Raw content that failed:", rawContent);
       
-      // Try to extract content manually if JSON parsing fails
-      const fallbackContent = rawContent.includes("こんにちは") || rawContent.includes("すみません") 
-        ? rawContent.substring(0, 100) 
-        : "すみません、もう一度言ってください。";
+      // Enhanced fallback for group conversations
+      const isIntroduction = context.userMessage === 'start-introduction';
+      const fallbackContent = isIntroduction 
+        ? `こんにちは！私は${context.persona.name}です。よろしくお願いします！`
+        : rawContent.includes("こんにちは") || rawContent.includes("すみません") 
+          ? rawContent.substring(0, 100) 
+          : "すみません、もう一度言ってください。";
       
       return {
         content: fallbackContent,
-        english_translation: "I'm sorry, could you please say that again?",
-        feedback: "Please try rephrasing your message",
+        english_translation: isIntroduction 
+          ? `Hello! I'm ${context.persona.name}. Nice to meet you!`
+          : "I'm sorry, could you please say that again?",
+        feedback: isIntroduction 
+          ? "Welcome to our group conversation!"
+          : "Please try rephrasing your message",
         vocabUsed: [],
         grammarUsed: [],
-        suggestions: ["Try using simpler Japanese", "Ask me about basic topics"],
+        suggestions: isIntroduction 
+          ? ["Let's start talking!", "What would you like to discuss?"]
+          : ["Try using simpler Japanese", "Ask me about basic topics"],
       };
     }
 

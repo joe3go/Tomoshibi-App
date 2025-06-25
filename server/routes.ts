@@ -1071,20 +1071,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           content: msg.content
         }));
 
-      // Generate secure AI response using dynamic prompt with group context
-      const { generateSecureAIResponse } = await import('./openai');
-      const aiResponse = await generateSecureAIResponse(
-        validTutorId, // Use validated UUID
-        userId,
-        username,
-        message,
-        actualTopic, // Use actual topic from group or default
+      // Create context for AI response generation
+      const context: ConversationContext = {
+        persona,
+        scenario: null,
         conversationHistory,
-        prefersEnglish,
-        groupContext || undefined, // Pass group context for enhanced prompts
-        isGroupConversation || false,
-        allParticipants || undefined // Pass participant info for persona awareness
-      );
+        userMessage: message,
+        targetVocab: [], 
+        targetGrammar: [], 
+        conversationTopic: actualTopic,
+        groupPromptSuffix: groupContext,
+        isGroupConversation: isGroupConversation || false,
+        allPersonas: allParticipants || [],
+      };
+
+      // Generate AI response using enhanced context
+      const { generateAIResponse } = await import('./openai');
+      const aiResponse = await generateAIResponse(context);
 
       res.json({
         content: aiResponse.content,
