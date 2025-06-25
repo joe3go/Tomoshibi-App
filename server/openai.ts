@@ -177,51 +177,7 @@ export async function generateAIResponse(context: ConversationContext): Promise<
   }
 }
 
-function buildSystemPrompt(context: ConversationContext): string {
-  const {
-    persona,
-    scenario,
-    targetVocab,
-    targetGrammar,
-    groupPromptSuffix,
-    isGroupConversation,
-    allPersonas,
-    conversationTopic = "general conversation",
-  } = context;
 
-  let prompt = `You are ${persona.name}, a Japanese tutor.
-- Personality: ${persona.personality}
-- Style: ${persona.speaking_style}
-- Role: Help a learner practice Japanese conversation.
-- Level: ${persona.level || "N5"}
-- Topic: ${conversationTopic}
-
-Target Vocabulary: ${targetVocab.map(v => `${v.kanji || v.hiragana} (${v.meaning})`).join(", ")}
-Target Grammar: ${targetGrammar.map(g => g.pattern).join(", ")}
-
-${scenario ? `Scenario: ${scenario.title} - ${scenario.description}` : "Have a free conversation."}`;
-
-  if (isGroupConversation) {
-    prompt += `\nThis is a group chat. Respond as ${persona.name}.`;
-    if (groupPromptSuffix) prompt += `\nGroup prompt: ${groupPromptSuffix}`;
-    if (allPersonas?.length) {
-      const others = allPersonas.filter(p => p.id !== persona.id);
-      prompt += `\nOther participants: ${others.map(p => p.name).join(", ")}`;
-    }
-  }
-
-  prompt += `\n\nReturn a JSON like:
-{
-  "response": "Japanese reply here",
-  "english_translation": "English meaning",
-  "feedback": "Optional learning tip",
-  "vocabUsed": [],
-  "grammarUsed": [],
-  "suggestions": []
-}`;
-
-  return prompt;
-}
 
 export async function generateScenarioIntroduction(
   persona: Persona,
