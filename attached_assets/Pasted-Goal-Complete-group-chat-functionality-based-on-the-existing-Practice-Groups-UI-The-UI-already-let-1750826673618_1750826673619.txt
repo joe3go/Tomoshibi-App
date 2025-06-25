@@ -1,0 +1,66 @@
+Goal: Complete group chat functionality based on the existing Practice Groups UI. The UI already lets users select from 3 templates. Now, implement support for:
+
+Creating the group chat in the database
+
+Attaching the right AI participants
+
+Using conversation_templates.group_prompt_suffix in the AI system prompt
+
+Adjusting chat display to support multi-AI interactions
+
+🧠 Context (from current implementation)
+Templates are defined inline in PracticeGroups.tsx — update this to read from Supabase using conversation_templates, including default_personas and group_prompt_suffix.
+
+Group chat creation works but uses hardcoded template data.
+
+✅ Step-by-Step Tasks
+✅ Step 2: Fetch group templates from Supabase
+Replace the hardcoded templates array with:
+
+ts
+Copy
+Edit
+const { data: templates, error } = await supabase
+  .from('conversation_templates')
+  .select('id, title, description, default_personas, group_prompt_suffix, mode')
+  .eq('mode', 'group');
+Use these to render cards in the Practice Groups UI.
+
+✅ Step 3: Insert conversation + participants
+After inserting into conversations, insert into conversation_participants using default_personas:
+
+ts
+Copy
+Edit
+await supabase.from('conversation_participants').insert(
+  default_personas.map((persona_id, index) => ({
+    conversation_id: conversation.id,
+    persona_id,
+    role: 'ai',
+    order_in_convo: index + 1
+  }))
+);
+✅ Step 4: Use group_prompt_suffix in AI prompts
+When composing the system prompt for an AI message:
+
+ts
+Copy
+Edit
+const fullPrompt = `${persona.system_prompt_hint ?? ''}\n\n${template.group_prompt_suffix ?? ''}`;
+Pass this to your OpenAI system prompt for that AI participant.
+
+✅ Step 5: Update the chat interface to show multiple AI messages
+In your main chat UI:
+
+Query conversation_participants for the current conversation.
+
+Identify all AI persona participants.
+
+When rendering AI messages, label them with the persona.name or avatar.
+
+Ensure each AI can respond independently (e.g., in group turn-taking logic or parallel messages).
+
+✅ Final Notes
+The visual layout from your screenshot is already well-aligned for group use — no redesign needed.
+
+No changes needed to routing: /chat/:conversationId works as-is for solo or group.

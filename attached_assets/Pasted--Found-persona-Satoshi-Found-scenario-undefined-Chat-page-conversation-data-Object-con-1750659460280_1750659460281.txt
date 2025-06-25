@@ -1,0 +1,26 @@
+🔍 Found persona: Satoshi Found scenario: undefined
+🔍 Chat page - conversation data: 
+Object {conversationId: "60b37357-d0dd-4336-81f9-b100058f847b", extractedPersonaId: "be32911d-08a9-4308-8a00-7ffa5144ccdc", validPersonaId: "be32911d-08a9-4308-8a00-7ffa5144ccdc", title: "Chat with Satoshi|persona:be32911d-08a9-4308-8a00-7ffa5144ccdc", scenarioId: null}
+🔍 Found persona: Satoshi Found scenario: undefined
+⚠️ No cache data available for optimistic update
+📤 Sending message to conversation: 60b37357-d0dd-4336-81f9-b100058f847b
+🔍 Chat page - conversation data: 
+Object {conversationId: "60b37357-d0dd-4336-81f9-b100058f847b", extractedPersonaId: "be32911d-08a9-4308-8a00-7ffa5144ccdc", validPersonaId: "be32911d-08a9-4308-8a00-7ffa5144ccdc", title: "Chat with Satoshi|persona:be32911d-08a9-4308-8a00-7ffa5144ccdc", scenarioId: null}
+🔍 Found persona: Satoshi Found scenario: undefined
+🔍 Chat page - conversation data: 
+Object {conversationId: "60b37357-d0dd-4336-81f9-b100058f847b", extractedPersonaId: "be32911d-08a9-4308-8a00-7ffa5144ccdc", validPersonaId: "be32911d-08a9-4308-8a00-7ffa5144ccdc", title: "Chat with Satoshi|persona:be32911d-08a9-4308-8a00-7ffa5144ccdc", scenarioId: null}
+🔍 Found persona: Satoshi Found scenario: undefined
+✅ Valid AI response received: 
+Object {hasContent: true, hasTranslation: false, hasFeedback: false, contentLength: 44}
+✅ Messages added successfully: 
+Object {user: "d5cfb090-8d30-4151-9a86-2299df62a273", ai: "d2973935-44e6-4f41-95a4-3a465d5b4462"}
+🔄 Mutation success, updating cache with new messages...
+📨 New messages received: 
+(2) [{…}, {…}]
+🔄 Cache is empty, invalidating to trigger refetch...
+🔍 Chat page - conversation data: 
+Object {conversationId: "60b37357-d0dd-4336-81f9-b100058f847b", extractedPersonaId: "be32911d-08a9-4308-8a00-7ffa5144ccdc", validPersonaId: "be32911d-08a9-4308-8a00-7ffa5144ccdc", title: "Chat with Satoshi|persona:be32911d-08a9-4308-8a00-7ffa5144ccdc", scenarioId: null}
+🔍 Found persona: Satoshi Found scenario: undefined
+🔍 Chat page - conversation data: 
+Object {conversationId: "60b37357-d0dd-4336-81f9-b100058f847b", extractedPersonaId: "be32911d-08a9-4308-8a00-7ffa5144ccdc", validPersonaId: "be32911d-08a9-4308-8a00-7ffa5144ccdc", title: "Chat with Satoshi|persona:be32911d-08a9-4308-8a00-7ffa5144ccdc", scenarioId: null}
+🔍 Found persona: Satoshi Found scenario: undefined

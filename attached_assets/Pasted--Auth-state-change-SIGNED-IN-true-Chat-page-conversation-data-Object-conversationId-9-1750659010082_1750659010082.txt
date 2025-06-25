@@ -1,0 +1,27 @@
+🔄 Auth state change: SIGNED_IN true
+🔍 Chat page - conversation data: 
+Object {conversationId: "90f489ac-64a7-4446-aab9-7cc6d09fefd3", extractedPersonaId: "9612651e-d1df-428f-865c-2a1c005952ef", validPersonaId: "9612651e-d1df-428f-865c-2a1c005952ef", title: "Chat with Aoi|persona:9612651e-d1df-428f-865c-2a1c005952ef", scenarioId: null}
+🔍 Found persona: Aoi Found scenario: undefined
+🔍 Chat page - conversation data: 
+Object {conversationId: "90f489ac-64a7-4446-aab9-7cc6d09fefd3", extractedPersonaId: "9612651e-d1df-428f-865c-2a1c005952ef", validPersonaId: "9612651e-d1df-428f-865c-2a1c005952ef", title: "Chat with Aoi|persona:9612651e-d1df-428f-865c-2a1c005952ef", scenarioId: null}
+🔍 Found persona: Aoi Found scenario: undefined
+🔕 Cleaning up realtime subscription
+🔔 Setting up realtime subscription for conversation: 90f489ac-64a7-4446-aab9-7cc6d09fefd3
+🔄 Auth state change: SIGNED_IN true
+🔍 Chat page - conversation data: 
+Object {conversationId: "90f489ac-64a7-4446-aab9-7cc6d09fefd3", extractedPersonaId: "9612651e-d1df-428f-865c-2a1c005952ef", validPersonaId: "9612651e-d1df-428f-865c-2a1c005952ef", title: "Chat with Aoi|persona:9612651e-d1df-428f-865c-2a1c005952ef", scenarioId: null}
+🔍 Found persona: Aoi Found scenario: undefined
+🔍 Chat page - conversation data: 
+Object {conversationId: "90f489ac-64a7-4446-aab9-7cc6d09fefd3", extractedPersonaId: "9612651e-d1df-428f-865c-2a1c005952ef", validPersonaId: "9612651e-d1df-428f-865c-2a1c005952ef", title: "Chat with Aoi|persona:9612651e-d1df-428f-865c-2a1c005952ef", scenarioId: null}
+🔍 Found persona: Aoi Found scenario: undefined
+🔕 Cleaning up realtime subscription
+🔔 Setting up realtime subscription for conversation: 90f489ac-64a7-4446-aab9-7cc6d09fefd3
+🔄 Auth state change: SIGNED_IN true
+🔍 Chat page - conversation data: 
+Object {conversationId: "90f489ac-64a7-4446-aab9-7cc6d09fefd3", extractedPersonaId: "9612651e-d1df-428f-865c-2a1c005952ef", validPersonaId: "9612651e-d1df-428f-865c-2a1c005952ef", title: "Chat with Aoi|persona:9612651e-d1df-428f-865c-2a1c005952ef", scenarioId: null}
+🔍 Found persona: Aoi Found scenario: undefined
+🔍 Chat page - conversation data: 
+Object {conversationId: "90f489ac-64a7-4446-aab9-7cc6d09fefd3", extractedPersonaId: "9612651e-d1df-428f-865c-2a1c005952ef", validPersonaId: "9612651e-d1df-428f-865c-2a1c005952ef", title: "Chat with Aoi|persona:9612651e-d1df-428f-865c-2a1c005952ef", scenarioId: null}
+🔍 Found persona: Aoi Found scenario: undefined
+🔕 Cleaning up realtime subscription
+🔔 Setting up realtime subscription for conversation: 90f489ac-64a7-4446-aab9-7cc6d09fefd3

@@ -1,0 +1,27 @@
+🔍 Found persona: Keiko Found scenario: undefined
+🔍 Chat page - conversation data: 
+Object {conversationId: "bd6abf20-ac61-4cbd-b00e-2494da9b5037", extractedPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", validPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", title: "Chat with Keiko|persona:8b0f056c-41fb-4c47-baac-6029c64e026a", scenarioId: null}
+🔍 Found persona: Keiko Found scenario: undefined
+📤 Sending message to conversation: bd6abf20-ac61-4cbd-b00e-2494da9b5037
+🔍 Chat page - conversation data: 
+Object {conversationId: "bd6abf20-ac61-4cbd-b00e-2494da9b5037", extractedPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", validPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", title: "Chat with Keiko|persona:8b0f056c-41fb-4c47-baac-6029c64e026a", scenarioId: null}
+🔍 Found persona: Keiko Found scenario: undefined
+🔍 Chat page - conversation data: 
+Object {conversationId: "bd6abf20-ac61-4cbd-b00e-2494da9b5037", extractedPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", validPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", title: "Chat with Keiko|persona:8b0f056c-41fb-4c47-baac-6029c64e026a", scenarioId: null}
+🔍 Found persona: Keiko Found scenario: undefined
+✅ Valid AI response received: 
+Object {hasContent: true, hasTranslation: false, hasFeedback: false, contentLength: 78}
+✅ Messages added successfully: 
+Object {user: "afc4147f-35e4-46a1-ab1d-7f90f62b4e77", ai: "6c72500c-8f83-4950-b327-5aa8c61eb0c8"}
+🔄 Mutation success, updating cache with new messages...
+📨 New messages received: 
+(2) [{…}, {…}]
+⚠️ No existing cache data found
+🔍 CURRENT CACHE STATE: undefined
+🔍 Chat page - conversation data: 
+Object {conversationId: "bd6abf20-ac61-4cbd-b00e-2494da9b5037", extractedPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", validPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", title: "Chat with Keiko|persona:8b0f056c-41fb-4c47-baac-6029c64e026a", scenarioId: null}
+🔍 Found persona: Keiko Found scenario: undefined
+🔍 Chat page - conversation data: 
+Object {conversationId: "bd6abf20-ac61-4cbd-b00e-2494da9b5037", extractedPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", validPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", title: "Chat with Keiko|persona:8b0f056c-41fb-4c47-baac-6029c64e026a", scenarioId: null}
+🔍 Found persona: Keiko Found scenario: undefined
+

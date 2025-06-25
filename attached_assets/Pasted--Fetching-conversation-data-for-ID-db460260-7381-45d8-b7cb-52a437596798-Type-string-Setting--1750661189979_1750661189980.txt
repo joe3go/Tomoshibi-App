@@ -1,0 +1,73 @@
+🔍 Fetching conversation data for ID: db460260-7381-45d8-b7cb-52a437596798 Type: string
+🔔 Setting up realtime subscription for conversation: db460260-7381-45d8-b7cb-52a437596798
+🔕 Cleaning up realtime subscription
+📡 Realtime subscription status: CLOSED
+🔔 Setting up realtime subscription for conversation: db460260-7381-45d8-b7cb-52a437596798
+Personas fetched from Supabase: 
+(6) [{…}, {…}, {…}, {…}, {…}, {…}]
+✅ Conversation and messages loaded: 
+Object {conversationId: "db460260-7381-45d8-b7cb-52a437596798", messageCount: 1}
+🔍 Chat page - conversation data: 
+Object {conversationId: "db460260-7381-45d8-b7cb-52a437596798", extractedPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", validPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", title: "Chat with Keiko|persona:8b0f056c-41fb-4c47-baac-6029c64e026a", scenarioId: null}
+🔍 Found persona: Keiko Found scenario: undefined
+🔍 Chat page - conversation data: 
+Object {conversationId: "db460260-7381-45d8-b7cb-52a437596798", extractedPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", validPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", title: "Chat with Keiko|persona:8b0f056c-41fb-4c47-baac-6029c64e026a", scenarioId: null}
+🔍 Found persona: Keiko Found scenario: undefined
+🔍 Loading vocabulary dictionary from Supabase...
+Module "path" has been externalized for browser compatibility. Cannot access "path.join" in client code. See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+🔍 Loading vocabulary dictionary from Supabase...
+Failed to initialize conjugation normalizer: 
+TypeError {}
+
+Error tracking vocabulary usage: 
+TypeError {}
+
+Error tracking vocabulary usage: 
+TypeError {}
+
+❌ Supabase vocabulary loading error: 
+Object {code: "42P01", details: null, hint: null, message: "relation "public.jlpt_vocab" does not exist"}
+
+❌ Failed to load vocabulary from Supabase: 
+Object {code: "42P01", details: null, hint: null, message: "relation "public.jlpt_vocab" does not exist"}
+
+❌ Supabase vocabulary loading error: 
+Object {code: "42P01", details: null, hint: null, message: "relation "public.jlpt_vocab" does not exist"}
+
+❌ Failed to load vocabulary from Supabase: 
+Object {code: "42P01", details: null, hint: null, message: "relation "public.jlpt_vocab" does not exist"}
+
+🔄 Cache mismatch detected - DB has messages but cache is empty, refetching...
+🔍 Chat page - conversation data: 
+Object {conversationId: "db460260-7381-45d8-b7cb-52a437596798", extractedPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", validPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", title: "Chat with Keiko|persona:8b0f056c-41fb-4c47-baac-6029c64e026a", scenarioId: null}
+🔍 Found persona: Keiko Found scenario: undefined
+🔍 Chat page - conversation data: 
+Object {conversationId: "db460260-7381-45d8-b7cb-52a437596798", extractedPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", validPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", title: "Chat with Keiko|persona:8b0f056c-41fb-4c47-baac-6029c64e026a", scenarioId: null}
+🔍 Found persona: Keiko Found scenario: undefined
+🔍 Chat page - conversation data: 
+Object {conversationId: "db460260-7381-45d8-b7cb-52a437596798", extractedPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", validPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", title: "Chat with Keiko|persona:8b0f056c-41fb-4c47-baac-6029c64e026a", scenarioId: null}
+🔍 Found persona: Keiko Found scenario: undefined
+🔍 Chat page - conversation data: 
+Object {conversationId: "db460260-7381-45d8-b7cb-52a437596798", extractedPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", validPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", title: "Chat with Keiko|persona:8b0f056c-41fb-4c47-baac-6029c64e026a", scenarioId: null}
+🔍 Found persona: Keiko Found scenario: undefined
+🔍 Chat page - conversation data: 
+Object {conversationId: "db460260-7381-45d8-b7cb-52a437596798", extractedPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", validPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", title: "Chat with Keiko|persona:8b0f056c-41fb-4c47-baac-6029c64e026a", scenarioId: null}
+🔍 Found persona: Keiko Found scenario: undefined
+🔍 Chat page - conversation data: 
+Object {conversationId: "db460260-7381-45d8-b7cb-52a437596798", extractedPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", validPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", title: "Chat with Keiko|persona:8b0f056c-41fb-4c47-baac-6029c64e026a", scenarioId: null}
+🔍 Found persona: Keiko Found scenario: undefined
+🔍 Chat page - conversation data: 
+Object {conversationId: "db460260-7381-45d8-b7cb-52a437596798", extractedPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", validPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", title: "Chat with Keiko|persona:8b0f056c-41fb-4c47-baac-6029c64e026a", scenarioId: null}
+🔍 Found persona: Keiko Found scenario: undefined
+🔍 Chat page - conversation data: 
+Object {conversationId: "db460260-7381-45d8-b7cb-52a437596798", extractedPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", validPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", title: "Chat with Keiko|persona:8b0f056c-41fb-4c47-baac-6029c64e026a", scenarioId: null}
+🔍 Found persona: Keiko Found scenario: undefined
+🔧 Initializing cache structure before optimistic update
+✅ Adding optimistic message to cache
+📤 Sending message to conversation: db460260-7381-45d8-b7cb-52a437596798
+🔍 Chat page - conversation data: 
+Object {conversationId: "db460260-7381-45d8-b7cb-52a437596798", extractedPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", validPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", title: "Chat with Keiko|persona:8b0f056c-41fb-4c47-baac-6029c64e026a", scenarioId: null}
+🔍 Found persona: Keiko Found scenario: undefined
+🔍 Chat page - conversation data: 
+Object {conversationId: "db460260-7381-45d8-b7cb-52a437596798", extractedPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", validPersonaId: "8b0f056c-41fb-4c47-baac-6029c64e026a", title: "Chat with Keiko|persona:8b0f056c-41fb-4c47-baac-6029c64e026a", scenarioId: null}
+🔍 Found persona: Keiko Found scenario: undefined
