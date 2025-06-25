@@ -806,15 +806,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } else {
             // Find current speaker and get next one (round-robin)
             const currentIndex = participants.findIndex(p => p.persona_id === lastAIMessage.sender_persona_id);
-            const nextIndex = (currentIndex + 1) % participants.length;
-            selectedPersonaId = participants[nextIndex].persona_id;
+            if (currentIndex >= 0) {
+              const nextIndex = (currentIndex + 1) % participants.length;
+              selectedPersonaId = participants[nextIndex].persona_id;
+            } else {
+              // Fallback if persona not found in participants
+              selectedPersonaId = participants[0].persona_id;
+            }
           }
           
           console.log('🎭 Group conversation AI selection:', {
-            selectedPersona: participants.find(p => p.persona_id === selectedPersonaId)?.personas?.name,
+            selectedPersona: participants.find(p => p.persona_id === selectedPersonaId)?.personas?.name || 'Unknown',
             personaId: selectedPersonaId,
             totalParticipants: participants.length,
-            lastSpeaker: lastAIMessage?.sender_persona_id
+            lastSpeaker: lastAIMessage?.sender_persona_id || 'None'
           });
         }
 

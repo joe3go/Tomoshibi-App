@@ -397,6 +397,36 @@ export default function Chat() {
         console.log("Vocabulary tracking failed:", error);
       }
 
+      // Group chat cooldown and consecutive response enforcement
+      if (isGroup && persona?.id) {
+        const stateKey = `${conversationId}_${persona.id}`;
+        const currentState = groupChatStates.current.get(stateKey) || {
+          lastResponseTimestamp: 0,
+          consecutiveResponses: 0
+        };
+
+        // Check cooldown
+        if (Date.now() - currentState.lastResponseTimestamp < responseCooldown) {
+          console.log('Cooldown active, skipping AI response');
+          setSending(false);
+          return;
+        }
+
+        // Check consecutive response limit
+        if (currentState.consecutiveResponses >= maxConsecutiveResponses) {
+          console.log('Consecutive response limit reached');
+          setSending(false);
+          return;
+        }
+      }
+
+      // Simulated typing delay for group chats
+      if (isGroup) {
+        await new Promise(resolve => setTimeout(resolve, 
+          Math.random() * 2000 + 1000 // 1-3 second delay
+        ));
+      }
+
       // Get AI response
       const response = await fetch("/api/chat/secure", {
         method: "POST",

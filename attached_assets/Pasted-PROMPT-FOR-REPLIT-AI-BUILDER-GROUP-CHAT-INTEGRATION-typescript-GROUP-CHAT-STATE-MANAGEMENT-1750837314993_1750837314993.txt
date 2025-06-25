@@ -1,0 +1,154 @@
+PROMPT FOR REPLIT AI BUILDER: GROUP CHAT INTEGRATION
+
+typescript
+
+// GROUP CHAT STATE MANAGEMENT ADDITIONS
+interface GroupChatState {
+  lastResponseTimestamp: number;
+  consecutiveResponses: number;
+}
+
+// Add to existing Chat component
+const groupChatStates = useRef<Map<string, GroupChatState>>(new Map());
+const responseCooldown = 15000; // 15 seconds
+const maxConsecutiveResponses = 2;
+
+// MODIFIED sendMessage FUNCTION
+const sendMessage = async () => {
+  if (!message.trim() || sending || !session || !user) return;
+
+  // PRESERVE EXISTING WANAKANA CONVERSION
+  const finalMessage = romajiMode ? toHiragana(message.trim()) : message.trim();
+  
+  try {
+    setSending(true);
+    setMessage("");
+
+    // EXISTING USER MESSAGE HANDLING (preserved)
+    const { data: userMessage } = await supabase
+      .from("messages")
+      .insert({ /* unchanged */ })
+      .single();
+
+    setMessages(prev => [...prev, userMessage]);
+
+    // GROUP CHAT RULES ENFORCEMENT
+    if (isGroup) {
+      const stateKey = `${conversationId}_${persona?.id}`;
+      const currentState = groupChatStates.current.get(stateKey) || {
+        lastResponseTimestamp: 0,
+        consecutiveResponses: 0
+      };
+
+      // Cooldown check
+      if (Date.now() - currentState.lastResponseTimestamp < responseCooldown) {
+        console.log('Cooldown active, skipping response');
+        return;
+      }
+
+      // Consecutive response limit
+      if (currentState.consecutiveResponses >= maxConsecutiveResponses) {
+        console.log('Consecutive response limit reached');
+        return;
+      }
+    }
+
+    // EXISTING AI RESPONSE GENERATION (preserved)
+    const response = await fetch("/api/chat/secure", { /* unchanged */ });
+    
+    // GROUP CHAT STATE UPDATE
+    if (isGroup && persona?.id) {
+      const stateKey = `${conversationId}_${persona.id}`;
+      groupChatStates.current.set(stateKey, {
+        lastResponseTimestamp: Date.now(),
+        consecutiveResponses: (groupChatStates.current.get(stateKey)?.consecutiveResponses || 0) + 1
+      });
+    }
+
+    // SIMULATED TYPING DELAY FOR GROUP CHATS
+    if (isGroup) {
+      await new Promise(resolve => setTimeout(resolve, 
+        Math.random() * 2000 + 1000 // 1-3 second delay
+      ));
+    }
+
+    // EXISTING AI MESSAGE HANDLING (preserved)
+    const { data: aiMessage } = await supabase
+      .from("messages")
+      .insert({ /* unchanged */ })
+      .single();
+
+    setMessages(prev => [...prev, aiMessage]);
+
+  } catch (error) {
+    // EXISTING ERROR HANDLING (preserved)
+  } finally {
+    setSending(false);
+  }
+};
+
+// ENHANCED MESSAGE DISPLAY LOGIC
+{isGroup && msg.sender_type === 'ai' && senderPersona && (
+  <div className="relative group">
+    <div className={`absolute -left-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full 
+      ${Date.now() - new Date(msg.created_at).getTime() < 30000 
+        ? 'bg-green-500 animate-pulse' 
+        : 'bg-muted'
+      }`}
+    />
+    <div className="text-xs font-medium mb-1 opacity-80">
+      {senderPersona.name}
+      <span className="ml-2 text-muted-foreground text-xs">
+        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+      </span>
+    </div>
+  </div>
+)}
+IMPLEMENTATION INSTRUCTIONS
+
+
+Preserve Existing Features
+
+
+Maintain WanaKana conversion pipeline
+
+Keep furigana display toggle functionality
+
+Don't modify persona bubble color logic
+
+Retain avatar resolution system
+
+
+Group Chat Enhancements
+
+
+Add inline state management using useRef
+
+Implement cooldown/consecutive response limits
+
+Add subtle typing indicators for AI responses
+
+Show persona timestamps in group messages
+
+
+Testing Requirements
+
+
+Verify solo chats remain unchanged
+
+Confirm group message throttling works
+
+Check persona colors/avatars persist
+
+Ensure furigana toggle affects all messages
+
+VISUAL ENHANCEMENT PROMPT
+
+text
+
+When implementing group chat features:
+1. Add subtle connection indicators next to persona avatars
+2. Include relative timestamps for messages
+3. Maintain existing color coding for different personas
+4. Preserve animated typing indicators
+5. Keep conversation completion workflow intact

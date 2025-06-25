@@ -156,6 +156,28 @@ Preferred communication style: Simple, everyday language.
   - Template-based conversation initialization with personalized greetings
   - Responsive UI design with proper loading states and error handling
 
+### June 25, 2025 - Enhanced Group Chat System with Smart State Management and Turn-Taking
+- **Implemented advanced group chat state management**:
+  - Added cooldown system (15 seconds) to prevent rapid-fire AI responses
+  - Implemented consecutive response limits (max 2) for natural conversation flow
+  - Created typing delays (1-3 seconds) for realistic group chat simulation
+  - Enhanced message display with connection indicators and timestamps
+- **Fixed conversation participants population issues**:
+  - Added emergency fallback system when template data is unavailable
+  - Improved round-robin speaker selection with better error handling
+  - Enhanced persona resolution for group conversations
+  - Fixed template data loading from conversation_templates table
+- **Enhanced visual indicators for group conversations**:
+  - Added green pulse indicators for recent messages (30-second window)
+  - Implemented relative timestamps for all group messages
+  - Maintained existing persona color coding and avatar system
+  - Added connection status indicators next to persona names
+- **Preserved all existing functionality**:
+  - Solo conversations continue to work without changes
+  - Furigana toggle functionality maintained across all messages
+  - WanaKana romaji-to-hiragana conversion preserved
+  - Vocabulary tracking and progress analytics intact
+
 ### June 25, 2025 - Complete Group Chat Functionality Implementation with Persona Attribution
 - **Implemented complete group conversation system with database integration**:
   - Created `conversation_templates` table with group chat templates including prompt suffixes

@@ -132,6 +132,17 @@ export async function loadAllPersonas(): Promise<Persona[]> {
 export async function populateConversationParticipants(conversationId: string): Promise<boolean> {
   console.log("🔧 Populating conversation_participants for:", conversationId);
   
+  // Check if participants already exist first
+  const { data: existingParticipants } = await supabase
+    .from("conversation_participants")
+    .select("persona_id")
+    .eq("conversation_id", conversationId);
+
+  if (existingParticipants && existingParticipants.length > 0) {
+    console.log("✅ Participants already exist, skipping population");
+    return true;
+  }
+
   // Get conversation template data
   const { data: convData, error: convError } = await supabase
     .from("conversations")
@@ -146,22 +157,36 @@ export async function populateConversationParticipants(conversationId: string): 
 
   if (convError || !convData?.conversation_templates?.default_personas) {
     console.error("⚠️ Could not get template data:", convError);
-    return false;
+    
+    // Emergency fallback: create participants with default personas
+    const defaultPersonaIds = [
+      "9612651e-d1df-428f-865c-2a1c005952ef", // Aoi
+      "e73a0afc-3ee9-4886-b39a-c6f516ad7db7", // Haruki  
+      "8b0f056c-41fb-4c47-baac-6029c64e026a"  // Keiko
+    ];
+    
+    const emergencyRecords = defaultPersonaIds.map((personaId, index) => ({
+      conversation_id: conversationId,
+      persona_id: personaId,
+      role: 'ai' as const,
+      order_in_convo: index
+    }));
+    
+    const { error: emergencyError } = await supabase
+      .from("conversation_participants")
+      .insert(emergencyRecords);
+      
+    if (emergencyError) {
+      console.error("❌ Emergency participant creation failed:", emergencyError);
+      return false;
+    }
+    
+    console.log("🚨 Emergency participants created successfully");
+    return true;
   }
 
   const personaIds = convData.conversation_templates.default_personas;
   
-  // Check if participants already exist
-  const { data: existingParticipants } = await supabase
-    .from("conversation_participants")
-    .select("persona_id")
-    .eq("conversation_id", conversationId);
-
-  if (existingParticipants && existingParticipants.length > 0) {
-    console.log("🔧 Participants already exist, skipping population");
-    return true;
-  }
-
   // Create participant records
   const participantsToInsert = personaIds.map((personaId, index) => ({
     conversation_id: conversationId,
