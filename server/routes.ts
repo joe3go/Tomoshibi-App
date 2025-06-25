@@ -757,10 +757,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Return simple response for now
-      res.json({ message: 'Message received', conversationId, content });
+      // Generate AI response if needed
+      if (aiPersonaId) {
+        // Generate AI response using the chat/secure endpoint for group context
+        const { generateAIResponse } = await import('./openai');
 
-      res.json(updatedMessages || []);
+        // Get recent conversation history
+        const { data: recentMessages } = await supabase
+          .from('messages')
+          .select('sender_type, content, sender_persona_id')
+          .eq('conversation_id', conversationId)
+          .order('created_at', { ascending: false })
+          .limit(12);
+
+        const conversationHistory = (recentMessages || [])
+          .reverse()
+          .map((msg: any) => ({
+            role: msg.sender_type === 'user' ? 'user' as const : 'assistant' as const,
+            content: msg.content
+          }));
+
+        // Get conversation template for topic and group prompt suffix
+        let conversationTopic = 'general conversation';
+        let groupPromptSuffix = undefined;
+        
+        if (conversation.template_id) {
+          const { data: template } = await supabase
+            .from('conversation_templates')
+            .select('title, group_prompt_suffix')
+            .eq('id', conversation.template_id)
+            .single();
+          
+          if (template) {
+            conversationTopic = template.title;
+            groupPromptSuffix = template.group_prompt_suffix;
+          }
+        }
+
+        // For group conversations, implement smart round-robin speaker selection
+        let selectedPersonaId = aiPersonaId;
+        if (isGroupConversation && participants && participants.length > 1) {
+          // Find the last AI message to determine next speaker
+          const lastAIMessage = recentMessages?.find(msg => msg.sender_type === 'ai' && msg.sender_persona_id);
+          
+          if (!lastAIMessage?.sender_persona_id) {
+            // No previous AI speaker, use first participant
+            selectedPersonaId = participants[0].persona_id;
+          } else {
+            // Find current speaker and get next one (round-robin)
+            const currentIndex = participants.findIndex(p => p.persona_id === lastAIMessage.sender_persona_id);
+            const nextIndex = (currentIndex + 1) % participants.length;
+            selectedPersonaId = participants[nextIndex].persona_id;
+          }
+          
+          console.log('🎭 Group conversation AI selection:', {
+            selectedPersona: participants.find(p => p.persona_id === selectedPersonaId)?.personas?.name,
+            personaId: selectedPersonaId,
+            totalParticipants: participants.length,
+            lastSpeaker: lastAIMessage?.sender_persona_id
+          });
+        }
+
+        // Get persona for system prompt
+        const { data: personaData } = await supabase
+          .from('personas')
+          .select('*')
+          .eq('id', selectedPersonaId)
+          .single();
+
+        if (!personaData) {
+          throw new Error('Persona not found');
+        }
+
+        // Generate AI response with group context
+        const aiResponse = await generateAIResponse({
+          persona: personaData,
+          conversationHistory,
+          userMessage: content,
+          targetVocab: [],
+          targetGrammar: [],
+          isGroupConversation,
+          allPersonas: participants?.map(p => p.personas).filter(Boolean) || undefined,
+          groupPromptSuffix,
+          conversationTopic
+        });
+
+        // Create AI message using RPC with proper persona attribution
+        const { data: aiMessage, error: aiMsgError } = await supabase
+          .rpc('create_message_with_tracking', {
+            p_conversation_id: conversationId,
+            p_sender_type: 'ai',
+            p_content: aiResponse.content,
+            p_english_translation: aiResponse.english_translation || null,
+            p_tutor_feedback: aiResponse.feedback || null,
+            p_suggestions: Array.isArray(aiResponse.suggestions) ? aiResponse.suggestions : null,
+            p_vocab_used: null,
+            p_grammar_used: null,
+            p_sender_persona_id: selectedPersonaId,
+            p_user_id: req.userId
+          });
+
+        if (aiMsgError) {
+          console.error('Error creating AI message:', aiMsgError);
+          return res.status(500).json({ message: 'Failed to create AI response' });
+        }
+
+        console.log('✅ AI message created successfully with persona:', selectedPersonaId);
+        
+        // Return success response with message data
+        res.json({ 
+          userMessage: userMessage,
+          aiMessage: aiMessage,
+          success: true 
+        });
+        return;
+      }
+
+      // Return success for user message only
+      res.json({ message: 'Message received successfully' });
     } catch (error) {
       console.error('Send message error:', error);
       res.status(500).json({ message: 'Failed to send message' });
