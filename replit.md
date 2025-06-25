@@ -183,6 +183,33 @@ Preferred communication style: Simple, everyday language.
   - Added group context and participant awareness to AI prompts
   - Console logs now show actual topic names instead of "general conversation"
 
+### June 25, 2025 - Comprehensive Group Dynamics System Implementation
+- **Implemented welcome and onboarding logic for authentic group experiences**:
+  - First message triggers all AI personas to introduce themselves naturally
+  - Each persona greets the user and references other participants by name
+  - Leader persona explains the group topic and sets conversation expectations
+  - Staggered introduction timing creates realistic group entry experience
+- **Enhanced dynamic speaking order system replacing rigid round-robin**:
+  - Smart persona targeting when user mentions specific names with particle support
+  - Confusion detection triggers helpful tutor persona responses automatically
+  - 20% randomness factor allows natural interruptions and spontaneous interactions
+  - Context-aware speaker selection based on conversation flow and user needs
+- **Advanced persona interaction and cross-referencing capabilities**:
+  - AI personas react to and reference each other's messages naturally
+  - Built-in name usage patterns: "そうですね、ケイコさん！" and "どう思いますか、ハルキ？"
+  - Character-appropriate emotions, agreements, disagreements, and humor
+  - Shared group memory system tracks last 3 AI messages for contextual responses
+- **Comprehensive user engagement and encouragement system**:
+  - Frequent praise and effort recognition: "いいですね、ジョーさん！"
+  - Automatic re-engagement with questions when user goes quiet
+  - Suggestion system provides helpful phrases and learning tips
+  - Gentle confusion assistance from designated tutor personas
+- **Natural conversation flow enhancements**:
+  - Variable typing delays (1-3 seconds) with visual typing indicators per persona
+  - Reduced cooldown (8 seconds) for more realistic group conversation pace
+  - Recent message indicators show conversation activity with timestamps
+  - Fallback safety responses for parsing errors maintain conversation flow
+
 ### June 25, 2025 - Decoupled Group Chat System for Better Scalability
 - **Created dedicated GroupChat component** (`client/src/pages/group-chat.tsx`):
   - Completely separate from solo chat to avoid complexity and bugs

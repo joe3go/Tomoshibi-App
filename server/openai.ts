@@ -286,7 +286,7 @@ function isEnglishMessage(text: string): boolean {
 
 function buildSystemPrompt(context: ConversationContext): string {
   const topic = context.conversationTopic || 'general conversation';
-  const { persona, scenario, targetVocab, targetGrammar, groupPromptSuffix, isGroupConversation, allPersonas } = context;
+  const { persona, scenario, targetVocab, targetGrammar, groupPromptSuffix, isGroupConversation, allPersonas, userMessage, conversationHistory } = context;
   
   let basePrompt = `You are ${persona.name}, a Japanese language tutor with the following characteristics:
 - Personality: ${persona.personality}
@@ -305,25 +305,71 @@ Target Grammar: ${targetGrammar.map(g => g.pattern).slice(0, 5).join(', ')}
 
 ${scenario ? `Scenario: ${scenario.title} - ${scenario.description}` : `Focus on discussing: ${topic}`}`;
 
-  // Add group conversation context if applicable
+  // Enhanced group conversation context
   if (isGroupConversation && allPersonas) {
     const otherPersonas = allPersonas.filter(p => p.id !== persona.id);
+    const lastThreeAIMessages = conversationHistory
+      .filter(msg => msg.role === 'assistant')
+      .slice(-3)
+      .map(msg => msg.content)
+      .join(' | ');
+
     basePrompt += `
 
-🎭 GROUP CONVERSATION CONTEXT:
+🎭 ENHANCED GROUP CONVERSATION CONTEXT:
 - You are participating in a group conversation about: ${topic}
-- Other participants: ${otherPersonas.map(p => p.name).join(', ')}
+- Other AI participants: ${otherPersonas.map(p => p.name).join(', ')}
 - ${groupPromptSuffix || ''}
-- When the user mentions another participant by name (like "${otherPersonas.map(p => p.name).join('", "')}", etc.), acknowledge them and stay engaged in the group dynamic
-- Respond naturally as ${persona.name} while being aware of the group setting`;
+
+🎯 SPECIAL INSTRUCTIONS:
+${userMessage === 'start-introduction' ? `
+- This is the START of the conversation. Introduce yourself warmly and reference the other participants.
+- Mention what you're excited to discuss about "${topic}".
+- Keep it brief (1-2 sentences) and natural.
+- Example: "こんにちは！私は${persona.name}です。${otherPersonas[0]?.name || 'みんな'}と一緒に${topic}について話すのを楽しみにしています！"` : `
+- React to what others have said. Reference previous messages when relevant.
+- Use other participants' names naturally: "そうですね、${otherPersonas[0]?.name || 'ケイコ'}さん！"
+- If another AI asks you something directly, respond to them.
+- Occasionally agree/disagree or add follow-ups: "どう思いますか、${otherPersonas[1]?.name || 'ハルキ'}？"
+- If the user seems confused, gently help them.
+- Praise user effort often: "いいですね、ジョーさん！"
+- If conversation gets quiet, ask an engaging question.
+- Stay in character as ${persona.name} - be authentic to your personality.`}
+
+Recent AI conversation: ${lastThreeAIMessages || 'None yet'}
+
+🎪 GROUP DYNAMICS:
+- Be natural and spontaneous
+- Show emotions that fit your character
+- Sometimes interrupt or add quick reactions
+- Keep the energy positive and encouraging`;
       basePrompt += `\n\nOther AI participants in this conversation: ${otherPersonas.map(p => `${p.name} (${p.description})`).join(', ')}`;
       basePrompt += `\nYou are responding as ${persona.name}. Keep your response natural and in character. Focus on helping the human learner while maintaining the group conversation atmosphere.`;
     }
   }
 
-  basePrompt += `\n\nImportant: Always respond in character as ${persona.name}. Keep responses natural and conversational.
-  
-RESPONSE FORMAT: Return valid JSON with: {"response": "Japanese text", "english_translation": "English", "feedback": "Learning tip", "vocabUsed": [], "grammarUsed": [], "suggestions": ["phrase1", "phrase2"]}`;
+  }
+
+  basePrompt += `
+
+RESPONSE GUIDELINES:
+- Always respond in character as ${persona.name}
+- Keep responses natural and conversational (1-3 sentences)
+- Use appropriate Japanese for the user's level
+- Be warm, encouraging, and authentic to your personality
+
+FALLBACK SAFETY:
+- If confused, say: "すみません、もう一度言ってください！" or "わかりませんでしたが、もう一回話してみましょう。"
+
+RESPONSE FORMAT: Return valid JSON with:
+{
+  "response": "Your Japanese response here",
+  "english_translation": "English translation", 
+  "feedback": "Brief learning tip or encouragement",
+  "vocabUsed": [],
+  "grammarUsed": [],
+  "suggestions": ["helpful phrase 1", "helpful phrase 2"]
+}`;
 
   return basePrompt;
 }

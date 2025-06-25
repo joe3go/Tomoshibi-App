@@ -54,8 +54,8 @@ export default function GroupChat() {
 
   // Group chat specific state
   const groupChatStates = useRef<Map<string, GroupChatState>>(new Map());
-  const responseCooldown = 15000; // 15 seconds
-  const maxConsecutiveResponses = 2;
+  const responseCooldown = 8000; // 8 seconds for more natural flow
+  const [typingPersonas, setTypingPersonas] = useState<Set<string>>(new Set());
 
   const conversationId = params?.conversationId;
 
@@ -148,6 +148,12 @@ export default function GroupChat() {
       setSending(true);
       setMessage("");
 
+      // Check if this is the first message (welcome/onboarding logic)
+      if (messages.length === 0) {
+        await handleFirstMessage(finalMessage);
+        return;
+      }
+
       // Create user message
       const { data: userMessage, error: userError } = await supabase
         .from("messages")
@@ -175,13 +181,23 @@ export default function GroupChat() {
         return;
       }
 
-      // Simulate typing delay
-      await new Promise(resolve => setTimeout(resolve, 
-        Math.random() * 2000 + 1000 // 1-3 second delay
-      ));
-
-      // Determine next AI speaker (round-robin)
-      const nextSpeakerId = getNextAISpeaker();
+      // Show typing indicator and natural delay
+      const nextSpeakerId = getNextAISpeaker(finalMessage);
+      const speakingPersona = groupPersonas.find(p => p.id === nextSpeakerId);
+      
+      if (speakingPersona) {
+        setTypingPersonas(prev => new Set(prev).add(nextSpeakerId));
+        
+        // Variable delay for thinking effect
+        const delay = Math.random() * 2000 + 1000; // 1-3 seconds
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
+        setTypingPersonas(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(nextSpeakerId);
+          return newSet;
+        });
+      }
       
       // Get conversation template to pass group context
       const { data: conversation, error: convError } = await supabase
@@ -213,7 +229,7 @@ export default function GroupChat() {
           groupTopic: groupTopic,
           groupContext: groupContext,
           isGroupConversation: true,
-          allParticipants: participants.map(p => ({ id: p.persona_id, name: p.name }))
+          allParticipants: groupPersonas.map(p => ({ id: p.id, name: p.name }))
         }),
       });
 
@@ -255,10 +271,96 @@ export default function GroupChat() {
     }
   };
 
+  // Welcome and onboarding logic for first message
+  const handleFirstMessage = async (userMessage: string) => {
+    try {
+      // Create user message first
+      const { data: userMsg, error: userError } = await supabase
+        .from("messages")
+        .insert({
+          conversation_id: conversationId,
+          sender_type: "user",
+          content: userMessage,
+          sender_persona_id: null,
+        })
+        .select()
+        .single();
+
+      if (userError) throw new Error("Failed to save user message");
+      setMessages(prev => [...prev, userMsg]);
+
+      // Get conversation template data
+      const { data: conversation } = await supabase
+        .from("conversations")
+        .select(`
+          title,
+          conversation_templates (
+            title,
+            group_prompt_suffix
+          )
+        `)
+        .eq("id", conversationId)
+        .single();
+
+      const groupTopic = conversation?.conversation_templates?.title || conversation?.title || "group conversation";
+      const groupContext = conversation?.conversation_templates?.group_prompt_suffix || "";
+
+      // Trigger introductions from all personas
+      console.log(`🎉 Starting group introductions for ${groupPersonas.length} personas`);
+      
+      for (const persona of groupPersonas) {
+        await new Promise(resolve => setTimeout(resolve, Math.random() * 1000 + 500)); // Stagger introductions
+
+        const response = await fetch("/api/chat/secure", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            tutorId: persona.id,
+            conversationId: conversationId,
+            message: "start-introduction",
+            groupTopic: groupTopic,
+            groupContext: groupContext,
+            isGroupConversation: true,
+            allParticipants: groupPersonas.map(p => ({ id: p.id, name: p.name }))
+          }),
+        });
+
+        if (response.ok) {
+          const aiData = await response.json();
+          
+          // Create AI message
+          const { data: aiMessage } = await supabase
+            .from("messages")
+            .insert({
+              conversation_id: conversationId,
+              sender_type: "ai",
+              content: aiData.content || '',
+              english_translation: aiData.english_translation || null,
+              sender_persona_id: persona.id,
+            })
+            .select()
+            .single();
+
+          if (aiMessage) {
+            setMessages(prev => [...prev, aiMessage]);
+          }
+        }
+      }
+      
+    } catch (error) {
+      console.error("First message error:", error);
+    } finally {
+      setSending(false);
+    }
+  };
+
   const checkResponseThrottling = (): boolean => {
     if (groupPersonas.length === 0) return true;
 
-    // For now, use first persona as representative
+    // More relaxed throttling for natural group dynamics
     const representativePersona = groupPersonas[0];
     const stateKey = `${conversationId}_${representativePersona.id}`;
     const currentState = groupChatStates.current.get(stateKey) || {
@@ -266,19 +368,13 @@ export default function GroupChat() {
       consecutiveResponses: 0
     };
 
-    // Check cooldown
-    if (Date.now() - currentState.lastResponseTimestamp < responseCooldown) {
+    // Reduced cooldown for more natural flow
+    if (Date.now() - currentState.lastResponseTimestamp < 8000) { // 8 seconds instead of 15
       console.log('Group chat cooldown active, skipping AI response');
       return false;
     }
 
-    // Check consecutive response limit
-    if (currentState.consecutiveResponses >= maxConsecutiveResponses) {
-      console.log('Group chat consecutive response limit reached');
-      return false;
-    }
-
-    return true;
+    return true; // Removed consecutive response limit for better group dynamics
   };
 
   const getNextAISpeaker = (): string => {
