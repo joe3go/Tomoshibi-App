@@ -360,6 +360,19 @@ export default function GroupChat() {
   const checkResponseThrottling = (): boolean => {
     if (groupPersonas.length === 0) return true;
 
+    // Check if user mentioned someone specifically - always allow response
+    const lastUserMessage = groupMessages[groupMessages.length - 1];
+    if (lastUserMessage?.sender_type === 'user') {
+      const userMessage = lastUserMessage.content.toLowerCase();
+      for (const persona of groupPersonas) {
+        const name = persona.name.toLowerCase();
+        if (userMessage.includes(name) || userMessage.includes(`${name}さん`)) {
+          console.log(`🎯 User mentioned ${persona.name}, bypassing throttling`);
+          return true;
+        }
+      }
+    }
+
     // More relaxed throttling for natural group dynamics
     const representativePersona = groupPersonas[0];
     const stateKey = `${conversationId}_${representativePersona.id}`;
@@ -369,12 +382,12 @@ export default function GroupChat() {
     };
 
     // Reduced cooldown for more natural flow
-    if (Date.now() - currentState.lastResponseTimestamp < 8000) { // 8 seconds instead of 15
+    if (Date.now() - currentState.lastResponseTimestamp < 5000) { // 5 seconds for faster response
       console.log('Group chat cooldown active, skipping AI response');
       return false;
     }
 
-    return true; // Removed consecutive response limit for better group dynamics
+    return true;
   };
 
   const getNextAISpeaker = (): string => {
@@ -597,11 +610,13 @@ export default function GroupChat() {
                     </div>
                   )}
                   
-                  <FuriganaText
-                    text={msg.content}
-                    showFurigana={showFurigana}
-                    showToggleButton={false}
-                  />
+                  <div className="text-sm leading-relaxed">
+                    <FuriganaText
+                      text={msg.content}
+                      showFurigana={showFurigana}
+                      showToggleButton={false}
+                    />
+                  </div>
 
                   {msg.sender_type === 'ai' && msg.english_translation && (
                     <div className="mt-2">

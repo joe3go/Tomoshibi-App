@@ -100,17 +100,18 @@ export default function FuriganaText({
         </div>
       )}
 
-      <div className="text-lg leading-relaxed">
+      <div className="leading-relaxed">
         {parsedText.map((part, index) => {
           if (part.type === "furigana") {
             return (
               <ruby
                 key={index}
                 className="inline-block mr-1"
-                style={{ display: showFurigana ? 'ruby' : 'inline' }}
               >
                 {part.kanji}
-                {showFurigana && <rt className="text-xs">{part.reading}</rt>}
+                <rt className={`text-xs ${showFurigana ? 'opacity-100' : 'opacity-0'}`}>
+                  {part.reading}
+                </rt>
               </ruby>
             );
           }
