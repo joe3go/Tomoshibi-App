@@ -162,14 +162,28 @@ export async function generateSecureAIResponse(
 export async function generateAIResponse(
   context: ConversationContext,
 ): Promise<AIResponse> {
-  const systemPrompt = buildSystemPrompt(context);
-  const messages = [
-    { role: "system" as const, content: systemPrompt },
-    ...context.conversationHistory,
-    { role: "user" as const, content: context.userMessage },
-  ];
-
   try {
+    const systemPrompt = buildSystemPrompt(context);
+    
+    // Limit conversation history to last 12 messages for token management
+    const limitedHistory = context.conversationHistory.slice(-12);
+    
+    const messages = [
+      { role: "system" as const, content: systemPrompt },
+      ...limitedHistory,
+      { role: "user" as const, content: context.userMessage },
+    ];
+
+    console.log('🔄 OpenAI Request Debug:', {
+      model: 'gpt-4o',
+      messageCount: messages.length,
+      systemPromptLength: systemPrompt.length,
+      hasJsonInPrompt: systemPrompt.includes('JSON'),
+      lastUserMessage: context.userMessage,
+      topic: context.conversationTopic,
+      isGroup: context.isGroupConversation
+    });
+
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages,
