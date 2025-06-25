@@ -1,4 +1,4 @@
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
 
   @tailwind base;
   @tailwind components;
@@ -1043,7 +1043,7 @@
   /* ==============================
      📚 Vocabulary Popup System Styles
      ============================== */
-  
+
   .vocab-enabled-message {
     @apply relative;
   }
@@ -1072,6 +1072,7 @@
     @apply bg-blue-900/20;
   }
 
+```text
   .settings-loading-content {
     @apply text-center space-y-4;
   }
@@ -2038,3 +2039,29 @@
       @apply hidden;
     }
   }
+
+/* Add your custom styles here */
+
+/* Furigana styling */
+.furigana-ruby {
+  ruby-position: over;
+  ruby-align: center;
+}
+
+.furigana-reading {
+  font-size: 0.6em;
+  color: #666;
+  font-weight: normal;
+  line-height: 1;
+}
+
+ruby {
+  ruby-position: over;
+}
+
+rt {
+  font-size: 0.6em;
+  color: #666;
+  font-weight: normal;
+  line-height: 1;
+}

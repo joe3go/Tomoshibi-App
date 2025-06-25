@@ -104,10 +104,10 @@ export default function EnhancedFuriganaText({
     // More sophisticated Japanese text segmentation
     const words: string[] = [];
     let currentWord = '';
-    
+
     for (let i = 0; i < content.length; i++) {
       const char = content[i];
-      
+
       // Check character type
       const isKanji = /[一-龯々]/.test(char);
       const isHiragana = /[ぁ-ん]/.test(char);
@@ -115,7 +115,7 @@ export default function EnhancedFuriganaText({
       const isAlphabetic = /[A-Za-z]/.test(char);
       const isNumber = /\d/.test(char);
       const isPunctuation = /[。、！？「」（）\s]/.test(char);
-      
+
       if (isPunctuation) {
         if (currentWord.length > 0) {
           words.push(currentWord);
@@ -123,7 +123,7 @@ export default function EnhancedFuriganaText({
         }
       } else if (isKanji || isHiragana || isKatakana || isAlphabetic || isNumber) {
         currentWord += char;
-        
+
         // Break on character type changes (except kanji to hiragana)
         const nextChar = content[i + 1];
         if (nextChar) {
@@ -133,7 +133,7 @@ export default function EnhancedFuriganaText({
           const nextIsAlphabetic = /[A-Za-z]/.test(nextChar);
           const nextIsNumber = /\d/.test(nextChar);
           const nextIsPunctuation = /[。、！？「」（）\s]/.test(nextChar);
-          
+
           // Break conditions
           if (nextIsPunctuation || 
               (isKatakana && !nextIsKatakana) ||
@@ -149,11 +149,11 @@ export default function EnhancedFuriganaText({
         }
       }
     }
-    
+
     if (currentWord.length > 0) {
       words.push(currentWord);
     }
-    
+
     return words.filter(word => word.length > 0 && /[一-龯々ぁ-んァ-ヶー]/.test(word));
   };
 
@@ -195,7 +195,7 @@ export default function EnhancedFuriganaText({
 
   const handleWordClick = useCallback((word: string, event: React.MouseEvent) => {
     if (!enableWordHover) return;
-    
+
     event.preventDefault();
     const rect = (event.target as HTMLElement).getBoundingClientRect();
     setPopupPosition({
@@ -226,7 +226,7 @@ export default function EnhancedFuriganaText({
 
     words.forEach((word, index) => {
       const wordIndex = content.indexOf(word, lastIndex);
-      
+
       // Add text before the word
       if (wordIndex > lastIndex) {
         parts.push(
@@ -262,6 +262,44 @@ export default function EnhancedFuriganaText({
     }
 
     return <>{parts}</>;
+  };
+
+  const renderTextWithFurigana = (text: string) => {
+    if (!showFurigana) {
+      return <span className="japanese-text">{text}</span>;
+    }
+
+    // Parse furigana in format: kanji[furigana]
+    const furiganaRegex = /([一-龯々]+)\[([ひらがな\u3040-\u309F]+)\]/g;
+    let lastIndex = 0;
+    const elements: React.ReactNode[] = [];
+
+    let match;
+    while ((match = furiganaRegex.exec(text)) !== null) {
+      // Add text before the match
+      if (match.index > lastIndex) {
+        elements.push(text.substring(lastIndex, match.index));
+      }
+
+      // Add furigana ruby element
+      const kanji = match[1];
+      const reading = match[2];
+      elements.push(
+        <ruby key={match.index} className="furigana-ruby">
+          {kanji}
+          <rt className="furigana-reading">{reading}</rt>
+        </ruby>
+      );
+
+      lastIndex = match.index + match[0].length;
+    }
+
+    // Add remaining text
+    if (lastIndex < text.length) {
+      elements.push(text.substring(lastIndex));
+    }
+
+    return elements.length > 0 ? elements : <span className="japanese-text">{text}</span>;
   };
 
   const parsedText = parseText(text);

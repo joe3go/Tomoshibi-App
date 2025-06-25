@@ -431,12 +431,29 @@ export default function GroupChat() {
       return groupPersonas[0].id;
     }
 
+    // Check if the last AI message was asking a question to another persona
+    const lastAIContent = lastAIMessage.content.toLowerCase();
+    for (const persona of groupPersonas) {
+      const name = persona.name.toLowerCase();
+      // If the last AI message mentioned another persona, let that persona respond
+      if (lastAIContent.includes(`${name}さん`) || 
+          lastAIContent.includes(`${name}は`) ||
+          lastAIContent.includes(`${name}が`) ||
+          lastAIContent.includes(`どう思います`) ||
+          lastAIContent.includes(`どうですか`)) {
+        if (persona.id !== lastAIMessage.sender_persona_id) {
+          console.log(`🎯 ${persona.name} was mentioned/asked a question, they will respond next`);
+          return persona.id;
+        }
+      }
+    }
+
     // Use round-robin with some randomness
     const lastSpeakerIndex = groupPersonas.findIndex(p => p.id === lastAIMessage.sender_persona_id);
     const nextIndex = (lastSpeakerIndex + 1) % groupPersonas.length;
     
-    // Add 20% chance of random speaker for natural flow
-    if (Math.random() < 0.2) {
+    // Add 15% chance of random speaker for natural flow (reduced from 20%)
+    if (Math.random() < 0.15) {
       const randomIndex = Math.floor(Math.random() * groupPersonas.length);
       return groupPersonas[randomIndex].id;
     }

@@ -224,7 +224,7 @@ function isEnglishMessage(text: string): boolean {
 function buildSystemPrompt(context: ConversationContext): string {
   const topic = context.conversationTopic || 'general conversation';
   const { persona, scenario, targetVocab, targetGrammar, groupPromptSuffix, isGroupConversation, allPersonas, userMessage, conversationHistory } = context;
-  
+
   let basePrompt = `You are ${persona.name}, a Japanese language tutor with the following characteristics:
 - Personality: ${persona.personality}
 - Speaking Style: ${persona.speaking_style}
@@ -243,49 +243,49 @@ Target Grammar: ${targetGrammar.map(g => g.pattern).slice(0, 5).join(', ')}
 ${scenario ? `Scenario: ${scenario.title} - ${scenario.description}` : `Focus on discussing: ${topic}`}`;
 
   // Enhanced group conversation context
-  if (isGroupConversation && allPersonas) {
-    const otherPersonas = allPersonas.filter(p => p.id !== persona.id);
-    const lastThreeAIMessages = conversationHistory
-      .filter(msg => msg.role === 'assistant')
-      .slice(-3)
-      .map(msg => msg.content)
-      .join(' | ');
+    if (isGroupConversation && allPersonas && allPersonas.length > 0) {
+      const otherPersonas = allPersonas.filter(p => p.id !== persona.id);
+      const personaNames = otherPersonas.map(p => p.name).join(', ');
 
-    basePrompt += `
+      basePrompt += `\n\n🎭 GROUP CONVERSATION CONTEXT:
+You are ${persona.name} in a group conversation with ${personaNames} and the user.
+Topic: ${conversationTopic || 'general discussion'}
+${groupPromptSuffix || ''}
 
-🎭 ENHANCED GROUP CONVERSATION CONTEXT:
-- You are participating in a group conversation about: ${topic}
-- Other AI participants: ${otherPersonas.map(p => p.name).join(', ')}
-- ${groupPromptSuffix || ''}
+CRITICAL GROUP RULES:
+- You are ONLY ${persona.name} - never respond as other personas
+- NEVER ask yourself questions like "What about you, ${persona.name}?"
+- When others ask you questions, answer them directly
+- Reference other participants naturally: "That's interesting, ${otherPersonas[0]?.name}さん"
+- If someone asks "What about you, [other persona]?" - DO NOT respond, let them respond
+- Only respond when it's natural for ${persona.name} to speak
+- Keep responses conversational and engaging
+- Stay aware of who said what in the conversation`;
+    }
 
-🎯 SPECIAL INSTRUCTIONS:
-${userMessage === 'start-introduction' ? `
-- This is the START of the conversation. Introduce yourself warmly and reference the other participants.
-- Mention what you're excited to discuss about anime (specific shows, genres, characters).
-- Keep it brief (1-2 sentences) and natural.
-- Example: "こんにちは！私は${persona.name}です。${otherPersonas[0]?.name || 'みんな'}と一緒にアニメについて話すのを楽しみにしています！"` : `
-- React to what others have said. Reference previous messages when relevant.
-- Use other participants' names naturally: "そうですね、${otherPersonas[0]?.name || 'ケイコ'}さん！"
-- If someone asks YOU directly (mentions your name), you MUST respond to them.
-- If the user asks about YOUR anime preferences, share specific shows you like.
-- Talk about actual anime series (Naruto, Attack on Titan, Studio Ghibli films, etc.)
-- Occasionally agree/disagree or add follow-ups: "どう思いますか、${otherPersonas[1]?.name || 'ハルキ'}？"
-- If the user seems confused, gently help them.
-- Praise user effort often: "いいですね、ジョーさん！"
-- If conversation gets quiet, ask an engaging question about specific anime.
-- Stay in character as ${persona.name} - be authentic to your personality and anime preferences.`}
+  // Add conversation history
+    if (conversationHistory && conversationHistory.length > 0) {
+      const recentMessages = conversationHistory.slice(-8); // Last 8 messages for better context
+      const historyText = recentMessages.map(msg => {
+        if (msg.sender_type === 'user') {
+          return `User: ${msg.content}`;
+        } else {
+          const senderName = allPersonas?.find(p => p.id === msg.sender_persona_id)?.name || 'AI';
+          return `${senderName}: ${msg.content}`;
+        }
+      }).join('\n');
 
-Recent AI conversation: ${lastThreeAIMessages || 'None yet'}
+      basePrompt += `\n\n📝 RECENT CONVERSATION HISTORY:\n${historyText}`;
 
-🎪 GROUP DYNAMICS:
-- Be natural and spontaneous
-- Show emotions that fit your character
-- Sometimes interrupt or add quick reactions
-- Keep the energy positive and encouraging`;
-    
-    basePrompt += `\n\nOther AI participants in this conversation: ${otherPersonas.map(p => `${p.name} (${p.personality || p.description || 'AI participant'})`).join(', ')}`;
-    basePrompt += `\nYou are responding as ${persona.name}. Keep your response natural and in character. Focus on helping the human learner while maintaining the group conversation atmosphere.`;
-  }
+      // Add specific context about who just spoke
+      const lastMessage = recentMessages[recentMessages.length - 1];
+      if (lastMessage && lastMessage.sender_type === 'ai' && lastMessage.sender_persona_id !== persona.id) {
+        const lastSpeaker = allPersonas?.find(p => p.id === lastMessage.sender_persona_id)?.name;
+        if (lastSpeaker) {
+          basePrompt += `\n\n⚠️ IMPORTANT: ${lastSpeaker} just spoke. You (${persona.name}) should respond naturally to their message or the conversation flow.`;
+        }
+      }
+    }
 
   basePrompt += `
 
