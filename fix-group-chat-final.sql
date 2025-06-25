@@ -1,13 +1,17 @@
--- Fix all group chat database schema issues
+
+-- Fix all group chat database schema issues for Supabase
 
 -- 1. Add missing difficulty column to conversation_templates
 ALTER TABLE conversation_templates ADD COLUMN IF NOT EXISTS difficulty TEXT DEFAULT 'beginner';
 
--- 2. Check and clean up invalid conversation_participants
+-- 2. Add missing group_prompt_suffix column if it doesn't exist
+ALTER TABLE conversation_templates ADD COLUMN IF NOT EXISTS group_prompt_suffix TEXT;
+
+-- 3. Clean up invalid conversation_participants (remove entries with non-existent persona IDs)
 DELETE FROM conversation_participants 
 WHERE persona_id NOT IN (SELECT id FROM personas);
 
--- 3. Get valid persona IDs and update conversation templates
+-- 4. Get valid persona IDs and update conversation templates with correct default_personas
 WITH valid_personas AS (
   SELECT id, name FROM personas WHERE name IN ('Aoi', 'Haruki', 'Keiko')
 )
@@ -19,7 +23,7 @@ SET default_personas = ARRAY(
 )
 WHERE title IN ('Anime Club', 'Study Group', 'Cafe Hangout');
 
--- 4. Insert correct participants for group conversations using template_id instead of conversation_id
+-- 5. Insert correct participants for group conversations
 INSERT INTO conversation_participants (conversation_id, persona_id, role, order_in_convo)
 SELECT c.id, p.id, 'ai', ROW_NUMBER() OVER (PARTITION BY c.id ORDER BY p.name)
 FROM conversations c
@@ -30,25 +34,21 @@ AND p.name IN ('Aoi', 'Haruki', 'Keiko')
 AND c.mode = 'group'
 ON CONFLICT (conversation_id, persona_id) DO NOTHING;
 
--- 5. Ensure group_prompt_suffix column exists
-ALTER TABLE conversation_templates ADD COLUMN IF NOT EXISTS group_prompt_suffix TEXT;
-
 -- 6. Update group templates with proper prompt suffixes
-UPDATE conversation_templates SET 
-  group_prompt_suffix = CASE 
-    WHEN title = 'Anime Club' THEN 'This is a casual group conversation about anime. Keep responses short and natural for group discussion.'
-    WHEN title = 'Study Group' THEN 'This is a Japanese study group session. Focus on helping with Japanese learning in a supportive group environment.'
-    WHEN title = 'Cafe Hangout' THEN 'This is a casual conversation at a cafe. Keep responses relaxed and friendly for casual chat.'
-    ELSE 'This is a group conversation. Keep responses natural and engaging for multiple participants.'
-  END
-WHERE title IN ('Anime Club', 'Study Group', 'Cafe Hangout');
-
--- 6. Update group prompt suffixes
 UPDATE conversation_templates 
 SET group_prompt_suffix = CASE 
-  WHEN title = 'Anime Club' THEN 'You are part of an anime discussion group. Share your favorite shows, discuss characters, and help each other learn Japanese through anime culture.'
-  WHEN title = 'Study Group' THEN 'You are studying together for JLPT exams. Practice vocabulary, grammar, and encourage each other in your Japanese learning journey.'
-  WHEN title = 'Cafe Hangout' THEN 'You are hanging out at a Japanese cafe. Have casual conversations about daily life, food, hobbies, and Japanese culture.'
-  ELSE group_prompt_suffix
+  WHEN title = 'Anime Club' THEN 'You are part of an anime discussion group. Share your favorite shows, discuss characters, and help each other learn Japanese through anime culture. Keep responses short and natural for group discussion.'
+  WHEN title = 'Study Group' THEN 'You are studying together for JLPT exams. Practice vocabulary, grammar, and encourage each other in your Japanese learning journey. Focus on helping with Japanese learning in a supportive group environment.'
+  WHEN title = 'Cafe Hangout' THEN 'You are hanging out at a Japanese cafe. Have casual conversations about daily life, food, hobbies, and Japanese culture. Keep responses relaxed and friendly for casual chat.'
+  ELSE 'This is a group conversation. Keep responses natural and engaging for multiple participants.'
 END
 WHERE title IN ('Anime Club', 'Study Group', 'Cafe Hangout');
+
+-- 7. Verify the changes worked
+SELECT 
+  ct.title,
+  ct.difficulty,
+  ct.group_prompt_suffix,
+  array_length(ct.default_personas, 1) as persona_count
+FROM conversation_templates ct
+WHERE ct.title IN ('Anime Club', 'Study Group', 'Cafe Hangout');
