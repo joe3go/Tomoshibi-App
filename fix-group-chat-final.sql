@@ -19,17 +19,29 @@ SET default_personas = ARRAY(
 )
 WHERE title IN ('Anime Club', 'Study Group', 'Cafe Hangout');
 
--- 4. Insert correct participants for group conversations
-INSERT INTO conversation_participants (conversation_id, persona_id)
-SELECT ct.id, p.id
-FROM conversation_templates ct
+-- 4. Insert correct participants for group conversations using template_id instead of conversation_id
+INSERT INTO conversation_participants (conversation_id, persona_id, role, order_in_convo)
+SELECT c.id, p.id, 'ai', ROW_NUMBER() OVER (PARTITION BY c.id ORDER BY p.name)
+FROM conversations c
+JOIN conversation_templates ct ON c.template_id = ct.id
 CROSS JOIN personas p
 WHERE ct.title IN ('Anime Club', 'Study Group', 'Cafe Hangout')
 AND p.name IN ('Aoi', 'Haruki', 'Keiko')
+AND c.mode = 'group'
 ON CONFLICT (conversation_id, persona_id) DO NOTHING;
 
 -- 5. Ensure group_prompt_suffix column exists
 ALTER TABLE conversation_templates ADD COLUMN IF NOT EXISTS group_prompt_suffix TEXT;
+
+-- 6. Update group templates with proper prompt suffixes
+UPDATE conversation_templates SET 
+  group_prompt_suffix = CASE 
+    WHEN title = 'Anime Club' THEN 'This is a casual group conversation about anime. Keep responses short and natural for group discussion.'
+    WHEN title = 'Study Group' THEN 'This is a Japanese study group session. Focus on helping with Japanese learning in a supportive group environment.'
+    WHEN title = 'Cafe Hangout' THEN 'This is a casual conversation at a cafe. Keep responses relaxed and friendly for casual chat.'
+    ELSE 'This is a group conversation. Keep responses natural and engaging for multiple participants.'
+  END
+WHERE title IN ('Anime Club', 'Study Group', 'Cafe Hangout');
 
 -- 6. Update group prompt suffixes
 UPDATE conversation_templates 

@@ -1071,6 +1071,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           content: msg.content
         }));
 
+      // Get persona data for AI response generation
+      const { data: persona } = await supabase
+        .from('personas')
+        .select('*')
+        .eq('id', validTutorId)
+        .single();
+
+      if (!persona) {
+        console.error('❌ Persona not found for tutorId:', validTutorId);
+        return res.status(400).json({ message: 'Tutor not found' });
+      }
+
       // Create context for AI response generation
       const context: ConversationContext = {
         persona,
