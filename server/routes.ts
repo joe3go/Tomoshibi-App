@@ -777,8 +777,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (aiPersonaId) {
 
-        // Generate AI response with group context
-        const { generateSecureAIResponse } = await import('./openai');
+        // Generate AI response with proper group context
+        const { generateAIResponse } = await import('./openai');
 
         // Get recent conversation history
         const { data: recentMessages } = await supabase
@@ -795,15 +795,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
             content: msg.content
           }));
 
-        const aiResponse = await generateSecureAIResponse(
-          aiPersonaId,
-          req.userId!,
-          'Student',
-          content,
-          'general conversation',
+        // Get conversation template for topic and group prompt suffix
+        let conversationTopic = 'general conversation';
+        let groupPromptSuffix = undefined;
+        
+        if (conversation.template_id) {
+          const { data: template } = await supabase
+            .from('conversation_templates')
+            .select('title, group_prompt_suffix')
+            .eq('id', conversation.template_id)
+            .single();
+          
+          if (template) {
+            conversationTopic = template.title;
+            groupPromptSuffix = template.group_prompt_suffix;
+          }
+        } else if (conversation.scenario_id) {
+          const { data: scenario } = await supabase
+            .from('scenarios')
+            .select('title')
+            .eq('id', conversation.scenario_id)
+            .single();
+          
+          if (scenario) {
+            conversationTopic = scenario.title;
+          }
+        }
+
+        console.log('🎯 Conversation topic:', conversationTopic, isGroupConversation ? '(Group)' : '(Solo)');
+
+        // Determine next AI speaker for group conversations
+        let selectedPersonaId = aiPersonaId;
+        if (isGroupConversation && participants && participants.length > 1) {
+          selectedPersonaId = getNextAISpeaker(participants, recentMessages || []);
+          console.log('🎭 Selected AI speaker for group:', {
+            selectedId: selectedPersonaId,
+            totalParticipants: participants.length
+          });
+        }
+
+        // Get persona for system prompt
+        const { data: personaData } = await supabase
+          .from('personas')
+          .select('*')
+          .eq('id', selectedPersonaId)
+          .single();
+
+        if (!personaData) {
+          throw new Error('Persona not found');
+        }
+
+        // Get target vocab and grammar (simplified for now)
+        const targetVocab: any[] = [];
+        const targetGrammar: any[] = [];
+
+        const aiResponse = await generateAIResponse({
+          persona: personaData,
           conversationHistory,
-          false
-        );
+          userMessage: content,
+          targetVocab,
+          targetGrammar,
+          isGroupConversation,
+          allPersonas: participants?.map(p => p.personas).filter(Boolean) || undefined,
+          groupPromptSuffix,
+          conversationTopic
+        });
+
+        // Update aiPersonaId to the selected speaker
+        aiPersonaId = selectedPersonaId;
 
         // Validate UUIDs before creating AI message
         const { isValidUUID } = await import("../shared/validation");

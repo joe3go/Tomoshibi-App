@@ -276,13 +276,15 @@ Target Grammar: ${targetGrammar.map(g => g.pattern).slice(0, 5).join(', ')}
 ${scenario ? `Scenario: ${scenario.title} - ${scenario.description}` : 'Have a natural conversation in Japanese.'}`;
 
   // Add group conversation context if applicable
-  if (isGroupConversation && groupPromptSuffix) {
-    basePrompt += `\n\nGroup Conversation Context: ${groupPromptSuffix}`;
+  if (isGroupConversation) {
+    if (groupPromptSuffix) {
+      basePrompt += `\n\nGroup Conversation Context: ${groupPromptSuffix}`;
+    }
     
     if (allPersonas && allPersonas.length > 1) {
       const otherPersonas = allPersonas.filter(p => p.id !== persona.id);
-      basePrompt += `\n\nOther participants in this conversation: ${otherPersonas.map(p => `${p.name} (${p.description})`).join(', ')}`;
-      basePrompt += `\nInteract naturally with other AI participants when appropriate, but focus primarily on helping the human learner.`;
+      basePrompt += `\n\nOther AI participants in this conversation: ${otherPersonas.map(p => `${p.name} (${p.description})`).join(', ')}`;
+      basePrompt += `\nYou are responding as ${persona.name}. Keep your response natural and in character. Focus on helping the human learner while maintaining the group conversation atmosphere.`;
     }
   }
 
