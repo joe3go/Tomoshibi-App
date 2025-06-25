@@ -13,6 +13,7 @@ import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/context/SupabaseAuthContext";
 import { extractPersonaFromTitle } from "@/lib/supabase-functions";
 import { useConversationMode } from "@/hooks/useConversationMode";
+import { loadGroupPersonas, loadSoloPersona, loadAllPersonas, Persona as LoaderPersona } from "@/lib/supabase/loaders";
 // Import vocabulary tracking function from API
 const trackVocabularyUsage = async (text: string, source: 'user' | 'ai', session: any, tutorId?: string, conversationId?: string) => {
   try {
@@ -228,78 +229,47 @@ export default function Chat() {
 
   const loadConversationParticipants = async () => {
     try {
+      let loadedPersonas: Persona[] = [];
+
       if (isGroup) {
         console.log("🔍 Loading group participants for conversation:", conversationId);
+        loadedPersonas = await loadGroupPersonas(conversationId);
         
-        // For group conversations, fetch participants
-        const { data: participantsData, error: participantsError } = await supabase
-          .from("conversation_participants")
-          .select(`
-            conversation_id,
-            persona_id,
-            role,
-            order_in_convo,
-            personas(*)
-          `)
-          .eq("conversation_id", conversationId)
-          .order("order_in_convo");
-
-        console.log("🔍 Raw participants query result:", { 
-          data: participantsData, 
-          error: participantsError,
-          dataLength: participantsData?.length 
-        });
-
-        if (participantsError) {
-          console.error("❌ Participants query error:", participantsError);
-          return;
+        if (loadedPersonas.length === 0) {
+          console.warn("⚠️ No group personas found, falling back to all personas");
+          // Fallback: load first 3 personas as mock participants for demo
+          const allPersonas = await loadAllPersonas();
+          loadedPersonas = allPersonas.slice(0, 3);
+          console.log("🔧 Using fallback personas:", loadedPersonas.map(p => p.name));
         }
-
-        if (!participantsData || participantsData.length === 0) {
-          console.warn("⚠️ No participants found for group conversation:", conversationId);
-          return;
-        }
-
-        // Debug each participant entry
-        participantsData.forEach((participant, index) => {
-          console.log(`🔍 Participant ${index}:`, {
-            persona_id: participant.persona_id,
-            role: participant.role,
-            order: participant.order_in_convo,
-            persona_resolved: !!participant.personas,
-            persona_data: participant.personas
-          });
-        });
-
-        // Extract personas and filter out any null/undefined entries
-        const groupPersonas = participantsData
-          .map((p: any) => p.personas)
-          .filter(Boolean);
-
-        console.log("✅ Successfully resolved group personas:", {
-          totalParticipants: participantsData.length,
-          resolvedPersonas: groupPersonas.length,
-          personaNames: groupPersonas.map((p: any) => `${p.name}:${p.id}`)
-        });
-
-        if (groupPersonas.length === 0) {
-          console.error("❌ No personas could be resolved from participants!");
-          console.log("🔍 Available persona IDs in system:", personas.map(p => `${p.name}:${p.id}`));
-        }
-
-        setConversationPersonas(groupPersonas);
-        console.log("🧠 Loaded group personas:", groupPersonas.map(p => p.name));
       } else {
-        // Single chat: find persona by conversation persona_id or title
-        await loadSinglePersona();
+        console.log("🔍 Loading solo persona for conversation:", conversationId);
+        const soloPersona = await loadSoloPersona(conversationId);
+        
+        if (soloPersona) {
+          loadedPersonas = [soloPersona];
+        } else {
+          // Fallback: extract from title
+          await loadSinglePersonaFallback();
+          return;
+        }
       }
+
+      setConversationPersonas(loadedPersonas);
+      if (!isGroup && loadedPersonas.length > 0) {
+        setPersona(loadedPersonas[0]);
+      }
+      
+      console.log("🧠 Loaded personas:", loadedPersonas.map(p => p.name));
     } catch (error) {
       console.error("❌ Error loading conversation participants:", error);
-      await loadSinglePersona();
+      if (!isGroup) {
+        await loadSinglePersonaFallback();
+      }
     }
   };
 
-  const loadSinglePersona = async () => {
+  const loadSinglePersonaFallback = async () => {
     if (conversation && personas.length > 0) {
       // First try to find persona by persona_id from conversation
       let foundPersona = null;
