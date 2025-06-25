@@ -254,6 +254,23 @@ Preferred communication style: Simple, everyday language.
   - WanaKana romaji-to-hiragana conversion preserved
   - Vocabulary tracking and progress analytics intact
 
+### June 25, 2025 - Critical Fixes: Message Sending and Furigana Display
+- **Fixed critical message sending error in group chat**:
+  - Identified root cause: incorrect function parameter in getNextAISpeaker() call
+  - Fixed variable reference bug using `messages` instead of undefined `groupMessages`
+  - Enhanced error logging throughout the message creation pipeline
+  - Second messages now send successfully without errors
+- **Resolved furigana display functionality**:
+  - Fixed FuriganaText component with proper conditional rendering logic
+  - Verified regex pattern correctly parses Japanese text with furigana notation
+  - Applied consistent furigana display across both solo and group chat interfaces
+  - Toggle functionality now works properly with opacity transitions
+- **Enhanced group chat persona targeting**:
+  - Improved persona targeting when user mentions specific names
+  - Added Japanese particle support for natural name detection (けいこさん, あおいは)
+  - Fixed throttling logic to use correct message arrays
+  - AI personas now respond immediately when directly addressed
+
 ### June 25, 2025 - Fixed Furigana Display and Enhanced Group Chat Responsiveness
 - **Restored Furigana functionality across all chat interfaces**:
   - Fixed FuriganaText component rendering with proper ruby text display

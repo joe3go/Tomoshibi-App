@@ -174,16 +174,17 @@ export default function GroupChat() {
       // Add user message to UI immediately
       setMessages(prev => [...prev, userMessage]);
 
-      // Group chat throttling logic
+      // Group chat throttling logic - but always allow at least one AI response
       const shouldGenerateResponse = checkResponseThrottling();
       
-      if (!shouldGenerateResponse) {
+      if (!shouldGenerateResponse && messages.filter(m => m.sender_type === 'ai').length > 0) {
+        console.log('⏳ Throttling AI response, user message saved');
         setSending(false);
         return;
       }
 
       // Show typing indicator and natural delay
-      const nextSpeakerId = getNextAISpeaker(finalMessage);
+      const nextSpeakerId = getNextAISpeaker();
       const speakingPersona = groupPersonas.find(p => p.id === nextSpeakerId);
       
       if (speakingPersona) {
@@ -369,7 +370,7 @@ export default function GroupChat() {
     if (groupPersonas.length === 0) return true;
 
     // Check if user mentioned someone specifically - always allow response
-    const lastUserMessage = groupMessages[groupMessages.length - 1];
+    const lastUserMessage = messages[messages.length - 1];
     if (lastUserMessage?.sender_type === 'user') {
       const userMessage = lastUserMessage.content.toLowerCase();
       for (const persona of groupPersonas) {
@@ -390,7 +391,7 @@ export default function GroupChat() {
     };
 
     // Reduced cooldown for more natural flow
-    if (Date.now() - currentState.lastResponseTimestamp < 5000) { // 5 seconds for faster response
+    if (Date.now() - currentState.lastResponseTimestamp < 8000) { // 8 seconds
       console.log('Group chat cooldown active, skipping AI response');
       return false;
     }
@@ -401,9 +402,11 @@ export default function GroupChat() {
   const getNextAISpeaker = (): string => {
     if (groupPersonas.length === 0) return "";
 
-    // Check if user mentioned a specific persona by name
-    const lastUserMessage = groupMessages[groupMessages.length - 1];
-    if (lastUserMessage?.sender_type === 'user') {
+    // Check if user mentioned a specific persona by name in their most recent message
+    const userMessages = messages.filter(m => m.sender_type === 'user');
+    const lastUserMessage = userMessages[userMessages.length - 1];
+    
+    if (lastUserMessage) {
       const userMessage = lastUserMessage.content.toLowerCase();
       for (const persona of groupPersonas) {
         const name = persona.name.toLowerCase();
@@ -419,7 +422,7 @@ export default function GroupChat() {
     }
 
     // Find the last AI message to determine next speaker
-    const lastAIMessage = groupMessages
+    const lastAIMessage = messages
       .filter(msg => msg.sender_type === 'ai' && msg.sender_persona_id)
       .pop();
 
@@ -637,13 +640,12 @@ export default function GroupChat() {
                     </div>
                   )}
                   
-                  <div className="text-sm leading-relaxed">
-                    <FuriganaText
-                      text={msg.content}
-                      showFurigana={showFurigana}
-                      showToggleButton={false}
-                    />
-                  </div>
+                  <FuriganaText
+                    text={msg.content}
+                    showFurigana={showFurigana}
+                    showToggleButton={false}
+                    className="text-sm leading-relaxed"
+                  />
 
                   {msg.sender_type === 'ai' && msg.english_translation && (
                     <div className="mt-2">
