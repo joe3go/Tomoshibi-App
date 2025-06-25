@@ -726,11 +726,13 @@ export default function Chat() {
                 )}
                 
                 <MessageWithVocab content={msg.content}>
-                  <FuriganaText
-                    text={msg.content}
-                    showFurigana={showFurigana}
-                    showToggleButton={false}
-                  />
+                  <div className="text-sm leading-relaxed">
+                    <FuriganaText
+                      text={msg.content}
+                      showFurigana={showFurigana}
+                      showToggleButton={false}
+                    />
+                  </div>
                 </MessageWithVocab>
 
                 {msg.sender_type === 'ai' && msg.english_translation && (

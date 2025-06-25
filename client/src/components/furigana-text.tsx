@@ -100,16 +100,17 @@ export default function FuriganaText({
         </div>
       )}
 
-      <div className="text-lg leading-relaxed ruby-text-container">
+      <div className="text-lg leading-relaxed">
         {parsedText.map((part, index) => {
           if (part.type === "furigana") {
             return (
               <ruby
                 key={index}
-                className={`inline ${showFurigana ? "" : "hide-furigana"}`}
+                className="inline-block mr-1"
+                style={{ display: showFurigana ? 'ruby' : 'inline' }}
               >
                 {part.kanji}
-                <rt className="ruby-text">{part.reading}</rt>
+                {showFurigana && <rt className="text-xs">{part.reading}</rt>}
               </ruby>
             );
           }
