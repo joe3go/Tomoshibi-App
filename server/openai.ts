@@ -249,7 +249,7 @@ ${scenario ? `Scenario: ${scenario.title} - ${scenario.description}` : `Focus on
 
       basePrompt += `\n\n🎭 GROUP CONVERSATION CONTEXT:
 You are ${persona.name} in a group conversation with ${personaNames} and the user.
-Topic: ${conversationTopic || 'general discussion'}
+Topic: ${context.conversationTopic || 'general discussion'}
 ${groupPromptSuffix || ''}
 
 CRITICAL GROUP RULES:
