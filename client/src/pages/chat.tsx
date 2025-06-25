@@ -48,6 +48,57 @@ interface Conversation {
   created_at: string;
 }
 
+// Diagnostic function to validate conversation participants
+const validateConversationParticipants = async (conversationId: string) => {
+  console.log('🔧 Running conversation participants diagnostic...');
+  
+  // Check conversation exists and get its mode
+  const { data: conv, error: convError } = await supabase
+    .from('conversations')
+    .select('id, mode, title, persona_id')
+    .eq('id', conversationId)
+    .single();
+    
+  if (convError || !conv) {
+    console.error('❌ Conversation not found:', convError);
+    return;
+  }
+  
+  console.log('✅ Conversation found:', conv);
+  
+  // Check participants table
+  const { data: participants, error: partError } = await supabase
+    .from('conversation_participants')
+    .select('*')
+    .eq('conversation_id', conversationId);
+    
+  if (partError) {
+    console.error('❌ Error fetching participants:', partError);
+    return;
+  }
+  
+  console.log('🔍 Raw participants data:', participants);
+  
+  // Check if persona IDs exist in personas table
+  if (participants && participants.length > 0) {
+    for (const participant of participants) {
+      const { data: persona, error: personaError } = await supabase
+        .from('personas')
+        .select('id, name')
+        .eq('id', participant.persona_id)
+        .single();
+        
+      if (personaError || !persona) {
+        console.error('❌ Invalid persona ID in participants:', participant.persona_id, personaError);
+      } else {
+        console.log('✅ Valid persona:', persona);
+      }
+    }
+  }
+};
+
+
+
 interface Persona {
   id: string;
   name: string;
@@ -92,6 +143,11 @@ export default function Chat() {
       return;
     }
 
+    // Run diagnostic in development
+    if (process.env.NODE_ENV === 'development') {
+      validateConversationParticipants(conversationId);
+    }
+
     loadConversationData();
     loadPersonas();
   }, [conversationId, session, user]);
@@ -120,7 +176,13 @@ export default function Chat() {
 
       setConversation(convData);
       
-      // Load conversation participants will be called after personas are loaded
+      console.log('🔍 Conversation loaded:', {
+        id: convData.id,
+        mode: convData.mode,
+        title: convData.title,
+        persona_id: convData.persona_id,
+        isGroup: convData.mode === 'group'
+      });
       
       // Load messages
       await loadMessages();
@@ -158,6 +220,8 @@ export default function Chat() {
   const loadConversationParticipants = async () => {
     try {
       if (isGroup) {
+        console.log("🔍 Loading group participants for conversation:", conversationId);
+        
         // For group conversations, fetch participants
         const { data: participantsData, error: participantsError } = await supabase
           .from("conversation_participants")
@@ -171,19 +235,56 @@ export default function Chat() {
           .eq("conversation_id", conversationId)
           .order("order_in_convo");
 
-        if (!participantsError && participantsData && participantsData.length > 0) {
-          const groupPersonas = participantsData.map((p: any) => p.personas).filter(Boolean);
-          setConversationPersonas(groupPersonas);
-          console.log("Group chat participants loaded:", groupPersonas.map((p: any) => p.name));
-        } else {
-          console.error("Failed to load group participants:", participantsError);
+        console.log("🔍 Raw participants query result:", { 
+          data: participantsData, 
+          error: participantsError,
+          dataLength: participantsData?.length 
+        });
+
+        if (participantsError) {
+          console.error("❌ Participants query error:", participantsError);
+          return;
         }
+
+        if (!participantsData || participantsData.length === 0) {
+          console.warn("⚠️ No participants found for group conversation:", conversationId);
+          return;
+        }
+
+        // Debug each participant entry
+        participantsData.forEach((participant, index) => {
+          console.log(`🔍 Participant ${index}:`, {
+            persona_id: participant.persona_id,
+            role: participant.role,
+            order: participant.order_in_convo,
+            persona_resolved: !!participant.personas,
+            persona_data: participant.personas
+          });
+        });
+
+        // Extract personas and filter out any null/undefined entries
+        const groupPersonas = participantsData
+          .map((p: any) => p.personas)
+          .filter(Boolean);
+
+        console.log("✅ Successfully resolved group personas:", {
+          totalParticipants: participantsData.length,
+          resolvedPersonas: groupPersonas.length,
+          personaNames: groupPersonas.map((p: any) => `${p.name}:${p.id}`)
+        });
+
+        if (groupPersonas.length === 0) {
+          console.error("❌ No personas could be resolved from participants!");
+          console.log("🔍 Available persona IDs in system:", personas.map(p => `${p.name}:${p.id}`));
+        }
+
+        setConversationPersonas(groupPersonas);
       } else {
         // Single chat: find persona by conversation persona_id or title
         await loadSinglePersona();
       }
     } catch (error) {
-      console.log("Error loading conversation participants:", error);
+      console.error("❌ Error loading conversation participants:", error);
       await loadSinglePersona();
     }
   };
@@ -224,9 +325,26 @@ export default function Chat() {
   // Set persona when conversation and personas are loaded
   useEffect(() => {
     if (conversation && personas.length > 0) {
+      console.log('🔍 Setting up persona for conversation:', {
+        conversationId: conversation.id,
+        mode: conversation.mode,
+        title: conversation.title,
+        persona_id: conversation.persona_id,
+        availablePersonas: personas.length
+      });
+
       const { personaId } = extractPersonaFromTitle(conversation.title || "");
       const foundPersona = personas.find(p => p.id === personaId);
+      
+      console.log('🔍 Persona extraction result:', {
+        extractedPersonaId: personaId,
+        foundPersona: foundPersona ? `${foundPersona.name}:${foundPersona.id}` : null
+      });
+
       setPersona(foundPersona || null);
+      
+      // Load participants after persona setup
+      loadConversationParticipants();
     }
   }, [conversation, personas]);
 
@@ -515,17 +633,30 @@ export default function Chat() {
             
             if (msg.sender_type === 'ai') {
               if (isGroup) {
+                console.log('🔍 Resolving persona for group message:', {
+                  messageId: msg.id,
+                  senderPersonaId: msg.sender_persona_id,
+                  availableConversationPersonas: conversationPersonas.length,
+                  availableAllPersonas: personas.length
+                });
+
                 // For group messages, find persona by sender_persona_id
-                senderPersona = conversationPersonas.find(p => p.id === msg.sender_persona_id) || 
-                               personas.find(p => p.id === msg.sender_persona_id) ||
-                               null;
+                senderPersona = conversationPersonas.find(p => p.id === msg.sender_persona_id);
+                
                 if (!senderPersona) {
-                  console.log('Group message persona lookup failed:', {
+                  console.log('🔍 Not found in conversation personas, checking all personas...');
+                  senderPersona = personas.find(p => p.id === msg.sender_persona_id);
+                }
+
+                if (!senderPersona) {
+                  console.error('❌ Could not resolve sender persona:', {
                     messageId: msg.id,
                     senderPersonaId: msg.sender_persona_id,
                     availableConversationPersonas: conversationPersonas.map(p => `${p.name}:${p.id}`),
                     availableAllPersonas: personas.map(p => `${p.name}:${p.id}`)
                   });
+                } else {
+                  console.log('✅ Resolved persona:', `${senderPersona.name}:${senderPersona.id}`);
                 }
               } else {
                 // For solo messages, use the main persona
