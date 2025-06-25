@@ -156,6 +156,23 @@ Preferred communication style: Simple, everyday language.
   - Template-based conversation initialization with personalized greetings
   - Responsive UI design with proper loading states and error handling
 
+### June 25, 2025 - User-Level Based Difficulty System Implementation
+- **Implemented user-centric difficulty system**:
+  - Added `jlpt_level` column to users table with N1-N5 levels
+  - Updated Settings page with JLPT level selector (N5 Beginner to N1 Advanced)
+  - Modified AI prompt generation to use user's JLPT level instead of persona level
+  - Updated user profile API endpoints to include JLPT level management
+- **Enhanced AI conversation context**:
+  - AI responses now adapt to user's actual skill level from settings
+  - Vocabulary and grammar complexity match user's declared JLPT level
+  - Consistent difficulty across all conversation types (solo and group)
+  - Database schema migration file (`add-user-jlpt-level.sql`) created for deployment
+- **Benefits for personalized learning**:
+  - Users control their learning difficulty independently of tutor choice
+  - More accurate vocabulary targeting based on actual user level
+  - Consistent learning experience across different AI personas
+  - Foundation for adaptive difficulty that can evolve with user progress
+
 ### June 25, 2025 - Decoupled Group Chat System for Better Scalability
 - **Created dedicated GroupChat component** (`client/src/pages/group-chat.tsx`):
   - Completely separate from solo chat to avoid complexity and bugs
