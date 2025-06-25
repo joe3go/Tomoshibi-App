@@ -663,7 +663,7 @@ export default function GroupChat() {
                     showToggleButton={false}
                     enableWordLookup={true}
                     onSaveToVocab={(word, reading) => {
-                      console.log('Saving word to vocab:', word, reading);
+                      console.log('Vocab saved:', word, reading);
                     }}
                     className="text-sm leading-relaxed"
                   />

@@ -288,6 +288,23 @@ Preferred communication style: Simple, everyday language.
   - Modified group prompt suffix to encourage natural anime conversation flow
   - AI now shares specific anime preferences and responds immediately when addressed
 
+### June 25, 2025 - Complete Japanese Text Rendering System with Furigana and Word Lookup
+- **Built comprehensive FuriganaText component from scratch**:
+  - Created clean, modular architecture with FuriganaText.tsx, japanese-parser.ts, and WordDefinitionPopup.tsx
+  - Supports multiple furigana notation formats: 漢字(かんじ), 漢字（かんじ）, and 漢字|かんじ
+  - Enhanced parser handles kanji detection and intelligent text segmentation
+  - Removed all duplicate and broken furigana components for single source of truth
+- **Integrated with existing Jisho API and Supabase vocabulary tracking**:
+  - WordDefinitionPopup fetches definitions from /api/word-definition endpoint
+  - Automatic vocabulary saving to user_vocab table in Supabase with proper user association
+  - Vocabulary usage tracking via /api/vocab-tracker/increment for analytics
+  - Authentication-aware features with session management and error handling
+- **Deployed across all chat interfaces**:
+  - Updated chat.tsx, group-chat.tsx, and all related components to use new FuriganaText
+  - Consistent word lookup functionality with click-to-define in both solo and group conversations
+  - Enhanced test page with multiple notation format examples for validation
+  - Maintained backward compatibility with existing furigana preferences
+
 ### June 25, 2025 - Complete Group Chat Functionality Implementation with Persona Attribution
 - **Implemented complete group conversation system with database integration**:
   - Created `conversation_templates` table with group chat templates including prompt suffixes
