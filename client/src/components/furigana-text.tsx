@@ -1,5 +1,8 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Eye, EyeOff } from "lucide-react";
+import { parseJapaneseTextWithFurigana, ParsedToken } from "@/utils/japanese-parser";
+import WordDefinitionPopup from "./WordDefinitionPopup";
 
 interface FuriganaTextProps {
   text: string;
@@ -7,6 +10,8 @@ interface FuriganaTextProps {
   showToggleButton?: boolean;
   showFurigana?: boolean;
   onToggleFurigana?: (show: boolean) => void;
+  enableWordLookup?: boolean;
+  onSaveToVocab?: (word: string, reading?: string) => void;
 }
 
 export default function FuriganaText({
@@ -15,14 +20,41 @@ export default function FuriganaText({
   showToggleButton = true,
   showFurigana: externalShowFurigana,
   onToggleFurigana,
+  enableWordLookup = true,
+  onSaveToVocab,
 }: FuriganaTextProps) {
   const [internalShowFurigana, setInternalShowFurigana] = useState(true);
+  const [parsedTokens, setParsedTokens] = useState<ParsedToken[]>([]);
+  const [selectedWord, setSelectedWord] = useState<{
+    word: string;
+    reading?: string;
+    position: { x: number; y: number };
+  } | null>(null);
 
   // Use external state if provided, otherwise use internal state
   const showFurigana =
     externalShowFurigana !== undefined
       ? externalShowFurigana
       : internalShowFurigana;
+
+  // Parse text when it changes
+  useEffect(() => {
+    const parseText = async () => {
+      if (text) {
+        try {
+          const tokens = await parseJapaneseTextWithFurigana(text);
+          setParsedTokens(tokens);
+        } catch (error) {
+          console.warn('Text parsing failed:', error);
+          setParsedTokens([{ type: 'text', surface: text }]);
+        }
+      } else {
+        setParsedTokens([]);
+      }
+    };
+
+    parseText();
+  }, [text]);
 
   // Load preference from localStorage on mount (only for internal state)
   useEffect(() => {
@@ -45,8 +77,36 @@ export default function FuriganaText({
     }
   };
 
-  // Parse text to identify kanji with furigana notation: 漢字(かんじ) or 漢字（かんじ）
-  const parseText = (input: string) => {
+  // Handle word click for definition lookup
+  const handleWordClick = (token: ParsedToken, event: React.MouseEvent) => {
+    if (!enableWordLookup || token.type === 'punctuation') return;
+    
+    const word = token.kanji || token.surface;
+    if (!word) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    setSelectedWord({
+      word,
+      reading: token.reading,
+      position: { x: event.clientX, y: event.clientY }
+    });
+  };
+
+  // Get word styling based on type and interactivity
+  const getWordStyling = (token: ParsedToken): string => {
+    const baseStyle = "transition-colors duration-200";
+    
+    if (!enableWordLookup || token.type === 'punctuation') {
+      return baseStyle;
+    }
+
+    return `${baseStyle} hover:bg-blue-100 hover:text-blue-800 cursor-pointer rounded px-1`;
+  };
+
+  // Parse text to identify kanji with furigana notation (fallback)
+  const parseTextFallback = (input: string) => {
     // Matches both Japanese and standard parentheses
     const furiganaPattern = /([一-龯々]+)[（\(]([ぁ-んァ-ヶー]+)[）\)]/g;
     const parts = [];
