@@ -38,7 +38,7 @@ CREATE POLICY "Users can update their own conversations" ON public.conversations
 
 -- Create indexes for performance
 CREATE INDEX idx_conversations_user_id ON public.conversations(user_id);
-CREATE INDEX idx_conversations_persona_id ON public.conversations(persona_id);
+CREATE INDEX IF NOT EXISTS idx_conversations_persona_id ON conversations(persona_id);
 CREATE INDEX idx_conversations_status ON public.conversations(status);
 CREATE INDEX idx_conversations_created_at ON public.conversations(created_at);
 
@@ -46,20 +46,23 @@ CREATE INDEX idx_conversations_created_at ON public.conversations(created_at);
 GRANT ALL ON public.conversations TO authenticated;
 GRANT ALL ON public.conversations TO service_role;
 
--- Update existing conversations to set persona_id where possible
--- For solo conversations, we can extract persona from title
-UPDATE public.conversations 
+-- Update existing conversations without persona_id by extracting from title
+UPDATE conversations 
 SET persona_id = (
-  CASE 
-    WHEN title LIKE '%Keiko%' THEN (SELECT id FROM personas WHERE name = 'Keiko' LIMIT 1)
-    WHEN title LIKE '%Aoi%' THEN (SELECT id FROM personas WHERE name = 'Aoi' LIMIT 1)  
-    WHEN title LIKE '%Haruki%' THEN (SELECT id FROM personas WHERE name = 'Haruki' LIMIT 1)
-    WHEN title LIKE '%Satoshi%' THEN (SELECT id FROM personas WHERE name = 'Satoshi' LIMIT 1)
-    WHEN title LIKE '%Ren%' THEN (SELECT id FROM personas WHERE name = 'Ren' LIMIT 1)
-    WHEN title LIKE '%Yuki%' THEN (SELECT id FROM personas WHERE name = 'Yuki' LIMIT 1)
-    ELSE NULL
-  END
+  SELECT p.id 
+  FROM personas p 
+  WHERE conversations.title ILIKE '%' || p.name || '%'
+  LIMIT 1
 )
-WHERE persona_id IS NULL AND title IS NOT NULL;
+WHERE persona_id IS NULL AND mode = 'solo';
 
--- For group conversations, persona_id can remain NULL since they use conversation_participants
+-- Verify the update
+SELECT 
+  id, 
+  title, 
+  mode, 
+  persona_id, 
+  (SELECT name FROM personas WHERE id = conversations.persona_id) as persona_name
+FROM conversations 
+WHERE persona_id IS NOT NULL
+LIMIT 10;
