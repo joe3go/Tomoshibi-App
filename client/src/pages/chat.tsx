@@ -157,37 +157,48 @@ export default function Chat() {
 
   const loadConversationParticipants = async () => {
     try {
-      // Check if conversation_participants table exists and has data
-      const { data: participantsData, error: participantsError } = await supabase
-        .from("conversation_participants")
-        .select("*, personas(*)")
-        .eq("conversation_id", conversationId);
+      if (isGroup) {
+        // For group conversations, fetch participants
+        const { data: participantsData, error: participantsError } = await supabase
+          .from("conversation_participants")
+          .select("*, personas(*)")
+          .eq("conversation_id", conversationId)
+          .order("order_in_convo");
 
-      if (!participantsError && participantsData && participantsData.length > 0) {
-        // Group chat: extract personas from participants
-        const groupPersonas = participantsData.map((p: any) => p.personas).filter(Boolean);
-        setConversationPersonas(groupPersonas);
-        console.log("Group chat detected with personas:", groupPersonas.map((p: any) => p.name));
+        if (!participantsError && participantsData && participantsData.length > 0) {
+          const groupPersonas = participantsData.map((p: any) => p.personas).filter(Boolean);
+          setConversationPersonas(groupPersonas);
+          console.log("Group chat participants loaded:", groupPersonas.map((p: any) => p.name));
+        } else {
+          console.error("Failed to load group participants:", participantsError);
+        }
       } else {
-        // Single chat: find persona by extracting from conversation title
+        // Single chat: find persona by conversation persona_id or title
         await loadSinglePersona();
       }
     } catch (error) {
-      console.log("No conversation_participants table found, using single persona mode");
-      // Fallback to single persona mode using conversation title
+      console.log("Error loading conversation participants:", error);
       await loadSinglePersona();
     }
   };
 
   const loadSinglePersona = async () => {
-    if (conversation?.title && personas.length > 0) {
-      // Extract persona name from title like "Chat with Aoi" or "Aoi | Scenario"
-      const titleParts = conversation.title.split('|')[0].trim();
-      const personaName = titleParts.replace(/^Chat with\s+/i, '').trim();
+    if (conversation && personas.length > 0) {
+      // First try to find persona by persona_id from conversation
+      let foundPersona = null;
       
-      const foundPersona = personas.find(p => 
-        p.name.toLowerCase() === personaName.toLowerCase()
-      );
+      if (conversation.persona_id) {
+        foundPersona = personas.find(p => p.id === conversation.persona_id);
+      }
+      
+      // Fallback: Extract persona name from title
+      if (!foundPersona && conversation.title) {
+        const titleParts = conversation.title.split('|')[0].trim();
+        const personaName = titleParts.replace(/^Chat with\s+/i, '').trim();
+        foundPersona = personas.find(p => 
+          p.name.toLowerCase() === personaName.toLowerCase()
+        );
+      }
       
       if (foundPersona) {
         setConversationPersonas([foundPersona]);
@@ -494,9 +505,27 @@ export default function Chat() {
         <div className="max-w-4xl mx-auto space-y-4">
           {messages.map((msg) => {
             // Resolve persona per message for group/solo mode
-            const senderPersona = isGroup
-              ? personas.find(p => p.id === msg.sender_persona_id) || null
-              : persona;
+            let senderPersona = null;
+            
+            if (msg.sender_type === 'ai') {
+              if (isGroup) {
+                // For group messages, find persona by sender_persona_id
+                senderPersona = conversationPersonas.find(p => p.id === msg.sender_persona_id) || 
+                               personas.find(p => p.id === msg.sender_persona_id) ||
+                               null;
+                if (!senderPersona) {
+                  console.log('Group message persona lookup failed:', {
+                    messageId: msg.id,
+                    senderPersonaId: msg.sender_persona_id,
+                    availableConversationPersonas: conversationPersonas.map(p => `${p.name}:${p.id}`),
+                    availableAllPersonas: personas.map(p => `${p.name}:${p.id}`)
+                  });
+                }
+              } else {
+                // For solo messages, use the main persona
+                senderPersona = persona;
+              }
+            }
 
             return (
               <div

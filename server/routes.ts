@@ -761,21 +761,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .rpc('create_message_with_tracking', {
             p_conversation_id: conversationId,
             p_sender_type: 'ai',
-            _content: aiResponse.content,
-            _sender_persona_id: aiPersonaId,
-            _vocab_used: validVocabUsed.length > 0 ? validVocabUsed : null,
-            _grammar_used: validGrammarUsed.length > 0 ? validGrammarUsed : null,
-            _english_translation: aiResponse.english_translation || null,
-            _tutor_feedback: aiResponse.feedback || null,
-            _suggestions: Array.isArray(aiResponse.suggestions) ? aiResponse.suggestions : null
+            p_content: aiResponse.content,
+            p_english_translation: aiResponse.english_translation || null,
+            p_tutor_feedback: aiResponse.feedback || null,
+            p_suggestions: Array.isArray(aiResponse.suggestions) ? aiResponse.suggestions : null,
+            p_vocab_used: validVocabUsed.length > 0 ? validVocabUsed : null,
+            p_grammar_used: validGrammarUsed.length > 0 ? validGrammarUsed : null,
+            p_sender_persona_id: aiPersonaId,
+            p_user_id: req.userId
           });
 
         if (aiMsgError) {
           console.error('Error creating AI message:', aiMsgError);
+          return res.status(500).json({ message: 'Failed to create AI response' });
+        }
+
+        console.log('✅ AI message created successfully with persona:', aiPersonaId);
+        
+        // Immediately fetch the created message to return with proper data
+        const { data: newMessage } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('conversation_id', conversationId)
+          .eq('sender_type', 'ai')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+        
+        if (newMessage) {
+          res.json({ 
+            userMessage: userMessage,
+            aiMessage: newMessage,
+            success: true 
+          });
+          return;
         }
       }
 
-      // Return updated messages
+      // Return updated messages with persona information
       const { data: updatedMessages } = await supabase
         .from('messages')
         .select(`
@@ -788,8 +811,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           vocab_used,
           grammar_used,
           sender_persona_id,
-          created_at,
-          personas(name, bubble_class)
+          created_at
         `)
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
