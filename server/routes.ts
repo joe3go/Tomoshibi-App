@@ -699,7 +699,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Get conversation participants for group conversations
         const { data: participants } = await supabase
           .from('conversation_participants')
-          .select('persona_id, order_in_convo, personas(*)')
+          .select(`
+            conversation_id,
+            persona_id,
+            role,
+            order_in_convo,
+            personas(*)
+          `)
           .eq('conversation_id', conversationId)
           .eq('role', 'ai')
           .order('order_in_convo');

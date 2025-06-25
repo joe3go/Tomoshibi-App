@@ -161,7 +161,13 @@ export default function Chat() {
         // For group conversations, fetch participants
         const { data: participantsData, error: participantsError } = await supabase
           .from("conversation_participants")
-          .select("*, personas(*)")
+          .select(`
+            conversation_id,
+            persona_id,
+            role,
+            order_in_convo,
+            personas(*)
+          `)
           .eq("conversation_id", conversationId)
           .order("order_in_convo");
 

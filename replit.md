@@ -156,28 +156,32 @@ Preferred communication style: Simple, everyday language.
   - Template-based conversation initialization with personalized greetings
   - Responsive UI design with proper loading states and error handling
 
-### June 25, 2025 - Complete Group Chat Functionality Implementation
+### June 25, 2025 - Complete Group Chat Functionality Implementation with Persona Attribution
 - **Implemented complete group conversation system with database integration**:
   - Created `conversation_templates` table with group chat templates including prompt suffixes
-  - Added `conversation_participants` table to track AI participants in group conversations
+  - Added `conversation_participants` table to track AI participants in group conversations (composite primary key)
   - Added `mode` column to conversations table to distinguish solo vs group chats
-  - Inserted default group templates: Anime Club, Study Group, and Cafe Hangout
+  - Inserted default group templates: Anime Club, Study Group, and Cafe Hangout with correct persona IDs
 - **Enhanced AI response system for group conversations**:
   - Updated OpenAI integration to support group prompt suffixes and multi-persona context
   - Modified server routes to handle group conversation creation and AI response generation
   - Implemented intelligent AI participant selection for group conversation responses
+  - Fixed AI message creation to properly set sender_persona_id for persona attribution
 - **Updated practice groups interface to use real Supabase data**:
   - Replaced hardcoded templates with dynamic fetching from conversation_templates table
   - Added fallback templates for graceful degradation if database unavailable
   - Enhanced template selector to show correct participant counts and metadata
-- **Completed chat interface for group conversations**:
-  - Added persona name display for AI messages in group mode
-  - Updated chat header to show multiple participant avatars for group conversations
-  - Enhanced message handling to support multiple AI responses per user message
+  - Fixed dashboard to distinguish between solo tutors and group conversations
+- **Completed chat interface for group conversations with proper persona display**:
+  - Fixed persona name display for AI messages in group mode (shows actual names like "Keiko", "Aoi")
+  - Updated chat header to show group topic instead of misleading participant counts
+  - Enhanced message handling to support persona attribution and lookup
+  - Corrected conversation participant loading to work with actual database schema
 - **Full system integration and testing**:
   - All group chat features work seamlessly with existing solo chat functionality
-  - Proper database schema with foreign key constraints and RLS policies
+  - Proper database schema alignment with foreign key constraints and RLS policies
   - Complete end-to-end functionality from template selection to group conversation
+  - Verified AI messages display correct persona names instead of generic "AI" text
 
 ### June 23, 2025 - Fixed Recent Conversations Display and Tutor Labeling Issues
 - **Fixed recent conversations filtering**:
