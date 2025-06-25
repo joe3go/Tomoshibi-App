@@ -727,11 +727,14 @@ export default function Chat() {
                 
                 <MessageWithVocab content={msg.content}>
                   <div className="text-sm leading-relaxed">
-                    <EnhancedFuriganaText
+                    <FuriganaText
                       text={msg.content}
                       showFurigana={showFurigana}
                       showToggleButton={false}
-                      enableWordHover={true}
+                      enableWordLookup={true}
+                      onSaveToVocab={(word, reading) => {
+                        console.log('Saving word to vocab:', word, reading);
+                      }}
                     />
                   </div>
                 </MessageWithVocab>

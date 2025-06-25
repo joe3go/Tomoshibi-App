@@ -661,7 +661,10 @@ export default function GroupChat() {
                     text={msg.content}
                     showFurigana={showFurigana}
                     showToggleButton={false}
-                    enableWordHover={true}
+                    enableWordLookup={true}
+                    onSaveToVocab={(word, reading) => {
+                      console.log('Saving word to vocab:', word, reading);
+                    }}
                     className="text-sm leading-relaxed"
                   />
 

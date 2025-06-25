@@ -329,7 +329,7 @@ export default function History() {
                                       <FuriganaText
                                         text={conversation.messages[conversation.messages.length - 1].content}
                                         showToggleButton={false}
-                                        enableWordHover={false}
+                                        enableWordLookup={false}
                                         className="line-clamp-2"
                                       />
                                     </div>
