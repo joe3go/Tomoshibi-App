@@ -1,21 +1,37 @@
--- FINAL DATABASE FIX FOR GROUP CHAT
+-- CORRECTED DATABASE FIX FOR GROUP CHAT (UUID VERSION)
 -- Copy and paste this entire SQL block into your Supabase SQL Editor and execute
 
--- STEP 1: First run this to see your actual persona IDs
+-- STEP 1: First run this to see your actual persona UUIDs
 SELECT id, name FROM personas ORDER BY name;
 
--- STEP 2: After seeing the persona IDs above, run the rest of this script
+-- STEP 2: After seeing the persona UUIDs above, run the rest of this script
 
--- Add missing columns
+-- Add missing columns with proper data types
 ALTER TABLE conversation_templates ADD COLUMN IF NOT EXISTS difficulty TEXT DEFAULT 'beginner';
 ALTER TABLE conversation_templates ADD COLUMN IF NOT EXISTS group_prompt_suffix TEXT;
+
+-- Check if default_personas column exists and what type it is
+DO $$
+BEGIN
+    -- Try to alter the column to UUID array if it exists but is wrong type
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'conversation_templates' 
+               AND column_name = 'default_personas') THEN
+        
+        -- Drop and recreate with correct type if needed
+        ALTER TABLE conversation_templates DROP COLUMN IF EXISTS default_personas;
+    END IF;
+    
+    -- Add default_personas as UUID array
+    ALTER TABLE conversation_templates ADD COLUMN IF NOT EXISTS default_personas UUID[];
+END $$;
 
 -- Clean up invalid participants first
 DELETE FROM conversation_participants 
 WHERE persona_id NOT IN (SELECT id FROM personas);
 
 -- Update conversation templates with valid persona UUIDs
--- IMPORTANT: Replace the persona UUIDs below with the actual UUIDs from STEP 1
+-- IMPORTANT: Replace these UUIDs with your actual persona UUIDs from STEP 1
 UPDATE conversation_templates 
 SET default_personas = ARRAY[
   'e73a0afc-3ee9-4886-b39a-c6f516ad7db7'::uuid,  -- Replace with Aoi's actual UUID
@@ -56,3 +72,14 @@ SELECT
   ct.default_personas
 FROM conversation_templates ct
 WHERE ct.title IN ('Anime Club', 'Study Group', 'Cafe Hangout');
+
+-- Double-check participants were inserted correctly
+SELECT 
+  ct.title,
+  p.name as persona_name,
+  cp.persona_id
+FROM conversation_templates ct
+JOIN conversation_participants cp ON ct.id = cp.conversation_id
+JOIN personas p ON cp.persona_id = p.id
+WHERE ct.title IN ('Anime Club', 'Study Group', 'Cafe Hangout')
+ORDER BY ct.title, p.name;
