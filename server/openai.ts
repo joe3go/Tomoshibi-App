@@ -1,45 +1,192 @@
-// openai.ts (updated with system prompt logic)
+  import OpenAI from "openai";
+  import type { Persona, Scenario, JlptVocab, JlptGrammar } from "@shared/schema";
+  import {
+    buildSystemPrompt as buildDynamicPrompt,
+    getTutorById,
+    buildUserContext,
+    logPromptUsage,
+  } from "./prompt-builder";
 
-import OpenAI from "openai";
-import type { Persona, Scenario, JlptVocab, JlptGrammar } from "@shared/schema";
-import {
-  buildSystemPrompt as buildDynamicPrompt,
-  getTutorById,
-  buildUserContext,
-  logPromptUsage,
-  type Tutor,
-  type UserContext,
-} from "./prompt-builder";
+  // UUID validation helper
+  function isValidUUID(val: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+  }
 
-// UUID validation helper
-function isValidUUID(val: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
-}
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY || "default_key",
+  });
 
-const openai = new OpenAI({
-  apiKey:
-    process.env.OPENAI_API_KEY ||
-    process.env.OPENAI_API_KEY_ENV_VAR ||
-    "default_key",
-});
+  export interface ConversationContext {
+    persona: Persona;
+    scenario?: Scenario;
+    conversationHistory: Array<{ role: "user" | "assistant"; content: string }>;
+    userMessage: string;
+    targetVocab: JlptVocab[];
+    targetGrammar: JlptGrammar[];
+    groupPromptSuffix?: string;
+    isGroupConversation?: boolean;
+    allPersonas?: Persona[];
+    conversationTopic?: string;
+  }
 
-export interface ConversationContext {
-  persona: Persona;
-  scenario?: Scenario;
-  conversationHistory: Array<{ role: "user" | "assistant"; content: string }>;
-  userMessage: string;
-  targetVocab: JlptVocab[];
-  targetGrammar: JlptGrammar[];
-  groupPromptSuffix?: string;
-  isGroupConversation?: boolean;
-  allPersonas?: Persona[];
-  conversationTopic?: string;
-}
+  export interface AIResponse {
+    content: string;
+    english_translation?: string;
+    feedback?: string;
+    vocabUsed: string[];
+    grammarUsed: string[];
+    suggestions: string[];
+  }
 
-export interface AIResponse {
-  content: string;
-  english_translation?: string;
-  feedback?: string;
+  export async function generateSecureAIResponse(
+    tutorId: string,
+    userId: string,
+    username: string,
+    userMessage: string,
+    topic: string,
+    conversationHistory: Array<{ role: "user" | "assistant"; content: string }> = [],
+    prefersEnglish: boolean = false
+  ): Promise<AIResponse> {
+    const { validateTutorId } = await import("../shared/validation");
+
+    const validTutorId = validateTutorId(tutorId);
+    const tutor = await getTutorById(validTutorId);
+    if (!tutor) throw new Error(`Tutor with ID ${validTutorId} not found`);
+
+    const userContext = await buildUserContext(userId, username, topic, prefersEnglish);
+    const systemPrompt = buildDynamicPrompt(tutor, userContext);
+    logPromptUsage(tutorId, userId, topic);
+
+    const messages = [
+      { role: "system" as const, content: systemPrompt },
+      ...conversationHistory,
+      { role: "user" as const, content: userMessage },
+    ];
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages,
+      temperature: 0.8,
+      max_tokens: 500,
+      response_format: { type: "json_object" },
+    });
+
+    const raw = response?.choices?.[0]?.message?.content;
+    if (!raw) throw new Error("Empty AI response");
+
+    try {
+      const json = JSON.parse(raw.replace(/```json\s*|\s*```/g, "").trim());
+      return {
+        content: json.response || "もう一度お願いします。",
+        english_translation: json.english_translation || "Please say it again.",
+        feedback: json.feedback || null,
+        vocabUsed: Array.isArray(json.vocabUsed)
+          ? json.vocabUsed.filter((id: any) => typeof id === "string" && isValidUUID(id))
+          : [],
+        grammarUsed: Array.isArray(json.grammarUsed)
+          ? json.grammarUsed.filter((id: any) => typeof id === "string" && isValidUUID(id))
+          : [],
+        suggestions: Array.isArray(json.suggestions)
+          ? json.suggestions
+          : typeof json.suggestions === "string"
+          ? [json.suggestions]
+          : [],
+      };
+    } catch (err) {
+      console.error("Failed to parse AI JSON:", err, raw);
+      return {
+        content: "すみません、もう一度言ってください。",
+        english_translation: "Sorry, please say that again.",
+        feedback: null,
+        vocabUsed: [],
+        grammarUsed: [],
+        suggestions: ["Try rephrasing", "Use simpler Japanese"],
+      };
+    }
+  }
+
+  export async function generateAIResponse(context: ConversationContext): Promise<AIResponse> {
+    const systemPrompt = buildSystemPrompt(context);
+    const limitedHistory = context.conversationHistory.slice(-12);
+
+    const messages = [
+      { role: "system" as const, content: systemPrompt },
+      ...limitedHistory,
+      { role: "user" as const, content: context.userMessage },
+    ];
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages,
+      temperature: 0.7,
+      max_tokens: 500,
+      response_format: { type: "json_object" },
+    });
+
+    const raw = response?.choices?.[0]?.message?.content;
+    if (!raw) throw new Error("Empty AI response");
+
+    try {
+      const json = JSON.parse(raw);
+      return {
+        content: json.response || "もう一度お願いします。",
+        english_translation: json.english_translation || "",
+        feedback: json.feedback || "",
+        vocabUsed: Array.isArray(json.vocabUsed) ? json.vocabUsed : [],
+        grammarUsed: Array.isArray(json.grammarUsed) ? json.grammarUsed : [],
+        suggestions: Array.isArray(json.suggestions) ? json.suggestions : [],
+      };
+    } catch (err) {
+      console.error("Failed to parse JSON response:", err);
+      throw new Error("Failed to parse AI response.");
+    }
+  }
+
+  function buildSystemPrompt(context: ConversationContext): string {
+    const {
+      persona,
+      scenario,
+      targetVocab,
+      targetGrammar,
+      groupPromptSuffix,
+      isGroupConversation,
+      allPersonas,
+      conversationTopic = "general conversation",
+    } = context;
+
+    let prompt = `You are ${persona.name}, a Japanese tutor.
+  - Personality: ${persona.personality}
+  - Style: ${persona.speaking_style}
+  - Role: Help a learner practice Japanese conversation.
+  - Level: ${persona.level || "N5"}
+  - Topic: ${conversationTopic}
+
+  Target Vocabulary: ${targetVocab.map(v => `${v.kanji || v.hiragana} (${v.meaning})`).join(", ")}
+  Target Grammar: ${targetGrammar.map(g => g.pattern).join(", ")}
+
+  ${scenario ? `Scenario: ${scenario.title} - ${scenario.description}` : "Have a free conversation."}`;
+
+    if (isGroupConversation) {
+      prompt += `\nThis is a group chat. Respond as ${persona.name}.`;
+      if (groupPromptSuffix) prompt += `\nGroup prompt: ${groupPromptSuffix}`;
+      if (allPersonas?.length) {
+        const others = allPersonas.filter(p => p.id !== persona.id);
+        prompt += `\nOther participants: ${others.map(p => p.name).join(", ")}`;
+      }
+    }
+
+    prompt += `\n\nReturn a JSON like:
+  {
+    "response": "Japanese reply here",
+    "english_translation": "English meaning",
+    "feedback": "Optional learning tip",
+    "vocabUsed": [],
+    "grammarUsed": [],
+    "suggestions": []
+  }`;
+
+    return prompt;
+  }  feedback?: string;
   vocabUsed: number[];
   grammarUsed: number[];
   suggestions: string[];
