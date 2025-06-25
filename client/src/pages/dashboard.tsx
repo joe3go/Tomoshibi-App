@@ -30,6 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase/client";
 import { queryClient } from "@/lib/queryClient";
 import VocabularyStatsCard from "@/components/VocabularyStatsCard";
+import { getUserProfile, updateStreak, addXP, UserProfile } from "@/lib/supabase-user-profile";
 
 // Helper function to get avatar image
 const getAvatarImage = (persona: any) => {
@@ -56,6 +57,7 @@ export default function Dashboard() {
   const [tutorsData, setTutorsData] = useState<any[]>([]);
   const [tutorsLoading, setTutorsLoading] = useState(true);
   const [groupConversations, setGroupConversations] = useState<any[]>([]);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const { toast } = useToast();
 
   // Fetch conversations from Supabase
@@ -106,6 +108,22 @@ export default function Dashboard() {
     fetchTutors();
   }, []);
 
+  // Fetch user profile from Supabase
+  const { data: userProfileData } = useQuery({
+    queryKey: ["user-profile", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const profile = await getUserProfile(user.id);
+      if (profile) {
+        setUserProfile(profile);
+        // Update streak when user visits dashboard
+        await updateStreak(user.id);
+      }
+      return profile;
+    },
+    enabled: !!user?.id,
+  });
+
   // Fetch vocabulary stats from Supabase
   const { data: vocabStats } = useQuery({
     queryKey: ["vocab-stats", user?.id],
@@ -150,14 +168,18 @@ export default function Dashboard() {
     },
   });
 
-  // Mock analytics data (in real app, this would come from API)
+  // Analytics data from user profile and conversations
   const analytics = {
-    streak: 7,
-    newWordsThisWeek: 12,
-    totalWords: 150,
+    streak: userProfile?.streak_days || 0,
+    newWordsThisWeek: 12, // Could be calculated from vocab tracker
+    totalWords: vocabStats ? 
+      Object.values(vocabStats).reduce((sum: number, count: any) => sum + (count || 0), 0) : 
+      150,
     activeConversations: Array.isArray(conversations) ? conversations.filter((conv: any) => conv.status === 'active').length : 0,
-    practiceTime: 155, // minutes
-    upcomingGoal: "Learn 20 JLPT N5 words"
+    practiceTime: 155, // minutes - could be tracked in future
+    upcomingGoal: userProfile?.learning_goals || `Learn ${userProfile?.jlpt_goal_level || 'N5'} vocabulary`,
+    xp: userProfile?.xp || 0,
+    jlptGoal: userProfile?.jlpt_goal_level || 'N5'
   };
 
   // Handle tutor selection for new chat
@@ -216,13 +238,19 @@ export default function Dashboard() {
 
       return { success: true };
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      // Add XP reward for completing conversation
+      if (user?.id) {
+        await addXP(user.id, 50); // 50 XP for completing a conversation
+      }
+      
       toast({
         title: "Conversation ended",
-        description: "The conversation has been completed and moved to your transcripts.",
+        description: "The conversation has been completed and moved to your transcripts. +50 XP earned!",
       });
       // Force immediate refresh of conversations list
       queryClient.invalidateQueries({ queryKey: ["conversations", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["user-profile", user?.id] });
       refetchConversations();
     },
     onError: (error) => {
@@ -316,6 +344,7 @@ export default function Dashboard() {
             <Button
               variant="ghost"
               size="sm"
+              onClick={() => setLocation('/settings')}
               className="header-nav-btn"
             >
               <Settings className="w-4 h-4" />
@@ -336,10 +365,25 @@ export default function Dashboard() {
         {/* Welcome Section */}
         <div className="welcome-section">
           <div className="welcome-content">
-            <h1 className="welcome-title">
-              Welcome back, {user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Student'}!
-            </h1>
-            <p className="welcome-subtitle">Keep your momentum going!</p>
+            <div className="flex items-center gap-4 mb-4">
+              <Avatar className="w-16 h-16">
+                <AvatarImage src={userProfile?.avatar_url} alt="Profile" />
+                <AvatarFallback>
+                  {(userProfile?.display_name || user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Student')[0].toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h1 className="welcome-title">
+                  Welcome back, {userProfile?.display_name || user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Student'}!
+                </h1>
+                <p className="welcome-subtitle">Keep your momentum going!</p>
+                {userProfile?.jlpt_goal_level && (
+                  <Badge variant="secondary" className="mt-1">
+                    Goal: {userProfile.jlpt_goal_level}
+                  </Badge>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -414,11 +458,23 @@ export default function Dashboard() {
             <Card className="stat-card">
               <CardContent className="stat-content">
                 <div className="stat-icon">
+                  <Award className="w-6 h-6 text-yellow-500" />
+                </div>
+                <div className="stat-details">
+                  <p className="stat-value">{analytics.xp}</p>
+                  <p className="stat-label">XP Earned</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="stat-card">
+              <CardContent className="stat-content">
+                <div className="stat-icon">
                   <Target className="w-6 h-6 text-red-500" />
                 </div>
                 <div className="stat-details">
-                  <p className="stat-value">Goal</p>
-                  <p className="stat-label">{analytics.upcomingGoal}</p>
+                  <p className="stat-value">{analytics.jlptGoal}</p>
+                  <p className="stat-label">JLPT Goal</p>
                 </div>
               </CardContent>
             </Card>

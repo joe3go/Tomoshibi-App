@@ -1,372 +1,297 @@
-
-import { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Upload, User, BookOpen, Settings as SettingsIcon } from 'lucide-react';
-import { useLocation } from 'wouter';
-import { apiRequest, queryClient } from '@/lib/queryClient';
-import { useAuth } from '@/context/SupabaseAuthContext';
-import { removeAuthToken } from '@/lib/auth';
-
-interface UserSettings {
-  id: number;
-  email: string;
-  displayName: string;
-  profileImageUrl?: string;
-  jlptLevel: string;
-  studyGoal: string;
-  preferredDifficulty: string;
-}
-
-interface UserProgress {
-  id: number;
-  userId: number;
-  jlptLevel: string;
-  vocabEncountered: number[];
-  vocabMastered: number[];
-  grammarEncountered: number[];
-  grammarMastered: number[];
-  totalConversations: number;
-  totalMessagesSent: number;
-}
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
+import { useAuth } from "@/context/SupabaseAuthContext";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
+import { ArrowLeft, User, Target, Globe, Palette, Save } from "lucide-react";
+import { getUserProfile, updateUserProfile, createUserProfile, UserProfile } from "@/lib/supabase-user-profile";
 
 export default function Settings() {
   const [, setLocation] = useLocation();
+  const { user, loading: authLoading, session } = useAuth();
+  const isAuthenticated = !!session;
   const { toast } = useToast();
-  const { user } = useAuth();
-  const [isUploading, setIsUploading] = useState(false);
 
-  const handleLogout = () => {
-    removeAuthToken();
-    queryClient.clear();
-    window.location.href = '/login';
-  };
-
-  const { data: userSettings, isLoading } = useQuery<UserSettings>({
-    queryKey: ['/api/auth/me'],
+  const [profile, setProfile] = useState<UserProfile>({
+    id: '',
+    username: '',
+    display_name: '',
+    avatar_url: '',
+    prefers_english: false,
+    jlpt_goal_level: 'N5',
+    native_language: '',
+    timezone: '',
+    theme: 'light',
+    learning_goals: '',
   });
 
-  const { data: progress } = useQuery<UserProgress>({
-    queryKey: ['/api/progress'],
-  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const updateProfileMutation = useMutation({
-    mutationFn: async (updates: Partial<UserSettings>) => {
-      const response = await apiRequest('PATCH', `/api/users/${userSettings?.id}`, updates);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
-      toast({
-        title: "Profile Updated",
-        description: "Your profile has been successfully updated.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Update Failed",
-        description: "Failed to update profile. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "File Too Large",
-        description: "Please select an image smaller than 5MB.",
-        variant: "destructive",
-      });
-      return;
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      setLocation('/login');
     }
+  }, [authLoading, isAuthenticated, setLocation]);
 
-    setIsUploading(true);
+  // Load user profile
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user?.id) return;
+
+      try {
+        let userProfile = await getUserProfile(user.id);
+
+        // Create profile if it doesn't exist
+        if (!userProfile) {
+          userProfile = await createUserProfile(user.id, {
+            display_name: user.user_metadata?.display_name || user.email?.split('@')[0] || '',
+            username: user.email?.split('@')[0] || '',
+          });
+        }
+
+        if (userProfile) {
+          setProfile(userProfile);
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load profile settings",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user?.id) {
+      loadProfile();
+    }
+  }, [user?.id, toast]);
+
+  const handleSave = async () => {
+    if (!user?.id) return;
+
+    setSaving(true);
     try {
-      const formData = new FormData();
-      formData.append('avatar', file);
-
-      const response = await fetch('/api/upload/avatar', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        updateProfileMutation.mutate({ profileImageUrl: data.url });
+      const updated = await updateUserProfile(user.id, profile);
+      if (updated) {
+        toast({
+          title: "Settings saved",
+          description: "Your profile has been updated successfully",
+        });
       } else {
-        throw new Error('Upload failed');
+        throw new Error('Failed to update profile');
       }
     } catch (error) {
+      console.error('Error saving profile:', error);
       toast({
-        title: "Upload Failed",
-        description: "Failed to upload avatar. Please try again.",
+        title: "Error",
+        description: "Failed to save profile settings",
         variant: "destructive",
       });
     } finally {
-      setIsUploading(false);
+      setSaving(false);
     }
   };
 
-  const handleProfileUpdate = (field: keyof UserSettings, value: string) => {
-    updateProfileMutation.mutate({ [field]: value });
+  const updateField = (field: keyof UserProfile, value: any) => {
+    setProfile(prev => ({ ...prev, [field]: value }));
   };
 
-  if (isLoading) {
+  if (authLoading || loading) {
     return (
-      <div className="settings-page-container">
-        <div className="settings-content-wrapper">
-          <div className="settings-loading-container">
-            <div className="settings-loading-content">
-              <div className="settings-loading-spinner"></div>
-              <p className="settings-loading-text">Loading settings...</p>
-            </div>
-          </div>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full"></div>
       </div>
     );
   }
 
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
-    <div className="settings-page-container">
-      <div className="settings-content-wrapper">
-        {/* Header */}
-        <div className="settings-header">
-          <Button
-            variant="ghost"
-            onClick={() => setLocation('/')}
-            className="settings-back-button"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
-          </Button>
-          <div className="settings-title-section">
-            <div className="settings-icon-container">
-              <SettingsIcon className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <h1 className="settings-page-title">Settings</h1>
-              <p className="settings-page-subtitle">Manage your account and learning preferences</p>
-            </div>
-          </div>
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-8">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setLocation('/dashboard')}
+          className="p-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold">Settings</h1>
+          <p className="text-muted-foreground">Manage your profile and preferences</p>
         </div>
+      </div>
 
-        <div className="settings-grid-layout">
-          {/* Profile Settings */}
-          <div className="settings-main-column">
-            <Card>
-              <CardHeader>
-                <CardTitle className="settings-section-title">
-                  <User className="w-5 h-5" />
-                  Profile
-                </CardTitle>
-                <CardDescription>
-                  Update your personal information and avatar
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="settings-profile-content">
-                {/* Avatar Upload */}
-                <div className="settings-avatar-section">
-                  <Avatar className="settings-avatar">
-                    <AvatarImage src={userSettings?.profileImageUrl} />
-                    <AvatarFallback>
-                      {userSettings?.displayName?.charAt(0)?.toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <Label htmlFor="avatar-upload" className="settings-avatar-upload-label">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        disabled={isUploading}
-                        asChild
-                      >
-                        <span>
-                          <Upload className="w-4 h-4 mr-2" />
-                          {isUploading ? 'Uploading...' : 'Change Avatar'}
-                        </span>
-                      </Button>
-                    </Label>
-                    <input
-                      id="avatar-upload"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarUpload}
-                      className="settings-avatar-input"
-                    />
-                    <p className="settings-avatar-helper-text">
-                      JPG, PNG or GIF (max 5MB)
-                    </p>
-                  </div>
-                </div>
+      <div className="grid gap-6">
+        {/* Profile Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="w-5 h-5" />
+              Profile Information
+            </CardTitle>
+            <CardDescription>
+              Update your personal information and display preferences
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="display_name">Display Name</Label>
+                <Input
+                  id="display_name"
+                  value={profile.display_name || ''}
+                  onChange={(e) => updateField('display_name', e.target.value)}
+                  placeholder="How you'd like to be addressed"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  value={profile.username || ''}
+                  onChange={(e) => updateField('username', e.target.value)}
+                  placeholder="Unique username"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="avatar_url">Avatar URL</Label>
+              <Input
+                id="avatar_url"
+                value={profile.avatar_url || ''}
+                onChange={(e) => updateField('avatar_url', e.target.value)}
+                placeholder="https://example.com/avatar.png"
+              />
+            </div>
+          </CardContent>
+        </Card>
 
-                <Separator />
-
-                {/* Display Name */}
-                <div className="settings-field-group">
-                  <Label htmlFor="displayName">Display Name</Label>
-                  <Input
-                    id="displayName"
-                    defaultValue={userSettings?.displayName}
-                    onBlur={(e) => handleProfileUpdate('displayName', e.target.value)}
-                    placeholder="Enter your display name"
-                  />
-                </div>
-
-                {/* Email (readonly) */}
-                <div className="settings-field-group">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    value={userSettings?.email}
-                    disabled
-                    className="settings-readonly-field"
-                  />
-                  <p className="settings-field-helper-text">
-                    Contact support to change your email address
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Learning Preferences */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="settings-section-title">
-                  <BookOpen className="w-5 h-5" />
-                  Learning Preferences
-                </CardTitle>
-                <CardDescription>
-                  Customize your learning experience
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="settings-preferences-content">
-                {/* JLPT Level */}
-                <div className="settings-field-group">
-                  <Label>Current JLPT Level</Label>
-                  <Select
-                    defaultValue={progress?.jlptLevel || 'N5'}
-                    onValueChange={(value) => handleProfileUpdate('jlptLevel', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="N5">N5 (Beginner)</SelectItem>
-                      <SelectItem value="N4">N4 (Elementary)</SelectItem>
-                      <SelectItem value="N3">N3 (Intermediate)</SelectItem>
-                      <SelectItem value="N2">N2 (Upper Intermediate)</SelectItem>
-                      <SelectItem value="N1">N1 (Advanced)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Study Goal */}
-                <div className="settings-field-group">
-                  <Label>Study Goal</Label>
-                  <Select
-                    defaultValue={userSettings?.studyGoal || 'conversation'}
-                    onValueChange={(value) => handleProfileUpdate('studyGoal', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="conversation">Improve Conversation</SelectItem>
-                      <SelectItem value="jlpt">Pass JLPT Exam</SelectItem>
-                      <SelectItem value="business">Business Japanese</SelectItem>
-                      <SelectItem value="travel">Travel Japanese</SelectItem>
-                      <SelectItem value="general">General Proficiency</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Preferred Difficulty */}
-                <div className="settings-field-group">
-                  <Label>Preferred Difficulty</Label>
-                  <Select
-                    defaultValue={userSettings?.preferredDifficulty || 'adaptive'}
-                    onValueChange={(value) => handleProfileUpdate('preferredDifficulty', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="easy">Easy</SelectItem>
-                      <SelectItem value="adaptive">Adaptive</SelectItem>
-                      <SelectItem value="challenging">Challenging</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="settings-sidebar">
-            <Card>
-              <CardHeader>
-                <CardTitle>Learning Progress</CardTitle>
-              </CardHeader>
-              <CardContent className="settings-stats-content">
-                <div className="settings-stat-item">
-                  <div className="settings-stat-value settings-stat-value-primary">
-                    {progress?.totalConversations || 0}
-                  </div>
-                  <p className="settings-stat-label">Conversations</p>
-                </div>
-                <div className="settings-stat-item">
-                  <div className="settings-stat-value settings-stat-value-green">
-                    {progress?.vocabEncountered?.length || 0}
-                  </div>
-                  <p className="settings-stat-label">Vocabulary Encountered</p>
-                </div>
-                <div className="settings-stat-item">
-                  <div className="settings-stat-value settings-stat-value-blue">
-                    {progress?.vocabMastered?.length || 0}
-                  </div>
-                  <p className="settings-stat-label">Words Mastered</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Account</CardTitle>
-              </CardHeader>
-              <CardContent className="settings-account-actions">
-                <Button variant="outline" className="settings-action-button" disabled>
-                  Export Data
-                </Button>
-                <Button variant="outline" className="settings-action-button" disabled>
-                  Reset Progress
-                </Button>
-                <Button 
-                  variant="destructive" 
-                  className="settings-logout-button" 
-                  onClick={handleLogout}
+        {/* Learning Preferences */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="w-5 h-5" />
+              Learning Preferences
+            </CardTitle>
+            <CardDescription>
+              Set your Japanese learning goals and preferences
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="jlpt_goal_level">JLPT Goal Level</Label>
+                <Select
+                  value={profile.jlpt_goal_level || 'N5'}
+                  onValueChange={(value) => updateField('jlpt_goal_level', value)}
                 >
-                  Logout
-                </Button>
-                <p className="settings-logout-help-text">
-                  Sign out of your account
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="N5">N5 (Beginner)</SelectItem>
+                    <SelectItem value="N4">N4 (Elementary)</SelectItem>
+                    <SelectItem value="N3">N3 (Intermediate)</SelectItem>
+                    <SelectItem value="N2">N2 (Upper-Intermediate)</SelectItem>
+                    <SelectItem value="N1">N1 (Advanced)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="native_language">Native Language</Label>
+                <Input
+                  id="native_language"
+                  value={profile.native_language || ''}
+                  onChange={(e) => updateField('native_language', e.target.value)}
+                  placeholder="English, Spanish, etc."
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="learning_goals">Learning Goals</Label>
+              <Textarea
+                id="learning_goals"
+                value={profile.learning_goals || ''}
+                onChange={(e) => updateField('learning_goals', e.target.value)}
+                placeholder="Describe your Japanese learning goals..."
+                rows={3}
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="prefers_english"
+                checked={profile.prefers_english || false}
+                onCheckedChange={(checked) => updateField('prefers_english', checked)}
+              />
+              <Label htmlFor="prefers_english">Prefer English explanations</Label>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* App Preferences */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Palette className="w-5 h-5" />
+              App Preferences
+            </CardTitle>
+            <CardDescription>
+              Customize your app experience
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="theme">Theme</Label>
+                <Select
+                  value={profile.theme || 'light'}
+                  onValueChange={(value) => updateField('theme', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="light">Light</SelectItem>
+                    <SelectItem value="dark">Dark</SelectItem>
+                    <SelectItem value="system">System</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="timezone">Timezone</Label>
+                <Input
+                  id="timezone"
+                  value={profile.timezone || ''}
+                  onChange={(e) => updateField('timezone', e.target.value)}
+                  placeholder="America/New_York, Asia/Tokyo, etc."
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Save Button */}
+        <div className="flex justify-end">
+          <Button onClick={handleSave} disabled={saving} size="lg">
+            <Save className="w-4 h-4 mr-2" />
+            {saving ? 'Saving...' : 'Save Settings'}
+          </Button>
         </div>
       </div>
     </div>
