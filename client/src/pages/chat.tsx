@@ -14,11 +14,14 @@ import { useAuth } from "@/context/SupabaseAuthContext";
 import { extractPersonaFromTitle } from "@/lib/supabase-functions";
 import { useConversationMode } from "@/hooks/useConversationMode";
 // Import vocabulary tracking function from API
-const trackVocabularyUsage = async (text: string, source: 'user' | 'ai') => {
+const trackVocabularyUsage = async (text: string, source: 'user' | 'ai', session: any) => {
   try {
     await fetch('/api/vocab-tracker/increment', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.access_token}`
+      },
       body: JSON.stringify({ text, source })
     });
   } catch (error) {
@@ -279,6 +282,7 @@ export default function Chat() {
         }
 
         setConversationPersonas(groupPersonas);
+        console.log("🧠 Loaded group personas:", groupPersonas.map(p => p.name));
       } else {
         // Single chat: find persona by conversation persona_id or title
         await loadSinglePersona();
@@ -310,7 +314,8 @@ export default function Chat() {
       if (foundPersona) {
         setConversationPersonas([foundPersona]);
         setPersona(foundPersona);
-        console.log("Single chat with persona:", foundPersona.name);
+        console.log("🧠 Loaded single persona:", foundPersona.name);
+        console.log("🧠 Loaded personas:", [foundPersona.name]);
       }
     }
   };
@@ -401,7 +406,7 @@ export default function Chat() {
 
       // Track vocabulary usage for user message
       try {
-        await trackVocabularyUsage(finalMessage, 'user');
+        await trackVocabularyUsage(finalMessage, 'user', session);
       } catch (error) {
         console.log("Vocabulary tracking failed:", error);
       }
@@ -416,7 +421,7 @@ export default function Chat() {
         body: JSON.stringify({
           message: finalMessage,
           conversationId: conversationId,
-          tutorId: persona?.id || "",
+          tutorId: persona?.id ?? conversationPersonas?.[0]?.id ?? "",
         }),
       });
 
@@ -450,10 +455,15 @@ export default function Chat() {
 
       // Immediately add AI message to UI
       setMessages(prev => [...prev, aiMessage]);
+      
+      // Force shallow state update to ensure UI reflow
+      setTimeout(() => {
+        setMessages(prev => [...prev]);
+      }, 50);
 
       // Track vocabulary usage for AI message
       try {
-        await trackVocabularyUsage(aiData.content || '', 'ai');
+        await trackVocabularyUsage(aiData.content || '', 'ai', session);
       } catch (error) {
         console.log("AI vocabulary tracking failed:", error);
       }
