@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Calendar, MessageCircle, User, Clock, BookOpen, TrendingUp, BarChart3, Play, CheckCircle } from 'lucide-react';
 import { useLocation } from 'wouter';
-import EnhancedFuriganaText from '@/components/enhanced-furigana-text';
+import FuriganaText from '@/components/furigana-text';
 
 interface ConversationWithDetails {
   id: number;
@@ -326,7 +326,7 @@ export default function History() {
                                   <div className="history-message-preview">
                                     <p className="history-message-preview-label">Last message:</p>
                                     <div className="history-message-preview-content">
-                                      <EnhancedFuriganaText
+                                      <FuriganaText
                                         text={conversation.messages[conversation.messages.length - 1].content}
                                         showToggleButton={false}
                                         enableWordHover={false}
