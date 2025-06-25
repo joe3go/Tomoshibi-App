@@ -156,6 +156,28 @@ Preferred communication style: Simple, everyday language.
   - Template-based conversation initialization with personalized greetings
   - Responsive UI design with proper loading states and error handling
 
+### June 25, 2025 - Decoupled Group Chat System for Better Scalability
+- **Created dedicated GroupChat component** (`client/src/pages/group-chat.tsx`):
+  - Completely separate from solo chat to avoid complexity and bugs
+  - Dedicated group chat logic with proper round-robin speaker selection
+  - Built-in throttling system (15-second cooldown, max 2 consecutive responses)
+  - Clean persona attribution and message display with timestamps
+- **Improved architecture for long-term maintainability**:
+  - Isolated group chat state management and business logic
+  - Dedicated route `/group-chat/:conversationId` for group conversations
+  - Updated Practice Groups to use new group chat component
+  - Easier debugging and feature development for group-specific functionality
+- **Database schema fixes** (`fix-group-chat-schema.sql`):
+  - Added missing `difficulty` column to conversation_templates
+  - Fixed `default_personas` array with proper UUID references
+  - Added `group_prompt_suffix` column for conversation context
+  - Clean up invalid persona references in conversation_participants
+- **Benefits for scalability**:
+  - Independent evolution of group vs solo chat features
+  - Performance optimization specific to group scenarios  
+  - Cleaner testing and debugging workflows
+  - Foundation for advanced group features (reactions, threads, moderation)
+
 ### June 25, 2025 - Enhanced Group Chat System with Smart State Management and Turn-Taking
 - **Implemented advanced group chat state management**:
   - Added cooldown system (15 seconds) to prevent rapid-fire AI responses
