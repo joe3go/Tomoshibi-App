@@ -172,6 +172,11 @@ Preferred communication style: Simple, everyday language.
   - More accurate vocabulary targeting based on actual user level
   - Consistent learning experience across different AI personas
   - Foundation for adaptive difficulty that can evolve with user progress
+- **Implementation completed**:
+  - Backend AI generation now uses user's JLPT level from settings
+  - Settings page JLPT selector fully functional (N5 Beginner to N1 Advanced)
+  - Consistent difficulty across both solo chat and group chat systems
+  - Database migration ready for deployment (add-user-jlpt-level.sql)
 
 ### June 25, 2025 - Decoupled Group Chat System for Better Scalability
 - **Created dedicated GroupChat component** (`client/src/pages/group-chat.tsx`):

@@ -280,8 +280,8 @@ function buildSystemPrompt(context: ConversationContext): string {
 - Background: ${persona.background || 'Experienced Japanese language instructor'}
 
 You are helping a Japanese language learner practice conversation. Your goal is to:
-1. Respond naturally in Japanese using vocabulary and grammar appropriate for the user's current level
-2. Be encouraging and supportive
+1. Respond naturally in Japanese using vocabulary and grammar appropriate for ${context.persona.level || 'the user\'s current level'}
+2. Be encouraging and supportive  
 3. Use vocabulary from the target list when possible
 4. Keep responses conversational and engaging
 
