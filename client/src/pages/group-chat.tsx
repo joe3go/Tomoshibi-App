@@ -93,11 +93,11 @@ export default function GroupChat() {
 
       setConversation(convData);
 
-      // Load group personas from template
+      // Load group personas from template - using correct database persona IDs
       const personaIds = convData.conversation_templates?.default_personas || [
+        "8b0f056c-41fb-4c47-baac-6029c64e026a", // Keiko
         "9612651e-d1df-428f-865c-2a1c005952ef", // Aoi
-        "e73a0afc-3ee9-4886-b39a-c6f516ad7db7", // Haruki
-        "8b0f056c-41fb-4c47-baac-6029c64e026a"  // Keiko
+        "e73a0afc-3ee9-4886-b39a-c6f516ad7db7"  // Haruki
       ];
 
       const { data: personasData, error: personasError } = await supabase
