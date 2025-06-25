@@ -709,6 +709,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Simple approach: random selection or round-robin
           const respondingParticipant = participants[Math.floor(Math.random() * participants.length)];
           aiPersonaId = respondingParticipant.persona_id;
+          console.log('Selected AI persona for group response:', {
+            personaId: aiPersonaId,
+            personaName: respondingParticipant.personas?.name,
+            totalParticipants: participants.length
+          });
+        } else {
+          console.log('No participants found for group conversation:', conversationId);
         }
       }
 
