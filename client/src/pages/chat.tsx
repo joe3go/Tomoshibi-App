@@ -13,7 +13,7 @@ import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/context/SupabaseAuthContext";
 import { extractPersonaFromTitle } from "@/lib/supabase-functions";
 import { useConversationMode } from "@/hooks/useConversationMode";
-import { loadGroupPersonas, loadSoloPersona, loadAllPersonas, Persona as LoaderPersona } from "@/lib/supabase/loaders";
+import { loadGroupPersonas, loadSoloPersona, loadAllPersonas, populateConversationParticipants, Persona as LoaderPersona } from "@/lib/supabase/loaders";
 // Import vocabulary tracking function from API
 const trackVocabularyUsage = async (text: string, source: 'user' | 'ai', session: any, tutorId?: string, conversationId?: string) => {
   try {
@@ -233,14 +233,18 @@ export default function Chat() {
 
       if (isGroup) {
         console.log("🔍 Loading group participants for conversation:", conversationId);
+        
+        // Try to populate participants table first if empty
+        await populateConversationParticipants(conversationId);
+        
         loadedPersonas = await loadGroupPersonas(conversationId);
         
         if (loadedPersonas.length === 0) {
-          console.warn("⚠️ No group personas found, falling back to all personas");
-          // Fallback: load first 3 personas as mock participants for demo
+          console.warn("⚠️ No group personas found even after population attempt");
+          // Final fallback: load first 3 personas as mock participants
           const allPersonas = await loadAllPersonas();
           loadedPersonas = allPersonas.slice(0, 3);
-          console.log("🔧 Using fallback personas:", loadedPersonas.map(p => p.name));
+          console.log("🔧 Using emergency fallback personas:", loadedPersonas.map(p => p.name));
         }
       } else {
         console.log("🔍 Loading solo persona for conversation:", conversationId);
