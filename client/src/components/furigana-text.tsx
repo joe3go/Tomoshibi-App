@@ -103,16 +103,13 @@ export default function FuriganaText({
       <div className="leading-relaxed">
         {parsedText.map((part, index) => {
           if (part.type === "furigana") {
-            return (
-              <ruby
-                key={index}
-                className="inline-block mr-1"
-              >
+            return showFurigana ? (
+              <ruby key={index} className="inline-block mr-1">
                 {part.kanji}
-                <rt className={`text-xs ${showFurigana ? 'opacity-100' : 'opacity-0'}`}>
-                  {part.reading}
-                </rt>
+                <rt className="text-xs leading-none">{part.reading}</rt>
               </ruby>
+            ) : (
+              <span key={index}>{part.kanji}</span>
             );
           }
           return <span key={index}>{part.content}</span>;

@@ -234,7 +234,9 @@ export default function GroupChat() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to get AI response");
+        const errorText = await response.text();
+        console.error("AI response error:", response.status, errorText);
+        throw new Error(`Failed to get AI response: ${response.status} ${errorText}`);
       }
 
       const aiData = await response.json();
@@ -260,10 +262,10 @@ export default function GroupChat() {
       updateGroupChatState(nextSpeakerId);
 
     } catch (error) {
-      console.error("Send message error:", error);
+      console.error("Send message error details:", error);
       toast({
         title: "Error sending message",
-        description: "Please try again.",
+        description: error?.message || "Please try again.",
         variant: "destructive",
       });
     } finally {
