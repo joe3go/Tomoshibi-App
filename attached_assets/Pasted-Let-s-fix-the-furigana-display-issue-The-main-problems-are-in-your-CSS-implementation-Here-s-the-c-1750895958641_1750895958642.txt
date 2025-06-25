@@ -1,0 +1,141 @@
+Let's fix the furigana display issue. The main problems are in your CSS implementation. Here's the corrected approach:
+
+css
+
+/* Fix for Furigana Display */
+.jt-ruby {
+  ruby-position: over;
+  ruby-align: center;
+  display: inline-flex;
+  flex-direction: column-reverse;
+  vertical-align: top;
+  line-height: 1.6;
+}
+
+.jt-ruby rt {
+  font-size: 0.5em;
+  letter-spacing: 0.5px;
+  color: hsl(var(--muted-foreground));
+  text-align: center;
+  display: block;
+  padding: 0 0.15em;
+  transform: translateY(-0.1em);
+  line-height: 1.2;
+  font-feature-settings: "pkna";
+}
+
+/* Remove absolute positioning and transforms */
+rt {
+  position: static !important;
+  transform: none !important;
+}
+
+/* Add browser-specific fixes */
+@supports (ruby-position: over) {
+  .jt-ruby {
+    ruby-position: over;
+  }
+}
+
+/* Fallback for browsers without proper ruby support */
+@supports not (ruby-position: over) {
+  .jt-ruby {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    vertical-align: top;
+  }
+  
+  .jt-ruby rt {
+    order: -1;
+    padding-bottom: 0.2em;
+  }
+}
+
+/* Ensure parent containers allow proper rendering */
+.jt-body {
+  line-height: 1.8;
+  font-size: 1rem;
+}
+
+/* Remove conflicting transitions */
+.jt-ruby {
+  transition: none !important;
+}
+Key Fixes:
+
+
+Removed absolute positioning conflicting with ruby layout
+
+Added proper browser feature detection
+
+Created a flex-based fallback for incompatible browsers
+
+Fixed line-height inheritance
+
+Added font-feature-settings for better Japanese typography
+
+Removed conflicting transforms
+
+Adjusted font sizes and spacing for better readability
+
+Update your FuriganaText component to use these classes:
+
+tsx
+
+// In your FuriganaText component's render method
+{showFurigana ? (
+  <ruby
+    key={i}
+    className="jt-ruby hover:bg-blue-100 cursor-pointer rounded px-1"
+    onClick={(e) => handleClick(e, t)}
+  >
+    {t.kanji}
+    <rt className="text-xs text-blue-600 font-medium">
+      {t.reading}
+    </rt>
+  </ruby>
+) : (
+  // ... existing kanji display
+)}
+Additional Recommendations:
+
+
+Add this meta tag to your HTML head:
+
+html
+
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+Ensure you're using a modern font that supports ruby positioning:
+
+css
+
+body {
+  font-family: "Noto Sans JP", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 
+    "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+
+Add this CSS for better Japanese text rendering:
+
+css
+
+* {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  font-kerning: auto;
+}
+The issue was caused by:
+
+
+Absolute positioning overriding natural ruby layout
+
+Conflicting transform properties
+
+Missing browser feature detection
+
+Line-height inheritance issues
+
+Over-aggressive transitions affecting layout
+
+These changes should properly display furigana while maintaining your existing color scheme and interactivity features.
