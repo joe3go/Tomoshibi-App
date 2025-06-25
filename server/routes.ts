@@ -691,15 +691,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Failed to create message' });
       }
 
-      // Get conversation participants to determine AI persona
-      const { data: participants } = await supabase
-        .from('conversation_participants')
-        .select('persona_id, personas(name, personality, speaking_style)')
-        .eq('conversation_id', conversationId)
-        .eq('role', 'tutor');
+      // Check if this is a group conversation and get participants
+      const isGroupConversation = conversation.mode === 'group';
+      let aiPersonaId = conversation.persona_id; // Default for solo conversations
 
-      if (participants && participants.length > 0) {
-        const aiPersonaId = participants[0].persona_id;
+      if (isGroupConversation) {
+        // Get conversation participants for group conversations
+        const { data: participants } = await supabase
+          .from('conversation_participants')
+          .select('persona_id, order_in_convo, personas(*)')
+          .eq('conversation_id', conversationId)
+          .eq('role', 'ai')
+          .order('order_in_convo');
+
+        if (participants && participants.length > 0) {
+          // For group conversations, select which AI should respond
+          // Simple approach: random selection or round-robin
+          const respondingParticipant = participants[Math.floor(Math.random() * participants.length)];
+          aiPersonaId = respondingParticipant.persona_id;
+        }
+      }
+
+      if (aiPersonaId) {
 
         // Generate AI response (using existing logic)
         const { generateSecureAIResponse } = await import('./openai');

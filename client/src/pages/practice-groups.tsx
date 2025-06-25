@@ -171,7 +171,7 @@ export default function PracticeGroups() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">3</div>
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{templates.length}</div>
                   <div className="text-sm text-muted-foreground">Available Groups</div>
                 </div>
                 <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
