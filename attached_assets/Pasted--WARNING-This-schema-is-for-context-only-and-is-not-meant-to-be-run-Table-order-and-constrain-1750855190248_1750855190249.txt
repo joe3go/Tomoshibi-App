@@ -1,0 +1,246 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.conversation_participants (
+  conversation_id uuid NOT NULL,
+  persona_id uuid NOT NULL,
+  role text,
+  order_in_convo integer,
+  CONSTRAINT conversation_participants_pkey PRIMARY KEY (conversation_id, persona_id),
+  CONSTRAINT conversation_participants_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id),
+  CONSTRAINT conversation_participants_persona_id_fkey FOREIGN KEY (persona_id) REFERENCES public.personas(id)
+);
+CREATE TABLE public.conversation_prompts (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  template_id uuid NOT NULL,
+  role text NOT NULL CHECK (role = ANY (ARRAY['system'::text, 'user'::text, 'assistant'::text])),
+  content text NOT NULL,
+  variables jsonb DEFAULT '{}'::jsonb,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT conversation_prompts_pkey PRIMARY KEY (id),
+  CONSTRAINT conversation_prompts_template_id_fkey FOREIGN KEY (template_id) REFERENCES public.conversation_templates(id)
+);
+CREATE TABLE public.conversation_templates (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  slug text NOT NULL UNIQUE,
+  title text NOT NULL,
+  description text,
+  mode text NOT NULL CHECK (mode = ANY (ARRAY['solo'::text, 'group'::text])),
+  default_personas ARRAY DEFAULT '{}'::uuid[],
+  created_at timestamp with time zone DEFAULT now(),
+  image_url text,
+  group_prompt_suffix text,
+  difficulty text DEFAULT 'N5'::text CHECK (difficulty = ANY (ARRAY['N5'::text, 'N4'::text, 'N3'::text, 'N2'::text, 'N1'::text])),
+  CONSTRAINT conversation_templates_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.conversations (
+  user_id uuid,
+  status text DEFAULT 'active'::text,
+  title text,
+  created_at timestamp with time zone DEFAULT now(),
+  completed_at timestamp with time zone,
+  last_message_at timestamp with time zone DEFAULT now(),
+  language_level text,
+  metadata jsonb,
+  scenario_id uuid,
+  id uuid NOT NULL DEFAULT gen_random_uuid() UNIQUE,
+  mode text DEFAULT 'solo'::text,
+  template_id uuid,
+  persona_id uuid,
+  CONSTRAINT conversations_pkey PRIMARY KEY (id),
+  CONSTRAINT conversations_persona_id_fkey FOREIGN KEY (persona_id) REFERENCES public.personas(id),
+  CONSTRAINT conversations_scenario_id_fkey FOREIGN KEY (scenario_id) REFERENCES public.scenarios(id),
+  CONSTRAINT fk_conversations_persona FOREIGN KEY (persona_id) REFERENCES public.personas(id),
+  CONSTRAINT conversations_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT conversations_template_id_fkey FOREIGN KEY (template_id) REFERENCES public.conversation_templates(id)
+);
+CREATE TABLE public.grammar_sources (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  description text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT grammar_sources_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.grammar_tracker (
+  id integer NOT NULL DEFAULT nextval('grammar_tracker_id_seq'::regclass),
+  user_id uuid NOT NULL,
+  frequency integer DEFAULT 0,
+  last_seen_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now(),
+  grammar_id uuid,
+  CONSTRAINT grammar_tracker_pkey PRIMARY KEY (id),
+  CONSTRAINT grammar_tracker_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT grammar_tracker_grammar_id_fkey FOREIGN KEY (grammar_id) REFERENCES public.jlpt_grammar(id)
+);
+CREATE TABLE public.jlpt_grammar (
+  pattern character varying NOT NULL,
+  jlpt_level character varying NOT NULL,
+  english_explanation text NOT NULL,
+  example_japanese text,
+  example_english text,
+  created_at timestamp with time zone DEFAULT now(),
+  id uuid NOT NULL DEFAULT gen_random_uuid() UNIQUE,
+  source_id uuid,
+  CONSTRAINT jlpt_grammar_pkey PRIMARY KEY (id),
+  CONSTRAINT jlpt_grammar_source_id_fkey FOREIGN KEY (source_id) REFERENCES public.grammar_sources(id)
+);
+CREATE TABLE public.messages (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  conversation_id uuid NOT NULL,
+  content text NOT NULL,
+  sender_type text NOT NULL CHECK (sender_type = ANY (ARRAY['user'::text, 'ai'::text])),
+  sender_persona_id uuid,
+  sender_user_id uuid,
+  english_translation text,
+  tutor_feedback text,
+  suggestions ARRAY,
+  vocab_used ARRAY,
+  grammar_used ARRAY,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT messages_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_messages_conversation FOREIGN KEY (conversation_id) REFERENCES public.conversations(id),
+  CONSTRAINT fk_messages_persona FOREIGN KEY (sender_persona_id) REFERENCES public.personas(id)
+);
+CREATE TABLE public.messages_backup (
+  sender_type character varying,
+  content text,
+  metadata jsonb,
+  created_at timestamp with time zone,
+  english_translation text,
+  tutor_feedback text,
+  suggestions ARRAY,
+  conversation_id uuid,
+  id uuid,
+  vocab_used ARRAY,
+  grammar_used ARRAY,
+  sender_persona_id uuid
+);
+CREATE TABLE public.personas (
+  name character varying NOT NULL,
+  description text,
+  personality text,
+  speaking_style text,
+  avatar_url character varying,
+  created_at timestamp with time zone DEFAULT now(),
+  type text NOT NULL DEFAULT 'tutor'::text,
+  tone text,
+  level text,
+  origin text,
+  quirks text,
+  correction_style text,
+  language_policy text,
+  bubble_class character varying,
+  voice_model character varying,
+  system_prompt_hint text,
+  id uuid NOT NULL DEFAULT gen_random_uuid() UNIQUE,
+  response_cooldown integer NOT NULL DEFAULT 15,
+  max_consecutive integer NOT NULL DEFAULT 1,
+  base_typing_speed integer NOT NULL DEFAULT 2000,
+  CONSTRAINT personas_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.scenarios (
+  title character varying NOT NULL,
+  description text,
+  category character varying,
+  difficulty_level character varying,
+  estimated_duration integer,
+  goals ARRAY,
+  context text,
+  created_at timestamp with time zone DEFAULT now(),
+  id uuid NOT NULL DEFAULT gen_random_uuid() UNIQUE,
+  CONSTRAINT scenarios_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.user_progress (
+  id integer NOT NULL DEFAULT nextval('user_progress_id_seq'::regclass),
+  user_id uuid NOT NULL,
+  jlpt_level character varying,
+  vocab_encountered ARRAY DEFAULT ARRAY[]::integer[],
+  vocab_mastered ARRAY DEFAULT ARRAY[]::integer[],
+  grammar_encountered ARRAY DEFAULT ARRAY[]::integer[],
+  grammar_mastered ARRAY DEFAULT ARRAY[]::integer[],
+  total_conversations integer DEFAULT 0,
+  total_messages_sent integer DEFAULT 0,
+  last_activity timestamp with time zone DEFAULT now(),
+  CONSTRAINT user_progress_pkey PRIMARY KEY (id),
+  CONSTRAINT user_progress_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.user_scenario_progress (
+  id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  completed boolean DEFAULT false,
+  xp integer DEFAULT 0,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  scenario_id uuid,
+  CONSTRAINT user_scenario_progress_pkey PRIMARY KEY (id),
+  CONSTRAINT user_scenario_progress_scenario_id_fkey FOREIGN KEY (scenario_id) REFERENCES public.scenarios(id),
+  CONSTRAINT user_scenario_progress_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.user_vocab (
+  id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  word text NOT NULL,
+  reading text NOT NULL,
+  meaning text NOT NULL,
+  source text NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  base_form text,
+  CONSTRAINT user_vocab_pkey PRIMARY KEY (id),
+  CONSTRAINT user_vocab_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.users (
+  id uuid NOT NULL,
+  username text UNIQUE,
+  display_name text,
+  avatar_url text,
+  prefers_english boolean DEFAULT false,
+  jlpt_goal_level text,
+  native_language text,
+  timezone text,
+  theme text DEFAULT 'light'::text,
+  streak_days integer DEFAULT 0,
+  last_streak_date date,
+  xp integer DEFAULT 0,
+  learning_goals text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT users_pkey PRIMARY KEY (id),
+  CONSTRAINT users_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.vocab_library (
+  kanji character varying,
+  hiragana character varying NOT NULL,
+  english_meaning text NOT NULL,
+  jlpt_level integer NOT NULL,
+  word_type character varying,
+  created_at timestamp with time zone DEFAULT now(),
+  id uuid NOT NULL DEFAULT gen_random_uuid() UNIQUE,
+  source_id uuid,
+  CONSTRAINT vocab_library_pkey PRIMARY KEY (id),
+  CONSTRAINT vocab_library_source_id_fkey FOREIGN KEY (source_id) REFERENCES public.vocab_sources(id)
+);
+CREATE TABLE public.vocab_sources (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  description text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT vocab_sources_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.vocab_tracker (
+  id integer NOT NULL DEFAULT nextval('vocab_tracker_id_seq'::regclass),
+  user_id uuid NOT NULL,
+  frequency integer DEFAULT 0,
+  user_usage_count integer DEFAULT 0,
+  ai_encounter_count integer DEFAULT 0,
+  last_seen_at timestamp with time zone,
+  memory_strength real DEFAULT 0,
+  next_review_at timestamp with time zone,
+  source character varying,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  word_id uuid,
+  CONSTRAINT vocab_tracker_pkey PRIMARY KEY (id),
+  CONSTRAINT vocab_tracker_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT vocab_tracker_word_id_fkey FOREIGN KEY (word_id) REFERENCES public.vocab_library(id)
+);

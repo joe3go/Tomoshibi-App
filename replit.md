@@ -296,8 +296,9 @@ Preferred communication style: Simple, everyday language.
   - Removed all duplicate and broken furigana components for single source of truth
 - **Integrated with existing Jisho API and Supabase vocabulary tracking**:
   - WordDefinitionPopup fetches definitions from /api/word-definition endpoint
-  - Automatic vocabulary saving to user_vocab table in Supabase with proper user association
-  - Vocabulary usage tracking via /api/vocab-tracker/increment for analytics
+  - Automatic vocabulary saving to user_vocab table and vocab_library for comprehensive tracking
+  - Enhanced vocab_tracker integration with proper word_id references and analytics
+  - User progress tracking with memory_strength, frequency, and review scheduling
   - Authentication-aware features with session management and error handling
 - **Deployed across all chat interfaces**:
   - Updated chat.tsx, group-chat.tsx, and all related components to use new FuriganaText

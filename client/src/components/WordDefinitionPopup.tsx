@@ -78,36 +78,83 @@ export default function WordDefinitionPopup({
     
     setIsSaving(true);
     try {
-      // Save to user's personal vocabulary in Supabase
-      const { error: insertError } = await supabase
-        .from('user_vocab')
-        .insert({
-          user_id: session.user.id,
-          word: definition.word,
-          reading: definition.reading || reading,
-          meaning: definition.meanings.join('; '),
-          jlpt_level: definition.jlpt_level,
-          pos: definition.pos?.join(', '),
-          source: 'chat_lookup'
-        });
+      // First, check if word exists in vocab_library
+      let vocabLibraryId: string | null = null;
+      
+      const { data: existingVocab, error: searchError } = await supabase
+        .from('vocab_library')
+        .select('id')
+        .or(`kanji.eq.${definition.word},hiragana.eq.${definition.word}`)
+        .limit(1);
 
-      if (insertError) {
-        console.error('Error saving to vocab:', insertError);
+      if (searchError) {
+        console.error('Error searching vocab library:', searchError);
         return;
       }
 
-      // Track vocabulary usage
-      await fetch('/api/vocab-tracker/increment', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({
+      if (existingVocab && existingVocab.length > 0) {
+        vocabLibraryId = existingVocab[0].id;
+      } else {
+        // Create new entry in vocab_library if it doesn't exist
+        const { data: newVocab, error: insertLibraryError } = await supabase
+          .from('vocab_library')
+          .insert({
+            kanji: definition.word.match(/[\u4e00-\u9faf]/) ? definition.word : null,
+            hiragana: definition.reading || reading || definition.word,
+            english_meaning: definition.meanings.join('; '),
+            jlpt_level: definition.jlpt_level || 5,
+            word_type: definition.pos?.[0] || 'unknown'
+          })
+          .select('id')
+          .single();
+
+        if (insertLibraryError) {
+          console.error('Error creating vocab library entry:', insertLibraryError);
+          return;
+        }
+
+        vocabLibraryId = newVocab.id;
+      }
+
+      // Save to user's personal vocabulary in user_vocab
+      const { error: userVocabError } = await supabase
+        .from('user_vocab')
+        .insert({
+          id: crypto.randomUUID(),
+          user_id: session.user.id,
           word: definition.word,
-          source: 'lookup'
-        })
-      });
+          reading: definition.reading || reading || definition.word,
+          meaning: definition.meanings.join('; '),
+          source: 'chat_lookup',
+          base_form: definition.word
+        });
+
+      if (userVocabError && !userVocabError.message.includes('duplicate')) {
+        console.error('Error saving to user vocab:', userVocabError);
+      }
+
+      // Track in vocab_tracker for analytics
+      if (vocabLibraryId) {
+        const { error: trackerError } = await supabase
+          .from('vocab_tracker')
+          .upsert({
+            user_id: session.user.id,
+            word_id: vocabLibraryId,
+            frequency: 1,
+            user_usage_count: 1,
+            last_seen_at: new Date().toISOString(),
+            source: 'lookup',
+            memory_strength: 0.1,
+            next_review_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
+          }, {
+            onConflict: 'user_id,word_id',
+            ignoreDuplicates: false
+          });
+
+        if (trackerError) {
+          console.error('Error updating vocab tracker:', trackerError);
+        }
+      }
 
       // Call parent callback if provided
       if (onSave) {

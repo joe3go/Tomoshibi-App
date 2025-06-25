@@ -91,7 +91,7 @@ const getSupabaseConfig = () => {
 };
 
 // Vocabulary tracking function (enhanced client-side tracking will be handled by VocabPopup)
-async function trackVocabularyFromMessage(userId: number, content: string, source: 'user' | 'ai'): Promise<void> {
+async function trackVocabularyFromMessage(userId: string, content: string, source: 'user' | 'ai'): Promise<void> {
   try {
     // Extract Japanese words (hiragana, katakana, kanji)
     const japaneseWords = content.match(/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+/g) || [];
