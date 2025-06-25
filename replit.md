@@ -177,6 +177,11 @@ Preferred communication style: Simple, everyday language.
   - Settings page JLPT selector fully functional (N5 Beginner to N1 Advanced)
   - Consistent difficulty across both solo chat and group chat systems
   - Database migration ready for deployment (add-user-jlpt-level.sql)
+- **Fixed group conversation issues**:
+  - Group topics now properly passed from conversation templates to AI
+  - Enhanced persona name detection with Japanese particle support (はるきは, あおいさん)
+  - Added group context and participant awareness to AI prompts
+  - Console logs now show actual topic names instead of "general conversation"
 
 ### June 25, 2025 - Decoupled Group Chat System for Better Scalability
 - **Created dedicated GroupChat component** (`client/src/pages/group-chat.tsx`):

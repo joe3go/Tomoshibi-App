@@ -1010,10 +1010,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // New secure chat endpoint using dynamic prompts
   app.post('/api/chat/secure', authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const { tutorId, message, topic = 'general conversation', prefersEnglish = false, conversationId } = req.body;
+      const { tutorId, message, topic = 'general conversation', prefersEnglish = false, conversationId, groupTopic, groupContext, isGroupConversation, allParticipants } = req.body;
       const userId = req.userId!;
 
-      console.log('🤖 Chat secure request:', { tutorId, conversationId, messageLength: message?.length });
+      const actualTopic = groupTopic || topic;
+      
+      console.log('🤖 Chat secure request:', { 
+        tutorId, 
+        conversationId, 
+        messageLength: message?.length, 
+        topic: actualTopic,
+        isGroupConversation: isGroupConversation || false 
+      });
 
       if (!message) {
         return res.status(400).json({ message: 'Missing required field: message' });
@@ -1073,9 +1081,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         actualTopic, // Use actual topic from group or default
         conversationHistory,
         prefersEnglish,
-        groupContext, // Pass group context for enhanced prompts
-        isGroupConversation,
-        allParticipants // Pass participant info for persona awareness
+        groupContext || undefined, // Pass group context for enhanced prompts
+        isGroupConversation || false,
+        allParticipants || undefined // Pass participant info for persona awareness
       );
 
       res.json({

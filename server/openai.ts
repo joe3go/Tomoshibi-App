@@ -163,7 +163,21 @@ export async function generateAIResponse(
   context: ConversationContext,
 ): Promise<AIResponse> {
   try {
-    const systemPrompt = buildSystemPrompt(context);
+    // Create enhanced context with group information
+  const enhancedContext: ConversationContext = {
+    persona,
+    scenario: null,
+    conversationHistory,
+    userMessage,
+    targetVocab: [],
+    targetGrammar: [],
+    conversationTopic: topic,
+    groupPromptSuffix: groupContext,
+    isGroupConversation: isGroupConversation || false,
+    allPersonas: allParticipants || [],
+  };
+
+  const systemPrompt = buildSystemPrompt(enhancedContext);
     
     // Limit conversation history to last 12 messages for token management
     const limitedHistory = context.conversationHistory.slice(-12);
@@ -285,19 +299,23 @@ You are helping a Japanese language learner practice conversation. Your goal is 
 3. Use vocabulary from the target list when possible
 4. Keep responses conversational and engaging
 
+Topic: ${topic}
 Target Vocabulary: ${targetVocab.map(v => `${v.kanji || v.hiragana} (${v.meaning})`).slice(0, 10).join(', ')}
 Target Grammar: ${targetGrammar.map(g => g.pattern).slice(0, 5).join(', ')}
 
-${scenario ? `Scenario: ${scenario.title} - ${scenario.description}` : 'Have a natural conversation in Japanese.'}`;
+${scenario ? `Scenario: ${scenario.title} - ${scenario.description}` : `Focus on discussing: ${topic}`}`;
 
   // Add group conversation context if applicable
-  if (isGroupConversation) {
-    if (groupPromptSuffix) {
-      basePrompt += `\n\nGroup Conversation Context: ${groupPromptSuffix}`;
-    }
-    
-    if (allPersonas && allPersonas.length > 1) {
-      const otherPersonas = allPersonas.filter(p => p.id !== persona.id);
+  if (isGroupConversation && allPersonas) {
+    const otherPersonas = allPersonas.filter(p => p.id !== persona.id);
+    basePrompt += `
+
+🎭 GROUP CONVERSATION CONTEXT:
+- You are participating in a group conversation about: ${topic}
+- Other participants: ${otherPersonas.map(p => p.name).join(', ')}
+- ${groupPromptSuffix || ''}
+- When the user mentions another participant by name (like "${otherPersonas.map(p => p.name).join('", "')}", etc.), acknowledge them and stay engaged in the group dynamic
+- Respond naturally as ${persona.name} while being aware of the group setting`;
       basePrompt += `\n\nOther AI participants in this conversation: ${otherPersonas.map(p => `${p.name} (${p.description})`).join(', ')}`;
       basePrompt += `\nYou are responding as ${persona.name}. Keep your response natural and in character. Focus on helping the human learner while maintaining the group conversation atmosphere.`;
     }
