@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
@@ -143,7 +144,13 @@ export default function FuriganaText({
     return parts.length > 0 ? parts : [{ type: "text", content: input }];
   };
 
-  const parsedText = parseText(text);
+  // Use parsed tokens if available, otherwise fall back to simple parsing
+  const displayTokens = parsedTokens.length > 0 ? parsedTokens : parseTextFallback(text).map(part => ({
+    type: part.type as 'furigana' | 'text',
+    surface: part.type === 'furigana' ? part.kanji : part.content,
+    kanji: part.type === 'furigana' ? part.kanji : undefined,
+    reading: part.type === 'furigana' ? part.reading : undefined
+  }));
 
   return (
     <div className={className}>
@@ -155,26 +162,55 @@ export default function FuriganaText({
             size="sm"
             className="text-sm"
           >
+            {showFurigana ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
             {showFurigana ? "Hide Furigana" : "Show Furigana"}
           </Button>
         </div>
       )}
 
       <div className="leading-relaxed">
-        {parsedText.map((part, index) => {
-          if (part.type === "furigana") {
+        {displayTokens.map((token, index) => {
+          if (token.type === "furigana" && token.kanji && token.reading) {
             return showFurigana ? (
-              <ruby key={index} className="inline-block mr-1">
-                {part.kanji}
-                <rt className="text-xs leading-none">{part.reading}</rt>
+              <ruby 
+                key={index} 
+                className={`inline-block mr-1 ${getWordStyling(token)}`}
+                onClick={(e) => handleWordClick(token, e)}
+              >
+                {token.kanji}
+                <rt className="text-xs leading-none">{token.reading}</rt>
               </ruby>
             ) : (
-              <span key={index}>{part.kanji}</span>
+              <span 
+                key={index}
+                className={getWordStyling(token)}
+                onClick={(e) => handleWordClick(token, e)}
+              >
+                {token.kanji}
+              </span>
             );
           }
-          return <span key={index}>{part.content}</span>;
+          return (
+            <span 
+              key={index}
+              className={getWordStyling(token)}
+              onClick={(e) => handleWordClick(token, e)}
+            >
+              {token.surface}
+            </span>
+          );
         })}
       </div>
+
+      {selectedWord && (
+        <WordDefinitionPopup
+          word={selectedWord.word}
+          reading={selectedWord.reading}
+          position={selectedWord.position}
+          onClose={() => setSelectedWord(null)}
+          onSaveToVocab={onSaveToVocab}
+        />
+      )}
     </div>
   );
 }
