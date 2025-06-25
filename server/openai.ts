@@ -25,11 +25,14 @@ const openai = new OpenAI({
 
 export interface ConversationContext {
   persona: Persona;
-  scenario: Scenario;
+  scenario?: Scenario;
   conversationHistory: Array<{ role: "user" | "assistant"; content: string }>;
   userMessage: string;
   targetVocab: JlptVocab[];
   targetGrammar: JlptGrammar[];
+  groupPromptSuffix?: string;
+  isGroupConversation?: boolean;
+  allPersonas?: Persona[];
 }
 
 export interface AIResponse {
@@ -253,22 +256,37 @@ function isEnglishMessage(text: string): boolean {
 }
 
 function buildSystemPrompt(context: ConversationContext): string {
-  return buildDynamicPrompt(
-    {
-      id: context.persona.id,
-      name: context.persona.name,
-      type: context.persona.type,
-      personality: context.persona.personality,
-      speaking_style: context.persona.speaking_style,
-    },
-    {
-      userId: "temp", // override if needed
-      username: "temp", // override if needed
-      topic: context.scenario.title,
-      prefersEnglish: isEnglishMessage(context.userMessage),
-      vocab: context.targetVocab,
-      grammar: context.targetGrammar,
-      history: context.conversationHistory,
-    },
-  );
+  const { persona, scenario, targetVocab, targetGrammar, groupPromptSuffix, isGroupConversation, allPersonas } = context;
+  
+  let basePrompt = `You are ${persona.name}, ${persona.description}. ${persona.personality}
+
+Speaking Style: ${persona.speaking_style}
+
+You are helping a Japanese language learner practice conversation. Your goal is to:
+1. Respond naturally in Japanese using vocabulary and grammar appropriate for JLPT ${scenario?.jlpt_level || 'N5'} level
+2. Be encouraging and supportive
+3. Use vocabulary from the target list when possible
+4. Keep responses conversational and engaging
+
+Target Vocabulary: ${targetVocab.map(v => `${v.kanji || v.hiragana} (${v.meaning})`).slice(0, 10).join(', ')}
+Target Grammar: ${targetGrammar.map(g => g.pattern).slice(0, 5).join(', ')}
+
+${scenario ? `Scenario: ${scenario.title} - ${scenario.description}` : 'Have a natural conversation in Japanese.'}`;
+
+  // Add group conversation context if applicable
+  if (isGroupConversation && groupPromptSuffix) {
+    basePrompt += `\n\nGroup Conversation Context: ${groupPromptSuffix}`;
+    
+    if (allPersonas && allPersonas.length > 1) {
+      const otherPersonas = allPersonas.filter(p => p.id !== persona.id);
+      basePrompt += `\n\nOther participants in this conversation: ${otherPersonas.map(p => `${p.name} (${p.description})`).join(', ')}`;
+      basePrompt += `\nInteract naturally with other AI participants when appropriate, but focus primarily on helping the human learner.`;
+    }
+  }
+
+  basePrompt += `\n\nImportant: Always respond in character as ${persona.name}. Keep responses natural and conversational.
+  
+RESPONSE FORMAT: Return valid JSON with: {"response": "Japanese text", "english_translation": "English", "feedback": "Learning tip", "vocabUsed": [], "grammarUsed": [], "suggestions": ["phrase1", "phrase2"]}`;
+
+  return basePrompt;
 }
