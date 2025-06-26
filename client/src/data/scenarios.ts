@@ -1,4 +1,4 @@
-import { Scenario } from "../../../shared/scenario-types";
+import type { Scenario } from "@/types";
 
 export const scenarios: Scenario[] = [
   {

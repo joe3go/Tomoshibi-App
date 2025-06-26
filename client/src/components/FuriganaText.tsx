@@ -1,4 +1,2 @@
-// Legacy component - redirects to new kuroshiro-based implementation
-import FuriganaText from './furigana-text/FuriganaText';
-
-export default FuriganaText;
+// Re-export the main FuriganaText component
+export { default } from './furigana-text/FuriganaText';

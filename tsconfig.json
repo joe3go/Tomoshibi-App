@@ -18,7 +18,8 @@
     "paths": {
       "@/*": ["./client/src/*"],
       "@shared/*": ["./shared/*"],
-      "@types/*": ["./types/*"]
+      "@types/*": ["./types/*"],
+      "@/types": ["./types"]
     }
   }
 }

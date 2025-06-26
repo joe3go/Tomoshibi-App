@@ -1,4 +1,3 @@
-// Legacy component - redirects to new kuroshiro-based implementation
-import WordDefinitionPopup from './furigana-text/WordDefinitionPopup';
 
-export default WordDefinitionPopup;
+// Re-export the main WordDefinitionPopup component
+export { default } from './furigana-text/WordDefinitionPopup';
