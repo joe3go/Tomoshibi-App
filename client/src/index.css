@@ -4,8 +4,6 @@
   @tailwind components;
   @tailwind utilities;
 
-@import './furigana.css';
-
   /* ==============================
      🎎 Japanese-Inspired UI Theme Variables
      ============================== */
@@ -66,8 +64,8 @@
   body {
     @apply bg-background text-foreground;
     background: var(--background);
-    font-family: "Noto Sans JP", Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 
-    "Hiragino Sans", "Yu Gothic", sans-serif;
+    font-family: "Noto Sans JP", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     position: relative;
@@ -1074,6 +1072,7 @@
     @apply bg-blue-900/20;
   }
 
+```text
   .settings-loading-content {
     @apply text-center space-y-4;
   }
@@ -2043,101 +2042,6 @@
 
 /* Add your custom styles here */
 
-/* Fix for Furigana Display */
-.jt-ruby {
-  ruby-position: over;
-  ruby-align: center;
-  display: inline-flex;
-  flex-direction: column-reverse;
-  vertical-align: top;
-  line-height: 1.6;
-  transition: none !important;
-}
-
-.jt-ruby rt {
-  font-size: 0.5em;
-  letter-spacing: 0.5px;
-  color: hsl(var(--muted-foreground));
-  text-align: center;
-  display: block;
-  padding: 0 0.15em;
-  transform: translateY(-0.1em);
-  line-height: 1.2;
-  font-feature-settings: "pkna";
-  position: static !important;
-}
-
-/* Remove absolute positioning and transforms */
-rt {
-  position: static !important;
-  transform: none !important;
-}
-
-/* Add browser-specific fixes */
-@supports (ruby-position: over) {
-  .jt-ruby {
-    ruby-position: over;
-  }
-}
-
-/* Fallback for browsers without proper ruby support */
-@supports not (ruby-position: over) {
-  .jt-ruby {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    vertical-align: top;
-  }
-
-  .jt-ruby rt {
-    order: -1;
-    padding-bottom: 0.2em;
-  }
-}
-
-/* Ensure parent containers allow proper rendering */
-.jt-body {
-  line-height: 1.8;
-  font-size: 1rem;
-}
-
-/* Better Japanese text rendering */
-* {
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  font-kerning: auto;
-}
-
-/* Browser-specific ruby fixes */
-@-moz-document url-prefix() {
-  rt {
-    font-size: 0.5em !important;
-    transform: translateY(-0.6em) !important;
-  }
-}
-
-.jt-ruby {
-  ruby-position: over;
-  line-height: inherit !important;
-  vertical-align: top;
-}
-
-/* Ruby text styling for furigana */
-ruby {
-  ruby-position: over;
-  ruby-align: center;
-}
-
-rt {
-  font-size: 0.6em;
-  color: hsl(var(--muted-foreground));
-  font-weight: 400;
-  font-family: "Noto Sans JP", sans-serif;
-  text-underline-position: under;
-}
-
-/* Add your custom styles here */
-
 /* Furigana styling */
 .furigana-ruby {
   ruby-position: over;
@@ -2156,7 +2060,7 @@ ruby {
 }
 
 rt {
-font-size: 0.6em;
+  font-size: 0.6em;
   color: #666;
   font-weight: normal;
   line-height: 1;

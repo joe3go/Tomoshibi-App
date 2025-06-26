@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/SupabaseAuthContext";
 import { supabase } from "@/lib/supabase/client";
 import { bind, unbind, toHiragana } from "wanakana";
-import EnhancedFuriganaText from "@/components/enhanced-furigana-text";
+import FuriganaText from "@/components/FuriganaText";
 
 interface GroupMessage {
   id: string;
@@ -657,40 +657,13 @@ export default function GroupChat() {
                     </div>
                   )}
                   
-                  <EnhancedFuriganaText
+                  <FuriganaText
                     text={msg.content}
                     showFurigana={showFurigana}
                     showToggleButton={false}
                     enableWordLookup={true}
-                    onSaveToVocab={async (word, reading) => {
-                      try {
-                        const response = await fetch('/api/vocab/save', {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${session?.access_token}`
-                          },
-                          body: JSON.stringify({
-                            word,
-                            reading,
-                            source: `Group Chat: ${conversation?.title || 'Unknown'}`
-                          })
-                        });
-                        
-                        if (response.ok) {
-                          toast({
-                            title: "Vocabulary saved",
-                            description: `Added "${word}" to your vocabulary`,
-                          });
-                        }
-                      } catch (error) {
-                        console.error('Failed to save vocabulary:', error);
-                        toast({
-                          title: "Failed to save vocabulary", 
-                          description: "Please try again",
-                          variant: "destructive"
-                        });
-                      }
+                    onSaveToVocab={(word, reading) => {
+                      console.log('Vocab saved:', word, reading);
                     }}
                     className="text-sm leading-relaxed"
                   />

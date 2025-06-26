@@ -56,10 +56,10 @@ export default function FuriganaText({
 
   const handleClick = (e: React.MouseEvent, token: ParsedToken) => {
     if (!enableWordLookup) return;
-
+    
     const word = token.kanji || token.content;
     if (!word) return;
-
+    
     const rect = (e.target as HTMLElement).getBoundingClientRect();
     setPopupData({ 
       word, 
@@ -70,7 +70,7 @@ export default function FuriganaText({
   };
 
   return (
-    <div className={`jt-wrap ruby-support font-japanese ${className}`}>
+    <div className={`jt-wrap ${className}`}>
       {showToggleButton && (
         <Button
           variant="ghost"
@@ -79,26 +79,24 @@ export default function FuriganaText({
           onClick={handleToggle}
         >
           {showFurigana ? <EyeOff size={16} /> : <Eye size={16} />}
-          <span className="ml-1">{showFurigana ? "Hide" : "Show"} Reading Guides</span>
+          <span className="ml-1">{showFurigana ? "Hide" : "Show"} Furigana</span>
         </Button>
       )}
 
-      <div className="jt-body leading-ruby text-ruby-base">
+      <div className="jt-body leading-relaxed">
         {tokens.map((t, i) =>
           t.type === "text" ? (
             <span key={i} className="jt-text">{t.content}</span>
           ) : showFurigana ? (
-          <ruby
-            key={i}
-            className="jt-ruby hover:bg-blue-100 cursor-pointer rounded px-1"
-            onClick={(e) => handleClick(e, t)}
-          >
-            {t.kanji}
-            <rt className="ruby-annotation text-muted-foreground">
-              {t.reading}
-            </rt>
-          </ruby>
-        ) : (
+            <ruby
+              key={i}
+              className="jt-ruby inline-block mr-1 hover:bg-blue-100 cursor-pointer rounded px-1 transition-colors"
+              onClick={(e) => handleClick(e, t)}
+            >
+              {t.kanji}
+              <rt className="jt-rt text-xs">{t.reading}</rt>
+            </ruby>
+          ) : (
             <span
               key={i}
               className="jt-kanji hover:bg-blue-100 cursor-pointer rounded px-1 transition-colors"
