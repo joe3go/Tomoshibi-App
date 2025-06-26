@@ -293,13 +293,13 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
 
     setIsLoading(true);
     try {
-      // Use the fallback parser directly to avoid initialization issues
-      const parsedTokens = parseWithFallback(text);
+      // Use simple text parser that doesn't require external libraries
+      const parsedTokens = parseSimpleText(text);
       setTokens(parsedTokens);
     } finally {
       setIsLoading(false);
     }
-  }, [text]); // Remove parseWithFallback from dependencies to prevent re-render loop
+  }, [text, parseSimpleText]);
 
   // Load furigana preference from localStorage (only if no external control)
   useEffect(() => {

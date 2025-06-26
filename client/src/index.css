@@ -1072,18 +1072,50 @@
     @apply bg-blue-900/20;
   }
 
-```text
-  .settings-loading-content {
-    @apply text-center space-y-4;
-  }
+/* Settings loading styles */
+.settings-loading-content {
+  @apply text-center space-y-4;
+}
 
-  .settings-loading-spinner {
-    @apply w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto;
-  }
+.settings-loading-spinner {
+  @apply w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto;
+}
 
-  .settings-loading-text {
-    @apply text-muted-foreground;
-  }
+.settings-loading-text {
+  @apply text-muted-foreground;
+}
+
+/* Furigana Ruby Text Styling */
+.ruby-text {
+  ruby-align: center;
+  ruby-position: over;
+  line-height: 2.2;
+}
+
+.ruby-text rt {
+  font-size: 0.6em !important;
+  line-height: 1 !important;
+  color: #666 !important;
+  font-weight: normal !important;
+  display: block !important;
+  text-align: center !important;
+  margin-bottom: 2px !important;
+}
+
+/* Furigana visibility control */
+.furigana {
+  transition: opacity 0.2s ease !important;
+}
+
+.furigana-wrap {
+  line-height: 2.2em !important; /* Extra space for furigana */
+}
+
+/* Ensure ruby text displays properly */
+ruby {
+  ruby-position: over !important;
+  ruby-align: center !important;
+}
 
   /* ==============================
      💬 Tutor-Specific Chat Bubble Colors
