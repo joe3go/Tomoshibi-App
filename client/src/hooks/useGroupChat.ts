@@ -65,6 +65,12 @@ export function useGroupChat(conversationId: string | null) {
   }, [conversationId, session, user]);
 
   const loadGroupConversationData = async () => {
+    if (!conversationId || !user?.id) {
+      logError("Missing conversationId or user ID");
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -78,6 +84,7 @@ export function useGroupChat(conversationId: string | null) {
         .single();
 
       if (convError || !convData) {
+        logError("Conversation not found:", convError);
         throw new Error("Group conversation not found or access denied");
       }
 

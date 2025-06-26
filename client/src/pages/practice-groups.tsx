@@ -103,9 +103,16 @@ export default function PracticeGroups() {
         description: "Redirecting to your new group chat...",
       });
 
+      // Handle both possible response formats
+      const conversationId = data.conversationId || data.conversation?.id;
+      if (!conversationId) {
+        logError('❌ No conversation ID in response:', data);
+        throw new Error('Invalid response: missing conversation ID');
+      }
+
       // Store conversation ID and navigate with URL parameter
-      localStorage.setItem('currentGroupConversationId', data.conversationId);
-      setLocation(`/group-chat?conversationId=${data.conversationId}`);
+      localStorage.setItem('currentGroupConversationId', conversationId);
+      setLocation(`/group-chat?conversationId=${conversationId}`);
     },
     onError: (error) => {
       logError('❌ Error creating group conversation:', error);

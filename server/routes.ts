@@ -430,21 +430,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { createClient } = await import('@supabase/supabase-js');
       const supabase = createClient(config.url, config.serviceKey);
 
-      const { personaId, scenarioId, title = 'New Conversation' } = req.body;
+      const { personaId, scenarioId, templateId, mode, title = 'New Conversation' } = req.body;
       const userId = req.userId;
 
       console.log('🎯 Extracted values:', { 
         personaId, 
         scenarioId, 
+        templateId,
+        mode,
         userId,
         personaIdType: typeof personaId,
         scenarioIdType: typeof scenarioId,
         userIdType: typeof userId
       });
 
+      // Handle group conversations with templateId
+      if (mode === 'group' && templateId) {
+        console.log('🎭 Creating group conversation with template:', templateId);
+        
+        // Get template data
+        const { data: template, error: templateError } = await supabase
+          .from('conversation_templates')
+          .select('*')
+          .eq('id', templateId)
+          .single();
+
+        if (templateError || !template) {
+          console.error('❌ Template not found:', templateId, templateError);
+          return res.status(400).json({ message: 'Template not found' });
+        }
+
+        // Create group conversation
+        const { data: conversation, error: convError } = await supabase
+          .from('conversations')
+          .insert({
+            user_id: userId,
+            template_id: templateId,
+            title: template.title || title,
+            status: 'active',
+            mode: 'group'
+          })
+          .select()
+          .single();
+
+        if (convError) {
+          console.error('❌ Error creating group conversation:', convError);
+          return res.status(400).json({ message: `Failed to create group conversation: ${convError.message}` });
+        }
+
+        console.log('✅ Group conversation created:', conversation.id);
+
+        // Add participants from template
+        if (template.default_personas && Array.isArray(template.default_personas)) {
+          for (let i = 0; i < template.default_personas.length; i++) {
+            const personaId = template.default_personas[i];
+            
+            const { error: participantError } = await supabase
+              .from('conversation_participants')
+              .insert({
+                conversation_id: conversation.id,
+                persona_id: personaId,
+                role: 'ai',
+                order_in_convo: i + 1
+              });
+
+            if (participantError) {
+              console.error('❌ Error adding participant:', participantError);
+            }
+          }
+        }
+
+        // Add initial group message
+        if (template.default_personas && template.default_personas.length > 0) {
+          const firstPersonaId = template.default_personas[0];
+          
+          // Get persona for personalized greeting
+          const { data: persona } = await supabase
+            .from('personas')
+            .select('name')
+            .eq('id', firstPersonaId)
+            .single();
+
+          const greeting = `こんにちは！${template.title}へようこそ！今日は何について話しましょうか？`;
+          const englishGreeting = `Hello! Welcome to ${template.title}! What would you like to talk about today?`;
+
+          const { error: messageError } = await supabase
+            .from('messages')
+            .insert({
+              conversation_id: conversation.id,
+              sender_type: 'ai',
+              sender_persona_id: firstPersonaId,
+              content: greeting,
+              english: englishGreeting,
+              created_at: new Date().toISOString()
+            });
+
+          if (messageError) {
+            console.error('❌ Error adding initial message:', messageError);
+          }
+        }
+
+        return res.json({ 
+          conversationId: conversation.id,
+          conversation: conversation,
+          success: true 
+        });
+      }
+
+      // Handle solo conversations (existing logic)
       if (!personaId) {
-        console.error('❌ Missing personaId');
-        return res.status(400).json({ message: 'personaId is required' });
+        console.error('❌ Missing personaId for solo conversation');
+        return res.status(400).json({ message: 'personaId is required for solo conversations' });
       }
 
       // Validate UUID format
