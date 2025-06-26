@@ -1,5 +1,5 @@
-// Using browser-compatible kuromoji wrapper
-import { initializeBrowserKuromoji, tokenizeText } from '@/lib/kuromoji-browser';
+// Using simple tokenizer
+import { initializeSimpleKuromoji, tokenizeTextSimple } from '@/lib/simple-kuromoji';
 
 interface NormalizationResult {
   originalForm: string;
@@ -11,10 +11,9 @@ interface NormalizationResult {
 // Simple initialization wrapper
 async function initializeKuromoji(): Promise<boolean> {
   try {
-    const tokenizer = await initializeBrowserKuromoji();
-    return tokenizer !== null;
+    return await initializeSimpleKuromoji();
   } catch (error) {
-    console.error('Failed to initialize kuromoji:', error);
+    console.error('Failed to initialize simple tokenizer:', error);
     return false;
   }
 }
@@ -26,8 +25,8 @@ export async function normalizeJapaneseWord(word: string): Promise<string> {
       return word; // Return original if kuromoji fails
     }
     
-    // Use kuromoji to tokenize and get the basic form
-    const morphemes = await tokenizeText(word);
+    // Use simple tokenizer to get the basic form
+    const morphemes = await tokenizeTextSimple(word);
     
     if (morphemes && morphemes.length > 0) {
       // Return the basic form of the first morpheme, or original if no basic form
@@ -49,8 +48,8 @@ export async function extractVocabularyFromText(text: string): Promise<string[]>
       return extractBasicWords(text);
     }
     
-    // Use kuromoji for proper morphological analysis
-    const morphemes = await tokenizeText(text);
+    // Use simple tokenizer for basic morphological analysis
+    const morphemes = await tokenizeTextSimple(text);
     const vocabulary: string[] = [];
     
     for (const morpheme of morphemes) {

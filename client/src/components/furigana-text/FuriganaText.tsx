@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Eye, EyeOff } from 'lucide-react';
 import WordDefinitionPopup from './WordDefinitionPopup';
 
-import { initializeBrowserKuromoji, tokenizeText, katakanaToHiragana } from '@/lib/kuromoji-browser';
+import { initializeSimpleKuromoji, tokenizeTextSimple, katakanaToHiragana } from '@/lib/simple-kuromoji';
 
 interface FuriganaToken {
   type: 'text' | 'kanji' | 'kana';
@@ -169,11 +169,11 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
     return /^[。、！？「」『』（）(),.!?\s]$/.test(text);
   };
 
-  // Parse Japanese text using browser-compatible kuromoji
+  // Parse Japanese text using simple tokenizer
   const parseWithKuromoji = useCallback(async (inputText: string): Promise<FuriganaToken[]> => {
     try {
       const tokens: FuriganaToken[] = [];
-      const morphemes = await tokenizeText(inputText);
+      const morphemes = await tokenizeTextSimple(inputText);
 
       if (morphemes.length === 0) {
         return [{ type: 'text', surface: inputText }];
@@ -207,7 +207,7 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
 
       return tokens.length > 0 ? tokens : [{ type: 'text', surface: inputText }];
     } catch (error) {
-      console.error('Error parsing with kuromoji:', error);
+      console.error('Error parsing with simple tokenizer:', error);
       return [{ type: 'text', surface: inputText }];
     }
   }, []);
@@ -295,7 +295,7 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
 
       setIsLoading(true);
       try {
-        const parsedTokens = await parseText(text);
+        const parsedTokens = await parseTextAsync(text);
         setTokens(parsedTokens);
       } finally {
         setIsLoading(false);
@@ -303,7 +303,7 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
     };
 
     processText();
-  }, [text, parseText]);
+  }, [text, parseTextAsync]);
 
   // Load furigana preference from localStorage (only if no external control)
   useEffect(() => {
