@@ -52,9 +52,20 @@ export default function FuriganaText({
     const parseText = async () => {
       setIsLoading(true);
       try {
-        // Enhanced fallback parsing with furigana notation support
-        const tokens = parseJapaneseText(text);
-        setTokens(tokens);
+        const response = await fetch('/parse-japanese', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ text }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Parse failed: ${response.status}`);
+        }
+
+        const parsedTokens = await response.json();
+        setTokens(parsedTokens);
       } catch (error) {
         console.error('Failed to parse Japanese text:', error);
         // Fallback to simple character parsing
