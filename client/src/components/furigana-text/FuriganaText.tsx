@@ -212,15 +212,17 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
     }
   }, []);
 
-  // Initialize browser-compatible kuromoji
+  // Initialize simple tokenizer
   const initializeKuromoji = useCallback(async () => {
     if (isInitialized) return;
 
     try {
-      await getBrowserTokenizer();
+      const success = await initializeSimpleKuromoji();
       setIsInitialized(true);
+      console.log('Simple tokenizer ready:', success);
     } catch (error) {
-      console.error('Failed to initialize kuromoji:', error);
+      console.error('Failed to initialize simple tokenizer:', error);
+      // Set initialized to true so we use fallback parsing
       setIsInitialized(true);
     }
   }, [isInitialized]);
@@ -295,7 +297,8 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
 
       setIsLoading(true);
       try {
-        const parsedTokens = await parseTextAsync(text);
+        // Use the fallback parser directly to avoid initialization issues
+        const parsedTokens = parseWithFallback(text);
         setTokens(parsedTokens);
       } finally {
         setIsLoading(false);
@@ -303,7 +306,7 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
     };
 
     processText();
-  }, [text, parseTextAsync]);
+  }, [text, parseWithFallback]);
 
   // Load furigana preference from localStorage (only if no external control)
   useEffect(() => {
