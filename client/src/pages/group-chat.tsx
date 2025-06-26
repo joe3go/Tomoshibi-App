@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/SupabaseAuthContext";
 import { supabase } from "@/lib/supabase/client";
 import { bind, unbind, toHiragana } from "wanakana";
-import FuriganaText from "@/components/enhanced-furigana";
+import FuriganaText from "@/components/FuriganaText";
 
 interface GroupMessage {
   id: string;
@@ -662,7 +662,7 @@ export default function GroupChat() {
                     showFurigana={showFurigana}
                     showToggleButton={false}
                     enableWordLookup={true}
-                    onSaveToVocab={(word: string, reading?: string) => {
+                    onSaveToVocab={(word, reading) => {
                       console.log('Saving word to vocab:', word, reading);
                     }}
                     className="text-sm leading-relaxed"

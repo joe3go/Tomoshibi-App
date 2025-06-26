@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, CheckCircle } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import FuriganaText from "@/components/enhanced-furigana";
+import FuriganaText from "@/components/FuriganaText";
 import { MessageWithVocab } from "@/components/MessageWithVocab";
 import { Input } from "@/components/ui/input";
 import { Toggle } from "@/components/ui/toggle";

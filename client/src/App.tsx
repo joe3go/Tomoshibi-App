@@ -2,7 +2,6 @@ import { Router, Route, Switch } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SupabaseAuthProvider } from "@/context/SupabaseAuthContext";
 import { Toaster } from "@/components/ui/toaster";
-import "./index.css";
 
 // Pages
 import Landing from "@/pages/landing";
@@ -20,7 +19,6 @@ import Settings from "@/pages/settings";
 import PracticeGroups from "@/pages/practice-groups";
 import NotFound from "@/pages/not-found";
 import TestFuriganaPage from "@/pages/test-furigana-page";
-import FuriganaTest from "@/pages/furigana-test";
 
 // Create a single QueryClient instance
 const queryClient = new QueryClient({
@@ -53,8 +51,6 @@ export default function App() {
             <Route path="/history" component={History} />
             <Route path="/settings" component={Settings} />
             <Route path="/practice-groups" component={PracticeGroups} />
-            <Route path="/test-furigana" component={TestFuriganaPage} />
-            <Route path="/furigana-test" component={FuriganaTest} />
             <Route component={NotFound} />
           </Switch>
         </Router>
