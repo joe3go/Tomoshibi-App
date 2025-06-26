@@ -9,6 +9,8 @@ import { TemplateSelector } from "@/components/group-chat/TemplateSelector";
 import { useAuth } from "@/context/SupabaseAuthContext";
 import { supabase } from "@/lib/supabase/client";
 import { useQuery } from '@tanstack/react-query';
+import { logDebug, logError, logInfo } from "@utils/logger";
+import { generateUUID } from "@utils/uuid";
 
 export default function PracticeGroups() {
   const [, setLocation] = useLocation();
@@ -24,7 +26,7 @@ export default function PracticeGroups() {
         .select('id, title, description, default_personas, group_prompt_suffix, difficulty, topic, participant_count')
         .eq('mode', 'group')
         .order('title');
-      
+
       if (error) {
         console.error('Failed to fetch conversation templates:', error);
         // Return fallback templates if database query fails
@@ -61,7 +63,7 @@ export default function PracticeGroups() {
           }
         ];
       }
-      
+
       return data;
     }
   });

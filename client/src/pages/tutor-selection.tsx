@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 // Avatar images are now served from /avatars/ directory as SVG files
+import { logDebug, logError, logInfo } from "@utils/logger";
+import { generateUUID } from "@utils/uuid";
 
 export default function TutorSelection() {
   const [, setLocation] = useLocation();
@@ -37,10 +39,10 @@ export default function TutorSelection() {
   const handleTutorSelect = async (personaId: string) => {
     try {
       console.log('🎯 Tutor selection - persona ID:', personaId, 'Type:', typeof personaId);
-      
+
       // Import validation function
-      const { isValidUUID } = await import("../../../shared/validation");
-      
+      const { isValidUUID } = await import("@utils/validation");
+
       // Validate UUID format
       if (!personaId || !isValidUUID(personaId)) {
         console.error('❌ Invalid persona ID in tutor selection:', personaId);

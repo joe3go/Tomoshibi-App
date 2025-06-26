@@ -8,12 +8,15 @@ import { ArrowLeft, CheckCircle, Languages } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import FuriganaText from "@/components/FuriganaText";
 import { MessageWithVocab } from "@/components/MessageWithVocab";
-import { bind, unbind, toHiragana } from 'wanakana';
+import { bind, unbind, toHiragana } from "wanakana";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/context/SupabaseAuthContext";
 import { extractPersonaFromTitle } from "@/lib/supabase-functions";
 import { useConversationMode } from "@/hooks/useConversationMode";
 import { loadGroupPersonas, loadSoloPersona, loadAllPersonas, populateConversationParticipants } from "@/lib/supabase/loaders";
+import { logDebug, logError, logInfo } from "@utils/logger";
+import { isEnglishMessage, sanitizeInput } from "@utils/validation";
+import { generateUUID } from "@utils/uuid";
 // Import vocabulary tracking function from API
 const trackVocabularyUsage = async (text: string, source: 'user' | 'ai', session: any, tutorId?: string, conversationId?: string) => {
   try {
@@ -61,34 +64,34 @@ interface Conversation {
 // Diagnostic function to validate conversation participants
 const validateConversationParticipants = async (conversationId: string) => {
   console.log('🔧 Running conversation participants diagnostic...');
-  
+
   // Check conversation exists and get its mode
   const { data: conv, error: convError } = await supabase
     .from('conversations')
     .select('id, mode, title, persona_id')
     .eq('id', conversationId)
     .single();
-    
+
   if (convError || !conv) {
     console.error('❌ Conversation not found:', convError);
     return;
   }
-  
+
   console.log('✅ Conversation found:', conv);
-  
+
   // Check participants table
   const { data: participants, error: partError } = await supabase
     .from('conversation_participants')
     .select('*')
     .eq('conversation_id', conversationId);
-    
+
   if (partError) {
     console.error('❌ Error fetching participants:', partError);
     return;
   }
-  
+
   console.log('🔍 Raw participants data:', participants);
-  
+
   // Check if persona IDs exist in personas table
   if (participants && participants.length > 0) {
     for (const participant of participants) {
@@ -97,7 +100,7 @@ const validateConversationParticipants = async (conversationId: string) => {
         .select('id, name')
         .eq('id', participant.persona_id)
         .single();
-        
+
       if (personaError || !persona) {
         console.error('❌ Invalid persona ID in participants:', participant.persona_id, personaError);
       } else {
@@ -122,7 +125,7 @@ export default function Chat() {
   const [, setLocation] = useLocation();
   const { user, session } = useAuth();
   const { toast } = useToast();
-  
+
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [personas, setPersonas] = useState<Persona[]>([]);
@@ -131,7 +134,7 @@ export default function Chat() {
   const [typingPersonas, setTypingPersonas] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  
+
   const [message, setMessage] = useState("");
   const [romajiMode, setRomajiMode] = useState(false);
   const [showFurigana, setShowFurigana] = useState(() => {
@@ -165,7 +168,7 @@ export default function Chat() {
   const loadConversationData = async () => {
     try {
       setLoading(true);
-      
+
       // Load conversation
       const { data: convData, error: convError } = await supabase
         .from("conversations")
@@ -185,18 +188,18 @@ export default function Chat() {
       }
 
       setConversation(convData);
-      
-      console.log('🔍 Conversation loaded:', {
+
+      logDebug('🔍 Conversation loaded:', {
         id: convData.id,
         mode: convData.mode,
         title: convData.title,
         persona_id: convData.persona_id,
         isGroup: convData.mode === 'group'
       });
-      
+
       // Load messages
       await loadMessages();
-      
+
     } catch (error) {
       console.error("Error loading conversation:", error);
       toast({
@@ -233,12 +236,12 @@ export default function Chat() {
 
       if (isGroup) {
         console.log("🔍 Loading group participants for conversation:", conversationId);
-        
+
         // Try to populate participants table first if empty
         await populateConversationParticipants(conversationId);
-        
+
         loadedPersonas = await loadGroupPersonas(conversationId);
-        
+
         if (loadedPersonas.length === 0) {
           console.warn("⚠️ No group personas found even after population attempt");
           // Final fallback: load first 3 personas as mock participants
@@ -249,7 +252,7 @@ export default function Chat() {
       } else {
         console.log("🔍 Loading solo persona for conversation:", conversationId);
         const soloPersona = await loadSoloPersona(conversationId);
-        
+
         if (soloPersona) {
           loadedPersonas = [soloPersona];
         } else {
@@ -263,7 +266,7 @@ export default function Chat() {
       if (!isGroup && loadedPersonas.length > 0) {
         setPersona(loadedPersonas[0]);
       }
-      
+
       console.log("🧠 Loaded personas:", loadedPersonas.map(p => p.name));
     } catch (error) {
       console.error("❌ Error loading conversation participants:", error);
@@ -277,11 +280,11 @@ export default function Chat() {
     if (conversation && personas.length > 0) {
       // First try to find persona by persona_id from conversation
       let foundPersona = null;
-      
+
       if (conversation.persona_id) {
         foundPersona = personas.find(p => p.id === conversation.persona_id);
       }
-      
+
       // Fallback: Extract persona name from title
       if (!foundPersona && conversation.title) {
         const titleParts = conversation.title.split('|')[0].trim();
@@ -290,7 +293,7 @@ export default function Chat() {
           p.name.toLowerCase() === personaName.toLowerCase()
         );
       }
-      
+
       if (foundPersona) {
         setConversationPersonas([foundPersona]);
         setPersona(foundPersona);
@@ -320,14 +323,14 @@ export default function Chat() {
 
       const { personaId } = extractPersonaFromTitle(conversation.title || "");
       const foundPersona = personas.find(p => p.id === personaId);
-      
+
       console.log('🔍 Persona extraction result:', {
         extractedPersonaId: personaId,
         foundPersona: foundPersona ? `${foundPersona.name}:${foundPersona.id}` : null
       });
 
       setPersona(foundPersona || null);
-      
+
       // Load participants after persona setup
       loadConversationParticipants();
     }
@@ -337,7 +340,7 @@ export default function Chat() {
     if (messageType === 'user') {
       return 'bg-blue-500 text-white';
     }
-    
+
     // AI message bubble styling based on persona
     if (persona?.name === 'Keiko') {
       return 'bg-rose-100 text-rose-900 border border-rose-200';
@@ -348,7 +351,7 @@ export default function Chat() {
     } else if (persona?.name === 'Satoshi') {
       return 'bg-blue-100 text-blue-900 border border-blue-200';
     }
-    
+
     // Default AI styling
     return 'bg-gray-100 text-gray-900 border border-gray-200';
   };
@@ -357,7 +360,7 @@ export default function Chat() {
     if (!message.trim() || sending || !session || !user) return;
 
     const finalMessage = romajiMode ? toHiragana(message.trim()) : message.trim();
-    
+
     try {
       setSending(true);
       setMessage(""); // Clear input immediately
@@ -494,7 +497,7 @@ export default function Chat() {
     } catch (error) {
       console.error("❌ Message send failed:", error);
       setMessage(finalMessage); // Restore message on error
-      
+
       toast({
         title: "Failed to send message",
         description: "Please check your connection and try again.",
@@ -511,12 +514,12 @@ export default function Chat() {
         .from("conversations")
         .update({ status: "completed" })
         .eq("id", conversationId);
-      
+
       toast({
         title: "Conversation completed",
         description: "This conversation has been marked as completed.",
       });
-      
+
       setLocation("/dashboard");
     } catch (error) {
       toast({
@@ -658,10 +661,10 @@ export default function Chat() {
           {messages.map((msg) => {
             // Resolve persona per message for group/solo mode
             let senderPersona = null;
-            
+
             if (msg.sender_type === 'ai') {
               if (isGroup) {
-                console.log('🔍 Resolving persona for group message:', {
+                logDebug('🔍 Resolving persona for group message:', {
                   messageId: msg.id,
                   senderPersonaId: msg.sender_persona_id,
                   availableConversationPersonas: conversationPersonas.length,
@@ -670,7 +673,7 @@ export default function Chat() {
 
                 // For group messages, find persona by sender_persona_id
                 senderPersona = conversationPersonas.find(p => p.id === msg.sender_persona_id);
-                
+
                 if (!senderPersona) {
                   console.log('🔍 Not found in conversation personas, checking all personas...');
                   senderPersona = personas.find(p => p.id === msg.sender_persona_id);
@@ -724,7 +727,7 @@ export default function Chat() {
                     {senderPersona.name}
                   </div>
                 )}
-                
+
                 <MessageWithVocab content={msg.content}>
                   <div className="text-sm leading-relaxed">
                     <FuriganaText
@@ -783,7 +786,7 @@ export default function Chat() {
                   className="w-8 h-8 rounded-full object-cover"
                 />
               </div>
-              
+
               <div className={`rounded-lg p-3 ${getMessageBubbleStyles('ai', persona)}`}>
                 <div className="flex items-center gap-2">
                   <div className="flex space-x-1">
@@ -823,7 +826,7 @@ export default function Chat() {
               <span>振り仮名</span>
             </Toggle>
           </div>
-          
+
           <div className="flex gap-2">
             <textarea
               ref={textareaRef}

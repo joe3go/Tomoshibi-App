@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase/client';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { supabase } from "@/lib/supabase/client";
+import type { Session, User, AuthChangeEvent } from '@supabase/supabase-js';
+import { logDebug, logError, logInfo } from "@utils/logger";
 
 interface AuthContextType {
   session: Session | null;
@@ -19,7 +20,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('🚀 Initializing auth context...');
+    logInfo('Initializing auth context...');
 
     // Get initial session
     const getInitialSession = async () => {
@@ -29,7 +30,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         if (error) {
           console.error('❌ Error getting initial session:', error);
         } else {
-          console.log('✅ Initial session retrieved:', !!initialSession);
+          logInfo('Initial session retrieved:', !!initialSession);
           setSession(initialSession);
         }
       } catch (error) {
@@ -43,7 +44,11 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔄 Auth state change:', event, !!session);
+      logDebug('Auth state change:', event, !!session);
+
+      if (event === 'INITIAL_SESSION') {
+        logInfo('Initial session retrieved:', !!session);
+      }
       setSession(session);
 
       if (event === 'INITIAL_SESSION') {
@@ -52,7 +57,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     });
 
     return () => {
-      console.log('🧹 Cleaning up auth subscription');
+      logDebug('Cleaning up auth subscription');
       subscription.unsubscribe();
     };
   }, []);

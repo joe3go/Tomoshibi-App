@@ -12,6 +12,9 @@ import { insertUserSchema, insertConversationSchema, insertMessageSchema, usageL
 import { db } from "./db";
 import { sql } from "drizzle-orm";
 import { uuidToInt } from "./uuid-mapping";
+import { logError, logInfo, logDebug } from "@utils/logger";
+import { generateUUID } from "@utils/uuid";
+import { safeJSONParse, safeJSONStringify } from "@utils/json";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
@@ -780,14 +783,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Get conversation template for topic and group prompt suffix
         let conversationTopic = 'general conversation';
         let groupPromptSuffix = undefined;
-        
+
         if (conversation.template_id) {
           const { data: template } = await supabase
             .from('conversation_templates')
             .select('title, group_prompt_suffix')
             .eq('id', conversation.template_id)
             .single();
-          
+
           if (template) {
             conversationTopic = template.title;
             groupPromptSuffix = template.group_prompt_suffix;
@@ -799,7 +802,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (isGroupConversation && participants && participants.length > 1) {
           // Find the last AI message to determine next speaker
           const lastAIMessage = recentMessages?.find(msg => msg.sender_type === 'ai' && msg.sender_persona_id);
-          
+
           if (!lastAIMessage?.sender_persona_id) {
             // No previous AI speaker, use first participant
             selectedPersonaId = participants[0].persona_id;
@@ -814,7 +817,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               selectedPersonaId = participants[0].persona_id;
             }
           }
-          
+
           console.log('🎭 Group conversation AI selection:', {
             selectedPersona: participants.find(p => p.persona_id === selectedPersonaId)?.personas?.name || 'Unknown',
             personaId: selectedPersonaId,
@@ -825,8 +828,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Get persona for system prompt
         const { data: personaData } = await supabase
-          .from('personas')
-          .select('*')
+          .from('personas').select('*')
           .eq('id', selectedPersonaId)
           .single();
 
@@ -868,7 +870,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         console.log('✅ AI message created successfully with persona:', selectedPersonaId);
-        
+
         // Return success response with message data
         res.json({ 
           userMessage: userMessage,
@@ -1014,13 +1016,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.userId!;
 
       const actualTopic = groupTopic || topic;
-      
-      console.log('🤖 Chat secure request:', { 
-        tutorId, 
-        conversationId, 
-        messageLength: message?.length, 
-        topic: actualTopic,
-        isGroupConversation: isGroupConversation || false 
+
+      logInfo('OpenAI chat request', {
+        tutorId,
+        conversationId,
+        messageLength: message.length,
+        hasGroupContext: !!groupTopic
       });
 
       if (!message) {
@@ -1028,7 +1029,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Import validation functions
-      const { validateTutorId, getDefaultTutorId } = await import("../shared/validation");
+      const { validateTutorId, getDefaultTutorId } = await import("@utils/validation");
 
       // Validate or use default tutorId
       let validTutorId: string;
@@ -1112,10 +1113,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         timestamp: new Date().toISOString()
       });
 
-    } catch (error) {
-      console.error('❌ Secure chat error:', error);
-      res.status(500).json({ message: 'Failed to generate AI response' });
-    }
+    } catch (error: any) {
+    logError("Chat API Error:", error?.message || error);
+    res.status(500).json({
+      error: "Failed to generate response",
+      details: error?.message || "Unknown error"
+    });
+  }
   });
 
   // Debug endpoint to check Supabase vocab counts

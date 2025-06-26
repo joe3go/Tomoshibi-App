@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -132,7 +131,7 @@ export default function ScenarioBrowse() {
           <div className="tutor-selection-grid">
             {Array.isArray(personas) && personas.map((persona: any) => {
               const avatar = persona.avatar_url || '/avatars/aoi.png';
-              
+
               return (
                 <Card key={persona.id} className="tutor-selection-card">
                   <CardHeader className="tutor-selection-card-header">
@@ -192,7 +191,7 @@ export default function ScenarioBrowse() {
         <div className="scenario-browse-grid">
           {Array.isArray(scenarios) && scenarios.map((scenario: any) => {
             const IconComponent = getScenarioIcon(scenario.title);
-            
+
             return (
               <Card 
                 key={scenario.id} 
@@ -216,7 +215,7 @@ export default function ScenarioBrowse() {
                   <p className="scenario-description">
                     {scenario.description}
                   </p>
-                  
+
                   {scenario.learningGoals && (
                     <div className="scenario-learning-goals">
                       <h4 className="scenario-learning-goals-title">Learning Goals:</h4>
@@ -229,7 +228,7 @@ export default function ScenarioBrowse() {
                       </div>
                     </div>
                   )}
-                  
+
                   <Button 
                     className="scenario-select-button"
                     variant="outline"

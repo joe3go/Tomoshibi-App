@@ -1,5 +1,7 @@
 import { supabase } from './client';
-import { SupabaseUser } from './types';
+import type { Session, User } from '@supabase/supabase-js';
+import { logError, logInfo } from "@utils/logger";
+import { isValidEmail } from "@utils/validation";
 
 export async function getCurrentUser(): Promise<SupabaseUser | null> {
   const { data: { user } } = await supabase.auth.getUser();

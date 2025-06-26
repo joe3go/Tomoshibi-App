@@ -110,7 +110,7 @@ CRITICAL: Your entire response must be valid JSON. Do not include any text outsi
 export async function getTutorById(tutorId: string): Promise<Tutor | null> {
   try {
     // Import validation functions
-    const { isValidUUID } = await import("../shared/validation");
+    const { isValidUUID } = await import("@utils/validation");
 
     if (!isValidUUID(tutorId)) {
       console.error('❌ Invalid tutorId UUID format:', tutorId);
@@ -168,7 +168,7 @@ export async function buildUserContext(
 
     // Use user's JLPT goal level from profile, fallback to vocab analysis
     let vocabLevel = userProfile?.jlpt_goal_level || 'N5';
-    
+
     // If no goal level set, determine from vocabulary usage
     if (!userProfile?.jlpt_goal_level && vocabStats && vocabStats.length > 0) {
       const levelCounts = vocabStats.reduce((acc: any, stat: any) => {

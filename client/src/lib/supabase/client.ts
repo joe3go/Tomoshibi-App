@@ -1,6 +1,6 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { getSupabaseConfig, isDevelopment } from '@/lib/environment';
+import { logDebug, logInfo } from "@utils/logger";
 
 // Enhanced singleton with proper cleanup
 let supabaseClient: any = null;
@@ -14,8 +14,8 @@ function createSupabaseClient() {
     return supabaseClient;
   }
 
-  console.log('🔗 Creating new Supabase client for:', config.url, '(Environment:', isDevelopment ? 'development' : 'production' + ')');
-  
+  logInfo('Creating new Supabase client for:', config.url, '(Environment:', isDevelopment ? 'development' : 'production' + ')');
+
   supabaseClient = createClient(config.url, config.anonKey, {
     auth: {
       persistSession: true,

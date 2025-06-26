@@ -11,6 +11,8 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, User, Target, Globe, Palette, Save } from "lucide-react";
 import { getUserProfile, updateUserProfile, createUserProfile, UserProfile } from "@/lib/supabase-user-profile";
+import { logError, logInfo } from "@utils/logger";
+import { isValidEmail } from "@utils/validation";
 
 export default function Settings() {
   const [, setLocation] = useLocation();

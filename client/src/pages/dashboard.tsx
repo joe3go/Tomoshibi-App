@@ -31,6 +31,8 @@ import { supabase } from "@/lib/supabase/client";
 import { queryClient } from "@/lib/queryClient";
 import VocabularyStatsCard from "@/components/VocabularyStatsCard";
 import { getUserProfile, updateStreak, addXP, UserProfile } from "@/lib/supabase-user-profile";
+import { logDebug, logError, logInfo } from "@utils/logger";
+import { generateUUID } from "@utils/uuid";
 
 // Helper function to get avatar image
 const getAvatarImage = (persona: any) => {
@@ -243,7 +245,7 @@ export default function Dashboard() {
       if (user?.id) {
         await addXP(user.id, 50); // 50 XP for completing a conversation
       }
-      
+
       toast({
         title: "Conversation ended",
         description: "The conversation has been completed and moved to your transcripts. +50 XP earned!",
@@ -526,7 +528,7 @@ export default function Dashboard() {
                     // Handle both solo and group conversations
                     const isGroupConv = conversation.mode === 'group';
                     const persona = tutorsData.find((p: any) => p.id === conversation.persona_id);
-                    
+
                     return (
                       <div key={conversation.id} className="conversation-card">
                         <div className="conversation-info">

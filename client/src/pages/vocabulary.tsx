@@ -1,8 +1,9 @@
-
 import VocabTracker from '@/components/vocab-tracker';
 import { EnhancedButton } from '@/components/EnhancedButton';
 import { ArrowLeft } from 'lucide-react';
 import { useLocation } from 'wouter';
+import { logDebug, logError } from "@utils/logger";
+import { sanitizeInput } from "@utils/validation";
 
 export default function Vocabulary() {
   const [, setLocation] = useLocation();
