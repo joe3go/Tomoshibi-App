@@ -148,7 +148,14 @@ export async function generateAIResponse(context: ConversationContext): Promise<
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
-      messages,
+      messages: [
+        { 
+          role: "system", 
+          content: systemPrompt + "\n\n**FURIGANA REQUIREMENT: You MUST include hiragana readings in parentheses after every kanji character. Example: 今日(きょう)、学校(がっこう)、食べる(たべる)**" 
+        },
+        ...limitedHistory,
+        { role: "user", content: context.userMessage }
+      ],
       temperature: 0.7,
       max_tokens: 500,
       response_format: { type: "json_object" },
@@ -235,6 +242,7 @@ You are helping a Japanese language learner practice conversation. Your goal is 
 2. Be encouraging and supportive  
 3. Use vocabulary from the target list when possible
 4. Keep responses conversational and engaging
+5. CRITICAL: Include hiragana readings in parentheses after ALL kanji (e.g., 今日(きょう), 学校(がっこう))
 
 Topic: ${topic}
 Target Vocabulary: ${targetVocab.map(v => `${v.kanji || v.hiragana} (${v.meaning})`).slice(0, 10).join(', ')}
