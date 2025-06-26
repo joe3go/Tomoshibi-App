@@ -5,7 +5,6 @@ import WordDefinitionPopup from './WordDefinitionPopup';
 
 // Import kuroshiro lazily to avoid SSR issues
 let kuroshiro: any = null;
-let KuromojiAnalyzer: any = null;
 
 interface FuriganaToken {
   type: 'text' | 'kanji' | 'kana';
@@ -49,14 +48,18 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
 
     try {
       // Dynamic imports to avoid SSR issues
-      const Kuroshiro = (await import('kuroshiro')).default;
-      const KuromojiAnalyzer = (await import('kuroshiro-analyzer-kuromoji')).default;
+      const [{ default: Kuroshiro }, { default: KuromojiAnalyzer }] = await Promise.all([
+        import('kuroshiro'),
+        import('kuroshiro-analyzer-kuromoji')
+      ]);
 
       kuroshiro = new Kuroshiro();
       await kuroshiro.init(new KuromojiAnalyzer());
       setIsInitialized(true);
+      console.log('Kuroshiro initialized successfully');
     } catch (error) {
       console.error('Failed to initialize kuroshiro:', error);
+      // Continue with fallback parsing
     }
   }, [isInitialized]);
 
@@ -79,42 +82,56 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
     }
 
     try {
-      // Get tokenized result from kuroshiro
+      // Get tokenized result from kuroshiro in furigana mode
       const result = await kuroshiro.convert(inputText, {
         mode: 'furigana',
         to: 'hiragana'
       });
 
-      // Parse the result which comes as HTML with ruby tags
+      // Parse the HTML result which contains ruby tags
       const parser = new DOMParser();
-      const doc = parser.parseFromString(result, 'text/html');
+      const doc = parser.parseFromString(`<div>${result}</div>`, 'text/html');
       const tokens: FuriganaToken[] = [];
 
       const processNode = (node: Node) => {
         if (node.nodeType === Node.TEXT_NODE) {
           const text = node.textContent || '';
           if (text.trim()) {
-            tokens.push({ type: 'text', surface: text });
+            // Check if this text contains kanji
+            const hasKanji = /[\u4e00-\u9faf]/.test(text);
+            tokens.push({ 
+              type: hasKanji ? 'kanji' : 'text', 
+              surface: text 
+            });
           }
         } else if (node.nodeName === 'RUBY') {
           const rubyElement = node as Element;
-          const kanji = rubyElement.querySelector('rb')?.textContent || '';
-          const reading = rubyElement.querySelector('rt')?.textContent || '';
+          const kanji = rubyElement.textContent?.replace(/[\(\)（）]/g, '') || '';
+          const rtElement = rubyElement.querySelector('rt');
+          const reading = rtElement?.textContent || '';
           
           if (kanji) {
             tokens.push({
               type: 'kanji',
               surface: kanji,
-              reading: reading
+              reading: reading || undefined
             });
           }
         } else {
-          // Process child nodes
+          // Process child nodes recursively
           node.childNodes.forEach(processNode);
         }
       };
 
-      doc.body.childNodes.forEach(processNode);
+      const container = doc.querySelector('div');
+      if (container) {
+        container.childNodes.forEach(processNode);
+      }
+
+      // If no tokens were extracted, fallback to simple parsing
+      if (tokens.length === 0) {
+        tokens.push({ type: 'text', surface: inputText });
+      }
 
       // Cache the result
       cache.set(inputText, tokens);

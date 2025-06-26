@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import FuriganaText from '@/components/furigana-text/FuriganaText';
+import FuriganaText from '@/components/FuriganaText';
 
 const FuriganaTestPage: React.FC = () => {
   const testTexts = [
@@ -55,6 +55,7 @@ const FuriganaTestPage: React.FC = () => {
             <li>• Definitions are fetched from Jisho API</li>
             <li>• Click "Save to Vocab" to add words to your personal collection</li>
             <li>• All styling preserves existing theme and layout</li>
+            <li>• Powered by kuroshiro with kuromoji analyzer for accurate parsing</li>
           </ul>
         </CardContent>
       </Card>
