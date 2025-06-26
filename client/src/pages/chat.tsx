@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Toggle } from "@/components/ui/toggle";
 import { ArrowLeft, CheckCircle, Languages } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import FuriganaText from "@/components/FuriganaText";
+import JapaneseFuriganaText from "@/components/JapaneseFuriganaText";
 import { MessageWithVocab } from "@/components/MessageWithVocab";
 import { bind, unbind, toHiragana } from 'wanakana';
 import { supabase } from "@/lib/supabase/client";
@@ -727,7 +727,7 @@ export default function Chat() {
                 
                 <MessageWithVocab content={msg.content}>
                   <div className="text-sm leading-relaxed">
-                    <FuriganaText
+                    <JapaneseFuriganaText
                       text={msg.content}
                       showFurigana={showFurigana}
                       showToggleButton={false}
