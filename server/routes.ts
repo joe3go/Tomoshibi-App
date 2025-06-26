@@ -8,7 +8,7 @@ import path from "path";
 import fs from "fs";
 import type { Request, Response, NextFunction } from "express";
 import { generateAIResponse, generateScenarioIntroduction } from "./openai";
-import { insertUserSchema, insertConversationSchema, insertMessageSchema, usageLog } from "@shared/schema";
+import { insertUserSchema, insertConversationSchema, insertMessageSchema, usageLog } from "../shared/schema";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
 import { uuidToInt } from "./uuid-mapping";

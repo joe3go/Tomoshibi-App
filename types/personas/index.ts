@@ -12,3 +12,4 @@ export * from './personas';
 
 // Re-export for backwards compatibility
 export type { Persona, PersonaWithStats } from './personas';
+export * from './personas';

@@ -27,7 +27,7 @@ export default function Login() {
     }
   }, [authLoading, session, setLocation]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     if (!email || !password) {

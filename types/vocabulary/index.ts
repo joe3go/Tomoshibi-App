@@ -10,3 +10,5 @@
 // Vocabulary-related type exports
 export * from './vocab';
 export * from './progress';
+export * from './vocab';
+export * from './progress';

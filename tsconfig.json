@@ -22,7 +22,8 @@
       "@/hooks/*": ["./client/src/hooks/*"],
       "@/pages/*": ["./client/src/pages/*"],
       "@/types/*": ["./types/*"],
-      "@types/*": ["./types/*"]
+      "@types/*": ["./types/*"],
+      "@shared/*": ["./shared/*"]
     }
   }
 }

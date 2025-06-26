@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import type { Persona, Scenario, JlptVocab, JlptGrammar } from "@shared/schema";
+import type { Persona, Scenario, JlptVocab, JlptGrammar } from "../shared/schema";
 import {
   buildSystemPrompt as buildDynamicPrompt,
   getTutorById,
