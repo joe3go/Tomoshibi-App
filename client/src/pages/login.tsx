@@ -17,6 +17,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -26,7 +27,7 @@ export default function Login() {
     }
   }, [authLoading, session, setLocation]);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !password) {
@@ -41,32 +42,58 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
-
-      if (error) {
-        console.error('Login error:', error);
-        toast({
-          title: "Login Failed",
-          description: error.message,
-          variant: "destructive",
+      if (isSignUp) {
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
         });
-        return;
-      }
 
-      if (data.user) {
-        console.log('✅ Login successful');
-        toast({
-          title: "Welcome back!",
-          description: "You have been logged in successfully.",
+        if (error) {
+          console.error('Sign up error:', error);
+          toast({
+            title: "Sign Up Failed",
+            description: error.message,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (data.user) {
+          console.log('✅ Sign up successful');
+          toast({
+            title: "Account Created!",
+            description: "Please check your email to confirm your account.",
+          });
+          setIsSignUp(false); // Switch back to login mode
+        }
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
         });
+
+        if (error) {
+          console.error('Login error:', error);
+          toast({
+            title: "Login Failed",
+            description: error.message,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (data.user) {
+          console.log('✅ Login successful');
+          toast({
+            title: "Welcome back!",
+            description: "You have been logged in successfully.",
+          });
+        }
       }
     } catch (error) {
-      console.error('Unexpected login error:', error);
+      console.error(`Unexpected ${isSignUp ? 'sign up' : 'login'} error:`, error);
       toast({
-        title: "Login Error",
+        title: isSignUp ? "Sign Up Error" : "Login Error",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
@@ -101,10 +128,12 @@ export default function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">🌸 Tomoshibi</CardTitle>
-          <p className="text-muted-foreground">Sign in to your account</p>
+          <p className="text-muted-foreground">
+            {isSignUp ? "Create your account" : "Sign in to your account"}
+          </p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -134,9 +163,26 @@ export default function Login() {
               className="w-full" 
               disabled={isLoading}
             >
-              {isLoading ? "Signing in..." : "Sign In"}
+              {isLoading 
+                ? (isSignUp ? "Creating account..." : "Signing in...") 
+                : (isSignUp ? "Create Account" : "Sign In")
+              }
             </Button>
           </form>
+          
+          <div className="text-center mt-4">
+            <p className="text-sm text-muted-foreground">
+              {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+              <button
+                type="button"
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="font-medium text-primary hover:underline"
+                disabled={isLoading}
+              >
+                {isSignUp ? "Sign in" : "Sign up"}
+              </button>
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
