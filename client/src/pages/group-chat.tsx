@@ -8,7 +8,7 @@ import { ChatInput } from '@/components/chat/ChatInput';
 import { GroupTypingIndicator } from '@/components/chat/GroupTypingIndicator';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { getPersonaDisplayColor } from '@/lib/group-chat-utilities';
-import { logDebug, logError } from '@/utils/logger';
+import { logDebug, logError } from '../../../utils/logger';
 
 const GroupChatPage: React.FC = () => {
   const [, setLocation] = useLocation();
