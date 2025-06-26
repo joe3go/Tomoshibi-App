@@ -1,6 +1,6 @@
-
 import useSWR from 'swr';
 import TutorCard from './TutorCard';
+import type { Persona } from "@/types";
 
 export default function PersonaList() {
   const { data, error, isLoading } = useSWR(

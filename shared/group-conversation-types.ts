@@ -10,3 +10,6 @@ export type {
 
 // Re-export utility function
 export { injectPromptVariables } from "../types";
+
+// Re-export from centralized types
+export * from '../types/chat';

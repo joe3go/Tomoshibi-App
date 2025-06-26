@@ -1,8 +1,2 @@
-
-// Re-export persona types from centralized location
-export type { 
-  Persona,
-  GroupPersona,
-  VocabStats,
-  PersonaWithStats 
-} from "../types";
+// Re-export from centralized types
+export * from '../types/personas';

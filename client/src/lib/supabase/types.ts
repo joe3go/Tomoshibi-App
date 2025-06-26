@@ -1,6 +1,3 @@
-// Re-export types from centralized location
-export type { 
-  UserVocab, 
-  UserProgress, 
-  SupabaseUser 
-} from "@/types";
+// Re-export centralized types
+export * from '@/types/database';
+export * from '@/types/auth';
