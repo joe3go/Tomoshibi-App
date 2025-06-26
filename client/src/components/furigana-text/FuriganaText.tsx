@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Eye, EyeOff } from 'lucide-react';
 import WordDefinitionPopup from './WordDefinitionPopup';
 
-// Kuromoji tokenizer instance will be initialized lazily
-let kuromojiTokenizer: any = null;
+// Using browser-compatible kuromoji wrapper
+import { getBrowserTokenizer, type KuromojiBrowserTokenizer } from '@/lib/kuromoji-browser';
 
 interface FuriganaToken {
   type: 'text' | 'kanji' | 'kana';
@@ -170,15 +170,15 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
     return /^[。、！？「」『』（）(),.!?\s]$/.test(text);
   };
 
-  // Parse Japanese text using kuromoji tokenizer
-  const parseWithKuromoji = (inputText: string): FuriganaToken[] => {
-    if (!kuromojiTokenizer) {
-      return [{ type: 'text', surface: inputText }];
-    }
-
+  // Parse Japanese text using browser-compatible kuromoji
+  const parseWithKuromoji = async (inputText: string): Promise<FuriganaToken[]> => {
     try {
       const tokens: FuriganaToken[] = [];
-      const morphemes = kuromojiTokenizer.tokenize(inputText);
+      const morphemes = await tokenizeText(inputText);
+
+      if (morphemes.length === 0) {
+        return [{ type: 'text', surface: inputText }];
+      }
 
       for (const morpheme of morphemes) {
         const surface = morpheme.surface_form;
@@ -213,48 +213,15 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
     }
   };
 
-  // Convert katakana to hiragana for furigana display
-  const katakanaToHiragana = (katakana: string): string => {
-    return katakana.replace(/[\u30A1-\u30F6]/g, (match) => {
-      const code = match.charCodeAt(0) - 0x60;
-      return String.fromCharCode(code);
-    });
-  };
-
-  // Initialize kuromoji according to official documentation
+  // Initialize browser-compatible kuromoji
   const initializeKuromoji = useCallback(async () => {
-    if (isInitialized || kuromojiTokenizer) return;
+    if (isInitialized) return;
 
     try {
-      console.log('Initializing kuromoji tokenizer...');
-      
-      // Dynamic import according to documentation
-      const kuromoji = await import('kuromoji');
-      
-      // Build tokenizer with CDN dictionary path for browser compatibility
-      const builder = kuromoji.default ? kuromoji.default.builder({
-        dicPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/'
-      }) : kuromoji.builder({
-        dicPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/'
-      });
-
-      return new Promise<void>((resolve, reject) => {
-        builder.build((err: any, tokenizer: any) => {
-          if (err) {
-            console.error('Failed to build kuromoji tokenizer:', err);
-            reject(err);
-            return;
-          }
-          
-          kuromojiTokenizer = tokenizer;
-          setIsInitialized(true);
-          console.log('Kuromoji tokenizer initialized successfully');
-          resolve();
-        });
-      });
+      await getBrowserTokenizer();
+      setIsInitialized(true);
     } catch (error) {
       console.error('Failed to initialize kuromoji:', error);
-      // Set initialized to true so we use fallback parsing
       setIsInitialized(true);
     }
   }, [isInitialized]);
@@ -273,9 +240,9 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
     }
 
     // Try kuromoji first if available
-    if (kuromojiTokenizer) {
+    if (isInitialized) {
       try {
-        const tokens = parseWithKuromoji(inputText);
+        const tokens = await parseWithKuromoji(inputText);
         cache.set(inputText, tokens);  
         return tokens;
       } catch (error) {

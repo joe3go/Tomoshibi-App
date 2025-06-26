@@ -1,5 +1,5 @@
-// Using kuromoji directly for morphological analysis
-import { builder } from 'kuromoji';
+// Using browser-compatible kuromoji wrapper
+import { initializeBrowserKuromoji, tokenizeText } from '@/lib/kuromoji-browser';
 
 interface NormalizationResult {
   originalForm: string;
@@ -8,39 +8,26 @@ interface NormalizationResult {
   partOfSpeech?: string;
 }
 
-// Global kuromoji tokenizer instance
-let kuromojiTokenizer: any = null;
-
-// Initialize kuromoji tokenizer
-async function initializeKuromoji(): Promise<any> {
-  if (kuromojiTokenizer) return kuromojiTokenizer;
-  
+// Simple initialization wrapper
+async function initializeKuromoji(): Promise<boolean> {
   try {
-    const tokenizer = await new Promise((resolve, reject) => {
-      const kuromojiBuilder = builder({ dicPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/' });
-      kuromojiBuilder.build((err: any, tokenizer: any) => {
-        if (err) reject(err);
-        else resolve(tokenizer);
-      });
-    });
-    
-    kuromojiTokenizer = tokenizer;
-    return kuromojiTokenizer;
+    const tokenizer = await initializeBrowserKuromoji();
+    return tokenizer !== null;
   } catch (error) {
     console.error('Failed to initialize kuromoji:', error);
-    return null;
+    return false;
   }
 }
 
 export async function normalizeJapaneseWord(word: string): Promise<string> {
   try {
-    const tokenizer = await initializeKuromoji();
-    if (!tokenizer) {
+    const isReady = await initializeKuromoji();
+    if (!isReady) {
       return word; // Return original if kuromoji fails
     }
     
     // Use kuromoji to tokenize and get the basic form
-    const morphemes = tokenizer.tokenize(word);
+    const morphemes = await tokenizeText(word);
     
     if (morphemes && morphemes.length > 0) {
       // Return the basic form of the first morpheme, or original if no basic form
@@ -56,14 +43,14 @@ export async function normalizeJapaneseWord(word: string): Promise<string> {
 
 export async function extractVocabularyFromText(text: string): Promise<string[]> {
   try {
-    const tokenizer = await initializeKuromoji();
-    if (!tokenizer) {
+    const isReady = await initializeKuromoji();
+    if (!isReady) {
       // Fallback: extract basic words using regex
       return extractBasicWords(text);
     }
     
     // Use kuromoji for proper morphological analysis
-    const morphemes = tokenizer.tokenize(text);
+    const morphemes = await tokenizeText(text);
     const vocabulary: string[] = [];
     
     for (const morpheme of morphemes) {
@@ -110,8 +97,8 @@ class ConjugationNormalizer {
 
   private async doInitialize(): Promise<void> {
     try {
-      await initializeKuromoji();
-      this.isInitialized = true;
+      const isReady = await initializeKuromoji();
+      this.isInitialized = isReady;
       console.log('Japanese conjugation normalizer initialized');
     } catch (error) {
       console.error('Failed to initialize conjugation normalizer:', error);
