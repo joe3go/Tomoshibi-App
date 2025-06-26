@@ -56,10 +56,10 @@ export default function FuriganaText({
 
   const handleClick = (e: React.MouseEvent, token: ParsedToken) => {
     if (!enableWordLookup) return;
-    
+
     const word = token.kanji || token.content;
     if (!word) return;
-    
+
     const rect = (e.target as HTMLElement).getBoundingClientRect();
     setPopupData({ 
       word, 
@@ -88,17 +88,17 @@ export default function FuriganaText({
           t.type === "text" ? (
             <span key={i} className="jt-text">{t.content}</span>
           ) : showFurigana ? (
-            <ruby
-              key={i}
-              className="jt-ruby inline-block mr-1 hover:bg-blue-100 cursor-pointer rounded px-1 transition-colors"
-              onClick={(e) => handleClick(e, t)}
-            >
-              {t.kanji}
-              <rt className="text-xs text-blue-600 font-medium">
-                {t.reading}
-              </rt>
-            </ruby>
-          ) : (
+          <ruby
+            key={i}
+            className="jt-ruby hover:bg-blue-100 cursor-pointer rounded px-1"
+            onClick={(e) => handleClick(e, t)}
+          >
+            {t.kanji}
+            <rt className="text-xs text-blue-600 font-medium">
+              {t.reading}
+            </rt>
+          </ruby>
+        ) : (
             <span
               key={i}
               className="jt-kanji hover:bg-blue-100 cursor-pointer rounded px-1 transition-colors"
