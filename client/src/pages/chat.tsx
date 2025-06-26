@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Toggle } from "@/components/ui/toggle";
 import { ArrowLeft, CheckCircle, Languages } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import FuriganaText from "@/components/FuriganaText";
+import EnhancedFuriganaText from "@/components/enhanced-furigana-text";
 import { MessageWithVocab } from "@/components/MessageWithVocab";
 import { bind, unbind, toHiragana } from 'wanakana';
 import { supabase } from "@/lib/supabase/client";
@@ -727,13 +727,40 @@ export default function Chat() {
                 
                 <MessageWithVocab content={msg.content}>
                   <div className="text-sm leading-relaxed">
-                    <FuriganaText
+                    <EnhancedFuriganaText
                       text={msg.content}
                       showFurigana={showFurigana}
                       showToggleButton={false}
                       enableWordLookup={true}
-                      onSaveToVocab={(word, reading) => {
-                        console.log('Vocab saved:', word, reading);
+                      onSaveToVocab={async (word, reading) => {
+                        try {
+                          const response = await fetch('/api/vocab/save', {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              'Authorization': `Bearer ${session?.access_token}`
+                            },
+                            body: JSON.stringify({
+                              word,
+                              reading,
+                              source: `Chat with ${persona?.name || 'AI'}`
+                            })
+                          });
+                          
+                          if (response.ok) {
+                            toast({
+                              title: "Vocabulary saved",
+                              description: `Added "${word}" to your vocabulary`,
+                            });
+                          }
+                        } catch (error) {
+                          console.error('Failed to save vocabulary:', error);
+                          toast({
+                            title: "Failed to save vocabulary",
+                            description: "Please try again",
+                            variant: "destructive"
+                          });
+                        }
                       }}
                     />
                   </div>

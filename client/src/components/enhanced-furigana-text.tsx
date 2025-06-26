@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 import { parseJapaneseTextWithFurigana, ParsedToken } from "@/utils/japanese-parser";
+import { useToast } from "@/hooks/use-toast";
 
 interface EnhancedFuriganaTextProps {
   text: string;
@@ -23,13 +24,16 @@ export default function EnhancedFuriganaText({
   enableWordLookup = true,
   onSaveToVocab,
 }: EnhancedFuriganaTextProps) {
+  const { toast } = useToast();
   const [internalShowFurigana, setInternalShowFurigana] = useState(true);
   const [parsedTokens, setParsedTokens] = useState<ParsedToken[]>([]);
   const [selectedWord, setSelectedWord] = useState<{
     word: string;
     reading?: string;
     position: { x: number; y: number };
+    definition?: string;
   } | null>(null);
+  const [loadingDefinition, setLoadingDefinition] = useState(false);
 
   // Use external state if provided, otherwise use internal state
   const showFurigana =
@@ -66,15 +70,34 @@ export default function EnhancedFuriganaText({
     localStorage.setItem('furigana-preference', newValue.toString());
   };
 
-  const handleWordClick = (token: ParsedToken, e: React.MouseEvent) => {
-    if (!enableWordLookup || !token.kanji) return;
+  const handleWordClick = async (token: ParsedToken, e: React.MouseEvent) => {
+    if (!enableWordLookup || (!token.kanji && !token.surface)) return;
     
     e.preventDefault();
+    const word = token.kanji || token.surface;
+    
     setSelectedWord({
-      word: token.kanji,
+      word,
       reading: token.reading,
       position: { x: e.clientX, y: e.clientY }
     });
+
+    // Fetch definition
+    setLoadingDefinition(true);
+    try {
+      const response = await fetch(`/api/word-definition/${encodeURIComponent(word)}`);
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedWord(prev => prev ? {
+          ...prev,
+          definition: data.definitions?.[0]?.definition || 'No definition found'
+        } : null);
+      }
+    } catch (error) {
+      console.error('Failed to fetch definition:', error);
+    } finally {
+      setLoadingDefinition(false);
+    }
   };
 
   const getWordStyling = (token: ParsedToken) => {
@@ -132,36 +155,49 @@ export default function EnhancedFuriganaText({
         })}
       </div>
 
-      {selectedWord && onSaveToVocab && (
+      {selectedWord && (
         <div 
           className="fixed z-50 bg-white dark:bg-gray-800 border rounded-lg shadow-lg p-3 max-w-xs"
           style={{
-            left: selectedWord.position.x,
-            top: selectedWord.position.y - 60
+            left: Math.min(selectedWord.position.x, window.innerWidth - 250),
+            top: selectedWord.position.y - 120
           }}
         >
           <div className="text-sm font-medium">{selectedWord.word}</div>
           {selectedWord.reading && (
-            <div className="text-xs text-muted-foreground">{selectedWord.reading}</div>
+            <div className="text-xs text-muted-foreground mb-2">{selectedWord.reading}</div>
           )}
-          <Button
-            size="sm"
-            className="mt-2 w-full"
-            onClick={() => {
-              onSaveToVocab(selectedWord.word, selectedWord.reading);
-              setSelectedWord(null);
-            }}
-          >
-            Save to Vocabulary
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mt-1 w-full"
-            onClick={() => setSelectedWord(null)}
-          >
-            Close
-          </Button>
+          
+          {loadingDefinition ? (
+            <div className="text-xs text-muted-foreground mb-2">Loading definition...</div>
+          ) : selectedWord.definition && (
+            <div className="text-xs text-muted-foreground mb-2 max-h-16 overflow-y-auto">
+              {selectedWord.definition}
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            {onSaveToVocab && (
+              <Button
+                size="sm"
+                className="flex-1"
+                onClick={() => {
+                  onSaveToVocab(selectedWord.word, selectedWord.reading);
+                  setSelectedWord(null);
+                }}
+              >
+                Save
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex-1"
+              onClick={() => setSelectedWord(null)}
+            >
+              Close
+            </Button>
+          </div>
         </div>
       )}
     </div>
