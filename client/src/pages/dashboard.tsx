@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useQuery, useMutation } from "@tanstack/react-query";
 import { 
-  MessageCircle, 
   TrendingUp, 
   Award, 
   Target, 
@@ -10,175 +8,50 @@ import {
   Flame,
   BookOpen,
   Users,
-  ChevronRight,
   Play,
   Settings,
-  LogOut,
-  X
+  LogOut
 } from "lucide-react";
 import { useAuth } from "@/context/SupabaseAuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { 
-  getVocabStats,
-  createConversation,
-  getCurrentUser 
-} from "@/lib/supabase-functions";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase/client";
-import { queryClient } from "@/lib/queryClient";
 import VocabularyStatsCard from "@/components/VocabularyStatsCard";
-import { getUserProfile, updateStreak, addXP, UserProfile } from "@/lib/supabase-user-profile";
-import { logDebug, logError, logInfo } from "@utils/logger";
-import { generateUUID } from "@utils/uuid";
+import { formatDuration, calculateTotalWords, getAvatarImage } from "@/lib/analytics";
 
-// Helper function to get avatar image
-const getAvatarImage = (persona: any) => {
-  if (persona?.avatar_url && persona.avatar_url.startsWith('/avatars/')) {
-    return persona.avatar_url;
-  }
-  return `/avatars/${persona?.name?.toLowerCase() || 'default'}.png`;
-};
+// Custom hooks
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { useTutors } from "@/hooks/useTutors";
+import { useConversations } from "@/hooks/useConversations";
+import { useVocabularyStats } from "@/hooks/useVocabularyStats";
 
-// Helper function to format time duration
-const formatDuration = (minutes: number) => {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  if (hours > 0) {
-    return `${hours}h ${mins}m`;
-  }
-  return `${mins}m`;
-};
+// Dashboard components
+import DashboardLoading from "@/components/dashboard/DashboardLoading";
+import ProfileHeader from "@/components/dashboard/ProfileHeader";
+import StatCard from "@/components/dashboard/StatCard";
+import JLPTProgressGrid from "@/components/dashboard/JLPTProgressGrid";
+import ConversationPreviewCard from "@/components/dashboard/ConversationPreviewCard";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { user, loading: authLoading, session } = useAuth();
   const isAuthenticated = !!session;
-  const [tutorsData, setTutorsData] = useState<any[]>([]);
-  const [tutorsLoading, setTutorsLoading] = useState(true);
-  const [groupConversations, setGroupConversations] = useState<any[]>([]);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const { toast } = useToast();
 
-  // Fetch conversations from Supabase
-  const { data: conversations = [], isLoading: conversationsLoading, refetch: refetchConversations } = useQuery({
-    queryKey: ["conversations", user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
+  // Custom hooks
+  const { userProfile, addUserXP } = useUserProfile();
+  const { tutorsData, tutorsLoading } = useTutors();
+  const { conversations, createConversationMutation, endConversationMutation } = useConversations();
+  const { vocabStats } = useVocabularyStats();
 
-      const { data, error } = await supabase
-        .from('conversations')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Failed to fetch conversations:', error);
-        return [];
-      }
-      return data || [];
-    },
-    enabled: !!user?.id,
-    staleTime: 0, // Always consider data stale to ensure fresh fetches
-    gcTime: 1000 * 60 * 5, // Keep in cache for 5 minutes
-  });
-
-  // Fetch tutors from Supabase
-  useEffect(() => {
-    const fetchTutors = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('personas')
-          .select('*')
-          .order('id', { ascending: true });
-
-        if (error) {
-          console.error('Failed to fetch tutors:', error);
-        } else {
-          console.log('Tutors fetched successfully:', data);
-          setTutorsData(data || []);
-        }
-      } catch (error) {
-        console.error('Error fetching tutors:', error);
-      } finally {
-        setTutorsLoading(false);
-      }
-    };
-
-    fetchTutors();
-  }, []);
-
-  // Fetch user profile from Supabase
-  const { data: userProfileData } = useQuery({
-    queryKey: ["user-profile", user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const profile = await getUserProfile(user.id);
-      if (profile) {
-        setUserProfile(profile);
-        // Update streak when user visits dashboard
-        await updateStreak(user.id);
-      }
-      return profile;
-    },
-    enabled: !!user?.id,
-  });
-
-  // Fetch vocabulary stats from Supabase
-  const { data: vocabStats } = useQuery({
-    queryKey: ["vocab-stats", user?.id],
-    queryFn: async () => {
-      try {
-        if (!user?.id) {
-          console.warn('No current user for vocab stats');
-          return null;
-        }
-        return await getVocabStats(user.id);
-      } catch (error) {
-        console.error('Error fetching vocab stats:', error);
-        return null;
-      }
-    },
-    enabled: !!user?.id,
-  });
-
-  // Create conversation mutation using Supabase
-  const createConversationMutation = useMutation({
-    mutationFn: async ({ personaId, title }: { personaId: string; title: string }) => {
-      if (!user?.id) {
-        throw new Error("User not authenticated");
-      }
-
-      console.log('🎯 Creating conversation with persona:', personaId, 'title:', title);
-      const result = await createConversation(user.id, personaId, null, title);
-      console.log('✅ Conversation created with ID:', result, 'Type:', typeof result);
-      return result;
-    },
-    onSuccess: (conversationId) => {
-      console.log('🚀 Navigating to conversation:', conversationId);
-      setLocation(`/chat/${conversationId}`);
-    },
-    onError: (error) => {
-      console.error('❌ Conversation creation failed:', error);
-      toast({
-        title: "Failed to start conversation",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Analytics data from user profile and conversations
+  // Analytics data
   const analytics = {
     streak: userProfile?.streak_days || 0,
-    newWordsThisWeek: 12, // Could be calculated from vocab tracker
-    totalWords: vocabStats ? 
-      Object.values(vocabStats).reduce((sum: number, count: any) => sum + (count || 0), 0) : 
-      150,
+    newWordsThisWeek: 12,
+    totalWords: calculateTotalWords(vocabStats),
     activeConversations: Array.isArray(conversations) ? conversations.filter((conv: any) => conv.status === 'active').length : 0,
-    practiceTime: 155, // minutes - could be tracked in future
+    practiceTime: 155,
     upcomingGoal: userProfile?.learning_goals || `Learn ${userProfile?.jlpt_goal_level || 'N5'} vocabulary`,
     xp: userProfile?.xp || 0,
     jlptGoal: userProfile?.jlpt_goal_level || 'N5'
@@ -189,7 +62,6 @@ export default function Dashboard() {
     try {
       console.log('🎯 Starting new chat with persona ID:', personaId, 'Type:', typeof personaId);
 
-      // Import validation function
       const { isValidUUID } = await import("../../../shared/validation");
 
       if (!personaId || !isValidUUID(personaId)) {
@@ -201,11 +73,6 @@ export default function Dashboard() {
       createConversationMutation.mutate({ personaId, title });
     } catch (error) {
       console.error('Failed to start chat:', error);
-      toast({
-        title: "Authentication Error",
-        description: "Unable to start conversation. Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -215,58 +82,13 @@ export default function Dashboard() {
     setLocation(`/chat/${conversationId}`);
   };
 
-  // End conversation mutation
-  const endConversationMutation = useMutation({
-    mutationFn: async (conversationId: string | number) => {
-      if (!user?.id) {
-        throw new Error("User not authenticated");
-      }
-
-      console.log('🛑 Ending conversation:', conversationId);
-
-      const { error } = await supabase
-        .from('conversations')
-        .update({ 
-          status: 'completed',
-          completed_at: new Date().toISOString()
-        })
-        .eq('id', conversationId)
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('❌ Failed to end conversation:', error);
-        throw new Error('Failed to end conversation');
-      }
-
-      return { success: true };
-    },
-    onSuccess: async () => {
-      // Add XP reward for completing conversation
-      if (user?.id) {
-        await addXP(user.id, 50); // 50 XP for completing a conversation
-      }
-
-      toast({
-        title: "Conversation ended",
-        description: "The conversation has been completed and moved to your transcripts. +50 XP earned!",
-      });
-      // Force immediate refresh of conversations list
-      queryClient.invalidateQueries({ queryKey: ["conversations", user?.id] });
-      queryClient.invalidateQueries({ queryKey: ["user-profile", user?.id] });
-      refetchConversations();
-    },
-    onError: (error) => {
-      toast({
-        title: "Failed to end conversation",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
   // Handle end chat
-  const handleEndChat = (conversationId: string | number) => {
+  const handleEndChat = async (conversationId: string | number) => {
     endConversationMutation.mutate(conversationId);
+    // Add XP reward for completing conversation
+    if (user?.id) {
+      await addUserXP(50);
+    }
   };
 
   // Handle logout
@@ -280,31 +102,19 @@ export default function Dashboard() {
     }
   };
 
-  // Redirect to login if not authenticated (only after loading is complete)
+  // Navigation handlers
+  const navigateTo = (path: string) => setLocation(path);
+
+  // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       setLocation('/login');
     }
   }, [authLoading, isAuthenticated, setLocation]);
 
-  // Show loading while auth is being determined
-  if (authLoading) {
-    return (
-      <div className="dashboard-loading-container">
-        <div className="dashboard-loading-card">
-          <div className="dashboard-loading-content">
-            <div className="dashboard-loading-spinner"></div>
-            <span className="dashboard-loading-text">Loading dashboard...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render if not authenticated
-  if (!isAuthenticated) {
-    return null;
-  }
+  // Loading states
+  if (authLoading) return <DashboardLoading />;
+  if (!isAuthenticated) return null;
 
   return (
     <div className="dashboard-container">
@@ -319,7 +129,7 @@ export default function Dashboard() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setLocation('/tutor-selection')}
+              onClick={() => navigateTo('/tutor-selection')}
               className="header-nav-btn"
             >
               <Users className="w-4 h-4 mr-2" />
@@ -328,7 +138,7 @@ export default function Dashboard() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setLocation('/scenarios')}
+              onClick={() => navigateTo('/scenarios')}
               className="header-nav-btn"
             >
               <Target className="w-4 h-4 mr-2" />
@@ -337,7 +147,7 @@ export default function Dashboard() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setLocation('/vocabulary')}
+              onClick={() => navigateTo('/vocabulary')}
               className="header-nav-btn"
             >
               <BookOpen className="w-4 h-4 mr-2" />
@@ -346,7 +156,7 @@ export default function Dashboard() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setLocation('/settings')}
+              onClick={() => navigateTo('/settings')}
               className="header-nav-btn"
             >
               <Settings className="w-4 h-4" />
@@ -365,220 +175,75 @@ export default function Dashboard() {
 
       <div className="dashboard-content">
         {/* Welcome Section */}
-        <div className="welcome-section">
-          <div className="welcome-content">
-            <div className="flex items-center gap-4 mb-4">
-              <Avatar className="w-16 h-16">
-                <AvatarImage src={userProfile?.avatar_url} alt="Profile" />
-                <AvatarFallback>
-                  {(userProfile?.display_name || user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Student')[0].toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h1 className="welcome-title">
-                  Welcome back, {userProfile?.display_name || user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Student'}!
-                </h1>
-                <p className="welcome-subtitle">Keep your momentum going!</p>
-                {userProfile?.jlpt_goal_level && (
-                  <Badge variant="secondary" className="mt-1">
-                    Goal: {userProfile.jlpt_goal_level}
-                  </Badge>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+        <ProfileHeader 
+          userProfile={userProfile}
+          userEmail={user?.email}
+          displayName={user?.user_metadata?.display_name}
+        />
 
         {/* Analytics Section */}
         <div className="analytics-section">
           <div className="analytics-grid">
-            <Card className="stat-card streak-card">
-              <CardContent className="stat-content">
-                <div className="stat-icon">
-                  <Flame className="w-6 h-6 text-orange-500" />
-                </div>
-                <div className="stat-details">
-                  <p className="stat-value">{analytics.streak}-day</p>
-                  <p className="stat-label">Streak</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="stat-card">
-              <CardContent className="stat-content">
-                <div className="stat-icon">
-                  <TrendingUp className="w-6 h-6 text-green-500" />
-                </div>
-                <div className="stat-details">
-                  <p className="stat-value">{analytics.newWordsThisWeek}</p>
-                  <p className="stat-label">New Words This Week</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="stat-card">
-              <CardContent className="stat-content">
-                <div className="stat-icon">
-                  <BookOpen className="w-6 h-6 text-blue-500" />
-                </div>
-                <div className="stat-details">
-                  <p className="stat-value">
-                    {vocabStats ? 
-                      Object.values(vocabStats).reduce((sum: number, count: any) => sum + (count || 0), 0) : 
-                      analytics.totalWords
-                    }
-                  </p>
-                  <p className="stat-label">Total Words Used</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="stat-card">
-              <CardContent className="stat-content">
-                <div className="stat-icon">
-                  <MessageCircle className="w-6 h-6 text-purple-500" />
-                </div>
-                <div className="stat-details">
-                  <p className="stat-value">{analytics.activeConversations}</p>
-                  <p className="stat-label">Active Conversations</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="stat-card">
-              <CardContent className="stat-content">
-                <div className="stat-icon">
-                  <Clock className="w-6 h-6 text-indigo-500" />
-                </div>
-                <div className="stat-details">
-                  <p className="stat-value">{formatDuration(analytics.practiceTime)}</p>
-                  <p className="stat-label">Practice Time</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="stat-card">
-              <CardContent className="stat-content">
-                <div className="stat-icon">
-                  <Award className="w-6 h-6 text-yellow-500" />
-                </div>
-                <div className="stat-details">
-                  <p className="stat-value">{analytics.xp}</p>
-                  <p className="stat-label">XP Earned</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="stat-card">
-              <CardContent className="stat-content">
-                <div className="stat-icon">
-                  <Target className="w-6 h-6 text-red-500" />
-                </div>
-                <div className="stat-details">
-                  <p className="stat-value">{analytics.jlptGoal}</p>
-                  <p className="stat-label">JLPT Goal</p>
-                </div>
-              </CardContent>
-            </Card>
+            <StatCard
+              icon={Flame}
+              value={`${analytics.streak}-day`}
+              label="Streak"
+              iconColor="text-orange-500"
+              className="streak-card"
+            />
+            <StatCard
+              icon={TrendingUp}
+              value={analytics.newWordsThisWeek}
+              label="New Words This Week"
+              iconColor="text-green-500"
+            />
+            <StatCard
+              icon={BookOpen}
+              value={analytics.totalWords}
+              label="Total Words Used"
+              iconColor="text-blue-500"
+            />
+            <StatCard
+              icon={Users}
+              value={analytics.activeConversations}
+              label="Active Conversations"
+              iconColor="text-purple-500"
+            />
+            <StatCard
+              icon={Clock}
+              value={formatDuration(analytics.practiceTime)}
+              label="Practice Time"
+              iconColor="text-indigo-500"
+            />
+            <StatCard
+              icon={Award}
+              value={analytics.xp}
+              label="XP Earned"
+              iconColor="text-yellow-500"
+            />
+            <StatCard
+              icon={Target}
+              value={analytics.jlptGoal}
+              label="JLPT Goal"
+              iconColor="text-red-500"
+            />
           </div>
 
           {/* JLPT Vocabulary Stats */}
-          {vocabStats && (
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="w-5 h-5" />
-                  JLPT Vocabulary Progress
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  {['N5', 'N4', 'N3', 'N2', 'N1'].map(level => (
-                    <div key={level} className="text-center">
-                      <div className="text-2xl font-bold text-primary">
-                        {vocabStats[level.toLowerCase() as keyof typeof vocabStats] || 0}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {level} Words
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          <JLPTProgressGrid vocabStats={vocabStats} />
         </div>
 
         {/* JLPT Vocabulary Usage Card */}
         <VocabularyStatsCard />
 
         {/* Recent Conversations Section */}
-        <div className="recent-conversations-section">
-          <Card className="section-card">
-            <CardHeader className="section-header">
-              <CardTitle className="section-title">
-                <MessageCircle className="w-5 h-5" />
-                Recent Conversations
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="section-content">
-              {Array.isArray(conversations) && conversations.filter((conv: any) => conv.status === 'active').length > 0 ? (
-                <div className="conversations-list">
-                  {conversations.filter((conv: any) => conv.status === 'active').slice(0, 3).map((conversation: any) => {
-                    // Handle both solo and group conversations
-                    const isGroupConv = conversation.mode === 'group';
-                    const persona = tutorsData.find((p: any) => p.id === conversation.persona_id);
-
-                    return (
-                      <div key={conversation.id} className="conversation-card">
-                        <div className="conversation-info">
-                          <Avatar className="conversation-avatar">
-                            <AvatarImage src={getAvatarImage(persona)} alt={persona?.name || (isGroupConv ? 'Group' : 'Tutor')} />
-                            <AvatarFallback>{isGroupConv ? 'G' : (persona?.name?.[0] || 'T')}</AvatarFallback>
-                          </Avatar>
-                          <div className="conversation-details">
-                            <p className="conversation-tutor">
-                              {isGroupConv ? conversation.title : (persona?.name || 'Unknown Tutor')}
-                            </p>
-                            <p className="conversation-summary">
-                              {isGroupConv ? 'Group conversation' : 'Active conversation'}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="conversation-actions">
-                          <Button 
-                            size="sm" 
-                            onClick={() => handleResumeChat(conversation.id)}
-                            className="resume-btn"
-                          >
-                            Resume
-                            <ChevronRight className="w-4 h-4 ml-1" />
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleEndChat(conversation.id)}
-                            className="end-chat-btn"
-                            disabled={endConversationMutation.isPending}
-                          >
-                            <X className="w-4 h-4" />
-                            End Chat
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="empty-state">
-                  <MessageCircle className="w-12 h-12 text-muted-foreground mb-2" />
-                  <p className="empty-title">No conversations yet</p>
-                  <p className="empty-description">Start your first chat with a tutor below!</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+        <ConversationPreviewCard
+          conversations={conversations}
+          tutorsData={tutorsData}
+          onResumeChat={handleResumeChat}
+          onEndChat={handleEndChat}
+          isEndingConversation={endConversationMutation.isPending}
+        />
 
         {/* Practice Groups Section */}
         <div className="practice-groups-section">
@@ -609,7 +274,7 @@ export default function Dashboard() {
               </div>
               <div className="text-center">
                 <Button 
-                  onClick={() => setLocation('/practice-groups')}
+                  onClick={() => navigateTo('/practice-groups')}
                   className="bg-gradient-to-r from-blue-600 to-rose-600 hover:from-blue-700 hover:to-rose-700"
                 >
                   <Users className="w-4 h-4 mr-2" />
@@ -656,7 +321,6 @@ export default function Dashboard() {
                             {persona.description || 'Available for conversation practice'}
                           </p>
 
-                          {/* Personality Info */}
                           {persona.personality && (
                             <div className="mb-2">
                               <span className="text-xs font-medium text-teal-600">Personality:</span>
