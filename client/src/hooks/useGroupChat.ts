@@ -46,6 +46,8 @@ export function useGroupChat(conversationId: string | null) {
   const [participants, setParticipants] = useState<Persona[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [typingPersonas, setTypingPersonas] = useState<string[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [groupState, setGroupState] = useState<GroupChatState>({
     lastSpeaker: null,
     consecutiveCount: 0,
@@ -87,6 +89,8 @@ export function useGroupChat(conversationId: string | null) {
       
       // Load participants
       await loadParticipants();
+      
+      setIsInitialized(true);
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to load group conversation";
@@ -222,18 +226,58 @@ export function useGroupChat(conversationId: string | null) {
     }
   };
 
+  const sendMessage = async (content: string) => {
+    try {
+      const response = await fetch('/api/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          conversationId,
+          content,
+          mode: 'group'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
+
+      const result = await response.json();
+      logDebug('✅ Message sent successfully:', result);
+      
+      // Reload messages to get the latest state
+      await loadMessages();
+      
+    } catch (error) {
+      logError('❌ Error sending message:', error);
+      throw error;
+    }
+  };
+
+  const initializeGroupChat = () => {
+    if (conversationId && user && session) {
+      loadGroupConversationData();
+    }
+  };
+
   return {
     conversation,
     messages,
-    participants,
-    loading,
+    groupPersonas: participants,
+    isLoading: loading,
     error,
     groupState,
+    typingPersonas,
+    isInitialized,
     addMessage,
     updateGroupState,
     getNextAISpeaker,
     shouldAllowAIResponse,
     completeConversation,
+    sendMessage,
+    initializeGroupChat,
     refetch: loadGroupConversationData
   };
 }

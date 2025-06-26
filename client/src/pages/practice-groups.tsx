@@ -71,62 +71,45 @@ export default function PracticeGroups() {
   // Create group conversation mutation
   const createGroupMutation = useMutation({
     mutationFn: async (templateId: string) => {
-      if (!user?.id) {
-        throw new Error("User not authenticated");
-      }
+      if (!isAuthenticated) throw new Error('Must be logged in');
 
-      const template = templates.find(t => t.id === templateId);
-      if (!template) {
-        throw new Error("Template not found");
-      }
+      logInfo('🚀 Creating group conversation with template ID:', templateId);
 
-      // Create conversation with group mode
-      const { data: conversation, error: convError } = await supabase
-        .from('conversations')
-        .insert({
-          user_id: user.id,
-          title: template.title,
-          mode: 'group',
-          status: 'active'
-        })
-        .select()
-        .single();
-
-      if (convError || !conversation) {
-        console.error('Conversation creation error:', convError);
-        throw new Error("Failed to create group conversation");
-      }
-
-      // Add participants to conversation_participants table
-      const participantInserts = template.default_personas.map((personaId, index) => ({
-        conversation_id: conversation.id,
-        persona_id: personaId,
-        role: 'ai',
-        order_in_convo: index + 1
-      }));
-
-      const { error: participantsError } = await supabase
-        .from('conversation_participants')
-        .insert(participantInserts);
-
-      if (participantsError) {
-        console.error('Participants insertion error:', participantsError);
-        // Don't fail the whole operation, just log the error
-      }
-
-      return conversation.id;
-    },
-    onSuccess: (conversationId) => {
-      toast({
-        title: "Group chat created!",
-        description: "Welcome to your practice group",
+      const response = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          templateId,
+          mode: 'group'
+        }),
       });
-      setLocation(`/group-chat/${conversationId}`);
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        logError('❌ Failed to create group conversation:', errorData);
+        throw new Error(`Failed to create group conversation: ${errorData}`);
+      }
+
+      const result = await response.json();
+      logInfo('✅ Group conversation created successfully:', result);
+      return result;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Group conversation created!",
+        description: "Redirecting to your new group chat...",
+      });
+
+      // Store conversation ID and navigate with URL parameter
+      localStorage.setItem('currentGroupConversationId', data.conversationId);
+      setLocation(`/group-chat?conversationId=${data.conversationId}`);
     },
     onError: (error) => {
-      console.error('Group creation failed:', error);
+      logError('❌ Error creating group conversation:', error);
       toast({
-        title: "Failed to create group",
+        title: "Failed to create group conversation",
         description: error.message,
         variant: "destructive",
       });

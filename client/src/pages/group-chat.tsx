@@ -33,12 +33,18 @@ const GroupChatPage: React.FC = () => {
     const urlConversationId = urlParams.get('conversationId');
 
     if (urlConversationId) {
+      logDebug('Found conversation ID in URL:', urlConversationId);
       setConversationId(urlConversationId);
+      // Store in localStorage for future reference
+      localStorage.setItem('currentGroupConversationId', urlConversationId);
     } else {
       // Try to get from localStorage as fallback
       const storedConversationId = localStorage.getItem('currentGroupConversationId');
       if (storedConversationId) {
+        logDebug('Found conversation ID in localStorage:', storedConversationId);
         setConversationId(storedConversationId);
+        // Update URL to match localStorage
+        window.history.replaceState(null, '', `/group-chat?conversationId=${storedConversationId}`);
       } else {
         logDebug('No conversation ID found, redirecting to practice groups');
         setLocation('/practice-groups');
