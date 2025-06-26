@@ -5,7 +5,7 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["imagemagick", "mecab"]
+packages = ["imagemagick", "mecab", "python311Packages.flask", "python311Packages.flask-cors", "python311Packages.requests"]
 
 [env]
 PORT = "5000"

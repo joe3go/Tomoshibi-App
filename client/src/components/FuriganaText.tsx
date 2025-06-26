@@ -52,20 +52,23 @@ export default function FuriganaText({
     const parseText = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch('/parse-japanese', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ text }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`Parse failed: ${response.status}`);
+        // For now, use the existing API until Python backend is ready
+        const response = await fetch(`/api/word-definition/${encodeURIComponent(text)}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          // Simple tokenization for demo - split by common boundaries
+          const simpleTokens = text.match(/[\u4e00-\u9faf]+|[\u3040-\u309f]+|[\u30a0-\u30ff]+|[a-zA-Z0-9]+|[^\s]/g) || [text];
+          const tokens = simpleTokens.map(word => ({
+            word,
+            reading: word,
+            base_form: word,
+            pos: "unknown"
+          }));
+          setTokens(tokens);
+        } else {
+          throw new Error("Parse service unavailable");
         }
-
-        const parsedTokens = await response.json();
-        setTokens(parsedTokens);
       } catch (error) {
         console.error('Failed to parse Japanese text:', error);
         // Fallback to simple character parsing
@@ -142,7 +145,7 @@ export default function FuriganaText({
                 onClick={(e) => handleWordClick(e, token)}
                 title={enableWordLookup ? "Click for definition" : undefined}
               >
-                <rb>{token.word}</rb>
+                {token.word}
                 <rt className="text-xs leading-none text-gray-600">{token.reading}</rt>
               </ruby>
             );
