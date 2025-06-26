@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useGroupChat } from '@/hooks/useGroupChat';
 import { GroupChatHeader } from '@/components/chat/GroupChatHeader';
@@ -11,7 +11,7 @@ import { getPersonaDisplayColor } from '@/lib/group-chat-utilities';
 import { logDebug, logError } from '@/utils/logger';
 
 const GroupChatPage: React.FC = () => {
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const { user } = useSupabaseAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -41,11 +41,11 @@ const GroupChatPage: React.FC = () => {
         setConversationId(storedConversationId);
       } else {
         logDebug('No conversation ID found, redirecting to practice groups');
-        navigate('/practice-groups');
+        setLocation('/practice-groups');
         return;
       }
     }
-  }, [navigate]);
+  }, [setLocation]);
 
   // Initialize group chat when conversation ID is available
   useEffect(() => {
@@ -75,7 +75,7 @@ const GroupChatPage: React.FC = () => {
   // Handle leaving the group chat
   const handleLeaveChat = () => {
     localStorage.removeItem('currentGroupConversationId');
-    navigate('/practice-groups');
+    setLocation('/practice-groups');
   };
 
   // Show loading state while initializing
