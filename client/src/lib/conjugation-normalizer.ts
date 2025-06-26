@@ -1,12 +1,5 @@
-// Browser-compatible path operations
-const path = {
-  join: (...parts: string[]) => parts.join('/').replace(/\/+/g, '/'),
-  resolve: (p: string) => p
-};
-// @ts-ignore - Kuroshiro types not available
-import Kuroshiro from 'kuroshiro';
-// @ts-ignore - Kuromoji analyzer types not available
-import KuromojiAnalyzer from 'kuroshiro-analyzer-kuromoji';
+// Using kuromoji directly for morphological analysis
+import { builder } from 'kuromoji';
 
 interface NormalizationResult {
   originalForm: string;
@@ -15,8 +8,95 @@ interface NormalizationResult {
   partOfSpeech?: string;
 }
 
+// Global kuromoji tokenizer instance
+let kuromojiTokenizer: any = null;
+
+// Initialize kuromoji tokenizer
+async function initializeKuromoji(): Promise<any> {
+  if (kuromojiTokenizer) return kuromojiTokenizer;
+  
+  try {
+    const tokenizer = await new Promise((resolve, reject) => {
+      builder({ dicPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/' })
+        .build((err: any, tokenizer: any) => {
+          if (err) reject(err);
+          else resolve(tokenizer);
+        });
+    });
+    
+    kuromojiTokenizer = tokenizer;
+    return kuromojiTokenizer;
+  } catch (error) {
+    console.error('Failed to initialize kuromoji:', error);
+    return null;
+  }
+}
+
+export async function normalizeJapaneseWord(word: string): Promise<string> {
+  try {
+    const tokenizer = await initializeKuromoji();
+    if (!tokenizer) {
+      return word; // Return original if kuromoji fails
+    }
+    
+    // Use kuromoji to tokenize and get the basic form
+    const morphemes = tokenizer.tokenize(word);
+    
+    if (morphemes && morphemes.length > 0) {
+      // Return the basic form of the first morpheme, or original if no basic form
+      return morphemes[0].basic_form || word;
+    }
+    
+    return word;
+  } catch (error) {
+    console.error('Error normalizing Japanese word:', error);
+    return word; // Return original word if normalization fails
+  }
+}
+
+export async function extractVocabularyFromText(text: string): Promise<string[]> {
+  try {
+    const tokenizer = await initializeKuromoji();
+    if (!tokenizer) {
+      // Fallback: extract basic words using regex
+      return extractBasicWords(text);
+    }
+    
+    // Use kuromoji for proper morphological analysis
+    const morphemes = tokenizer.tokenize(text);
+    const vocabulary: string[] = [];
+    
+    for (const morpheme of morphemes) {
+      // Extract meaningful words (nouns, verbs, adjectives, etc.)
+      if (morpheme.pos && 
+          (morpheme.pos.includes('名詞') || 
+           morpheme.pos.includes('動詞') || 
+           morpheme.pos.includes('形容詞') ||
+           morpheme.pos.includes('副詞'))) {
+        
+        const baseForm = morpheme.basic_form || morpheme.surface_form;
+        if (baseForm && baseForm.length > 1) { // Skip single character words
+          vocabulary.push(baseForm);
+        }
+      }
+    }
+    
+    return [...new Set(vocabulary)]; // Remove duplicates
+  } catch (error) {
+    console.error('Error extracting vocabulary:', error);
+    return extractBasicWords(text);
+  }
+}
+
+// Fallback function for basic word extraction using regex
+function extractBasicWords(text: string): string[] {
+  // Extract Japanese words (hiragana, katakana, kanji combinations)
+  const words = text.match(/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+/g) || [];
+  return words.filter(word => word.length > 1); // Filter out single characters
+}
+
+// Legacy class for backward compatibility
 class ConjugationNormalizer {
-  private kuroshiro: Kuroshiro | null = null;
   private isInitialized = false;
   private initPromise: Promise<void> | null = null;
 
@@ -30,8 +110,7 @@ class ConjugationNormalizer {
 
   private async doInitialize(): Promise<void> {
     try {
-      this.kuroshiro = new Kuroshiro();
-      await this.kuroshiro.init(new KuromojiAnalyzer());
+      await initializeKuromoji();
       this.isInitialized = true;
       console.log('Japanese conjugation normalizer initialized');
     } catch (error) {
@@ -45,131 +124,36 @@ class ConjugationNormalizer {
       await this.initialize();
     }
 
-    if (!this.kuroshiro) {
-      throw new Error('Kuroshiro not initialized');
-    }
-
     try {
-      // Get morphological analysis
-      const tokens = await this.kuroshiro.util.tokenize(word);
-
-      if (tokens.length === 0) {
-        return {
-          originalForm: word,
-          normalizedForm: word,
-          confidence: 0
-        };
-      }
-
-      // Find the most likely token (usually the first meaningful one)
-      const primaryToken = tokens.find((token: any) => 
-        token.part_of_speech && 
-        !token.part_of_speech.includes('助詞') && // Not a particle
-        !token.part_of_speech.includes('記号')    // Not a symbol
-      ) || tokens[0];
-
-      // Extract base form
-      const baseForm = primaryToken.basic_form || primaryToken.surface_form;
-      const partOfSpeech = primaryToken.part_of_speech;
-
-      // Calculate confidence based on whether we found a different base form
-      const confidence = baseForm !== word ? 0.9 : 0.5;
-
+      const normalizedForm = await normalizeJapaneseWord(word);
+      
       return {
         originalForm: word,
-        normalizedForm: baseForm,
-        confidence,
-        partOfSpeech
+        normalizedForm: normalizedForm,
+        confidence: normalizedForm !== word ? 0.8 : 1.0,
+        partOfSpeech: undefined // Would need more analysis to determine
       };
-
     } catch (error) {
-      console.error('Error normalizing word:', word, error);
+      console.error('Error normalizing word:', error);
       return {
         originalForm: word,
         normalizedForm: word,
-        confidence: 0
+        confidence: 0.0
       };
     }
   }
 
-  async normalizeText(text: string): Promise<NormalizationResult[]> {
+  async extractVocabulary(text: string): Promise<string[]> {
     if (!this.isInitialized) {
       await this.initialize();
     }
 
-    if (!this.kuroshiro) {
-      throw new Error('Kuroshiro not initialized');
-    }
-
-    try {
-      const tokens = await this.kuroshiro.util.tokenize(text);
-      const results: NormalizationResult[] = [];
-
-      for (const token of tokens) {
-        // Skip particles, symbols, and punctuation
-        if (token.part_of_speech && (
-          token.part_of_speech.includes('助詞') ||
-          token.part_of_speech.includes('記号') ||
-          token.part_of_speech.includes('補助記号')
-        )) {
-          continue;
-        }
-
-        const baseForm = token.basic_form || token.surface_form;
-        const confidence = baseForm !== token.surface_form ? 0.9 : 0.5;
-
-        results.push({
-          originalForm: token.surface_form,
-          normalizedForm: baseForm,
-          confidence,
-          partOfSpeech: token.part_of_speech
-        });
-      }
-
-      return results;
-    } catch (error) {
-      console.error('Error normalizing text:', text, error);
-      return [];
-    }
-  }
-
-  // Static method for common conjugation patterns (fallback)
-  static basicNormalize(word: string): string {
-    // Basic verb patterns
-    const verbPatterns = [
-      { pattern: /(.+)ます$/, replacement: '$1る' },      // polite form
-      { pattern: /(.+)ました$/, replacement: '$1る' },     // past polite
-      { pattern: /(.+)たい$/, replacement: '$1る' },      // want to
-      { pattern: /(.+)った$/, replacement: '$1る' },      // past tense
-      { pattern: /(.+)んだ$/, replacement: '$1む' },      // past tense (mu verbs)
-      { pattern: /(.+)いた$/, replacement: '$1く' },      // past tense (ku verbs)
-      { pattern: /(.+)した$/, replacement: '$1す' },      // past tense (su verbs)
-      { pattern: /(.+)ない$/, replacement: '$1る' },      // negative
-      { pattern: /(.+)なかった$/, replacement: '$1る' },   // past negative
-    ];
-
-    // Basic adjective patterns
-    const adjectivePatterns = [
-      { pattern: /(.+)かった$/, replacement: '$1い' },    // past tense i-adjectives
-      { pattern: /(.+)くない$/, replacement: '$1い' },    // negative i-adjectives
-      { pattern: /(.+)くなかった$/, replacement: '$1い' }, // past negative i-adjectives
-    ];
-
-    const allPatterns = [...verbPatterns, ...adjectivePatterns];
-
-    for (const { pattern, replacement } of allPatterns) {
-      if (pattern.test(word)) {
-        return word.replace(pattern, replacement);
-      }
-    }
-
-    return word;
+    return extractVocabularyFromText(text);
   }
 }
 
-// Singleton instance
+// Export singleton instance
 export const conjugationNormalizer = new ConjugationNormalizer();
 
-// Export the class for testing
-export { ConjugationNormalizer };
-export type { NormalizationResult };
+// Export individual functions for direct use
+export { extractBasicWords };

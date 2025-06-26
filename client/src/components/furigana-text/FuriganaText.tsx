@@ -308,17 +308,19 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
     processText();
   }, [text, parseText]);
 
-  // Load furigana preference from localStorage
+  // Load furigana preference from localStorage (only if no external control)
   useEffect(() => {
-    const saved = localStorage.getItem('furigana-visible');
-    if (saved !== null) {
-      setShowFurigana(saved === 'true');
+    if (externalShowFurigana === undefined) {
+      const saved = localStorage.getItem('furigana-visible');
+      if (saved !== null) {
+        setInternalShowFurigana(saved === 'true');
+      }
     }
-  }, []);
+  }, [externalShowFurigana]);
 
   const handleToggleFurigana = () => {
-    const newState = !showFurigana;
-    setShowFurigana(newState);
+    const newState = !internalShowFurigana;
+    setInternalShowFurigana(newState);
     localStorage.setItem('furigana-visible', newState.toString());
   };
 
