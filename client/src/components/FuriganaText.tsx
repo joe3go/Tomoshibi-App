@@ -70,7 +70,7 @@ export default function FuriganaText({
   };
 
   return (
-    <div className={`jt-wrap ${className}`}>
+    <div className={`jt-wrap ruby-support font-japanese ${className}`}>
       {showToggleButton && (
         <Button
           variant="ghost"
@@ -83,7 +83,7 @@ export default function FuriganaText({
         </Button>
       )}
 
-      <div className="jt-body leading-relaxed">
+      <div className="jt-body leading-ruby text-ruby-base">
         {tokens.map((t, i) =>
           t.type === "text" ? (
             <span key={i} className="jt-text">{t.content}</span>
@@ -94,7 +94,7 @@ export default function FuriganaText({
             onClick={(e) => handleClick(e, t)}
           >
             {t.kanji}
-            <rt className="text-xs text-blue-600 font-medium">
+            <rt className="ruby-annotation text-muted-foreground">
               {t.reading}
             </rt>
           </ruby>

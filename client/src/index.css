@@ -2106,6 +2106,20 @@ rt {
   font-kerning: auto;
 }
 
+/* Browser-specific ruby fixes */
+@-moz-document url-prefix() {
+  rt {
+    font-size: 0.5em !important;
+    transform: translateY(-0.6em) !important;
+  }
+}
+
+.jt-ruby {
+  ruby-position: over;
+  line-height: inherit !important;
+  vertical-align: top;
+}
+
 /* Ruby text styling for furigana */
 ruby {
   ruby-position: over;
@@ -2116,6 +2130,8 @@ rt {
   font-size: 0.6em;
   color: hsl(var(--muted-foreground));
   font-weight: 400;
+  font-family: "Noto Sans JP", sans-serif;
+  text-underline-position: under;
 }
 
 /* Add your custom styles here */

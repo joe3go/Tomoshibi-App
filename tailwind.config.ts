@@ -151,9 +151,19 @@ export default {
         "lantern-glow": "lantern-glow 2s ease-in-out infinite",
       },
       fontFamily: {
-        japanese: ['"Noto Sans JP"', "sans-serif"],
+        japanese: ['"Noto Sans JP"', '"Noto Serif JP"', "sans-serif"],
         inter: ["Inter", "sans-serif"],
-        serif: ['"Noto Serif JP"', "serif"],
+        serif: ['"Noto Serif JP"', '"Noto Sans JP"', "serif"],
+      },
+      lineHeight: {
+        'ruby': '1.8',
+      },
+      fontSize: {
+        'ruby-base': ['1rem', { lineHeight: '1.8' }],
+        'ruby-annotation': ['0.6rem', { 
+          lineHeight: '1.2',
+          letterSpacing: '0.05em'
+        }],
       },
       screens: {
         short: { raw: "(max-height: 600px)" },
@@ -200,6 +210,20 @@ export default {
             borderRadius: "4px",
           },
         },
+        '.ruby-support': {
+          'font-feature-settings': "'pkna' 1, 'halt' 1",
+          '-webkit-font-feature-settings': "'pkna' 1, 'halt' 1",
+          'text-rendering': 'optimizeLegibility',
+        },
+        '@supports (-webkit-touch-callout: none)': {
+          'ruby': { 
+            '-webkit-ruby-position': 'before'
+          },
+          'rt': {
+            '-webkit-text-combine': 'horizontal',
+            'transform': 'translateY(-0.1em)'
+          }
+        }
       });
     },
     function ({ addComponents }) {
