@@ -151,7 +151,7 @@ export async function generateAIResponse(context: ConversationContext): Promise<
       messages: [
         { 
           role: "system", 
-          content: systemPrompt + "\n\n**FURIGANA REQUIREMENT: You MUST include hiragana readings in parentheses after every kanji character. Example: 今日(きょう)、学校(がっこう)、食べる(たべる)**" 
+          content: systemPrompt + "\n\n**CRITICAL FURIGANA REQUIREMENT: You MUST include hiragana readings in parentheses after EVERY SINGLE kanji character without exception. Examples: 今日(きょう), 学校(がっこう), 食べる(たべる), 青井(あおい), 話(はなし), 好き(すき). NO kanji should appear without furigana readings.**" 
         },
         ...limitedHistory,
         { role: "user", content: context.userMessage }
@@ -242,7 +242,15 @@ You are helping a Japanese language learner practice conversation. Your goal is 
 2. Be encouraging and supportive  
 3. Use vocabulary from the target list when possible
 4. Keep responses conversational and engaging
-5. CRITICAL: Include hiragana readings in parentheses after ALL kanji (e.g., 今日(きょう), 学校(がっこう))
+5. **MANDATORY FURIGANA**: Include hiragana readings in parentheses after EVERY SINGLE kanji without exception
+
+**FURIGANA EXAMPLES YOU MUST FOLLOW:**
+- 今日(きょう) - today
+- 学校(がっこう) - school
+- 青井(あおい) - Aoi (name)
+- 話(はなし) - talk/story
+- 好き(すき) - like
+- 私(わたし) - I/me
 
 Topic: ${topic}
 Target Vocabulary: ${targetVocab.map(v => `${v.kanji || v.hiragana} (${v.meaning})`).slice(0, 10).join(', ')}
@@ -306,9 +314,11 @@ RESPONSE GUIDELINES:
 FALLBACK SAFETY:
 - If confused, say: "すみません、もう一度言ってください！" or "わかりませんでしたが、もう一回話してみましょう。"
 
+**FURIGANA IS MANDATORY**: Every kanji character MUST have hiragana in parentheses immediately after it.
+
 RESPONSE FORMAT: Return valid JSON with:
 {
-  "response": "Your Japanese response here",
+  "response": "Your Japanese response with ALL kanji having furigana like 今日(きょう), 学校(がっこう), 青井(あおい), 話(はなし)",
   "english_translation": "English translation", 
   "feedback": "Brief learning tip or encouragement",
   "vocabUsed": [],
