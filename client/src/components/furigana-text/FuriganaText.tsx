@@ -260,6 +260,24 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
       await initializeKuroshiro();
     }
 
+    // Try kuroshiro first if available
+    if (kuroshiroInstance) {
+      try {
+        const result = await kuroshiroInstance.convert(inputText, {
+          mode: 'furigana',
+          to: 'hiragana'
+        });
+
+        // Parse the HTML result with ruby tags
+        const tokens = parseKuroshiroResult(result);
+        cache.set(inputText, tokens);  
+        return tokens;
+      } catch (error) {
+        console.error('Error with kuroshiro conversion:', error);
+        // Fall back to manual parsing
+      }
+    }
+
     // Use enhanced fallback parsing that handles furigana notation
     const tokens = parseWithFallback(inputText);
     cache.set(inputText, tokens);
