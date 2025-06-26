@@ -371,27 +371,7 @@ export default function Chat() {
     );
   };
 
-  const completeConversation = async () => {
-    try {
-      await supabase
-        .from("conversations")
-        .update({ status: "completed" })
-        .eq("id", conversationId);
-
-      toast({
-        title: "Conversation completed",
-        description: "This conversation has been marked as completed.",
-      });
-
-      setLocation("/dashboard");
-    } catch (error) {
-      toast({
-        title: "Failed to complete conversation",
-        description: "Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
+  
 
   // Wanakana binding
   useEffect(() => {
