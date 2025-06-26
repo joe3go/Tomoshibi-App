@@ -1,0 +1,91 @@
+🛠️ Rebuild my furigana and word definition system for a Japanese learner chat site using the following tech stack:
+
+### 📦 STACK
+- **Backend:**
+  - `fugashi` for tokenizing Japanese text
+  - `pykakasi` for kana conversion and furigana rendering
+  - `Jisho API` for word definitions (fallback to cached DB if offline or rate-limited)
+  - Python server (Flask or FastAPI preferred)
+- **Frontend (React):**
+  - TypeScript
+  - Furigana rendered using `<ruby>` tags with conditional toggling
+  - Clickable words to trigger popup definitions
+  - One popup visible at a time, no overlapping
+
+---
+
+### ✨ FUNCTIONALITY REQUIREMENTS
+
+#### 1. 🧠 **Text Parsing API**
+- Endpoint: `POST /parse-japanese`
+- Input: `{ text: string }`
+- Output:
+  ```json
+  [
+    {
+      "word": "日本語",
+      "reading": "にほんご",
+      "base_form": "日本語",
+      "pos": "noun"
+    },
+    ...
+  ]
+2. 📖 Word Definition API
+Endpoint: GET /definition?word=日本語
+
+Uses Jisho API: https://jisho.org/api/v1/search/words?keyword=日本語
+
+Returns: { word, reading, meaning(s), example(s) }
+
+Cache results in Supabase table word_definitions keyed by base word
+
+🧩 FRONTEND COMPONENTS
+🔤 <FuriganaText />
+Props: text, showFurigana, enableWordLookup, onSaveToVocab
+
+Renders <ruby><rb>漢字</rb><rt>かんじ</rt></ruby> only if showFurigana is true
+
+Word hover = shows 1 definition popup at a time (positioned near word)
+
+📌 WordDefinitionPopup
+Renders definition + save to vocab button
+
+Only one popup visible at a time
+
+Includes tailwind class popup-shadow, and responsive styling
+
+🧪 BONUS DEV UTILITIES
+Add /test-furigana page with input box for sample Japanese text
+
+Toggle to enable/disable furigana
+
+Click to view definitions and test popups
+
+🎨 STYLING & DESIGN
+Use TailwindCSS
+
+Keep classNames short, concise, and descriptive (txt-main, popup-def, btn-save)
+
+Font: "Noto Sans JP", "Inter", sans-serif
+
+Apply Japanese visual theme: pastel backgrounds, soft shadows, rounded corners
+
+📐 ARCHITECTURE & FILES
+server/parse.py: Flask or FastAPI app w/ parse-japanese and definition routes
+
+client/components/FuriganaText.tsx
+
+client/components/WordDefinitionPopup.tsx
+
+client/pages/test-furigana.tsx
+
+🧠 NOTES
+Avoid using multiple overlapping popups (use setTimeout + hover lock)
+
+Ensure kanji-only and kana-only words are both handled gracefully
+
+Validate pykakasi + fugashi install correctly in Replit environment
+
+Cache Jisho API responses and serve from Supabase if rate-limited
+
+Now please build this from scratch. Replace my current Furigana/Definition implementation with this rebuild.

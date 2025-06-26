@@ -19,6 +19,7 @@ import Settings from "@/pages/settings";
 import PracticeGroups from "@/pages/practice-groups";
 import NotFound from "@/pages/not-found";
 import TestFuriganaPage from "@/pages/test-furigana-page";
+import TestFurigana from "@/pages/test-furigana";
 
 // Create a single QueryClient instance
 const queryClient = new QueryClient({

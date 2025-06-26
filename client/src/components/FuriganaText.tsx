@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
-import { parseJapaneseTextWithFurigana, ParsedToken } from "@/utils/japanese-parser";
 import WordDefinitionPopup from "./WordDefinitionPopup";
+
+interface ParsedToken {
+  word: string;
+  reading: string;
+  base_form: string;
+  pos: string;
+}
 
 interface FuriganaTextProps {
   text: string;
   className?: string;
-  showToggleButton?: boolean;
   showFurigana?: boolean;
-  onToggleFurigana?: (show: boolean) => void;
   enableWordLookup?: boolean;
   onSaveToVocab?: (word: string, reading?: string) => void;
 }
@@ -17,22 +21,16 @@ interface FuriganaTextProps {
 export default function FuriganaText({
   text,
   className = "",
-  showToggleButton = true,
   showFurigana: externalShowFurigana,
-  onToggleFurigana,
   enableWordLookup = true,
   onSaveToVocab,
 }: FuriganaTextProps) {
   const [showFurigana, setShowFurigana] = useState(true);
   const [tokens, setTokens] = useState<ParsedToken[]>([]);
   const [popupData, setPopupData] = useState<{ word: string; reading?: string; x: number; y: number } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const parsed = parseJapaneseTextWithFurigana(text);
-    setTokens(parsed);
-  }, [text]);
-
-  // Load preference from localStorage on mount
+  // Load furigana preference from localStorage
   useEffect(() => {
     if (externalShowFurigana === undefined) {
       const saved = localStorage.getItem("furigana-visible");
@@ -44,68 +42,123 @@ export default function FuriganaText({
     }
   }, [externalShowFurigana]);
 
+  // Parse text when it changes
+  useEffect(() => {
+    if (!text?.trim()) {
+      setTokens([]);
+      return;
+    }
+
+    const parseText = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch('/parse-japanese', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ text }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Parse failed: ${response.status}`);
+        }
+
+        const parsedTokens = await response.json();
+        setTokens(parsedTokens);
+      } catch (error) {
+        console.error('Failed to parse Japanese text:', error);
+        // Fallback to simple character parsing
+        setTokens([{ word: text, reading: text, base_form: text, pos: "unknown" }]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    parseText();
+  }, [text]);
+
   const handleToggle = () => {
     const newState = !showFurigana;
     setShowFurigana(newState);
-    if (onToggleFurigana) {
-      onToggleFurigana(newState);
-    } else {
-      localStorage.setItem("furigana-visible", newState.toString());
-    }
+    localStorage.setItem("furigana-visible", newState.toString());
   };
 
-  const handleClick = (e: React.MouseEvent, token: ParsedToken) => {
+  const handleWordClick = (e: React.MouseEvent, token: ParsedToken) => {
     if (!enableWordLookup) return;
     
-    const word = token.kanji || token.content;
-    if (!word) return;
+    e.preventDefault();
+    e.stopPropagation();
     
     const rect = (e.target as HTMLElement).getBoundingClientRect();
     setPopupData({ 
-      word, 
+      word: token.base_form,
       reading: token.reading,
       x: rect.left, 
       y: rect.bottom + window.scrollY 
     });
   };
 
+  const isKanji = (char: string) => {
+    return /[\u4e00-\u9faf\u3400-\u4dbf]/.test(char);
+  };
+
+  const shouldShowReading = (token: ParsedToken) => {
+    return showFurigana && 
+           token.reading && 
+           token.reading !== token.word && 
+           isKanji(token.word);
+  };
+
+  if (isLoading) {
+    return (
+      <div className={`txt-main ${className}`}>
+        <div className="animate-pulse">Parsing Japanese text...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className={`jt-wrap ${className}`}>
-      {showToggleButton && (
+    <div className={`txt-main ${className}`} style={{ fontFamily: '"Noto Sans JP", "Inter", sans-serif' }}>
+      <div className="mb-3">
         <Button
           variant="ghost"
           size="sm"
-          className="jt-toggle mb-2"
           onClick={handleToggle}
+          className="text-sm px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 transition-colors"
         >
-          {showFurigana ? <EyeOff size={16} /> : <Eye size={16} />}
+          {showFurigana ? <EyeOff size={14} /> : <Eye size={14} />}
           <span className="ml-1">{showFurigana ? "Hide" : "Show"} Furigana</span>
         </Button>
-      )}
+      </div>
 
-      <div className="jt-body leading-relaxed">
-        {tokens.map((t, i) =>
-          t.type === "text" ? (
-            <span key={i} className="jt-text">{t.content}</span>
-          ) : showFurigana ? (
-            <ruby
-              key={i}
-              className="jt-ruby inline-block mr-1 hover:bg-blue-100 cursor-pointer rounded px-1 transition-colors"
-              onClick={(e) => handleClick(e, t)}
-            >
-              {t.kanji}
-              <rt className="jt-rt text-xs">{t.reading}</rt>
-            </ruby>
-          ) : (
-            <span
-              key={i}
-              className="jt-kanji hover:bg-blue-100 cursor-pointer rounded px-1 transition-colors"
-              onClick={(e) => handleClick(e, t)}
-            >
-              {t.kanji}
-            </span>
-          )
-        )}
+      <div className="leading-relaxed text-base">
+        {tokens.map((token, i) => {
+          if (shouldShowReading(token)) {
+            return (
+              <ruby
+                key={i}
+                className="inline-block mr-1 hover:bg-blue-50 cursor-pointer rounded px-1 transition-colors duration-200"
+                onClick={(e) => handleWordClick(e, token)}
+                title={enableWordLookup ? "Click for definition" : undefined}
+              >
+                <rb>{token.word}</rb>
+                <rt className="text-xs leading-none text-gray-600">{token.reading}</rt>
+              </ruby>
+            );
+          } else {
+            return (
+              <span
+                key={i}
+                className={`${enableWordLookup && isKanji(token.word) ? 'hover:bg-blue-50 cursor-pointer rounded px-1' : ''} transition-colors duration-200`}
+                onClick={(e) => enableWordLookup ? handleWordClick(e, token) : undefined}
+                title={enableWordLookup && isKanji(token.word) ? "Click for definition" : undefined}
+              >
+                {token.word}
+              </span>
+            );
+          }
+        })}
       </div>
 
       {popupData && (
