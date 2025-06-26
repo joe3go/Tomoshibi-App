@@ -14,7 +14,7 @@ import { generateUUID } from "@utils/uuid";
 
 export default function PracticeGroups() {
   const [, setLocation] = useLocation();
-  const { user, loading } = useAuth();
+  const { user, session, loading } = useAuth();
   const isAuthenticated = !!user;
   const { toast } = useToast();
   // Fetch group conversation templates from Supabase
@@ -79,6 +79,7 @@ export default function PracticeGroups() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
         },
         body: JSON.stringify({
           templateId,
