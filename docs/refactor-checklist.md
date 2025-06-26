@@ -1,4 +1,3 @@
-
 # Full Codebase Modular Refactor - Rollout Plan
 
 ## 🎯 Objective
@@ -19,22 +18,20 @@ Modularize the entire codebase for better maintainability while preserving 100% 
 - [x] analytics.ts utilities
 
 ### ✅ COMPLETED: Chat Module
-- [x] Extract shared ChatHeader component
-- [x] Extract shared ChatMessage component
-- [x] Extract shared ChatInput component
-- [x] Extract shared TypingIndicator component
-- [x] Create useChatConversation hook (shared logic)
+- [x] Extract ChatHeader component (shared between chat + group-chat)
+- [x] Extract ChatMessage component (shared between chat + group-chat)
+- [x] Extract ChatInput component (shared between chat + group-chat)
+- [x] Extract TypingIndicator component (shared between chat + group-chat)
+- [x] Create useChatConversation hook
 - [x] Create useMessageSending hook
-- [x] Consolidate avatar/styling utilities in chat-utilities.ts
-- [x] Refactor chat.tsx to use shared components
+- [x] Consolidate chat utilities
 
-### 📋 PENDING: Group Chat Module
-- [ ] Reuse ChatHeader, ChatMessage, ChatInput from chat
-- [ ] Extract GroupChatFlow component
-- [ ] Extract PersonaTargeting component
-- [ ] Create useGroupChatFlow hook (group-specific logic)
-- [ ] Create usePersonaTargeting hook
-- [ ] Create useGroupChatThrottling hook
+### ✅ COMPLETED: Group Chat Module
+- [x] Extract GroupChatHeader component
+- [x] Extract GroupTypingIndicator component
+- [x] Create useGroupChat hook
+- [x] Create useGroupConversationFlow hook
+- [x] Consolidate group chat utilities
 
 ### 📋 PENDING: Vocabulary Module
 - [ ] Extract VocabularyBrowser component
