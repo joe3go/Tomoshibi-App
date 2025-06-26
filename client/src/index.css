@@ -214,7 +214,7 @@ rt {
 
 /* Landing page layout styles */
 .landing-page-container {
-  @apply min-h-screen bg-gradient-to-b from-pink-50 to-white;
+  @apply min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-orange-50;
 }
 
 /* Header/Navbar styles */
@@ -228,7 +228,7 @@ rt {
 }
 
 .landing-hero-badge {
-  @apply inline-block bg-red-100 text-red-700 px-4 py-2 rounded-full text-sm font-medium;
+  @apply inline-block bg-gradient-to-r from-red-100 to-pink-100 text-red-700 px-4 py-2 rounded-full text-sm font-medium shadow-sm border border-red-200;
 }
 
 .landing-hero-description {
@@ -419,7 +419,7 @@ rt {
 }
 
 .landing-feature-card {
-  @apply bg-white rounded-xl p-8 shadow-md hover:shadow-lg transition-shadow border border-gray-100 text-center;
+  @apply bg-gradient-to-br from-white to-gray-50 rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 text-center hover:scale-105;
 }
 
 .landing-feature-image-container {
@@ -427,7 +427,7 @@ rt {
 }
 
 .landing-feature-image {
-  @apply w-16 h-16 mx-auto rounded-lg object-cover;
+  @apply w-24 h-24 mx-auto rounded-xl object-cover shadow-md;
 }
 
 .landing-feature-title {
@@ -461,7 +461,7 @@ rt {
 
 /* CTA section */
 .landing-cta-section {
-  @apply py-20 px-4 bg-red-50;
+  @apply py-20 px-4 bg-gradient-to-br from-red-100 to-pink-100;
 }
 
 .landing-cta-container {
@@ -477,7 +477,7 @@ rt {
 }
 
 .landing-cta-button {
-  @apply bg-red-500 hover:bg-red-600 text-white px-8 py-4 text-lg font-semibold;
+  @apply bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300;
 }
 
 .landing-hero-section {
