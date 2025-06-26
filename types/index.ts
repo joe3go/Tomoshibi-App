@@ -19,6 +19,9 @@ export * from './vocabulary';// Vocabulary tracking and progress types
 export * from './database';  // Database schema and table types
 export * from './ui';        // UI component and interaction types
 
+// === CONVENIENCE RE-EXPORTS ===
+export type { GroupMessage, GroupPersona, GroupChatState } from './chat/group-chat';
+
 // === UTILITY FUNCTIONS ===
 
 /**

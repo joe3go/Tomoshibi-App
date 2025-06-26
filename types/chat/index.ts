@@ -11,3 +11,6 @@
 export * from './conversations';
 export * from './messages';
 export * from './group-chat';
+
+// Re-export common types for backwards compatibility
+export type { GroupMessage, GroupPersona, GroupChatState } from './group-chat';

@@ -1,23 +1,20 @@
 
-// Group chat specific types
-export interface GroupConversation {
+export interface GroupPersona {
   id: string;
-  user_id: string;
-  template_id: string;
-  template_name: string;
-  mode: 'solo' | 'group';
-  title: string;
-  status: 'active' | 'completed';
-  created_at: string;
-  participants: ConversationParticipant[];
-  messages: GroupMessage[];
+  name: string;
+  avatar_url: string;
+  personality: string;
+  speaking_style: string;
 }
 
-export interface TypingIndicator {
-  persona_id: string;
-  persona_name: string;
-  is_typing: boolean;
-  started_at: number;
+export interface GroupMessage {
+  id: string;
+  conversation_id: string;
+  sender_type: 'user' | 'ai';
+  content: string;
+  english_translation?: string;
+  sender_persona_id?: string;
+  created_at: string;
 }
 
 export interface GroupChatState {
@@ -25,11 +22,7 @@ export interface GroupChatState {
   consecutiveResponses: number;
 }
 
-// Utility function to inject variables into prompt content
-export function injectPromptVariables(content: string, variables: Record<string, string>): string {
-  let result = content;
-  Object.entries(variables).forEach(([key, value]) => {
-    result = result.replace(new RegExp(`{${key}}`, 'g'), value);
-  });
-  return result;
+export interface TypingIndicatorType {
+  persona_name: string;
+  persona_id: string;
 }
