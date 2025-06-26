@@ -22,6 +22,24 @@ export interface GroupChatState {
   consecutiveResponses: number;
 }
 
+export interface GroupConversation {
+  id: string;
+  title: string;
+  participant_ids: string[];
+  template_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GroupConversationTemplate {
+  id: string;
+  title: string;
+  description: string;
+  default_personas: string[];
+  group_prompt_suffix?: string;
+  created_at: string;
+}
+
 export interface TypingIndicatorType {
   persona_name: string;
   persona_id: string;

@@ -1,4 +1,9 @@
-// DEPRECATED: This file has been moved to types/chat
-// Please use: import { ... } from '@/types' instead
-export * from '../types/chat';
-export { injectPromptVariables } from '../types';
+
+// Re-export group conversation types from centralized location
+export type { 
+  GroupConversation, 
+  GroupConversationTemplate, 
+  GroupChatState,
+  GroupMessage,
+  GroupPersona 
+} from '@/types/chat';

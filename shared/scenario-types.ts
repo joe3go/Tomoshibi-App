@@ -1,3 +1,7 @@
-// DEPRECATED: This file has been moved to types/scenarios
-// Please use: import { ... } from '@/types' instead
-export * from '../types/scenarios';
+
+// Re-export scenario types from centralized location
+export type { 
+  Scenario, 
+  ScenarioProgress, 
+  LearningObjective 
+} from '@/types/scenarios';

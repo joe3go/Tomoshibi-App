@@ -1,4 +1,3 @@
-
 /**
  * @fileoverview Central type definitions for the Tomoshibi Japanese Learning App
  * 
@@ -18,6 +17,21 @@ export * from './scenarios'; // Learning scenario and template types
 export * from './vocabulary';// Vocabulary tracking and progress types
 export * from './database';  // Database schema and table types
 export * from './ui';        // UI component and interaction types
+
+// Centralized type exports
+export * from './auth';
+export * from './chat';
+export * from './database';
+export * from './personas';
+export * from './scenarios';
+export * from './ui';
+export * from './vocabulary';
+
+// Commonly used type re-exports for convenience
+export type { Persona, PersonaWithStats } from './personas';
+export type { GroupMessage, GroupPersona, GroupChatState, GroupConversation } from './chat';
+export type { Scenario, ScenarioProgress } from './scenarios';
+export type { VocabWord, UserVocabProgress } from './vocabulary';
 
 // === CONVENIENCE RE-EXPORTS ===
 export type { GroupMessage, GroupPersona, GroupChatState } from './chat/group-chat';

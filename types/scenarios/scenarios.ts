@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 
 // Core scenario data structure

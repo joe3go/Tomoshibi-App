@@ -12,5 +12,10 @@ export * from './conversations';
 export * from './messages';
 export * from './group-chat';
 
+// Re-export commonly used types
+export type { GroupMessage, GroupPersona, GroupChatState, GroupConversation, GroupConversationTemplate } from './group-chat';
+export type { Message } from './messages';
+export type { Conversation } from './conversations';
+
 // Re-export common types for backwards compatibility
 export type { GroupMessage, GroupPersona, GroupChatState } from './group-chat';

@@ -1,4 +1,3 @@
-
 // Persona types
 export interface Persona {
   id: string;

@@ -1,3 +1,3 @@
-// DEPRECATED: This file has been moved to types/personas
-// Please use: import { ... } from '@/types' instead
-export * from '../types/personas';
+
+// Re-export persona types from centralized location
+export type { Persona, PersonaWithStats } from '@/types/personas';
