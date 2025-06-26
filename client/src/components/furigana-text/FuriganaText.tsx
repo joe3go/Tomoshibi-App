@@ -42,24 +42,143 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
   // Cache for parsed results
   const [cache] = useState(new Map<string, FuriganaToken[]>());
 
+  // Enhanced fallback parser for Japanese text with furigana notation
+  const parseWithFallback = (inputText: string): FuriganaToken[] => {
+    const tokens: FuriganaToken[] = [];
+    
+    // Support multiple furigana formats:
+    // 1. 漢字(かんじ) - parentheses format
+    // 2. 漢字（かんじ） - full-width parentheses format  
+    // 3. 漢字|かんじ - pipe format
+    const patterns = [
+      /([一-龯々\u3400-\u4DBF]+)\|([ぁ-んァ-ヶー]+)/g, // pipe format
+      /([一-龯々\u3400-\u4DBF]+)[（\(]([ぁ-んァ-ヶー]+)[）\)]/g // parentheses format
+    ];
+
+    let processedText = inputText;
+    let allMatches: Array<{match: RegExpMatchArray, start: number, end: number}> = [];
+
+    // Find all matches from all patterns
+    patterns.forEach(pattern => {
+      let match;
+      pattern.lastIndex = 0; // Reset regex
+      while ((match = pattern.exec(inputText)) !== null) {
+        allMatches.push({
+          match,
+          start: match.index!,
+          end: match.index! + match[0].length
+        });
+      }
+    });
+
+    // Sort matches by position
+    allMatches.sort((a, b) => a.start - b.start);
+
+    let lastIndex = 0;
+
+    for (const {match, start, end} of allMatches) {
+      // Add text before this match
+      if (start > lastIndex) {
+        const beforeText = inputText.slice(lastIndex, start);
+        if (beforeText.trim()) {
+          tokens.push(...parseNonFuriganaText(beforeText));
+        }
+      }
+
+      // Add the furigana match
+      tokens.push({
+        type: "kanji",
+        surface: match[1],
+        reading: match[2]
+      });
+
+      lastIndex = end;
+    }
+
+    // Add remaining text
+    if (lastIndex < inputText.length) {
+      const remainingText = inputText.slice(lastIndex);
+      if (remainingText.trim()) {
+        tokens.push(...parseNonFuriganaText(remainingText));
+      }
+    }
+
+    return tokens.length > 0 ? tokens : [{ type: "text", surface: inputText }];
+  };
+
+  const parseNonFuriganaText = (text: string): FuriganaToken[] => {
+    if (!text) return [];
+    
+    const tokens: FuriganaToken[] = [];
+    let currentToken = '';
+    
+    for (const char of text) {
+      if (isPunctuation(char)) {
+        // Flush current token if exists
+        if (currentToken) {
+          if (containsKanji(currentToken)) {
+            tokens.push({
+              type: "kanji",
+              surface: currentToken,
+              reading: undefined // No reading available
+            });
+          } else {
+            tokens.push({
+              type: "text",
+              surface: currentToken
+            });
+          }
+          currentToken = '';
+        }
+        // Add punctuation as text
+        tokens.push({
+          type: "text",
+          surface: char
+        });
+      } else {
+        currentToken += char;
+      }
+    }
+    
+    // Flush remaining token
+    if (currentToken) {
+      if (containsKanji(currentToken)) {
+        tokens.push({
+          type: "kanji",
+          surface: currentToken,
+          reading: undefined
+        });
+      } else {
+        tokens.push({
+          type: "text",
+          surface: currentToken
+        });
+      }
+    }
+    
+    return tokens;
+  };
+
+  const containsKanji = (text: string): boolean => {
+    return /[\u4e00-\u9faf\u3400-\u4dbf]/.test(text);
+  };
+
+  const isPunctuation = (text: string): boolean => {
+    return /^[。、！？「」『』（）(),.!?\s]$/.test(text);
+  };
+
   // Initialize kuroshiro
   const initializeKuroshiro = useCallback(async () => {
     if (isInitialized) return;
 
     try {
-      // Dynamic imports to avoid SSR issues
-      const [{ default: Kuroshiro }, { default: KuromojiAnalyzer }] = await Promise.all([
-        import('kuroshiro'),
-        import('kuroshiro-analyzer-kuromoji')
-      ]);
-
-      kuroshiro = new Kuroshiro();
-      await kuroshiro.init(new KuromojiAnalyzer());
+      // For browser environment, kuroshiro has compatibility issues
+      // We'll implement a fallback parser instead
+      console.log('Initializing Japanese text parser...');
       setIsInitialized(true);
-      console.log('Kuroshiro initialized successfully');
     } catch (error) {
       console.error('Failed to initialize kuroshiro:', error);
-      // Continue with fallback parsing
+      setIsInitialized(true);
     }
   }, [isInitialized]);
 
@@ -72,77 +191,14 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
       return cache.get(inputText)!;
     }
 
-    if (!isInitialized || !kuroshiro) {
+    if (!isInitialized) {
       await initializeKuroshiro();
     }
 
-    if (!kuroshiro) {
-      // Fallback parsing without kuroshiro
-      return [{ type: 'text', surface: inputText }];
-    }
-
-    try {
-      // Get tokenized result from kuroshiro in furigana mode
-      const result = await kuroshiro.convert(inputText, {
-        mode: 'furigana',
-        to: 'hiragana'
-      });
-
-      // Parse the HTML result which contains ruby tags
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(`<div>${result}</div>`, 'text/html');
-      const tokens: FuriganaToken[] = [];
-
-      const processNode = (node: Node) => {
-        if (node.nodeType === Node.TEXT_NODE) {
-          const text = node.textContent || '';
-          if (text.trim()) {
-            // Check if this text contains kanji
-            const hasKanji = /[\u4e00-\u9faf]/.test(text);
-            tokens.push({ 
-              type: hasKanji ? 'kanji' : 'text', 
-              surface: text 
-            });
-          }
-        } else if (node.nodeName === 'RUBY') {
-          const rubyElement = node as Element;
-          const kanji = rubyElement.textContent?.replace(/[\(\)（）]/g, '') || '';
-          const rtElement = rubyElement.querySelector('rt');
-          const reading = rtElement?.textContent || '';
-          
-          if (kanji) {
-            tokens.push({
-              type: 'kanji',
-              surface: kanji,
-              reading: reading || undefined
-            });
-          }
-        } else {
-          // Process child nodes recursively
-          node.childNodes.forEach(processNode);
-        }
-      };
-
-      const container = doc.querySelector('div');
-      if (container) {
-        container.childNodes.forEach(processNode);
-      }
-
-      // If no tokens were extracted, fallback to simple parsing
-      if (tokens.length === 0) {
-        tokens.push({ type: 'text', surface: inputText });
-      }
-
-      // Cache the result
-      cache.set(inputText, tokens);
-      return tokens;
-    } catch (error) {
-      console.error('Error parsing with kuroshiro:', error);
-      // Fallback to simple text token
-      const fallbackTokens = [{ type: 'text' as const, surface: inputText }];
-      cache.set(inputText, fallbackTokens);
-      return fallbackTokens;
-    }
+    // Use enhanced fallback parsing that handles furigana notation
+    const tokens = parseWithFallback(inputText);
+    cache.set(inputText, tokens);
+    return tokens;
   }, [cache, initializeKuroshiro, isInitialized]);
 
   // Parse text when it changes
