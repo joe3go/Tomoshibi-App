@@ -1,0 +1,166 @@
+client/src/App.tsx(54,42): error TS2322: Type '() => Promise<React.FC<{}>>' is not assignable to type 'ComponentType<RouteComponentProps<{ [param: number]: string | undefined; }>> | undefined'.
+  Type '() => Promise<React.FC<{}>>' is not assignable to type 'FunctionComponent<RouteComponentProps<{ [param: number]: string | undefined; }>>'.
+    Type 'Promise<FC<{}>>' is not assignable to type 'ReactNode'.
+client/src/components/EnhancedButton.tsx(6,11): error TS2430: Interface 'JapaneseButtonProps' incorrectly extends interface 'ButtonProps'.
+  Types of property 'variant' are incompatible.
+    Type '"link" | "destructive" | "outline" | "secondary" | "ghost" | "japanese" | "primary" | undefined' is not assignable to type '"default" | "link" | "destructive" | "outline" | "secondary" | "ghost" | null | undefined'.
+      Type '"japanese"' is not assignable to type '"default" | "link" | "destructive" | "outline" | "secondary" | "ghost" | null | undefined'.
+client/src/components/MessageWithVocab.tsx(68,22): error TS2339: Property 'error' does not exist on type '{ isLoading: boolean; lookupWord: (word: string) => DictionaryEntry | null; findLongestMatch: (text: string, startIndex: number) => { word: string; entry: DictionaryEntry; } | null; }'.
+client/src/components/PersonaList.tsx(1,20): error TS2307: Cannot find module 'swr' or its corresponding type declarations.
+client/src/components/PersonaList.tsx(8,5): error TS7006: Parameter 'url' implicitly has an 'any' type.
+client/src/components/PersonaList.tsx(16,19): error TS7006: Parameter 'tutor' implicitly has an 'any' type.
+client/src/components/PersonaList.tsx(21,11): error TS2322: Type '{ key: any; name: any; description: any; avatarUrl: any; }' is not assignable to type 'IntrinsicAttributes & TutorCardProps'.
+  Property 'avatarUrl' does not exist on type 'IntrinsicAttributes & TutorCardProps'. Did you mean 'avatar_url'?
+client/src/components/UsageAnalytics.tsx(62,33): error TS7006: Parameter 'entry' implicitly has an 'any' type.
+client/src/components/group-chat/TypingIndicator.tsx(2,10): error TS2305: Module '"@/../../shared/group-conversation-types"' has no exported member 'TypingIndicator'.
+client/src/components/scenario-learning/ScenarioCard.tsx(5,31): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+client/src/components/scenario-learning/ScenarioCard.tsx(117,46): error TS7006: Parameter 'goal' implicitly has an 'any' type.
+client/src/components/scenario-learning/ScenarioCard.tsx(117,52): error TS7006: Parameter 'index' implicitly has an 'any' type.
+client/src/components/scenario-learning/ScenarioPracticeView.tsx(12,20): error TS2305: Module '"../../../../shared/scenario-types"' has no exported member 'ScenarioPracticeSession'.
+client/src/components/scenario-learning/ScenarioPracticeView.tsx(12,45): error TS2305: Module '"../../../../shared/scenario-types"' has no exported member 'GoalCompletion'.
+client/src/components/scenario-learning/ScenarioProgressWidget.tsx(8,10): error TS2305: Module '"../../../../shared/scenario-types"' has no exported member 'UserLearningProgress'.
+client/src/components/scenario-learning/ScenarioSelectionView.tsx(11,20): error TS2305: Module '"../../../../shared/scenario-types"' has no exported member 'UserLearningProgress'.
+client/src/components/scenario-learning/ScenarioSelectionView.tsx(11,42): error TS2724: '"../../../../shared/scenario-types"' has no exported member named 'UserScenarioProgress'. Did you mean 'ScenarioProgress'?
+client/src/components/scenario-learning/ScenarioSelectionView.tsx(68,32): error TS7006: Parameter 'goal' implicitly has an 'any' type.
+client/src/components/vocab-tracker.tsx(204,59): error TS2339: Property 'userUsageCount' does not exist on type 'never'.
+client/src/components/vocab-tracker.tsx(205,57): error TS2339: Property 'aiEncounterCount' does not exist on type 'never'.
+client/src/context/SupabaseAuthContext.tsx(45,73): error TS7006: Parameter 'event' implicitly has an 'any' type.
+client/src/context/SupabaseAuthContext.tsx(45,80): error TS7006: Parameter 'session' implicitly has an 'any' type.
+client/src/data/scenarios.ts(1,31): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+client/src/data/scenarios.ts(257,9): error TS7006: Parameter 'requiredId' implicitly has an 'any' type.
+client/src/data/scenarios.ts(288,25): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ beginner: number; elementary: number; intermediate: number; 'upper-intermediate': number; advanced: number; }'.
+client/src/data/scenarios.ts(289,25): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ beginner: number; elementary: number; intermediate: number; 'upper-intermediate': number; advanced: number; }'.
+client/src/hooks/useUserProgress.ts(3,10): error TS2305: Module '"@/lib/supabase/types"' has no exported member 'UserProgress'.
+client/src/hooks/useUserVocab.ts(3,10): error TS2305: Module '"@/lib/supabase/types"' has no exported member 'UserVocab'.
+client/src/hooks/useVocabDictionary.ts(36,23): error TS7006: Parameter 'item' implicitly has an 'any' type.
+client/src/lib/group-conversation-mock.ts(2,10): error TS2724: '"@/../../shared/group-conversation-types"' has no exported member named 'ConversationTemplate'. Did you mean 'GroupConversationTemplate'?
+client/src/lib/group-conversation-mock.ts(2,32): error TS2305: Module '"@/../../shared/group-conversation-types"' has no exported member 'ConversationPrompt'.
+client/src/lib/group-conversation-mock.ts(2,52): error TS2305: Module '"@/../../shared/group-conversation-types"' has no exported member 'ConversationParticipant'.
+client/src/lib/group-conversation-mock.ts(2,110): error TS2305: Module '"@/../../shared/group-conversation-types"' has no exported member 'injectPromptVariables'.
+client/src/lib/scenario-learning/progress-manager.ts(1,10): error TS2305: Module '"../../../../shared/scenario-types"' has no exported member 'UserLearningProgress'.
+client/src/lib/scenario-learning/progress-manager.ts(1,32): error TS2724: '"../../../../shared/scenario-types"' has no exported member named 'UserScenarioProgress'. Did you mean 'ScenarioProgress'?
+client/src/lib/scenario-learning/progress-manager.ts(1,54): error TS2305: Module '"../../../../shared/scenario-types"' has no exported member 'ScenarioPracticeSession'.
+client/src/lib/scenario-learning/progress-manager.ts(235,48): error TS7006: Parameter 'b' implicitly has an 'any' type.
+client/src/lib/supabase-functions.ts(148,11): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ n5: number; n4: number; n3: number; n2: number; n1: number; total: number; }'.
+  No index signature with a parameter of type 'string' was found on type '{ n5: number; n4: number; n3: number; n2: number; n1: number; total: number; }'.
+client/src/lib/supabase-functions.ts(178,43): error TS7006: Parameter 'event' implicitly has an 'any' type.
+client/src/lib/supabase-functions.ts(178,50): error TS7006: Parameter 'session' implicitly has an 'any' type.
+client/src/lib/supabase/auth.ts(2,10): error TS2305: Module '"./types"' has no exported member 'SupabaseUser'.
+client/src/lib/supabase/auth.ts(36,43): error TS7006: Parameter 'event' implicitly has an 'any' type.
+client/src/lib/supabase/auth.ts(36,50): error TS7006: Parameter 'session' implicitly has an 'any' type.
+client/src/lib/supabase/database.ts(2,10): error TS2305: Module '"./types"' has no exported member 'UserVocab'.
+client/src/lib/supabase/database.ts(2,21): error TS2305: Module '"./types"' has no exported member 'UserProgress'.
+client/src/lib/supabase/loaders.ts(38,16): error TS7006: Parameter 'row' implicitly has an 'any' type.
+client/src/lib/supabase/loaders.ts(39,13): error TS7006: Parameter 'row' implicitly has an 'any' type.
+client/src/lib/supabase/loaders.ts(44,81): error TS7006: Parameter 'p' implicitly has an 'any' type.
+client/src/lib/supabase/loaders.ts(83,10): error TS7006: Parameter 'id' implicitly has an 'any' type.
+client/src/lib/supabase/loaders.ts(83,34): error TS7006: Parameter 'p' implicitly has an 'any' type.
+client/src/lib/supabase/loaders.ts(85,11): error TS7006: Parameter 'persona' implicitly has an 'any' type.
+client/src/lib/supabase/loaders.ts(85,20): error TS7006: Parameter 'index' implicitly has an 'any' type.
+client/src/lib/supabase/loaders.ts(90,86): error TS7006: Parameter 'p' implicitly has an 'any' type.
+client/src/lib/supabase/loaders.ts(191,48): error TS7006: Parameter 'personaId' implicitly has an 'any' type.
+client/src/lib/supabase/loaders.ts(191,59): error TS7006: Parameter 'index' implicitly has an 'any' type.
+client/src/lib/vocabulary-tracker.ts(31,61): error TS2339: Property 'normalizeText' does not exist on type 'ConjugationNormalizer'.
+client/src/lib/vocabulary-tracker.ts(35,17): error TS7006: Parameter 'result' implicitly has an 'any' type.
+client/src/lib/vocabulary-tracker.ts(41,14): error TS7006: Parameter 'result' implicitly has an 'any' type.
+client/src/lib/vocabulary-tracker.ts(231,21): error TS7006: Parameter 'entry' implicitly has an 'any' type.
+client/src/pages/chat.tsx(238,48): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string'.
+  Type 'null' is not assignable to type 'string'.
+client/src/pages/chat.tsx(240,9): error TS2322: Type 'import("/home/runner/workspace/client/src/lib/supabase/loaders").Persona[]' is not assignable to type 'Persona[]'.
+  Type 'Persona' is missing the following properties from type 'Persona': type, description
+client/src/pages/chat.tsx(240,50): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string'.
+  Type 'null' is not assignable to type 'string'.
+client/src/pages/chat.tsx(246,11): error TS2322: Type 'import("/home/runner/workspace/client/src/lib/supabase/loaders").Persona[]' is not assignable to type 'Persona[]'.
+  Type 'Persona' is missing the following properties from type 'Persona': type, description
+client/src/pages/chat.tsx(251,51): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string'.
+  Type 'null' is not assignable to type 'string'.
+client/src/pages/chat.tsx(254,29): error TS2739: Type 'Persona' is missing the following properties from type 'Persona': type, description
+client/src/pages/chat.tsx(281,24): error TS2339: Property 'persona_id' does not exist on type 'Conversation'.
+client/src/pages/chat.tsx(282,65): error TS2339: Property 'persona_id' does not exist on type 'Conversation'.
+client/src/pages/chat.tsx(315,28): error TS2339: Property 'mode' does not exist on type 'Conversation'.
+client/src/pages/chat.tsx(317,34): error TS2339: Property 'persona_id' does not exist on type 'Conversation'.
+client/src/pages/chat.tsx(394,11): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+client/src/pages/chat.tsx(403,30): error TS2304: Cannot find name 'groupChatStates'.
+client/src/pages/chat.tsx(409,63): error TS2304: Cannot find name 'responseCooldown'.
+client/src/pages/chat.tsx(416,50): error TS2304: Cannot find name 'maxConsecutiveResponses'.
+client/src/pages/chat.tsx(483,11): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+client/src/pages/chat.tsx(707,43): error TS2345: Argument of type 'Persona | null | undefined' is not assignable to parameter of type 'Persona | null'.
+  Type 'undefined' is not assignable to type 'Persona | null'.
+client/src/pages/enhanced-scenario-browse.tsx(6,25): error TS2307: Cannot find module '@/hooks/useAuth' or its corresponding type declarations.
+client/src/pages/group-chat.tsx(253,29): error TS2339: Property 'message' does not exist on type '{}'.
+client/src/pages/group-chat.tsx(305,38): error TS18047: 'session' is possibly 'null'.
+client/src/pages/my-vocabulary.tsx(2,32): error TS2307: Cannot find module '@/types' or its corresponding type declarations.
+client/src/pages/practice-groups.tsx(76,39): error TS7006: Parameter 't' implicitly has an 'any' type.
+client/src/pages/practice-groups.tsx(99,65): error TS7006: Parameter 'personaId' implicitly has an 'any' type.
+client/src/pages/practice-groups.tsx(99,76): error TS7006: Parameter 'index' implicitly has an 'any' type.
+server/db.ts(3,25): error TS2307: Cannot find module '@shared/schema' or its corresponding type declarations.
+server/openai.ts(2,64): error TS2307: Cannot find module '@shared/schema' or its corresponding type declarations.
+server/openai.ts(111,9): error TS2322: Type 'null' is not assignable to type 'string | undefined'.
+server/openai.ts(286,17): error TS2339: Property 'sender_type' does not exist on type '{ role: "user" | "assistant"; content: string; }'.
+server/openai.ts(289,66): error TS2339: Property 'sender_persona_id' does not exist on type '{ role: "user" | "assistant"; content: string; }'.
+server/openai.ts(298,38): error TS2339: Property 'sender_type' does not exist on type '{ role: "user" | "assistant"; content: string; }'.
+server/openai.ts(298,74): error TS2339: Property 'sender_persona_id' does not exist on type '{ role: "user" | "assistant"; content: string; }'.
+server/openai.ts(299,73): error TS2339: Property 'sender_persona_id' does not exist on type '{ role: "user" | "assistant"; content: string; }'.
+server/routes.ts(11,91): error TS2307: Cannot find module '@shared/schema' or its corresponding type declarations.
+server/routes.ts(220,39): error TS18046: 'error' is of type 'unknown'.
+server/routes.ts(243,56): error TS2339: Property 'serviceKey' does not exist on type '{ url: string; key: string | undefined; }'.
+server/routes.ts(377,52): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
+server/routes.ts(398,32): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
+server/routes.ts(412,60): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
+server/routes.ts(519,30): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ Aoi: string; Keiko: string; Ren: string; Yuki: string; Satoshi: string; Haruki: string; }'.
+server/routes.ts(531,36): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ Aoi: string; Keiko: string; Ren: string; Yuki: string; Satoshi: string; Haruki: string; }'.
+server/routes.ts(723,9): error TS2304: Cannot find name 'participants'.
+server/routes.ts(726,13): error TS2304: Cannot find name 'participants'.
+server/routes.ts(726,29): error TS2304: Cannot find name 'participants'.
+server/routes.ts(738,20): error TS1252: Function declarations are not allowed inside blocks in strict mode when targeting 'ES5'. Modules are automatically in strict mode.
+server/routes.ts(744,48): error TS2304: Cannot find name 'participants'.
+server/routes.ts(748,11): error TS2304: Cannot find name 'groupPromptSuffix'.
+server/routes.ts(748,69): error TS2339: Property 'group_prompt_suffix' does not exist on type '{ group_prompt_suffix: any; }[]'.
+server/routes.ts(754,32): error TS2304: Cannot find name 'participants'.
+server/routes.ts(755,31): error TS2304: Cannot find name 'groupPromptSuffix'.
+server/routes.ts(799,36): error TS2304: Cannot find name 'participants'.
+server/routes.ts(799,52): error TS2304: Cannot find name 'participants'.
+server/routes.ts(805,33): error TS2304: Cannot find name 'participants'.
+server/routes.ts(808,34): error TS2304: Cannot find name 'participants'.
+server/routes.ts(808,57): error TS7006: Parameter 'p' implicitly has an 'any' type.
+server/routes.ts(810,54): error TS2304: Cannot find name 'participants'.
+server/routes.ts(811,35): error TS2304: Cannot find name 'participants'.
+server/routes.ts(814,35): error TS2304: Cannot find name 'participants'.
+server/routes.ts(819,30): error TS2304: Cannot find name 'participants'.
+server/routes.ts(819,48): error TS7006: Parameter 'p' implicitly has an 'any' type.
+server/routes.ts(821,32): error TS2304: Cannot find name 'participants'.
+server/routes.ts(845,24): error TS2304: Cannot find name 'participants'.
+server/routes.ts(845,42): error TS7006: Parameter 'p' implicitly has an 'any' type.
+server/routes.ts(941,35): error TS18046: 'rpcError' is of type 'unknown'.
+server/routes.ts(1056,11): error TS7034: Variable 'recentMessages' implicitly has type 'any[]' in some locations where its type cannot be determined.
+server/routes.ts(1067,35): error TS7005: Variable 'recentMessages' implicitly has an 'any[]' type.
+server/routes.ts(1087,22): error TS2304: Cannot find name 'ConversationContext'.
+server/routes.ts(1162,61): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
+server/routes.ts(1172,60): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
+server/routes.ts(1187,60): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
+server/routes.ts(1260,54): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
+server/routes.ts(1263,62): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
+server/storage.ts(26,8): error TS2307: Cannot find module '@shared/schema' or its corresponding type declarations.
+server/storage.ts(457,18): error TS18047: 'db' is possibly 'null'.
+server/storage.ts(462,18): error TS18047: 'db' is possibly 'null'.
+server/storage.ts(469,30): error TS18047: 'db' is possibly 'null'.
+server/storage.ts(477,29): error TS18047: 'db' is possibly 'null'.
+server/storage.ts(490,29): error TS18047: 'db' is possibly 'null'.
+server/storage.ts(498,29): error TS18047: 'db' is possibly 'null'.
+server/storage.ts(506,29): error TS18047: 'db' is possibly 'null'.
+server/storage.ts(518,26): error TS18047: 'db' is possibly 'null'.
+server/storage.ts(659,29): error TS18047: 'db' is possibly 'null'.
+server/storage.ts(671,39): error TS7006: Parameter 'user' implicitly has an 'any' type.
+server/vite.ts(39,5): error TS2322: Type '{ middlewareMode: boolean; hmr: { server: Server<typeof IncomingMessage, typeof ServerResponse>; }; allowedHosts: boolean; }' is not assignable to type 'ServerOptions'.
+  Types of property 'allowedHosts' are incompatible.
+    Type 'boolean' is not assignable to type 'true | string[] | undefined'.
+types/chat/index.ts(16,15): error TS2300: Duplicate identifier 'GroupMessage'.
+types/chat/index.ts(16,29): error TS2300: Duplicate identifier 'GroupPersona'.
+types/chat/index.ts(16,43): error TS2300: Duplicate identifier 'GroupChatState'.
+types/chat/index.ts(21,15): error TS2300: Duplicate identifier 'GroupMessage'.
+types/chat/index.ts(21,29): error TS2300: Duplicate identifier 'GroupPersona'.
+types/chat/index.ts(21,43): error TS2300: Duplicate identifier 'GroupChatState'.
+types/scenarios/index.ts(5,25): error TS2724: '"./scenarios"' has no exported member named 'ScenarioProgress'. Did you mean 'UserScenarioProgress'?
+types/scenarios/index.ts(5,43): error TS2305: Module '"./scenarios"' has no exported member 'LearningObjective'.

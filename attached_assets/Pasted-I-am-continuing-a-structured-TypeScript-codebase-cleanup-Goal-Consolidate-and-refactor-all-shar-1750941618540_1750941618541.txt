@@ -1,0 +1,82 @@
+I am continuing a structured TypeScript codebase cleanup.
+
+✅ Goal:
+Consolidate and refactor all shared utility functions, constants, helpers, and validators into a clean, well-organized utils/ (or lib/) directory — improving code reuse, consistency, and maintainability.
+
+🔒 CRITICAL SAFETY REQUIREMENT:
+
+No changes to existing UI or user-facing functionality
+
+This is a non-behavioral refactor: absolutely no functional logic should be modified, added, or removed
+
+All code must continue to compile (npx tsc --noEmit) and pass existing tests without any regressions
+
+
+✅ What’s Already Done:
+
+All interface and type definitions were successfully consolidated into a types/ directory
+
+All imports updated accordingly and validated by the compiler
+
+
+🧠 What You Must Do in This Step:
+
+1. Create Utility Structure
+
+Set up a root-level utils/ (or lib/) directory with logically grouped submodules. Suggested structure:
+
+utils/
+├── uuid.ts            // UUID validation/generation
+├── openai.ts          // Shared OpenAI builders, request logic
+├── furigana.ts        // Furigana formatting, regex helpers
+├── validation.ts      // General validators (e.g. isEnglishMessage)
+├── json.ts            // JSON parsing with safety guards
+├── logger.ts          // Debug logging wrappers (optional)
+└── index.ts           // Barrel exports (optional)
+
+2. Identify Refactor Targets
+
+Audit the entire codebase and move:
+
+All helper functions used in 2+ places
+
+Any utility logic declared inline in components/pages
+
+Repetitive OpenAI or JSON parsing logic
+
+Any reusable validators, constants, formatting logic
+
+
+⚠️ Do not move code that is component-specific or tied to rendering.
+
+
+
+> 3. Apply the Refactor
+
+Move identified functions into their new utility modules
+
+Refactor imports across all files that used those functions
+
+Ensure no changes to the function’s behavior during migration
+
+Remove any now-empty or redundant helper files
+
+
+4. Validate Safety & Stability
+
+Run: npx tsc --noEmit --skipLibCheck
+
+Run all tests (unit, integration, snapshot if available)
+
+Confirm zero console errors or behavior changes in dev mode
+
+
+5. Optional Enhancements
+
+Use barrel files (index.ts) for grouped exports in utils/
+
+If using tsconfig path aliases, ensure they're updated accordingly
+(e.g., @utils/openai instead of deep relative paths)
+
+
+
