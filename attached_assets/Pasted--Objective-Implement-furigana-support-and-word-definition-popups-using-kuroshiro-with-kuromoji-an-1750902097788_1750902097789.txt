@@ -1,0 +1,111 @@
+ Objective:
+Implement furigana support and word definition popups using kuroshiro (with kuromoji) and the Jisho API, integrated into my existing Node.js + React project.
+
+🔒 ABSOLUTE REQUIREMENT:
+⚠️ DO NOT MODIFY OR BREAK the existing UI, layout, theme, Tailwind setup, fonts, spacing, or any visual styling.
+⚠️ Do not touch themeVariables, layout components, or CSS unless scoped within the new components.
+⚠️ Do not modify existing functionality, wanakana input, romaji toggling, or tailwind design tokens.
+
+🧠 Requirements
+Preserve Everything
+
+DO NOT edit existing:
+
+Layout structure
+
+Fonts or Tailwind color/theme
+
+Pages, containers, or component styling
+
+Wanakana input handling
+
+Everything must be added, not changed.
+
+Furigana Parsing and Display
+
+Add a new React component FuriganaText.tsx:
+
+Uses kuroshiro with kuromoji analyzer
+
+Adds ruby tags (furigana) above kanji
+
+Toggle button to show/hide furigana (optional)
+
+Parses input text: string into structured tokens
+
+Caches result to avoid repeated parsing
+
+Word Definition Popups
+
+Add WordDefinitionPopup.tsx component
+
+Appears on hover or click of any word
+
+Fetches definitions via Jisho API
+
+Only one popup visible at a time
+
+Popup closes when clicking outside
+
+Must NOT introduce double popups
+
+Code-Level Implementation
+
+Install dependencies:
+
+bash
+Copy
+Edit
+npm install kuroshiro kuroshiro-analyzer-kuromoji
+Place new components under:
+
+swift
+Copy
+Edit
+/client/src/components/furigana-text/FuriganaText.tsx
+/client/src/components/furigana-text/WordDefinitionPopup.tsx
+Keep component styles self-contained and classnames short and scoped:
+
+Examples: jp-word, jp-popup, furigana-wrap, ruby-toggle
+
+Behavior
+
+Component should work when passed:
+
+ts
+Copy
+Edit
+<FuriganaText text="私はアニメを見るのが好きです。" />
+Word “見る” should show furigana みる
+
+On click: show definition from Jisho
+
+Styling Rules
+
+Font: Noto Sans JP
+
+Ruby text must sit above kanji cleanly with readable font size
+
+NO changes to Tailwind config outside component
+
+Use Tailwind utility classes in new components only
+
+Performance
+
+Parse furigana only when text prop changes
+
+Do not re-parse on re-render
+
+Avoid lag or layout shift on render
+
+🧪 Sample Usage (Leave Existing Pages Alone)
+Add new usage in isolated page/component for now:
+
+tsx
+Copy
+Edit
+<FuriganaText
+  text="日本語を勉強しています。"
+  showToggleButton={true}
+  enableWordLookup={true}
+/>

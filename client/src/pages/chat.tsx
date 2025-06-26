@@ -732,7 +732,7 @@ export default function Chat() {
                       showFurigana={showFurigana}
                       showToggleButton={false}
                       enableWordLookup={true}
-                      onSaveToVocab={(word, reading) => {
+                      onSaveToVocab={(word: string, reading?: string) => {
                         console.log('Saving word to vocab:', word, reading);
                       }}
                     />
