@@ -17,11 +17,11 @@ async function initializeKuromoji(): Promise<any> {
   
   try {
     const tokenizer = await new Promise((resolve, reject) => {
-      builder({ dicPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/' })
-        .build((err: any, tokenizer: any) => {
-          if (err) reject(err);
-          else resolve(tokenizer);
-        });
+      const kuromojiBuilder = builder({ dicPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/' });
+      kuromojiBuilder.build((err: any, tokenizer: any) => {
+        if (err) reject(err);
+        else resolve(tokenizer);
+      });
     });
     
     kuromojiTokenizer = tokenizer;
@@ -81,7 +81,7 @@ export async function extractVocabularyFromText(text: string): Promise<string[]>
       }
     }
     
-    return [...new Set(vocabulary)]; // Remove duplicates
+    return Array.from(new Set(vocabulary)); // Remove duplicates
   } catch (error) {
     console.error('Error extracting vocabulary:', error);
     return extractBasicWords(text);

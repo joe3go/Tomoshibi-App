@@ -231,8 +231,10 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
       // Dynamic import according to documentation
       const kuromoji = await import('kuromoji');
       
-      // Build tokenizer with dictionary path
-      const builder = kuromoji.builder({
+      // Build tokenizer with CDN dictionary path for browser compatibility
+      const builder = kuromoji.default ? kuromoji.default.builder({
+        dicPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/'
+      }) : kuromoji.builder({
         dicPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/'
       });
 
