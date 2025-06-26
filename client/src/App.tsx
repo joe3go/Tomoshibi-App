@@ -52,6 +52,7 @@ export default function App() {
             <Route path="/history" component={History} />
             <Route path="/settings" component={Settings} />
             <Route path="/practice-groups" component={PracticeGroups} />
+            <Route path="/test-furigana" component={TestFurigana} />
             <Route component={NotFound} />
           </Switch>
         </Router>

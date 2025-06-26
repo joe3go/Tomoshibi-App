@@ -52,23 +52,9 @@ export default function FuriganaText({
     const parseText = async () => {
       setIsLoading(true);
       try {
-        // For now, use the existing API until Python backend is ready
-        const response = await fetch(`/api/word-definition/${encodeURIComponent(text)}`);
-        
-        if (response.ok) {
-          const data = await response.json();
-          // Simple tokenization for demo - split by common boundaries
-          const simpleTokens = text.match(/[\u4e00-\u9faf]+|[\u3040-\u309f]+|[\u30a0-\u30ff]+|[a-zA-Z0-9]+|[^\s]/g) || [text];
-          const tokens = simpleTokens.map(word => ({
-            word,
-            reading: word,
-            base_form: word,
-            pos: "unknown"
-          }));
-          setTokens(tokens);
-        } else {
-          throw new Error("Parse service unavailable");
-        }
+        // Enhanced fallback parsing with furigana notation support
+        const tokens = parseJapaneseText(text);
+        setTokens(tokens);
       } catch (error) {
         console.error('Failed to parse Japanese text:', error);
         // Fallback to simple character parsing
@@ -104,6 +90,62 @@ export default function FuriganaText({
 
   const isKanji = (char: string) => {
     return /[\u4e00-\u9faf\u3400-\u4dbf]/.test(char);
+  };
+
+  // Enhanced Japanese text parser
+  const parseJapaneseText = (text: string): ParsedToken[] => {
+    const tokens: ParsedToken[] = [];
+    
+    // Handle furigana notation: 漢字(かんじ) or 漢字（かんじ）
+    const furiganaPattern = /([一-龯々\u3400-\u4DBF]+)[（\(]([ぁ-んァ-ヶー]+)[）\)]/g;
+    let lastIndex = 0;
+    let match;
+
+    while ((match = furiganaPattern.exec(text)) !== null) {
+      // Add text before the match
+      if (match.index > lastIndex) {
+        const beforeText = text.slice(lastIndex, match.index);
+        tokens.push(...tokenizeText(beforeText));
+      }
+
+      // Add the furigana match
+      tokens.push({
+        word: match[1],
+        reading: match[2],
+        base_form: match[1],
+        pos: "word"
+      });
+
+      lastIndex = furiganaPattern.lastIndex;
+    }
+
+    // Add remaining text
+    if (lastIndex < text.length) {
+      const remainingText = text.slice(lastIndex);
+      tokens.push(...tokenizeText(remainingText));
+    }
+
+    return tokens.length > 0 ? tokens : tokenizeText(text);
+  };
+
+  const tokenizeText = (text: string): ParsedToken[] => {
+    if (!text.trim()) return [];
+    
+    const tokens: ParsedToken[] = [];
+    const segments = text.match(/[\u4e00-\u9faf\u3400-\u4dbf]+|[\u3040-\u309f]+|[\u30a0-\u30ff]+|[a-zA-Z0-9]+|[^\s\u4e00-\u9faf\u3040-\u309f\u30a0-\u30ff\u3400-\u4dbfa-zA-Z0-9]+/g) || [text];
+    
+    segments.forEach(segment => {
+      if (segment.trim()) {
+        tokens.push({
+          word: segment,
+          reading: isKanji(segment) ? segment : segment,
+          base_form: segment,
+          pos: isKanji(segment) ? "kanji" : /[\u3040-\u309f\u30a0-\u30ff]/.test(segment) ? "kana" : "other"
+        });
+      }
+    });
+
+    return tokens;
   };
 
   const shouldShowReading = (token: ParsedToken) => {

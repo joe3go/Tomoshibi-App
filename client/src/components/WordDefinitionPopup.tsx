@@ -43,8 +43,8 @@ export default function WordDefinitionPopup({
       setError(null);
       
       try {
-        // Use new Python parser backend
-        const response = await fetch(`/definition?word=${encodeURIComponent(word)}`);
+        // Use existing word definition API
+        const response = await fetch(`/api/word-definition/${encodeURIComponent(word)}`);
         
         if (!response.ok) {
           if (response.status === 404) {
@@ -57,7 +57,18 @@ export default function WordDefinitionPopup({
         }
 
         const data = await response.json();
-        setDefinition(data);
+        
+        // Transform to expected format
+        const transformedData = {
+          word: data.word || word,
+          reading: data.reading,
+          meanings: data.meanings || [],
+          pos: data.pos || [],
+          jlpt_level: data.jlpt_level,
+          examples: data.examples || []
+        };
+        
+        setDefinition(transformedData);
       } catch (err) {
         console.error('Error looking up word:', err);
         setError('Failed to look up word');
