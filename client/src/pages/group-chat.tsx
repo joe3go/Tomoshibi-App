@@ -9,6 +9,8 @@ import { supabase } from "@/lib/supabase/client";
 import { bind, unbind, toHiragana } from "wanakana";
 import FuriganaText from "@/components/FuriganaText";
 import type { GroupMessage, GroupPersona, GroupChatState } from "@/types/chat";
+import { logDebug, logError, logInfo } from "@utils/logger";
+import { isEnglishMessage, sanitizeInput } from "@utils/validation";
 
 export default function GroupChat() {
   const [, params] = useRoute("/group-chat/:conversationId");
@@ -91,7 +93,7 @@ export default function GroupChat() {
       await loadMessages();
 
     } catch (error) {
-      console.error("Error loading group conversation:", error);
+      logError("Error loading group conversation:", error);
       toast({
         title: "Error loading conversation",
         description: "Please try again or return to dashboard.",
@@ -145,7 +147,7 @@ export default function GroupChat() {
         .single();
 
       if (userError) {
-        console.error("User message error:", userError);
+        logError("User message error:", userError);
         throw new Error(`Failed to save user message: ${userError.message}`);
       }
 
@@ -215,7 +217,7 @@ export default function GroupChat() {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("AI response error:", response.status, errorText);
+        logError("AI response error:", `${response.status} ${errorText}`);
         throw new Error(`Failed to get AI response: ${response.status} ${errorText}`);
       }
 
@@ -235,7 +237,7 @@ export default function GroupChat() {
         .single();
 
       if (aiError) {
-        console.error("AI message error:", aiError);
+        logError("AI message error:", aiError);
         throw new Error(`Failed to save AI message: ${aiError.message}`);
       }
 
@@ -247,7 +249,7 @@ export default function GroupChat() {
       updateGroupChatState(nextSpeakerId);
 
     } catch (error) {
-      console.error("Send message error details:", error);
+      logError("Send message error details:", error);
       toast({
         title: "Error sending message",
         description: error?.message || "Please try again.",
@@ -293,7 +295,7 @@ export default function GroupChat() {
       const groupContext = conversation?.conversation_templates?.group_prompt_suffix || "";
 
       // Trigger introductions from all personas
-      console.log(`🎉 Starting group introductions for ${groupPersonas.length} personas`);
+      logInfo(`Starting group introductions for ${groupPersonas.length} personas`);
       
       for (const persona of groupPersonas) {
         await new Promise(resolve => setTimeout(resolve, Math.random() * 1000 + 500)); // Stagger introductions
@@ -338,7 +340,7 @@ export default function GroupChat() {
       }
       
     } catch (error) {
-      console.error("First message error:", error);
+      logError("First message error:", error);
     } finally {
       setSending(false);
     }
@@ -354,7 +356,7 @@ export default function GroupChat() {
       for (const persona of groupPersonas) {
         const name = persona.name.toLowerCase();
         if (userMessage.includes(name) || userMessage.includes(`${name}さん`)) {
-          console.log(`🎯 User mentioned ${persona.name}, bypassing throttling`);
+          logDebug(`User mentioned ${persona.name}, bypassing throttling`);
           return true;
         }
       }
@@ -370,7 +372,7 @@ export default function GroupChat() {
 
     // Reduced cooldown for more natural flow
     if (Date.now() - currentState.lastResponseTimestamp < 8000) { // 8 seconds
-      console.log('Group chat cooldown active, skipping AI response');
+      logDebug('Group chat cooldown active, skipping AI response');
       return false;
     }
 
@@ -393,7 +395,7 @@ export default function GroupChat() {
             userMessage.includes(`${name}さん`) || 
             userMessage.includes(`${name}は`) ||
             userMessage.includes(`${name}が`)) {
-          console.log(`🎯 User mentioned ${persona.name}, they will respond next`);
+          logDebug(`User mentioned ${persona.name}, they will respond next`);
           return persona.id;
         }
       }
@@ -420,7 +422,7 @@ export default function GroupChat() {
           lastAIContent.includes(`どう思います`) ||
           lastAIContent.includes(`どうですか`)) {
         if (persona.id !== lastAIMessage.sender_persona_id) {
-          console.log(`🎯 ${persona.name} was mentioned/asked a question, they will respond next`);
+          logDebug(`${persona.name} was mentioned/asked a question, they will respond next`);
           return persona.id;
         }
       }
@@ -485,7 +487,7 @@ export default function GroupChat() {
         try {
           unbind(element);
         } catch (e) {
-          console.log("Unbind cleanup completed");
+          logDebug("Unbind cleanup completed");
         }
       }
     };
@@ -641,7 +643,7 @@ export default function GroupChat() {
                     showToggleButton={false}
                     enableWordLookup={true}
                     onSaveToVocab={(word: string, reading?: string) => {
-                      console.log('Saving word to vocab:', word, reading);
+                      logDebug('Saving word to vocab:', word, reading);
                     }}
                     className="text-sm leading-relaxed"
                   />

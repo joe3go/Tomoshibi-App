@@ -23,7 +23,8 @@
       "@/pages/*": ["./client/src/pages/*"],
       "@/types/*": ["./types/*"],
       "@types/*": ["./types/*"],
-      "@shared/*": ["./shared/*"]
+      "@shared/*": ["./shared/*"],
+      "@utils/*": ["./utils/*"]
     }
   }
 }

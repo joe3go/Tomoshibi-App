@@ -6,6 +6,9 @@ import {
   buildUserContext,
   logPromptUsage,
 } from "./prompt-builder";
+import { createClient } from '@supabase/supabase-js';
+import { logDebug, logError, logInfo } from '../utils/logger';
+import { sanitizeForOpenAI, truncateToTokenLimit } from '../utils/openai';
 
 // UUID validation helper
 function isValidUUID(val: string): boolean {
