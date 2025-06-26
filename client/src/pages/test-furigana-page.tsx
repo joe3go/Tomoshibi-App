@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import FuriganaText from '@/components/FuriganaText';
+import FuriganaText from '@/components/enhanced-furigana';
 
 const TestFuriganaPage = () => {
   const [showFurigana, setShowFurigana] = useState(true);

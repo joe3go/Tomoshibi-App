@@ -1,4 +1,4 @@
-import FuriganaText from "@/components/FuriganaText";
+import FuriganaText from "@/components/enhanced-furigana";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function FuriganaDemo() {

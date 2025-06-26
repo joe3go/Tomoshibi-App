@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Calendar, MessageCircle, User, Clock, BookOpen, TrendingUp, BarChart3, Play, CheckCircle } from 'lucide-react';
 import { useLocation } from 'wouter';
-import FuriganaText from '@/components/FuriganaText';
+import FuriganaText from '@/components/enhanced-furigana';
 
 interface ConversationWithDetails {
   id: number;
