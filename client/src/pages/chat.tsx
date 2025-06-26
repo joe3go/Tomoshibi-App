@@ -1,22 +1,18 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Toggle } from "@/components/ui/toggle";
-import { ArrowLeft, CheckCircle, Languages } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import FuriganaText from "@/components/FuriganaText";
-import { MessageWithVocab } from "@/components/MessageWithVocab";
-import { bind, unbind, toHiragana } from "wanakana";
-import { supabase } from "@/lib/supabase/client";
-import { useAuth } from "@/context/SupabaseAuthContext";
-import { extractPersonaFromTitle } from "@/lib/supabase-functions";
+import { Languages } from "lucide-react";
+import { ChatHeader } from "@/components/chat/ChatHeader";
+import { ChatMessage } from "@/components/chat/ChatMessage";
+import { ChatInput } from "@/components/chat/ChatInput";
+import { TypingIndicator } from "@/components/chat/TypingIndicator";
+import { useChatConversation } from "@/hooks/useChatConversation";
+import { useMessageSending } from "@/hooks/useMessageSending";
 import { useConversationMode } from "@/hooks/useConversationMode";
 import { loadGroupPersonas, loadSoloPersona, loadAllPersonas, populateConversationParticipants } from "@/lib/supabase/loaders";
-import { logDebug, logError, logInfo } from "@utils/logger";
-import { isEnglishMessage, sanitizeInput } from "@utils/validation";
-import { generateUUID } from "@utils/uuid";
+import { safeFindPersona, safeMapPersonas } from "@/lib/chat-utilities";
+import { logDebug, logError } from "@utils/logger";
+import { supabase } from "@/lib/supabase/client";
 // Import vocabulary tracking function from API
 const trackVocabularyUsage = async (text: string, source: 'user' | 'ai', session: any, tutorId?: string, conversationId?: string) => {
   try {
@@ -123,28 +119,24 @@ interface Persona {
 export default function Chat() {
   const [, params] = useRoute("/chat/:conversationId");
   const [, setLocation] = useLocation();
-  const { user, session } = useAuth();
-  const { toast } = useToast();
+  const conversationId = params?.conversationId || null;
 
-  const [conversation, setConversation] = useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  // Chat conversation hook
+  const { conversation, messages, loading, error, addMessage, completeConversation } = useChatConversation(conversationId);
+  
+  // Message sending hook
+  const { sendMessage: sendMessageHandler, sending } = useMessageSending();
+
+  // Local state
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [persona, setPersona] = useState<Persona | null>(null);
   const [conversationPersonas, setConversationPersonas] = useState<Persona[]>([]);
-  const [typingPersonas, setTypingPersonas] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
-
   const [message, setMessage] = useState("");
   const [romajiMode, setRomajiMode] = useState(false);
   const [showFurigana, setShowFurigana] = useState(() => {
     const saved = localStorage.getItem("furigana-visible");
     return saved !== null ? saved === "true" : true;
   });
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const conversationId = params?.conversationId || null;
 
   // Use conversation mode hook
   const { isGroup, isSolo } = useConversationMode(conversation);
@@ -356,156 +348,27 @@ export default function Chat() {
     return 'bg-gray-100 text-gray-900 border border-gray-200';
   };
 
-  const sendMessage = async () => {
-    if (!message.trim() || sending || !session || !user) return;
-
-    const finalMessage = romajiMode ? toHiragana(message.trim()) : message.trim();
-
-    try {
-      setSending(true);
-      setMessage(""); // Clear input immediately
-
-      console.log("📤 Sending message to conversation:", conversationId);
-
-      // Add user message
-      const { data: userMessage, error: userMsgError } = await supabase
-        .from("messages")
-        .insert({
-          conversation_id: conversationId,
-          sender_type: "user",
-          content: finalMessage,
-          sender_persona_id: null,
-          created_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      if (userMsgError) {
-        throw new Error("Failed to save user message");
+  const handleSendMessage = async () => {
+    if (!conversationId) return;
+    
+    const tutorId = persona?.id ?? conversationPersonas?.[0]?.id ?? "";
+    
+    await sendMessageHandler(
+      message,
+      romajiMode,
+      {
+        conversationId,
+        tutorId,
+        isGroupConversation: isGroup
+      },
+      (userMessage) => {
+        addMessage(userMessage);
+        setMessage(""); // Clear input after successful send
+      },
+      (aiMessage) => {
+        addMessage(aiMessage);
       }
-
-      // Immediately add user message to UI
-      setMessages(prev => [...prev, userMessage]);
-
-      // Track vocabulary usage for user message
-      try {
-        await trackVocabularyUsage(
-          finalMessage, 
-          'user', 
-          session, 
-          persona?.id ?? conversationPersonas?.[0]?.id, 
-          conversationId
-        );
-      } catch (error) {
-        console.log("Vocabulary tracking failed:", error);
-      }
-
-      // Group chat cooldown and consecutive response enforcement
-      if (isGroup && persona?.id) {
-        const stateKey = `${conversationId}_${persona.id}`;
-        const currentState = groupChatStates.current.get(stateKey) || {
-          lastResponseTimestamp: 0,
-          consecutiveResponses: 0
-        };
-
-        // Check cooldown
-        if (Date.now() - currentState.lastResponseTimestamp < responseCooldown) {
-          console.log('Cooldown active, skipping AI response');
-          setSending(false);
-          return;
-        }
-
-        // Check consecutive response limit
-        if (currentState.consecutiveResponses >= maxConsecutiveResponses) {
-          console.log('Consecutive response limit reached');
-          setSending(false);
-          return;
-        }
-      }
-
-      // Simulated typing delay for group chats
-      if (isGroup) {
-        await new Promise(resolve => setTimeout(resolve, 
-          Math.random() * 2000 + 1000 // 1-3 second delay
-        ));
-      }
-
-      // Get AI response
-      const response = await fetch("/api/chat/secure", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          message: finalMessage,
-          conversationId: conversationId,
-          tutorId: persona?.id ?? conversationPersonas?.[0]?.id ?? "", // ✅ safer fallback
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to get AI response");
-      }
-
-      const aiData = await response.json();
-
-      // Add AI message
-      const { data: aiMessage, error: aiMsgError } = await supabase
-        .from("messages")
-        .insert({
-          conversation_id: conversationId,
-          sender_type: "ai",
-          content: aiData.content || '',
-          english_translation: aiData.english_translation || null,
-          tutor_feedback: aiData.feedback || null,
-          suggestions: Array.isArray(aiData.suggestions) ? aiData.suggestions : null,
-          vocab_used: Array.isArray(aiData.vocabUsed) ? aiData.vocabUsed : [],
-          grammar_used: Array.isArray(aiData.grammarUsed) ? aiData.grammarUsed : [],
-          sender_persona_id: persona?.id || null,
-          created_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      if (aiMsgError) {
-        throw new Error("Failed to save AI message");
-      }
-
-      // Immediately add AI message to UI
-      setMessages(prev => [...prev, aiMessage]);
-      setMessages(prev => [...prev]); // ✅ force reflow for immediate UI update
-
-      // Track vocabulary usage for AI message
-      try {
-        await trackVocabularyUsage(
-          aiData.content || '', 
-          'ai', 
-          session, 
-          persona?.id ?? conversationPersonas?.[0]?.id, 
-          conversationId
-        );
-      } catch (error) {
-        console.log("AI vocabulary tracking failed:", error);
-      }
-
-      // Scroll to bottom
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
-
-    } catch (error) {
-      console.error("❌ Message send failed:", error);
-      setMessage(finalMessage); // Restore message on error
-
-      toast({
-        title: "Failed to send message",
-        description: "Please check your connection and try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setSending(false);
-    }
+    );
   };
 
   const completeConversation = async () => {
@@ -591,69 +454,22 @@ export default function Chat() {
 
   return (
     <div className="flex flex-col h-screen bg-background">
-      {/* Chat Header */}
-      <header className="flex items-center justify-between p-4 border-b bg-card">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setLocation("/dashboard")}
-            className="back-button"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex items-center gap-3">
-            {isGroup ? (
-              <div className="flex -space-x-2">
-                {conversationPersonas.slice(0, 3).map((p, index) => (
-                  <img
-                    key={p.id}
-                    src={getAvatarImage(p)}
-                    alt={p.name}
-                    className="w-10 h-10 rounded-full object-cover border-2 border-background"
-                    style={{ zIndex: conversationPersonas.length - index }}
-                  />
-                ))}
-                {conversationPersonas.length > 3 && (
-                  <div className="w-10 h-10 rounded-full bg-muted border-2 border-background flex items-center justify-center text-xs font-medium">
-                    +{conversationPersonas.length - 3}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <img
-                src={getAvatarImage(persona)}
-                alt={persona?.name || "Persona"}
-                className="w-10 h-10 rounded-full object-cover"
-              />
-            )}
-            <div>
-              <h3 className="font-medium">
-                {isGroup 
-                  ? conversation.title
-                  : persona?.name || "AI"
-                }
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {isGroup 
-                  ? `Group Chat • ${conversationPersonas.map(p => p.name).join(", ")}`
-                  : conversation.title.split("|")[0] || "Conversation"
-                }
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={completeConversation}
-          className="complete-button"
-        >
-          <CheckCircle className="w-4 h-4 mr-2" />
-          Complete
-        </Button>
-      </header>
+      <ChatHeader
+        onBack={() => setLocation("/dashboard")}
+        title={isGroup ? conversation?.title || "Group Chat" : persona?.name || "AI"}
+        subtitle={isGroup 
+          ? `Group Chat • ${conversationPersonas.map(p => p.name).join(", ")}`
+          : conversation?.title?.split("|")[0] || "Conversation"
+        }
+        isGroup={isGroup}
+        personas={conversationPersonas}
+        currentPersona={persona}
+        showFurigana={showFurigana}
+        onToggleFurigana={() => setShowFurigana(!showFurigana)}
+        romajiMode={romajiMode}
+        onToggleRomaji={() => setRomajiMode(!romajiMode)}
+        onComplete={completeConversation}
+      />
 
       {/* Messages Container */}
       <div className="flex-1 overflow-y-auto p-4">
@@ -664,189 +480,50 @@ export default function Chat() {
 
             if (msg.sender_type === 'ai') {
               if (isGroup) {
-                logDebug('🔍 Resolving persona for group message:', {
-                  messageId: msg.id,
-                  senderPersonaId: msg.sender_persona_id,
-                  availableConversationPersonas: conversationPersonas.length,
-                  availableAllPersonas: personas.length
-                });
-
-                // For group messages, find persona by sender_persona_id
-                senderPersona = conversationPersonas.find(p => p.id === msg.sender_persona_id);
-
-                if (!senderPersona) {
-                  console.log('🔍 Not found in conversation personas, checking all personas...');
-                  senderPersona = personas.find(p => p.id === msg.sender_persona_id);
-                }
-
-                if (!senderPersona) {
-                  console.error('❌ Could not resolve sender persona:', {
-                    messageId: msg.id,
-                    senderPersonaId: msg.sender_persona_id,
-                    availableConversationPersonas: conversationPersonas.map(p => `${p.name}:${p.id}`),
-                    availableAllPersonas: personas.map(p => `${p.name}:${p.id}`)
-                  });
-                } else {
-                  console.log('✅ Resolved persona:', `${senderPersona.name}:${senderPersona.id}`);
-                }
+                senderPersona = safeFindPersona(conversationPersonas, msg.sender_persona_id) ||
+                               safeFindPersona(personas, msg.sender_persona_id);
               } else {
-                // For solo messages, use the main persona
                 senderPersona = persona;
               }
             }
 
             return (
-              <div
+              <ChatMessage
                 key={msg.id}
-                className={`flex items-start gap-3 ${msg.sender_type === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
-              >
-                <div className="flex-shrink-0">
-                  {msg.sender_type === 'user' ? (
-                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                      You
-                    </div>
-                  ) : (
-                    <img
-                      src={getAvatarImage(senderPersona)}
-                      alt={senderPersona?.name || "AI"}
-                      className="w-8 h-8 rounded-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                      target.src = "/avatars/default.png";
-                    }}
-                  />
-                )}
-              </div>
-
-              <div
-                className={`max-w-[70%] rounded-lg p-3 ${getMessageBubbleStyles(msg.sender_type, senderPersona)}`}
-              >
-                {/* Show persona name in group mode */}
-                {isGroup && msg.sender_type === 'ai' && senderPersona && (
-                  <div className="text-xs font-medium mb-1 opacity-80">
-                    {senderPersona.name}
-                  </div>
-                )}
-
-                <MessageWithVocab content={msg.content}>
-                  <div className="text-sm leading-relaxed">
-                    <FuriganaText
-                      text={msg.content}
-                      showFurigana={showFurigana}
-                      showToggleButton={false}
-                      enableWordLookup={true}
-                      onSaveToVocab={(word: string, reading?: string) => {
-                        console.log('Saving word to vocab:', word, reading);
-                      }}
-                    />
-                  </div>
-                </MessageWithVocab>
-
-                {msg.sender_type === 'ai' && msg.english_translation && (
-                  <div className="mt-2">
-                    <details className="text-sm text-muted-foreground">
-                      <summary className="cursor-pointer hover:text-foreground">
-                        Show English translation
-                      </summary>
-                      <div className="mt-1 p-2 bg-muted/50 rounded-md">
-                        {msg.english_translation}
-                      </div>
-                    </details>
-                  </div>
-                )}
-
-                {msg.suggestions && msg.suggestions.length > 0 && (
-                  <div className="mt-2">
-                    <details className="text-sm">
-                      <summary className="cursor-pointer text-blue-600 hover:text-blue-800">
-                        Learning suggestions ({msg.suggestions.length})
-                      </summary>
-                      <div className="mt-1 p-2 bg-blue-50 dark:bg-blue-950/20 rounded-md">
-                        {msg.suggestions.map((suggestion: string, index: number) => (
-                          <div key={index} className="flex items-start gap-2 text-blue-800 dark:text-blue-200">
-                            <span>•</span>
-                            <span>{suggestion}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </details>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
+                id={msg.id}
+                content={msg.content}
+                senderType={msg.sender_type}
+                englishTranslation={msg.english_translation}
+                suggestions={msg.suggestions}
+                createdAt={msg.created_at}
+                senderPersona={senderPersona}
+                isGroup={isGroup}
+                showFurigana={showFurigana}
+                showPersonaName={isGroup}
+                onSaveToVocab={(word: string, reading?: string) => {
+                  console.log('Saving word to vocab:', word, reading);
+                }}
+              />
+            );
+          })}
 
           {sending && (
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0">
-                <img
-                  src={getAvatarImage(persona)}
-                  alt={persona?.name || "AI"}
-                  className="w-8 h-8 rounded-full object-cover"
-                />
-              </div>
-
-              <div className={`rounded-lg p-3 ${getMessageBubbleStyles('ai', persona)}`}>
-                <div className="flex items-center gap-2">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60"></div>
-                    <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '0.2s' }}></div>
-                  </div>
-                  <span className="text-sm opacity-70">Thinking...</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
-
-      {/* Input Section */}
-      <div className="border-t bg-card p-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-2 mb-2">
-            <Toggle
-              pressed={romajiMode}
-              onPressedChange={setRomajiMode}
-              aria-label="Toggle romaji input"
-              size="sm"
-            >
-              <Languages className="w-4 h-4" />
-              <span className="ml-1">Hiragana</span>
-            </Toggle>
-            <Toggle
-              pressed={showFurigana}
-              onPressedChange={setShowFurigana}
-              aria-label="Toggle furigana display"
-              size="sm"
-            >
-              <span>振り仮名</span>
-            </Toggle>
-          </div>
-
-          <div className="flex gap-2">
-            <textarea
-              ref={textareaRef}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={handleKeyPress}
-              placeholder="Type your message in Japanese..."
-              className="flex-1 min-h-[40px] max-h-[120px] p-2 border rounded-md resize-none"
-              disabled={sending}
+            <TypingIndicator
+              personas={persona ? [persona] : conversationPersonas}
+              typingPersonaIds={persona ? [persona.id] : []}
+              showPersonaName={false}
             />
-            <Button
-              onClick={sendMessage}
-              disabled={!message.trim() || sending}
-              className="self-end"
-            >
-              Send
-            </Button>
-          </div>
+          )}
         </div>
       </div>
+
+      <ChatInput
+        message={message}
+        onMessageChange={setMessage}
+        onSendMessage={handleSendMessage}
+        romajiMode={romajiMode}
+        disabled={sending}
+      />
     </div>
   );
 }
