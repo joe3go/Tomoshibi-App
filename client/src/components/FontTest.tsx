@@ -19,3 +19,22 @@ function FontTest() {
 }
 
 export default FontTest;
+import React from 'react';
+
+export default function FontTest() {
+  return (
+    <div className="p-4 bg-card border border-destructive rounded-lg">
+      <ruby className="text-2xl">
+        漢字<rt className="!text-destructive">かんじ</rt>
+      </ruby>
+      <div className="mt-2 text-sm text-muted-foreground">
+        Red furigana should appear above the kanji
+      </div>
+      <div className="mt-4">
+        <ruby className="text-lg furigana-wrapper">
+          東京<rt>とうきょう</rt>は大<rt>おお</rt>きい都市<rt>とし</rt>です。
+        </ruby>
+      </div>
+    </div>
+  );
+}

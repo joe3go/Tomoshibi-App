@@ -4,6 +4,8 @@
   @tailwind components;
   @tailwind utilities;
 
+@import './furigana.css';
+
   /* ==============================
      🎎 Japanese-Inspired UI Theme Variables
      ============================== */
@@ -2154,7 +2156,7 @@ ruby {
 }
 
 rt {
-  font-size: 0.6em;
+font-size: 0.6em;
   color: #666;
   font-weight: normal;
   line-height: 1;
