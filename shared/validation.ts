@@ -1,5 +1,5 @@
-import { isValidUUID } from "@utils/uuid";
-import { logError } from "@utils/logger";
+import { isValidUUID } from "../utils/uuid";
+import { logError } from "../utils/logger";
 
 export function validateTutorId(tutorId: string | undefined): string {
   if (!tutorId) {

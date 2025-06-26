@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { logError } from '@utils/logger';
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { EnhancedCard } from "../EnhancedCard";
@@ -59,9 +60,9 @@ export function ScenarioProgressWidget({ userId, onNavigateToScenarios, classNam
         return acc;
       }, { completed: 0, available: scenarios.length - completedScenarios.length, locked: 0, inProgress: 0 });
     }
-    
+
     if (!learningProgress) return { completed: 0, available: 0, locked: 0, inProgress: 0 };
-    
+
     return scenarios.reduce((acc, scenario) => {
       if (learningProgress.completedScenarios.includes(scenario.id)) {
         acc.completed++;
@@ -76,7 +77,7 @@ export function ScenarioProgressWidget({ userId, onNavigateToScenarios, classNam
 
   const getNextScenario = () => {
     if (!learningProgress) return null;
-    
+
     return getNextRecommendedScenario(
       learningProgress.completedScenarios,
       learningProgress.totalXp,
@@ -231,7 +232,7 @@ export function ScenarioProgressWidget({ userId, onNavigateToScenarios, classNam
             <BookOpen className="w-4 h-4" />
             <span>Browse Scenarios</span>
           </EnhancedButton>
-          
+
           {nextScenario && (
             <EnhancedButton 
               variant="outline"
@@ -247,3 +248,4 @@ export function ScenarioProgressWidget({ userId, onNavigateToScenarios, classNam
     </EnhancedCard>
   );
 }
+```

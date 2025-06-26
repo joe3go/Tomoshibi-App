@@ -24,6 +24,7 @@ import {
   Languages
 } from "lucide-react";
 import { bind, unbind } from 'wanakana';
+import { logError, logInfo } from '@utils/logger';
 
 interface ScenarioPracticeViewProps {
   scenario: Scenario;
@@ -62,7 +63,7 @@ export function ScenarioPracticeView({
     try {
       return new ScenarioProgressManager(userId);
     } catch (error) {
-      console.error('Failed to create progress manager:', error);
+      logError('Failed to create progress manager:', error);
       return null;
     }
   });
@@ -94,15 +95,15 @@ export function ScenarioPracticeView({
     const element = textareaRef.current;
     if (romajiMode && element) {
       bind(element, { IMEMode: 'toHiragana' });
-      console.log('Wanakana bound to scenario textarea');
+      logInfo('Wanakana bound to scenario textarea');
     }
-    
+
     return () => {
       if (element) {
         try {
           unbind(element);
         } catch (e) {
-          console.log('Unbind cleanup completed');
+          logInfo('Unbind cleanup completed');
         }
       }
     };
@@ -114,18 +115,18 @@ export function ScenarioPracticeView({
 
   const initializeSession = () => {
     if (!progressManager) {
-      console.error('Progress manager not available');
+      logError('Progress manager not available');
       return;
     }
-    
+
     try {
       const newSession = progressManager.createPracticeSession(scenario.id, personaId);
       setSession(newSession);
     } catch (error) {
-      console.error('Failed to create practice session:', error);
+      logError('Failed to create practice session:', error);
       return;
     }
-    
+
     // Initialize goal completions
     const initialGoals: GoalCompletion[] = scenario.goals.map(goal => ({
       goalText: goal,
@@ -192,10 +193,10 @@ export function ScenarioPracticeView({
     try {
       // Simulate AI response processing
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Generate AI response with feedback
       const aiResponse = await generateAIResponse(currentMessage);
-      
+
       // Add AI message
       const aiMessage: Message = {
         id: `ai_${Date.now()}`,
@@ -220,14 +221,14 @@ export function ScenarioPracticeView({
             score: sessionScore + aiResponse.scoreGain
           });
         } catch (updateError) {
-          console.error('Failed to update session:', updateError);
+          logError('Failed to update session:', updateError);
         }
       }
 
       setSessionScore(prev => prev + (aiResponse.scoreGain || 0));
 
     } catch (error) {
-      console.error('Failed to get AI response:', error);
+      logError('Failed to get AI response:', error);
       // Add fallback response
       const fallbackMessage: Message = {
         id: `ai_${Date.now()}`,
@@ -296,7 +297,7 @@ export function ScenarioPracticeView({
         isCompleted = true;
         evidence.push("Used はじめまして in message");
       }
-      
+
       if (goal.goalText.includes("ください") && userInput.includes("ください")) {
         isCompleted = true;
         evidence.push("Used ください correctly");
@@ -311,7 +312,7 @@ export function ScenarioPracticeView({
         try {
           progressManager.completeGoal(session.id, goal.goalText);
         } catch (error) {
-          console.error('Failed to complete goal:', error);
+          logError('Failed to complete goal:', error);
         }
       }
 
@@ -347,7 +348,7 @@ export function ScenarioPracticeView({
       try {
         progressManager.completeScenario(scenario.id);
       } catch (error) {
-        console.error('Failed to complete scenario:', error);
+        logError('Failed to complete scenario:', error);
       }
     }
 
@@ -356,7 +357,7 @@ export function ScenarioPracticeView({
 
   const handleFuriganaToggle = () => {
     const newState = !showFurigana;
-    console.log('Scenario Furigana toggle:', showFurigana, '->', newState);
+    logInfo('Scenario Furigana toggle:', showFurigana, '->', newState);
     setShowFurigana(newState);
     localStorage.setItem("furigana-visible", newState.toString());
   };
@@ -427,7 +428,7 @@ export function ScenarioPracticeView({
             <Lightbulb className="w-4 h-4" />
           </Button>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {goalCompletions.map((goal, index) => (
             <div key={index} className="flex items-center space-x-2 text-xs">
@@ -476,7 +477,7 @@ export function ScenarioPracticeView({
                   />
                 </MessageWithVocab>
               </div>
-              
+
               {message.vocabHighlights && message.vocabHighlights.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1">
                   {message.vocabHighlights.map((vocab, i) => (
@@ -486,7 +487,7 @@ export function ScenarioPracticeView({
                   ))}
                 </div>
               )}
-              
+
               {message.grammarNotes && message.grammarNotes.length > 0 && (
                 <div className="mt-2 text-xs text-green-600">
                   {message.grammarNotes[0]}
@@ -524,7 +525,7 @@ export function ScenarioPracticeView({
             <Send className="w-4 h-4" />
           </EnhancedButton>
         </div>
-        
+
         {/* Input Controls */}
         <div className="mt-2 flex items-center gap-4">
           <Toggle
@@ -543,12 +544,12 @@ export function ScenarioPracticeView({
             {showFurigana ? "Hide Furigana" : "Show Furigana"}
           </button>
         </div>
-        
+
         <div className="flex items-center justify-between mt-3">
           <Button variant="ghost" size="sm" onClick={onExit}>
             Exit Practice
           </Button>
-          
+
           {getCompletionPercentage() >= 50 && (
             <EnhancedButton
               onClick={handleCompleteSession}
