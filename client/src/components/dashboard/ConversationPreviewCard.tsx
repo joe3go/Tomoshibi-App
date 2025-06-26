@@ -20,8 +20,9 @@ export default function ConversationPreviewCard({
   onEndChat, 
   isEndingConversation 
 }: ConversationPreviewCardProps) {
-  const activeConversations = Array.isArray(conversations) ? 
-    conversations.filter((conv: any) => conv.status === 'active') : [];
+  // Safely handle conversations array - it's already filtered to active ones
+  const activeConversations = Array.isArray(conversations) ? conversations : [];
+  const safeTutorsData = Array.isArray(tutorsData) ? tutorsData : [];
 
   return (
     <div className="recent-conversations-section">
@@ -37,7 +38,7 @@ export default function ConversationPreviewCard({
             <div className="conversations-list">
               {activeConversations.slice(0, 3).map((conversation: any) => {
                 const isGroupConv = conversation.mode === 'group';
-                const persona = tutorsData.find((p: any) => p.id === conversation.persona_id);
+                const persona = safeTutorsData.find((p: any) => p.id === conversation.persona_id);
 
                 return (
                   <div key={conversation.id} className="conversation-card">

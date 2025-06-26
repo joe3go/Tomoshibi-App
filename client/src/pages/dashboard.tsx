@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { 
   TrendingUp, 
@@ -45,12 +45,21 @@ export default function Dashboard() {
   const { conversations, createConversationMutation, endConversationMutation } = useConversations();
   const { vocabStats } = useVocabularyStats();
 
+  // Memoized filtered data to avoid repeated calculations
+  const activeConversations = useMemo(() => {
+    return Array.isArray(conversations) ? conversations.filter((conv: any) => conv.status === 'active') : [];
+  }, [conversations]);
+
+  const displayTutors = useMemo(() => {
+    return (tutorsData || []).slice(0, 4);
+  }, [tutorsData]);
+
   // Analytics data
   const analytics = {
     streak: userProfile?.streak_days || 0,
     newWordsThisWeek: 12,
     totalWords: calculateTotalWords(vocabStats),
-    activeConversations: Array.isArray(conversations) ? conversations.filter((conv: any) => conv.status === 'active').length : 0,
+    activeConversations: activeConversations.length,
     practiceTime: 155,
     upcomingGoal: userProfile?.learning_goals || `Learn ${userProfile?.jlpt_goal_level || 'N5'} vocabulary`,
     xp: userProfile?.xp || 0,
@@ -238,8 +247,8 @@ export default function Dashboard() {
 
         {/* Recent Conversations Section */}
         <ConversationPreviewCard
-          conversations={conversations}
-          tutorsData={tutorsData}
+          conversations={activeConversations}
+          tutorsData={tutorsData || []}
           onResumeChat={handleResumeChat}
           onEndChat={handleEndChat}
           isEndingConversation={endConversationMutation.isPending}
@@ -304,8 +313,8 @@ export default function Dashboard() {
                     <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
                     <p className="text-muted-foreground">Loading tutors...</p>
                   </div>
-                ) : tutorsData.length > 0 ? (
-                  tutorsData.slice(0, 4).map((persona: any) => (
+                ) : displayTutors.length > 0 ? (
+                  displayTutors.map((persona: any) => (
                     <div key={persona.id} className="tutor-preview-card">
                       <div className="tutor-preview-content">
                         <Avatar className="tutor-preview-avatar">
