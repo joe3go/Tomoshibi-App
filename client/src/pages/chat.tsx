@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Toggle } from "@/components/ui/toggle";
 import { ArrowLeft, CheckCircle, Languages } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import JapaneseFuriganaText from "@/components/JapaneseFuriganaText";
+import FuriganaText from "@/components/enhanced-furigana";
 import { MessageWithVocab } from "@/components/MessageWithVocab";
 import { bind, unbind, toHiragana } from 'wanakana';
 import { supabase } from "@/lib/supabase/client";
@@ -727,12 +727,12 @@ export default function Chat() {
                 
                 <MessageWithVocab content={msg.content}>
                   <div className="text-sm leading-relaxed">
-                    <JapaneseFuriganaText
+                    <FuriganaText
                       text={msg.content}
                       showFurigana={showFurigana}
                       showToggleButton={false}
                       enableWordLookup={true}
-                      onSaveToVocab={(word, reading) => {
+                      onSaveToVocab={(word: string, reading?: string) => {
                         console.log('Saving word to vocab:', word, reading);
                       }}
                     />

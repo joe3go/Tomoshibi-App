@@ -1,28 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Eye, EyeOff } from 'lucide-react';
 import WordDefinitionPopup from './WordDefinitionPopup';
-
-// Kuroshiro integration for furigana parsing
-let kuroshiro: any = null;
-let isKuroshiroInitialized = false;
-
-async function initializeKuroshiro() {
-  if (isKuroshiroInitialized) return kuroshiro;
-  
-  try {
-    const Kuroshiro = (await import('kuroshiro')).default;
-    const KuromojiAnalyzer = (await import('kuroshiro-analyzer-kuromoji')).default;
-    
-    kuroshiro = new Kuroshiro();
-    await kuroshiro.init(new KuromojiAnalyzer());
-    isKuroshiroInitialized = true;
-    return kuroshiro;
-  } catch (error) {
-    console.warn('Kuroshiro initialization failed, using fallback parser:', error);
-    return null;
-  }
-}
 
 interface ParsedToken {
   type: 'text' | 'kanji';
@@ -41,7 +20,7 @@ interface FuriganaTextProps {
   onSaveToVocab?: (word: string, reading?: string) => void;
 }
 
-const JapaneseFuriganaText: React.FC<FuriganaTextProps> = ({
+const FuriganaText: React.FC<FuriganaTextProps> = ({
   text,
   className = '',
   showToggleButton = true,
@@ -52,14 +31,12 @@ const JapaneseFuriganaText: React.FC<FuriganaTextProps> = ({
 }) => {
   const [internalShowFurigana, setInternalShowFurigana] = useState(true);
   const [parsedTokens, setParsedTokens] = useState<ParsedToken[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedWord, setSelectedWord] = useState<{
     word: string;
     reading?: string;
     x: number;
     y: number;
   } | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   // Use external state if provided, otherwise use internal state
   const showFurigana = externalShowFurigana !== undefined ? externalShowFurigana : internalShowFurigana;
@@ -74,74 +51,22 @@ const JapaneseFuriganaText: React.FC<FuriganaTextProps> = ({
     }
   }, [externalShowFurigana]);
 
-  // Parse text with kuroshiro or fallback
+  // Parse text for furigana
   useEffect(() => {
-    const parseText = async () => {
+    const parseText = () => {
       if (!text || text.trim().length === 0) {
         setParsedTokens([]);
         return;
       }
 
-      setIsLoading(true);
-      try {
-        const k = await initializeKuroshiro();
-        
-        if (k) {
-          // Use kuroshiro for accurate parsing
-          const result = await k.convert(text, { mode: 'furigana', to: 'hiragana' });
-          const tokens = parseKuroshiroResult(result);
-          setParsedTokens(tokens);
-        } else {
-          // Fallback parser for simple furigana notation
-          const tokens = parseFallback(text);
-          setParsedTokens(tokens);
-        }
-      } catch (error) {
-        console.warn('Text parsing failed, using fallback:', error);
-        const tokens = parseFallback(text);
-        setParsedTokens(tokens);
-      } finally {
-        setIsLoading(false);
-      }
+      const tokens = parseFuriganaText(text);
+      setParsedTokens(tokens);
     };
 
     parseText();
   }, [text]);
 
-  const parseKuroshiroResult = (result: string): ParsedToken[] => {
-    const tokens: ParsedToken[] = [];
-    const rubyRegex = /<ruby>(.+?)<rt>(.+?)<\/rt><\/ruby>/g;
-    let lastIndex = 0;
-    let match;
-
-    while ((match = rubyRegex.exec(result)) !== null) {
-      // Add text before ruby
-      if (match.index > lastIndex) {
-        const beforeText = result.slice(lastIndex, match.index);
-        tokens.push(...parseNonRubyText(beforeText));
-      }
-
-      // Add ruby token
-      tokens.push({
-        type: 'kanji',
-        surface: match[1],
-        reading: match[2],
-        isClickable: true,
-      });
-
-      lastIndex = rubyRegex.lastIndex;
-    }
-
-    // Add remaining text
-    if (lastIndex < result.length) {
-      const remainingText = result.slice(lastIndex);
-      tokens.push(...parseNonRubyText(remainingText));
-    }
-
-    return tokens;
-  };
-
-  const parseFallback = (input: string): ParsedToken[] => {
+  const parseFuriganaText = (input: string): ParsedToken[] => {
     // Handle manual furigana notation: 漢字(かんじ) or 漢字（かんじ）
     const furiganaRegex = /([一-龯々\u3400-\u4DBF]+)[（\(]([ぁ-んァ-ヶー]+)[）\)]/g;
     const tokens: ParsedToken[] = [];
@@ -152,7 +77,7 @@ const JapaneseFuriganaText: React.FC<FuriganaTextProps> = ({
       // Add text before match
       if (match.index > lastIndex) {
         const beforeText = input.slice(lastIndex, match.index);
-        tokens.push(...parseNonRubyText(beforeText));
+        tokens.push(...parseNonFuriganaText(beforeText));
       }
 
       // Add furigana token
@@ -169,13 +94,13 @@ const JapaneseFuriganaText: React.FC<FuriganaTextProps> = ({
     // Add remaining text
     if (lastIndex < input.length) {
       const remainingText = input.slice(lastIndex);
-      tokens.push(...parseNonRubyText(remainingText));
+      tokens.push(...parseNonFuriganaText(remainingText));
     }
 
     return tokens;
   };
 
-  const parseNonRubyText = (text: string): ParsedToken[] => {
+  const parseNonFuriganaText = (text: string): ParsedToken[] => {
     if (!text) return [];
 
     const tokens: ParsedToken[] = [];
@@ -263,7 +188,7 @@ const JapaneseFuriganaText: React.FC<FuriganaTextProps> = ({
           onClick={(e) => handleWordClick(token, e)}
           title={enableWordLookup ? 'Click for definition' : undefined}
         >
-          <rb className="ruby-base">{token.surface}</rb>
+          {token.surface}
           <rt className="ruby-annotation text-xs leading-none font-normal opacity-80">
             {token.reading}
           </rt>
@@ -284,7 +209,7 @@ const JapaneseFuriganaText: React.FC<FuriganaTextProps> = ({
   };
 
   return (
-    <div className={`jp-wrap relative ${className}`} ref={containerRef}>
+    <div className={`jp-wrap relative ${className}`}>
       {showToggleButton && (
         <div className="mb-2">
           <Button
@@ -303,11 +228,7 @@ const JapaneseFuriganaText: React.FC<FuriganaTextProps> = ({
         className="jp-body leading-relaxed text-base"
         style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
       >
-        {isLoading ? (
-          <span className="text-gray-500">Parsing...</span>
-        ) : (
-          parsedTokens.map(renderToken)
-        )}
+        {parsedTokens.map(renderToken)}
       </div>
 
       {selectedWord && (
@@ -324,4 +245,4 @@ const JapaneseFuriganaText: React.FC<FuriganaTextProps> = ({
   );
 };
 
-export default JapaneseFuriganaText;
+export default FuriganaText;

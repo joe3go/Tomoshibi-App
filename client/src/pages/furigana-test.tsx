@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import JapaneseFuriganaText from '@/components/JapaneseFuriganaText';
+import FuriganaText from '@/components/enhanced-furigana';
 
 const FuriganaTest: React.FC = () => {
   const [testText, setTestText] = useState('私はアニメを見るのが好きです。特に「スパイファミリー」が面白いです。');
@@ -77,7 +77,7 @@ const FuriganaTest: React.FC = () => {
               <Label className="text-lg font-semibold">Current Test:</Label>
               <Card className="mt-2">
                 <CardContent className="pt-6">
-                  <JapaneseFuriganaText
+                  <FuriganaText
                     text={testText}
                     showToggleButton={true}
                     enableWordLookup={true}
