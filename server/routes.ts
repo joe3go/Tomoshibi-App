@@ -828,9 +828,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Get persona for system prompt
         const { data: personaData } = await supabase
-          .from('personas').select('*')
-          ```text
-.eq('id', selectedPersonaId)
+          .from('personas')
+          .select('*')
+          .eq('id', selectedPersonaId)
           .single();
 
         if (!personaData) {
