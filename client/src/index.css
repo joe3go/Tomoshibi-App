@@ -217,6 +217,269 @@ rt {
   @apply min-h-screen bg-gradient-to-b from-pink-50 to-white;
 }
 
+/* Header/Navbar styles */
+.navbar {
+  @apply bg-white/80 backdrop-blur-md border-b border-gray-200 py-4 sticky top-0 z-50;
+}
+
+/* Landing hero content wrapper */
+.landing-hero-content-wrapper {
+  @apply space-y-6;
+}
+
+.landing-hero-badge {
+  @apply inline-block bg-red-100 text-red-700 px-4 py-2 rounded-full text-sm font-medium;
+}
+
+.landing-hero-description {
+  @apply text-xl text-gray-600 leading-relaxed;
+}
+
+.landing-hero-actions {
+  @apply flex flex-col sm:flex-row gap-4 pt-4;
+}
+
+/* Feature highlights */
+.landing-feature-highlights {
+  @apply flex flex-wrap gap-6 pt-8;
+}
+
+.landing-feature-item {
+  @apply flex items-center gap-3;
+}
+
+.landing-feature-dot {
+  @apply w-3 h-3 rounded-full;
+}
+
+.landing-feature-dot-blue {
+  @apply bg-blue-500;
+}
+
+.landing-feature-dot-orange {
+  @apply bg-orange-500;
+}
+
+.landing-feature-dot-green {
+  @apply bg-green-500;
+}
+
+.landing-feature-text {
+  @apply text-gray-700 font-medium;
+}
+
+/* Preview container */
+.landing-preview-container {
+  @apply relative;
+}
+
+.landing-preview-wrapper {
+  @apply relative max-w-md mx-auto;
+}
+
+.landing-preview-card {
+  @apply bg-white rounded-2xl shadow-xl p-6 border border-gray-100;
+}
+
+.landing-preview-content {
+  @apply space-y-4;
+}
+
+.landing-preview-header {
+  @apply flex justify-between items-center;
+}
+
+.landing-preview-title {
+  @apply text-lg font-semibold text-gray-900;
+}
+
+.landing-preview-badge {
+  @apply bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium;
+}
+
+/* Conversation preview */
+.landing-conversation-preview {
+  @apply space-y-4;
+}
+
+.landing-message-ai {
+  @apply flex items-start gap-3;
+}
+
+.landing-message-user {
+  @apply flex items-start gap-3 flex-row-reverse;
+}
+
+.landing-avatar {
+  @apply w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm;
+}
+
+.landing-avatar-sensei {
+  @apply bg-emerald-500;
+}
+
+.landing-avatar-student {
+  @apply bg-blue-500;
+}
+
+.landing-avatar-text {
+  @apply text-white;
+}
+
+.landing-message-bubble {
+  @apply max-w-xs rounded-lg px-4 py-2;
+}
+
+.landing-message-bubble-ai {
+  @apply bg-gray-100 text-gray-900;
+}
+
+.landing-message-bubble-user {
+  @apply bg-blue-500 text-white;
+}
+
+.landing-message-japanese {
+  @apply block font-medium;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.landing-message-translation {
+  @apply text-xs text-gray-500 mt-1;
+}
+
+/* Progress section */
+.landing-progress-section {
+  @apply space-y-2;
+}
+
+.landing-progress-header {
+  @apply flex justify-between text-sm text-gray-600;
+}
+
+.landing-progress-bar {
+  @apply w-full bg-gray-200 rounded-full h-2;
+}
+
+.landing-progress-fill {
+  @apply bg-blue-500 h-2 rounded-full transition-all duration-300;
+}
+
+/* Floating stat cards */
+.landing-stat-card {
+  @apply absolute bg-white rounded-lg shadow-lg p-4 border border-gray-100;
+}
+
+.landing-stat-card-top {
+  @apply -top-4 -right-4;
+}
+
+.landing-stat-card-bottom {
+  @apply -bottom-4 -left-4;
+}
+
+.landing-stat-content {
+  @apply text-center;
+}
+
+.landing-stat-number {
+  @apply text-2xl font-bold text-blue-500;
+}
+
+.landing-stat-number-orange {
+  @apply text-orange-500;
+}
+
+.landing-stat-label {
+  @apply text-xs text-gray-600 mt-1;
+}
+
+/* Features section */
+.landing-features-section {
+  @apply py-20 px-4 bg-white;
+}
+
+.landing-features-container {
+  @apply max-w-6xl mx-auto;
+}
+
+.landing-features-header {
+  @apply text-center mb-16;
+}
+
+.landing-features-title {
+  @apply text-3xl font-bold text-gray-900 mb-4;
+}
+
+.landing-features-subtitle {
+  @apply text-xl text-gray-600;
+}
+
+.landing-features-grid {
+  @apply grid md:grid-cols-3 gap-8;
+}
+
+.landing-feature-card {
+  @apply bg-white rounded-xl p-8 shadow-md hover:shadow-lg transition-shadow border border-gray-100 text-center;
+}
+
+.landing-feature-image-container {
+  @apply mb-6;
+}
+
+.landing-feature-image {
+  @apply w-16 h-16 mx-auto rounded-lg object-cover;
+}
+
+.landing-feature-title {
+  @apply text-xl font-semibold text-gray-900 mb-4;
+}
+
+.landing-feature-description {
+  @apply text-gray-600 leading-relaxed;
+}
+
+/* Stats section */
+.landing-stats-section {
+  @apply py-16 px-4 bg-gray-50;
+}
+
+.landing-stats-container {
+  @apply max-w-4xl mx-auto text-center;
+}
+
+.landing-stats-grid {
+  @apply grid grid-cols-2 md:grid-cols-4 gap-8;
+}
+
+.landing-stat-value {
+  @apply text-3xl font-bold text-red-500 mb-2;
+}
+
+.landing-stat-description {
+  @apply text-gray-600 text-sm uppercase tracking-wide;
+}
+
+/* CTA section */
+.landing-cta-section {
+  @apply py-20 px-4 bg-red-50;
+}
+
+.landing-cta-container {
+  @apply max-w-4xl mx-auto text-center;
+}
+
+.landing-cta-title {
+  @apply text-3xl font-bold text-gray-900 mb-4;
+}
+
+.landing-cta-description {
+  @apply text-xl text-gray-600 mb-8;
+}
+
+.landing-cta-button {
+  @apply bg-red-500 hover:bg-red-600 text-white px-8 py-4 text-lg font-semibold;
+}
+
 .landing-hero-section {
   @apply py-20 px-4;
 }
