@@ -8,29 +8,7 @@ import { useAuth } from "@/context/SupabaseAuthContext";
 import { supabase } from "@/lib/supabase/client";
 import { bind, unbind, toHiragana } from "wanakana";
 import FuriganaText from "@/components/FuriganaText";
-
-interface GroupMessage {
-  id: string;
-  conversation_id: string;
-  sender_type: 'user' | 'ai';
-  content: string;
-  english_translation?: string;
-  sender_persona_id?: string;
-  created_at: string;
-}
-
-interface GroupPersona {
-  id: string;
-  name: string;
-  avatar_url: string;
-  personality: string;
-  speaking_style: string;
-}
-
-interface GroupChatState {
-  lastResponseTimestamp: number;
-  consecutiveResponses: number;
-}
+import type { GroupMessage, GroupPersona, GroupChatState } from "@/types";
 
 export default function GroupChat() {
   const [, params] = useRoute("/group-chat/:conversationId");
