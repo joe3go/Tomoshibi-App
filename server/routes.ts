@@ -447,7 +447,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Handle group conversations with templateId
       if (mode === 'group' && templateId) {
         console.log('🎭 Creating group conversation with template:', templateId);
-        
+
         // Get template data
         const { data: template, error: templateError } = await supabase
           .from('conversation_templates')
@@ -482,9 +482,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Add participants from template
         if (template.default_personas && Array.isArray(template.default_personas)) {
-          for (let i = 0; i < template.default_personas.length; i++) {
+          for (let i = 0; < template.default_personas.length; i++) {
             const personaId = template.default_personas[i];
-            
+
             const { error: participantError } = await supabase
               .from('conversation_participants')
               .insert({
@@ -500,7 +500,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
 
-        // Add initial group message
+                // Add initial group message
         if (template.default_personas && template.default_personas.length > 0) {
           const firstPersonaId = template.default_personas[0];
           
@@ -511,23 +511,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .eq('id', firstPersonaId)
             .single();
 
-          const greeting = `こんにちは！${template.title}へようこそ！今日は何について話しましょうか？`;
-          const englishGreeting = `Hello! Welcome to ${template.title}! What would you like to talk about today?`;
+            const greeting = `こんにちは！${template.title}へようこそ！今日は何について話しましょうか？`;
+            const englishGreeting = `Hello! Welcome to ${template.title}! What would you like to talk about today?`;
 
-          const { error: messageError } = await supabase
-            .from('messages')
-            .insert({
-              conversation_id: conversation.id,
-              sender_type: 'ai',
-              sender_persona_id: firstPersonaId,
-              content: greeting,
-              english: englishGreeting,
-              created_at: new Date().toISOString()
-            });
+            const { error: messageError } = await supabase
+              .from('messages')
+              .insert({
+                conversation_id: conversation.id,
+                sender_type: 'ai',
+                sender_persona_id: firstPersonaId,
+                content: greeting,
+                english_translation: englishGreeting,
+                created_at: new Date().toISOString()
+              });
 
-          if (messageError) {
-            console.error('❌ Error adding initial message:', messageError);
-          }
+            if (messageError) {
+              console.error('❌ Error adding initial message:', messageError);
+            }
         }
 
         return res.json({ 
@@ -639,7 +639,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             sender_type: 'ai',
             sender_persona_id: personaId,
             content: introduction,
-            english: englishTranslation,
+            english_translation: englishTranslation,
             created_at: new Date().toISOString()
           });
 

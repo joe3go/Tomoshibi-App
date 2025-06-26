@@ -47,7 +47,8 @@ const GroupChatPage: React.FC = () => {
         window.history.replaceState(null, '', `/group-chat?conversationId=${storedConversationId}`);
       } else {
         logDebug('No conversation ID found, redirecting to practice groups');
-        setLocation('/practice-groups');
+        // Add a small delay to ensure this runs after navigation
+        setTimeout(() => setLocation('/practice-groups'), 100);
         return;
       }
     }
