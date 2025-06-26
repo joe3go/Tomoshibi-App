@@ -3,8 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Eye, EyeOff } from 'lucide-react';
 import WordDefinitionPopup from './WordDefinitionPopup';
 
-// Using browser-compatible kuromoji wrapper
-import { getBrowserTokenizer, type KuromojiBrowserTokenizer } from '@/lib/kuromoji-browser';
+import { initializeBrowserKuromoji, tokenizeText, katakanaToHiragana } from '@/lib/kuromoji-browser';
 
 interface FuriganaToken {
   type: 'text' | 'kanji' | 'kana';
@@ -171,7 +170,7 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
   };
 
   // Parse Japanese text using browser-compatible kuromoji
-  const parseWithKuromoji = async (inputText: string): Promise<FuriganaToken[]> => {
+  const parseWithKuromoji = useCallback(async (inputText: string): Promise<FuriganaToken[]> => {
     try {
       const tokens: FuriganaToken[] = [];
       const morphemes = await tokenizeText(inputText);
@@ -211,7 +210,7 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
       console.error('Error parsing with kuromoji:', error);
       return [{ type: 'text', surface: inputText }];
     }
-  };
+  }, []);
 
   // Initialize browser-compatible kuromoji
   const initializeKuromoji = useCallback(async () => {
@@ -256,6 +255,35 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
     cache.set(inputText, tokens);
     return tokens;
   }, [cache, initializeKuromoji, isInitialized]);
+
+  // Make parseText async to handle kuromoji properly
+  const parseTextAsync = useCallback(async (inputText: string): Promise<FuriganaToken[]> => {
+    // Check cache first
+    if (cache.has(inputText)) {
+      return cache.get(inputText)!;
+    }
+
+    if (!isInitialized) {
+      await initializeKuromoji();
+    }
+
+    // Try kuromoji first if available
+    if (isInitialized) {
+      try {
+        const tokens = await parseWithKuromoji(inputText);
+        cache.set(inputText, tokens);  
+        return tokens;
+      } catch (error) {
+        console.error('Error with kuromoji conversion:', error);
+        // Fall back to manual parsing
+      }
+    }
+
+    // Use enhanced fallback parsing that handles furigana notation
+    const tokens = parseWithFallback(inputText);
+    cache.set(inputText, tokens);
+    return tokens;
+  }, [cache, initializeKuromoji, isInitialized, parseWithKuromoji, parseWithFallback]);
 
   // Parse text when it changes
   useEffect(() => {
