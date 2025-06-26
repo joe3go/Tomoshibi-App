@@ -166,6 +166,14 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
     return /^[。、！？「」『』（）(),.!?\s]$/.test(text);
   }, []);
 
+  // Simple text parser that doesn't require external libraries
+  const parseSimpleText = useCallback((inputText: string): FuriganaToken[] => {
+    if (!inputText.trim()) return [];
+    
+    // Use the fallback parser directly - no external dependencies
+    return parseWithFallback(inputText);
+  }, [parseWithFallback]);
+
   // Parse Japanese text using simple tokenizer
   const parseWithKuromoji = useCallback(async (inputText: string): Promise<FuriganaToken[]> => {
     try {
