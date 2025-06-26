@@ -45,7 +45,7 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
   const [cache] = useState(new Map<string, FuriganaToken[]>());
 
   // Enhanced fallback parser for Japanese text with furigana notation
-  const parseWithFallback = (inputText: string): FuriganaToken[] => {
+  const parseWithFallback = useCallback((inputText: string): FuriganaToken[] => {
     const tokens: FuriganaToken[] = [];
     
     // Support multiple furigana formats:
@@ -106,68 +106,65 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
     }
 
     return tokens.length > 0 ? tokens : [{ type: "text", surface: inputText }];
-  };
+  }, []); // Empty dependency array since this function doesn't depend on any state
 
-  const parseNonFuriganaText = (text: string): FuriganaToken[] => {
+  const parseNonFuriganaText = useCallback((text: string): FuriganaToken[] => {
     if (!text) return [];
     
     const tokens: FuriganaToken[] = [];
-    let currentToken = '';
     
-    for (const char of text) {
-      if (isPunctuation(char)) {
-        // Flush current token if exists
-        if (currentToken) {
-          if (containsKanji(currentToken)) {
-            tokens.push({
-              type: "kanji",
-              surface: currentToken,
-              reading: undefined // No reading available
-            });
-          } else {
-            tokens.push({
-              type: "text",
-              surface: currentToken
-            });
-          }
-          currentToken = '';
-        }
-        // Add punctuation as text
+    // Split text into individual characters for proper word boundary detection
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      
+      if (/^[。、！？「」『』（）(),.!?\s]$/.test(char)) {
+        // Add punctuation and spaces as text tokens
         tokens.push({
           type: "text",
           surface: char
         });
-      } else {
-        currentToken += char;
-      }
-    }
-    
-    // Flush remaining token
-    if (currentToken) {
-      if (containsKanji(currentToken)) {
+      } else if (/[\u4e00-\u9faf\u3400-\u4dbf]/.test(char)) {
+        // Each kanji character gets its own token for individual word lookup
         tokens.push({
           type: "kanji",
-          surface: currentToken,
+          surface: char,
           reading: undefined
         });
-      } else {
+      } else if (/[\u3040-\u309F\u30A0-\u30FF]/.test(char)) {
+        // Hiragana and katakana - group consecutive characters
+        let kanaGroup = char;
+        while (i + 1 < text.length && /[\u3040-\u309F\u30A0-\u30FF]/.test(text[i + 1]) && !/^[。、！？「」『』（）(),.!?\s]$/.test(text[i + 1])) {
+          i++;
+          kanaGroup += text[i];
+        }
         tokens.push({
           type: "text",
-          surface: currentToken
+          surface: kanaGroup
+        });
+      } else {
+        // Latin characters, numbers, etc.
+        let latinGroup = char;
+        while (i + 1 < text.length && /[a-zA-Z0-9]/.test(text[i + 1])) {
+          i++;
+          latinGroup += text[i];
+        }
+        tokens.push({
+          type: "text",
+          surface: latinGroup
         });
       }
     }
     
     return tokens;
-  };
+  }, []); // Empty dependency array since this function doesn't depend on any state
 
-  const containsKanji = (text: string): boolean => {
+  const containsKanji = useCallback((text: string): boolean => {
     return /[\u4e00-\u9faf\u3400-\u4dbf]/.test(text);
-  };
+  }, []);
 
-  const isPunctuation = (text: string): boolean => {
+  const isPunctuation = useCallback((text: string): boolean => {
     return /^[。、！？「」『』（）(),.!?\s]$/.test(text);
-  };
+  }, []);
 
   // Parse Japanese text using simple tokenizer
   const parseWithKuromoji = useCallback(async (inputText: string): Promise<FuriganaToken[]> => {
@@ -289,24 +286,20 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
 
   // Parse text when it changes
   useEffect(() => {
-    const processText = async () => {
-      if (!text) {
-        setTokens([]);
-        return;
-      }
+    if (!text) {
+      setTokens([]);
+      return;
+    }
 
-      setIsLoading(true);
-      try {
-        // Use the fallback parser directly to avoid initialization issues
-        const parsedTokens = parseWithFallback(text);
-        setTokens(parsedTokens);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    processText();
-  }, [text, parseWithFallback]);
+    setIsLoading(true);
+    try {
+      // Use the fallback parser directly to avoid initialization issues
+      const parsedTokens = parseWithFallback(text);
+      setTokens(parsedTokens);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [text]); // Remove parseWithFallback from dependencies to prevent re-render loop
 
   // Load furigana preference from localStorage (only if no external control)
   useEffect(() => {
