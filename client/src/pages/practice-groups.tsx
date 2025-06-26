@@ -23,7 +23,7 @@ export default function PracticeGroups() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('conversation_templates')
-        .select('id, title, description, default_personas, group_prompt_suffix, difficulty, topic, participant_count')
+        .select('id, title, description, default_personas, group_prompt_suffix, topic, participant_count')
         .eq('mode', 'group')
         .order('title');
 
@@ -36,7 +36,6 @@ export default function PracticeGroups() {
             title: 'Anime Club',
             description: 'Chat with others about your favorite anime, characters, and seasons',
             default_personas: ['8b0f056c-41fb-4c47-baac-6029c64e026a', '9612651e-d1df-428f-865c-2a1c005952ef', 'e73a0afc-3ee9-4886-b39a-c6f516ad7db7'],
-            difficulty: 'N5',
             group_prompt_suffix: 'You are discussing anime together - your favorite shows, characters, genres, and recommendations. Talk about specific anime series, what you like about them, and share recommendations naturally.',
             topic: 'anime_discussion',
             participant_count: 3
@@ -44,20 +43,18 @@ export default function PracticeGroups() {
           {
             id: '76d38157-b77f-48f0-a8c5-f1d6a48273f4', // Japanese Learning actual ID
             title: 'Japanese Focused Learning',
-            description: 'Practice Japanese in a guided group with JLPT N5–N4 level support',
+            description: 'Practice Japanese in a guided group with adaptive level support',
             default_personas: ['9612651e-d1df-428f-865c-2a1c005952ef', 'be32911d-08a9-4308-8a00-7ffa5144ccdc'],
-            difficulty: 'N5',
-            group_prompt_suffix: 'Keep the Japanese level around JLPT N5–N4. Help the user practice and make polite corrections. Avoid going too fast.',
+            group_prompt_suffix: 'Help the user practice Japanese at their current level. Make polite corrections and adjust complexity based on their responses.',
             topic: 'grammar_practice',
             participant_count: 2
           },
           {
             id: 'c86fb330-12ed-400b-9953-155dd9321072', // Casual Chat actual ID
             title: 'Casual Random Chat',
-            description: 'Light, everyday conversation with natural Japanese. Imagine texting friends about food, daily life, or the weather',
+            description: 'Light, everyday conversation with natural Japanese adapted to your level',
             default_personas: ['9612651e-d1df-428f-865c-2a1c005952ef', 'e4390fc8-40b4-4ad1-a153-08bc37482dad'],
-            difficulty: 'N5',
-            group_prompt_suffix: 'Keep it light and informal. Use friendly Japanese like texting friends. Talk about food, daily life, or anything random. Avoid textbook tone.',
+            group_prompt_suffix: 'Keep it light and informal. Use friendly Japanese appropriate for the user\'s level. Talk about food, daily life, or anything random.',
             topic: 'daily_life',
             participant_count: 2
           }
