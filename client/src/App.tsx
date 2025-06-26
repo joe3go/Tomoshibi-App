@@ -2,6 +2,7 @@ import { Router, Route, Switch } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SupabaseAuthProvider } from "@/context/SupabaseAuthContext";
 import { Toaster } from "@/components/ui/toaster";
+import "./index.css";
 
 // Pages
 import Landing from "@/pages/landing";

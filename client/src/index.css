@@ -211,3 +211,135 @@ rt {
     transform: translateY(0);
   }
 }
+
+/* Landing page layout styles */
+.landing-page-container {
+  @apply min-h-screen bg-gradient-to-b from-pink-50 to-white;
+}
+
+.landing-hero-section {
+  @apply py-20 px-4;
+}
+
+.landing-hero-content {
+  @apply max-w-7xl mx-auto;
+}
+
+.landing-hero-grid {
+  @apply grid lg:grid-cols-2 gap-12 items-center;
+}
+
+.landing-hero-text {
+  @apply text-center lg:text-left;
+}
+
+.landing-hero-title {
+  @apply text-4xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight;
+}
+
+.landing-hero-subtitle {
+  @apply text-xl text-gray-600 mb-8 leading-relaxed;
+}
+
+.landing-cta-buttons {
+  @apply flex flex-col sm:flex-row gap-4 justify-center lg:justify-start;
+}
+
+.landing-cta-primary {
+  @apply bg-red-500 hover:bg-red-600 text-white px-8 py-4 text-lg font-semibold rounded-lg transition-colors;
+}
+
+.landing-cta-secondary {
+  @apply border border-gray-300 hover:bg-gray-50 text-gray-700 px-8 py-4 text-lg font-semibold rounded-lg transition-colors;
+}
+
+.landing-hero-image {
+  @apply relative;
+}
+
+.landing-hero-image img {
+  @apply w-full h-auto rounded-lg shadow-lg;
+}
+
+/* Features section */
+.landing-features-section {
+  @apply py-20 px-4 bg-white;
+}
+
+.landing-features-container {
+  @apply max-w-6xl mx-auto;
+}
+
+.landing-features-title {
+  @apply text-3xl font-bold text-center text-gray-900 mb-4;
+}
+
+.landing-features-subtitle {
+  @apply text-xl text-gray-600 text-center mb-16;
+}
+
+.landing-features-grid {
+  @apply grid md:grid-cols-3 gap-8;
+}
+
+.landing-feature-card {
+  @apply bg-white rounded-xl p-8 shadow-md hover:shadow-lg transition-shadow border border-gray-100;
+}
+
+.landing-feature-icon {
+  @apply w-16 h-16 mx-auto mb-6 rounded-lg object-cover;
+}
+
+.landing-feature-title {
+  @apply text-xl font-semibold text-gray-900 mb-4 text-center;
+}
+
+.landing-feature-description {
+  @apply text-gray-600 text-center leading-relaxed;
+}
+
+/* Stats section */
+.landing-stats-section {
+  @apply py-16 px-4 bg-gray-50;
+}
+
+.landing-stats-container {
+  @apply max-w-4xl mx-auto text-center;
+}
+
+.landing-stats-grid {
+  @apply grid grid-cols-2 md:grid-cols-4 gap-8;
+}
+
+.landing-stat-item {
+  @apply text-center;
+}
+
+.landing-stat-number {
+  @apply text-3xl font-bold text-red-500 mb-2;
+}
+
+.landing-stat-label {
+  @apply text-gray-600 text-sm uppercase tracking-wide;
+}
+
+/* Japanese subtitle styles */
+.landing-japanese-subtitle {
+  @apply text-sm text-gray-500 mb-2 tracking-wide;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .landing-hero-title {
+    @apply text-3xl;
+  }
+  
+  .landing-hero-subtitle {
+    @apply text-lg;
+  }
+  
+  .landing-cta-buttons {
+    @apply flex-col;
+  }
+}
