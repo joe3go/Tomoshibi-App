@@ -19,7 +19,6 @@ import Settings from "@/pages/settings";
 import PracticeGroups from "@/pages/practice-groups";
 import NotFound from "@/pages/not-found";
 import TestFuriganaPage from "@/pages/test-furigana-page";
-import TestFurigana from "@/pages/test-furigana";
 
 // Create a single QueryClient instance
 const queryClient = new QueryClient({
@@ -52,7 +51,6 @@ export default function App() {
             <Route path="/history" component={History} />
             <Route path="/settings" component={Settings} />
             <Route path="/practice-groups" component={PracticeGroups} />
-            <Route path="/test-furigana" component={TestFurigana} />
             <Route component={NotFound} />
           </Switch>
         </Router>

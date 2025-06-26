@@ -5,13 +5,12 @@ import FuriganaText from '@/components/FuriganaText';
 const TestFuriganaPage = () => {
   const [showFurigana, setShowFurigana] = useState(true);
   
-  // Test messages with multiple furigana notation formats
+  // Test messages with furigana notation like the AI would send
   const testMessages = [
     "こんにちは！私(わたし)はAoiです。",
     "今日(きょう)は良い(よい)天気(てんき)ですね。",
-    "学校|がっこう で日本語|にほんご を勉強|べんきょう しています。",
-    "アニメが好き(すき)です。特(とく)にスポーツアニメが好(す)きなんだ。",
-    "Mixed format: 漢字|かんじ and 読み方（よみかた）test"
+    "私(わたし)は学生(がくせい)です。日本語(にほんご)を勉強(べんきょう)しています。",
+    "アニメが好き(すき)です。特(とく)にスポーツアニメが好(す)きなんだ。君(きみ)はどう？"
   ];
 
   return (
@@ -44,7 +43,7 @@ const TestFuriganaPage = () => {
                 showToggleButton={false}
                 enableWordLookup={true}
                 onSaveToVocab={(word, reading) => {
-                  console.log('Test vocab save:', word, reading);
+                  console.log('Saving to vocab:', word, reading);
                 }}
               />
             </div>
