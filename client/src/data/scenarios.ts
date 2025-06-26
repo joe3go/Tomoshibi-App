@@ -281,17 +281,17 @@ export function getNextRecommendedScenario(
   vocabUsed: number = 0
 ): Scenario | undefined {
   const available = getAvailableScenarios(completedScenarios, totalXp, vocabUsed);
-  
+
   // Sort by difficulty and XP reward to recommend the most appropriate next scenario
   return available.sort((a, b) => {
     const difficultyOrder = { 'beginner': 1, 'elementary': 2, 'intermediate': 3, 'upper-intermediate': 4, 'advanced': 5 };
     const aDifficulty = difficultyOrder[a.difficulty];
     const bDifficulty = difficultyOrder[b.difficulty];
-    
+
     if (aDifficulty !== bDifficulty) {
       return aDifficulty - bDifficulty;
     }
-    
+
     return a.rewards.xp - b.rewards.xp;
   })[0];
 }

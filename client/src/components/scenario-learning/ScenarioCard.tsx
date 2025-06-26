@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { EnhancedCard } from "../EnhancedCard";
 import { EnhancedButton } from "../EnhancedButton";
 import { Clock, Star, Lock, CheckCircle, PlayCircle, Target } from "lucide-react";
-import { Scenario } from "../../../../shared/scenario-types";
+import type { Scenario } from "@/types";
 
 interface ScenarioCardProps {
   scenario: Scenario;
