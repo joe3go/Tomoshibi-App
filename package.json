@@ -66,8 +66,6 @@
     "input-otp": "^1.4.2",
     "jsonwebtoken": "^9.0.2",
     "kuromoji": "^0.1.2",
-    "kuroshiro": "^1.2.0",
-    "kuroshiro-analyzer-kuromoji": "^1.1.0",
     "lucide-react": "^0.453.0",
     "memoizee": "^0.4.17",
     "memorystore": "^1.6.7",

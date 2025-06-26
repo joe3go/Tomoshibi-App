@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Eye, EyeOff } from 'lucide-react';
 import WordDefinitionPopup from './WordDefinitionPopup';
 
-// Kuroshiro instance will be initialized lazily
-let kuroshiroInstance: any = null;
+// Kuromoji tokenizer instance will be initialized lazily
+let kuromojiTokenizer: any = null;
 
 interface FuriganaToken {
   type: 'text' | 'kanji' | 'kana';
@@ -16,6 +16,7 @@ interface FuriganaToken {
 interface FuriganaTextProps {
   text: string;
   className?: string;
+  showFurigana?: boolean;
   showToggleButton?: boolean;
   enableWordLookup?: boolean;
   onSaveToVocab?: (word: string, reading?: string) => void;
@@ -24,11 +25,13 @@ interface FuriganaTextProps {
 const FuriganaText: React.FC<FuriganaTextProps> = ({
   text,
   className = '',
+  showFurigana: externalShowFurigana,
   showToggleButton = true,
   enableWordLookup = true,
   onSaveToVocab
 }) => {
-  const [showFurigana, setShowFurigana] = useState(true);
+  const [internalShowFurigana, setInternalShowFurigana] = useState(true);
+  const showFurigana = externalShowFurigana !== undefined ? externalShowFurigana : internalShowFurigana;
   const [tokens, setTokens] = useState<FuriganaToken[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -167,81 +170,88 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
     return /^[。、！？「」『』（）(),.!?\s]$/.test(text);
   };
 
-  // Parse kuroshiro HTML result with ruby tags
-  const parseKuroshiroResult = (htmlResult: string): FuriganaToken[] => {
-    const tokens: FuriganaToken[] = [];
-    
-    try {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(`<div>${htmlResult}</div>`, 'text/html');
-      
-      const processNode = (node: Node) => {
-        if (node.nodeType === Node.TEXT_NODE) {
-          const text = node.textContent || '';
-          if (text.trim()) {
-            const hasKanji = /[\u4e00-\u9faf\u3400-\u4dbf]/.test(text);
-            tokens.push({ 
-              type: hasKanji ? 'kanji' : 'text', 
-              surface: text 
-            });
-          }
-        } else if (node.nodeName === 'RUBY') {
-          const rubyElement = node as Element;
-          const surface = Array.from(rubyElement.childNodes)
-            .filter(child => child.nodeName !== 'RT')
-            .map(child => child.textContent)
-            .join('');
-          const rtElement = rubyElement.querySelector('rt');
-          const reading = rtElement?.textContent || '';
-          
-          if (surface) {
-            tokens.push({
-              type: 'kanji',
-              surface: surface,
-              reading: reading || undefined
-            });
-          }
-        } else {
-          // Process child nodes recursively
-          node.childNodes.forEach(processNode);
-        }
-      };
+  // Parse Japanese text using kuromoji tokenizer
+  const parseWithKuromoji = (inputText: string): FuriganaToken[] => {
+    if (!kuromojiTokenizer) {
+      return [{ type: 'text', surface: inputText }];
+    }
 
-      const container = doc.querySelector('div');
-      if (container) {
-        container.childNodes.forEach(processNode);
+    try {
+      const tokens: FuriganaToken[] = [];
+      const morphemes = kuromojiTokenizer.tokenize(inputText);
+
+      for (const morpheme of morphemes) {
+        const surface = morpheme.surface_form;
+        const reading = morpheme.reading;
+        const pos = morpheme.pos;
+
+        // Check if this morpheme contains kanji
+        const hasKanji = /[\u4e00-\u9faf\u3400-\u4dbf]/.test(surface);
+
+        if (hasKanji && reading && reading !== surface) {
+          // Convert katakana reading to hiragana for furigana
+          const hiraganaReading = katakanaToHiragana(reading);
+          tokens.push({
+            type: 'kanji',
+            surface: surface,
+            reading: hiraganaReading,
+            pos: pos
+          });
+        } else {
+          tokens.push({
+            type: hasKanji ? 'kanji' : 'text',
+            surface: surface,
+            pos: pos
+          });
+        }
       }
 
-      return tokens.length > 0 ? tokens : [{ type: 'text', surface: htmlResult }];
+      return tokens.length > 0 ? tokens : [{ type: 'text', surface: inputText }];
     } catch (error) {
-      console.error('Error parsing kuroshiro result:', error);
-      return [{ type: 'text', surface: htmlResult }];
+      console.error('Error parsing with kuromoji:', error);
+      return [{ type: 'text', surface: inputText }];
     }
   };
 
-  // Initialize kuroshiro according to official documentation
-  const initializeKuroshiro = useCallback(async () => {
-    if (isInitialized || kuroshiroInstance) return;
+  // Convert katakana to hiragana for furigana display
+  const katakanaToHiragana = (katakana: string): string => {
+    return katakana.replace(/[\u30A1-\u30F6]/g, (match) => {
+      const code = match.charCodeAt(0) - 0x60;
+      return String.fromCharCode(code);
+    });
+  };
+
+  // Initialize kuromoji according to official documentation
+  const initializeKuromoji = useCallback(async () => {
+    if (isInitialized || kuromojiTokenizer) return;
 
     try {
-      console.log('Initializing kuroshiro with kuromoji analyzer...');
+      console.log('Initializing kuromoji tokenizer...');
       
-      // Dynamic imports according to documentation
-      const [{ default: Kuroshiro }, { default: KuromojiAnalyzer }] = await Promise.all([
-        import('kuroshiro'),
-        import('kuroshiro-analyzer-kuromoji')
-      ]);
+      // Dynamic import according to documentation
+      const kuromoji = await import('kuromoji');
+      
+      // Build tokenizer with dictionary path
+      const builder = kuromoji.builder({
+        dicPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/'
+      });
 
-      // Instantiate kuroshiro
-      kuroshiroInstance = new Kuroshiro();
-      
-      // Initialize with kuromoji analyzer
-      await kuroshiroInstance.init(new KuromojiAnalyzer());
-      
-      setIsInitialized(true);
-      console.log('Kuroshiro initialized successfully');
+      return new Promise<void>((resolve, reject) => {
+        builder.build((err: any, tokenizer: any) => {
+          if (err) {
+            console.error('Failed to build kuromoji tokenizer:', err);
+            reject(err);
+            return;
+          }
+          
+          kuromojiTokenizer = tokenizer;
+          setIsInitialized(true);
+          console.log('Kuromoji tokenizer initialized successfully');
+          resolve();
+        });
+      });
     } catch (error) {
-      console.error('Failed to initialize kuroshiro:', error);
+      console.error('Failed to initialize kuromoji:', error);
       // Set initialized to true so we use fallback parsing
       setIsInitialized(true);
     }
@@ -257,23 +267,17 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
     }
 
     if (!isInitialized) {
-      await initializeKuroshiro();
+      await initializeKuromoji();
     }
 
-    // Try kuroshiro first if available
-    if (kuroshiroInstance) {
+    // Try kuromoji first if available
+    if (kuromojiTokenizer) {
       try {
-        const result = await kuroshiroInstance.convert(inputText, {
-          mode: 'furigana',
-          to: 'hiragana'
-        });
-
-        // Parse the HTML result with ruby tags
-        const tokens = parseKuroshiroResult(result);
+        const tokens = parseWithKuromoji(inputText);
         cache.set(inputText, tokens);  
         return tokens;
       } catch (error) {
-        console.error('Error with kuroshiro conversion:', error);
+        console.error('Error with kuromoji conversion:', error);
         // Fall back to manual parsing
       }
     }
@@ -282,7 +286,7 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
     const tokens = parseWithFallback(inputText);
     cache.set(inputText, tokens);
     return tokens;
-  }, [cache, initializeKuroshiro, isInitialized]);
+  }, [cache, initializeKuromoji, isInitialized]);
 
   // Parse text when it changes
   useEffect(() => {

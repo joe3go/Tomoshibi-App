@@ -1,29 +1,34 @@
-// Type definitions for kuroshiro
-declare module 'kuroshiro' {
-  interface ConvertOptions {
-    mode?: 'normal' | 'spaced' | 'okurigana' | 'furigana';
-    to?: 'hiragana' | 'katakana' | 'romaji';
-    delimiter_start?: string;
-    delimiter_end?: string;
+// Type definitions for kuromoji
+declare module 'kuromoji' {
+  interface TokenizerBuilderOptions {
+    dicPath?: string;
   }
 
-  class Kuroshiro {
-    constructor();
-    init(analyzer: any): Promise<void>;
-    convert(text: string, options?: ConvertOptions): Promise<string>;
+  interface Morpheme {
+    word_id: number;
+    word_type: string;
+    word_position: number;
+    surface_form: string;
+    pos: string;
+    pos_detail_1: string;
+    pos_detail_2: string;
+    pos_detail_3: string;
+    conjugated_type: string;
+    conjugated_form: string;
+    basic_form: string;
+    reading: string;
+    pronunciation: string;
   }
 
-  export default Kuroshiro;
-}
-
-declare module 'kuroshiro-analyzer-kuromoji' {
-  interface KuromojiAnalyzerOptions {
-    dictPath?: string;
+  interface Tokenizer {
+    tokenize(text: string): Morpheme[];
   }
 
-  class KuromojiAnalyzer {
-    constructor(options?: KuromojiAnalyzerOptions);
+  interface TokenizerBuilder {
+    build(callback: (err: Error | null, tokenizer: Tokenizer | null) => void): void;
   }
 
-  export default KuromojiAnalyzer;
+  function builder(options?: TokenizerBuilderOptions): TokenizerBuilder;
+
+  export { builder, Tokenizer, Morpheme, TokenizerBuilderOptions };
 }
