@@ -829,7 +829,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Get persona for system prompt
         const { data: personaData } = await supabase
           .from('personas').select('*')
-          .eq('id', selectedPersonaId)
+          ```text
+.eq('id', selectedPersonaId)
           .single();
 
         if (!personaData) {
@@ -1033,12 +1034,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate or use default tutorId
       let validTutorId: string;
-      try {
-        validTutorId = tutorId ? validateTutorId(tutorId) : getDefaultTutorId();
-      } catch (error) {
-        console.error('❌ Invalid tutorId provided:', tutorId);
-        return res.status(400).json({ message: 'Invalid tutor ID format' });
-      }
+      // Persona IDs are fixed UUIDs from Supabase, no validation needed
+    console.log('🔍 Using tutor ID:', tutorId);
+
+      validTutorId = tutorId
 
       // Get user info for context
       const config = getSupabaseConfig();

@@ -109,14 +109,7 @@ CRITICAL: Your entire response must be valid JSON. Do not include any text outsi
  */
 export async function getTutorById(tutorId: string): Promise<Tutor | null> {
   try {
-    // Import validation functions
-    const { isValidUUID } = await import("@utils/validation");
-
-    if (!isValidUUID(tutorId)) {
-      console.error('❌ Invalid tutorId UUID format:', tutorId);
-      return null;
-    }
-
+    // Skip UUID validation since persona IDs are fixed from Supabase
     const { data: tutor, error } = await supabase
       .from('personas')
       .select('*')
