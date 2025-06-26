@@ -42,7 +42,7 @@ const TestFuriganaPage = () => {
                 showFurigana={showFurigana}
                 showToggleButton={false}
                 enableWordLookup={true}
-                onSaveToVocab={(word, reading) => {
+                onSaveToVocab={(word: string, reading?: string) => {
                   console.log('Saving to vocab:', word, reading);
                 }}
               />

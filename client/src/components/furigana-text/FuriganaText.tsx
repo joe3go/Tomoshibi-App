@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Eye, EyeOff } from 'lucide-react';
 import WordDefinitionPopup from './WordDefinitionPopup';
 
-// Import kuroshiro lazily to avoid SSR issues
-let kuroshiro: any = null;
+// Kuroshiro instance will be initialized lazily
+let kuroshiroInstance: any = null;
 
 interface FuriganaToken {
   type: 'text' | 'kanji' | 'kana';
@@ -167,17 +167,82 @@ const FuriganaText: React.FC<FuriganaTextProps> = ({
     return /^[。、！？「」『』（）(),.!?\s]$/.test(text);
   };
 
-  // Initialize kuroshiro
+  // Parse kuroshiro HTML result with ruby tags
+  const parseKuroshiroResult = (htmlResult: string): FuriganaToken[] => {
+    const tokens: FuriganaToken[] = [];
+    
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(`<div>${htmlResult}</div>`, 'text/html');
+      
+      const processNode = (node: Node) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const text = node.textContent || '';
+          if (text.trim()) {
+            const hasKanji = /[\u4e00-\u9faf\u3400-\u4dbf]/.test(text);
+            tokens.push({ 
+              type: hasKanji ? 'kanji' : 'text', 
+              surface: text 
+            });
+          }
+        } else if (node.nodeName === 'RUBY') {
+          const rubyElement = node as Element;
+          const surface = Array.from(rubyElement.childNodes)
+            .filter(child => child.nodeName !== 'RT')
+            .map(child => child.textContent)
+            .join('');
+          const rtElement = rubyElement.querySelector('rt');
+          const reading = rtElement?.textContent || '';
+          
+          if (surface) {
+            tokens.push({
+              type: 'kanji',
+              surface: surface,
+              reading: reading || undefined
+            });
+          }
+        } else {
+          // Process child nodes recursively
+          node.childNodes.forEach(processNode);
+        }
+      };
+
+      const container = doc.querySelector('div');
+      if (container) {
+        container.childNodes.forEach(processNode);
+      }
+
+      return tokens.length > 0 ? tokens : [{ type: 'text', surface: htmlResult }];
+    } catch (error) {
+      console.error('Error parsing kuroshiro result:', error);
+      return [{ type: 'text', surface: htmlResult }];
+    }
+  };
+
+  // Initialize kuroshiro according to official documentation
   const initializeKuroshiro = useCallback(async () => {
-    if (isInitialized) return;
+    if (isInitialized || kuroshiroInstance) return;
 
     try {
-      // For browser environment, kuroshiro has compatibility issues
-      // We'll implement a fallback parser instead
-      console.log('Initializing Japanese text parser...');
+      console.log('Initializing kuroshiro with kuromoji analyzer...');
+      
+      // Dynamic imports according to documentation
+      const [{ default: Kuroshiro }, { default: KuromojiAnalyzer }] = await Promise.all([
+        import('kuroshiro'),
+        import('kuroshiro-analyzer-kuromoji')
+      ]);
+
+      // Instantiate kuroshiro
+      kuroshiroInstance = new Kuroshiro();
+      
+      // Initialize with kuromoji analyzer
+      await kuroshiroInstance.init(new KuromojiAnalyzer());
+      
       setIsInitialized(true);
+      console.log('Kuroshiro initialized successfully');
     } catch (error) {
       console.error('Failed to initialize kuroshiro:', error);
+      // Set initialized to true so we use fallback parsing
       setIsInitialized(true);
     }
   }, [isInitialized]);
