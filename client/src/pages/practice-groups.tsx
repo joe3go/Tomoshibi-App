@@ -29,35 +29,35 @@ export default function PracticeGroups() {
 
       if (error) {
         console.error('Failed to fetch conversation templates:', error);
-        // Return fallback templates if database query fails
+        // Return fallback templates matching your actual database structure
         return [
           {
-            id: 'anime-club-fallback',
+            id: 'b987f235-5199-4deb-86ec-af042c2bbeeb', // Anime Club actual ID
             title: 'Anime Club',
-            description: 'Chat with Keiko and Aoi about your favorite anime series',
-            default_personas: ['8b0f056c-41fb-4c47-baac-6029c64e026a', '3c9f4d8a-5678-9012-3456-789012345678'],
-            difficulty: 'beginner',
-            group_prompt_suffix: 'This is a group conversation about anime.',
+            description: 'Chat with others about your favorite anime, characters, and seasons',
+            default_personas: ['8b0f056c-41fb-4c47-baac-6029c64e026a', '9612651e-d1df-428f-865c-2a1c005952ef', 'e73a0afc-3ee9-4886-b39a-c6f516ad7db7'],
+            difficulty: 'N5',
+            group_prompt_suffix: 'You are discussing anime together - your favorite shows, characters, genres, and recommendations. Talk about specific anime series, what you like about them, and share recommendations naturally.',
             topic: 'anime_discussion',
-            participant_count: 2
+            participant_count: 3
           },
           {
-            id: 'study-group-fallback',
-            title: 'Japanese Study Group',
-            description: 'Practice with Aoi and Satoshi in a study session',
-            default_personas: ['3c9f4d8a-5678-9012-3456-789012345678', '2b8e7f3d-4567-8901-2345-678901234567'],
-            difficulty: 'intermediate',
-            group_prompt_suffix: 'This is a study group session.',
+            id: '76d38157-b77f-48f0-a8c5-f1d6a48273f4', // Japanese Learning actual ID
+            title: 'Japanese Focused Learning',
+            description: 'Practice Japanese in a guided group with JLPT N5–N4 level support',
+            default_personas: ['9612651e-d1df-428f-865c-2a1c005952ef', 'be32911d-08a9-4308-8a00-7ffa5144ccdc'],
+            difficulty: 'N5',
+            group_prompt_suffix: 'Keep the Japanese level around JLPT N5–N4. Help the user practice and make polite corrections. Avoid going too fast.',
             topic: 'grammar_practice',
             participant_count: 2
           },
           {
-            id: 'cafe-hangout-fallback',
-            title: 'Cafe Hangout',
-            description: 'Casual conversation with Keiko and Haruki at a Tokyo cafe',
-            default_personas: ['8b0f056c-41fb-4c47-baac-6029c64e026a', 'f7e8d9c2-1234-5678-9abc-def012345678'],
-            difficulty: 'beginner',
-            group_prompt_suffix: 'This is a casual cafe conversation.',
+            id: 'c86fb330-12ed-400b-9953-155dd9321072', // Casual Chat actual ID
+            title: 'Casual Random Chat',
+            description: 'Light, everyday conversation with natural Japanese. Imagine texting friends about food, daily life, or the weather',
+            default_personas: ['9612651e-d1df-428f-865c-2a1c005952ef', 'e4390fc8-40b4-4ad1-a153-08bc37482dad'],
+            difficulty: 'N5',
+            group_prompt_suffix: 'Keep it light and informal. Use friendly Japanese like texting friends. Talk about food, daily life, or anything random. Avoid textbook tone.',
             topic: 'daily_life',
             participant_count: 2
           }
