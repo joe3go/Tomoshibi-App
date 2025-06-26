@@ -9,8 +9,8 @@ import { supabase } from "@/lib/supabase/client";
 import { bind, unbind, toHiragana } from "wanakana";
 import FuriganaText from "@/components/FuriganaText";
 import type { GroupMessage, GroupPersona, GroupChatState } from "@/types/chat";
-import { logDebug, logError, logInfo } from "../../../utils/logger";
-import { isEnglishMessage, sanitizeInput } from "../../../utils/validation";
+import { logDebug, logError, logInfo } from "@utils/logger";
+import { isEnglishMessage, sanitizeInput } from "@utils/validation";
 
 export default function GroupChat() {
   const [, params] = useRoute("/group-chat/:conversationId");

@@ -24,7 +24,8 @@
       "@/types/*": ["./types/*"],
       "@types/*": ["./types/*"],
       "@shared/*": ["./shared/*"],
-      "@utils/*": ["./utils/*"]
+      "@utils/*": ["./utils/*"],
+      "@utils": ["./utils"]
     }
   }
 }
