@@ -1,0 +1,61 @@
+🔧 **Prompt: Extract Shared Chat Logic and Components Safely**
+
+You are assisting with a codebase refactor for a bilingual chat platform that includes:
+
+- Solo chat (`Chat.tsx`)
+- Group chat (`GroupChat.tsx`)
+- Dynamic AI personas
+- Vocabulary tracking
+- JLPT-level support
+
+The goal is to **safely consolidate** common logic, hooks, and components between the two without altering **any functionality or UI behavior**.
+
+### ✅ What You MUST Do
+1. **Create shared utility hooks/components** where appropriate:
+   - Extract common logic such as:
+     - `loadMessages()`
+     - scrolling behavior
+     - furigana and romaji toggles
+     - message rendering (where shared)
+     - fallback avatar/image logic
+     - toast error handling
+   - Name shared files clearly (e.g., `useChatBase.ts`, `ChatHeaderBase.tsx`, `loadCommonMessages.ts`).
+
+2. **Preserve uniqueness of each mode:**
+   - `Chat.tsx` = solo mode with single persona
+   - `GroupChat.tsx` = multiple personas, typing indicators, dynamic speaker resolution
+   - Ensure that group-specific features like:
+     - multiple avatar render
+     - dynamic persona response based on message content
+     - typing indicators
+     - `GroupChatHeader` and `ChatMessage` components
+     remain untouched and **are not replaced by generic versions** unless shared code is 100% universal.
+
+3. **Dynamic Persona Logic**
+   - Do NOT fall back to round-robin (`order_in_convo`)
+   - Retain logic that responds based on user prompt (e.g., "Keiko, what do you think?")
+   - This behavior is implemented in the `/api/chat/secure` layer and must be preserved
+
+4. **Strict Safety Check**
+   - Do NOT change any UI appearance, layout, or functionality.
+   - If unsure whether logic is shared or unique, **leave it untouched**.
+   - Output a detailed **plan/checklist** of extracted modules, their purpose, and where they were used.
+
+### ⚙️ Current Code Context
+You are working with:
+
+- `Chat.tsx` — solo chats with optional fallback persona parsing
+- `GroupChat.tsx` — multiple personas loaded from `conversation_participants`, with dynamic response behavior
+- `@/components/chat/` — already contains split components like `ChatMessage`, `ChatInput`, `GroupChatHeader`
+- `@/hooks/useGroupChat.ts` — handles group chat orchestration
+- `FuriganaText`, `MessageWithVocab`, and `wanakana` for real-time input and word parsing
+
+### ✅ Deliverables
+- Extracted hooks or components stored in `/hooks/` or `/components/chat/shared/`
+- Refactored `Chat.tsx` and `GroupChat.tsx` that import shared logic
+- A printed checklist of:
+  - What was extracted
+  - What remained separate and why
+- All changes must be **non-breaking**, with **no UI or behavior changes**
+
+Do not invent new fallback behavior. Focus only on refactoring, not altering logic. Always assume production safety is the highest priority.
