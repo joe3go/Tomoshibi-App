@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRoute, useLocation } from "wouter";
 import { Toggle } from "@/components/ui/toggle";
 import { Languages } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
@@ -9,10 +10,14 @@ import { TypingIndicator } from "@/components/chat/TypingIndicator";
 import { useChatConversation } from "@/hooks/useChatConversation";
 import { useMessageSending } from "@/hooks/useMessageSending";
 import { useConversationMode } from "@/hooks/useConversationMode";
+import { useAuth } from "@/context/SupabaseAuthContext";
+import { useToast } from "@/hooks/use-toast";
 import { loadGroupPersonas, loadSoloPersona, loadAllPersonas, populateConversationParticipants } from "@/lib/supabase/loaders";
 import { safeFindPersona, safeMapPersonas } from "@/lib/chat-utilities";
 import { logDebug, logError } from "@utils/logger";
 import { supabase } from "@/lib/supabase/client";
+import { extractPersonaFromTitle } from "@/lib/chat-utilities";
+import { bind, unbind } from "wanakana";
 // Import vocabulary tracking function from API
 const trackVocabularyUsage = async (text: string, source: 'user' | 'ai', session: any, tutorId?: string, conversationId?: string) => {
   try {
@@ -119,7 +124,11 @@ interface Persona {
 export default function Chat() {
   const [, params] = useRoute("/chat/:conversationId");
   const [, setLocation] = useLocation();
+  const { user, session } = useAuth();
+  const { toast } = useToast();
   const conversationId = params?.conversationId || null;
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Chat conversation hook
   const { conversation, messages, loading, error, addMessage, completeConversation } = useChatConversation(conversationId);
@@ -137,13 +146,16 @@ export default function Chat() {
     const saved = localStorage.getItem("furigana-visible");
     return saved !== null ? saved === "true" : true;
   });
+  const [conversation, setConversation] = useState<Conversation | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Use conversation mode hook
   const { isGroup, isSolo } = useConversationMode(conversation);
 
   // Load initial data
   useEffect(() => {
-    if (!session || !user || !conversationId) {
+    if (!user || !conversationId) {
       setLocation("/login");
       return;
     }
@@ -399,7 +411,7 @@ export default function Chat() {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      handleSendMessage();
     }
   };
 
