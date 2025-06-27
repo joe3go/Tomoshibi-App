@@ -17,6 +17,7 @@ const GroupChatPage: React.FC = () => {
 
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [inputMessage, setInputMessage] = useState<string>('');
 
   const {
     messages,
@@ -84,11 +85,12 @@ const GroupChatPage: React.FC = () => {
   }, [messages]);
 
   // Handle message sending
-  const handleSendMessage = async (content: string) => {
-    if (!content.trim()) return;
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim()) return;
 
     try {
-      await sendMessage(content);
+      await sendMessage(inputMessage);
+      setInputMessage(''); // Clear input after sending
     } catch (error) {
       logError('Failed to send message:', error);
     }
@@ -113,8 +115,14 @@ const GroupChatPage: React.FC = () => {
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
       <GroupChatHeader 
-        groupPersonas={groupPersonas}
-        onLeaveChat={handleLeaveChat}
+        onBack={handleLeaveChat}
+        title={conversation?.title || "Group Chat"}
+        subtitle={`${groupPersonas.length} participants`}
+        personas={groupPersonas}
+        showFurigana={false}
+        onToggleFurigana={() => {}}
+        romajiMode={false}
+        onToggleRomaji={() => {}}
       />
 
       {/* Messages Container */}
@@ -153,10 +161,11 @@ const GroupChatPage: React.FC = () => {
       {/* Input Area */}
       <div className="border-t border-border p-4">
         <ChatInput
-          message=""
-          setMessage={() => {}}
-          onSendMessage={sendMessage}
+          message={inputMessage}
+          setMessage={setInputMessage}
+          onSendMessage={handleSendMessage}
           disabled={isLoading}
+          placeholder="Type your message to the group..."
         />
       </div>
     </div>

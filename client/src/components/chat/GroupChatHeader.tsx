@@ -17,6 +17,13 @@ interface GroupChatHeaderProps {
   onComplete?: () => void;
 }
 
+interface Persona {
+  id: string;
+  name: string;
+  avatar_url?: string;
+  type: string;
+}
+
 export function GroupChatHeader({
   onBack,
   title,
@@ -42,14 +49,41 @@ export function GroupChatHeader({
           </Button>
           
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <Users className="h-8 w-8 text-primary" />
+            {/* Persona Avatars */}
+            <div className="flex -space-x-2">
+              {personas.slice(0, 3).map((persona) => (
+                <div
+                  key={persona.id}
+                  className="relative h-8 w-8 rounded-full border-2 border-background bg-muted overflow-hidden"
+                >
+                  {persona.avatar_url ? (
+                    <img
+                      src={persona.avatar_url.startsWith("/") ? persona.avatar_url : `/avatars/${persona.avatar_url}`}
+                      alt={persona.name}
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = "none";
+                        target.nextElementSibling!.className = "h-full w-full flex items-center justify-center text-xs font-medium";
+                      }}
+                    />
+                  ) : null}
+                  <div className="hidden h-full w-full flex items-center justify-center text-xs font-medium">
+                    {persona.name.charAt(0)}
+                  </div>
+                </div>
+              ))}
+              {personas.length > 3 && (
+                <div className="relative h-8 w-8 rounded-full border-2 border-background bg-muted flex items-center justify-center text-xs font-medium">
+                  +{personas.length - 3}
+                </div>
+              )}
             </div>
             <div>
               <h3 className="font-semibold text-foreground">{title}</h3>
-              {subtitle && (
-                <p className="text-sm text-muted-foreground">{subtitle}</p>
-              )}
+              <p className="text-sm text-muted-foreground">
+                {personas.map(p => p.name).join(", ")}
+              </p>
             </div>
           </div>
         </div>

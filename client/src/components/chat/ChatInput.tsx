@@ -6,9 +6,10 @@ import { bind, unbind, toHiragana } from "wanakana";
 
 interface ChatInputProps {
   message: string;
-  onMessageChange: (message: string) => void;
+  onMessageChange?: (message: string) => void;
+  setMessage?: (message: string) => void;
   onSendMessage: () => void;
-  romajiMode: boolean;
+  romajiMode?: boolean;
   disabled?: boolean;
   placeholder?: string;
   className?: string;
@@ -17,8 +18,9 @@ interface ChatInputProps {
 export function ChatInput({
   message,
   onMessageChange,
+  setMessage,
   onSendMessage,
-  romajiMode,
+  romajiMode = false,
   disabled = false,
   placeholder = "Type your message in Japanese...",
   className = ""
@@ -61,7 +63,14 @@ export function ChatInput({
         <Textarea
           ref={textareaRef}
           value={message}
-          onChange={(e) => onMessageChange(e.target.value)}
+          onChange={(e) => {
+            const newValue = e.target.value;
+            if (onMessageChange) {
+              onMessageChange(newValue);
+            } else if (setMessage) {
+              setMessage(newValue);
+            }
+          }}
           onKeyPress={handleKeyPress}
           placeholder={placeholder}
           className="flex-1 min-h-[60px] resize-none"
