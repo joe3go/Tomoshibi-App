@@ -8,7 +8,7 @@ import { useState, useCallback } from "react";
 import { useAuth } from "@/context/SupabaseAuthContext";
 import { supabase } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { logError, logInfo } from "@utils/logger";
+import { logError, logInfo, logDebug } from "@utils/logger";
 
 export interface UseConversationCoreResult {
   loading: boolean;
