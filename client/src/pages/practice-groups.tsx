@@ -23,7 +23,7 @@ export default function PracticeGroups() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('conversation_templates')
-        .select('id, title, description, default_personas, group_prompt_suffix, difficulty, topic, participant_count')
+        .select('id, title, description, default_personas, group_prompt_suffix, difficulty')
         .eq('mode', 'group')
         .order('title');
 
@@ -37,9 +37,7 @@ export default function PracticeGroups() {
             description: 'Chat with Keiko and Aoi about your favorite anime series',
             default_personas: ['8b0f056c-41fb-4c47-baac-6029c64e026a', '3c9f4d8a-5678-9012-3456-789012345678'],
             difficulty: 'beginner',
-            group_prompt_suffix: 'This is a group conversation about anime.',
-            topic: 'anime_discussion',
-            participant_count: 2
+            group_prompt_suffix: 'This is a group conversation about anime.'
           },
           {
             id: 'study-group-fallback',
@@ -47,9 +45,7 @@ export default function PracticeGroups() {
             description: 'Practice with Aoi and Satoshi in a study session',
             default_personas: ['3c9f4d8a-5678-9012-3456-789012345678', '2b8e7f3d-4567-8901-2345-678901234567'],
             difficulty: 'intermediate',
-            group_prompt_suffix: 'This is a study group session.',
-            topic: 'grammar_practice',
-            participant_count: 2
+            group_prompt_suffix: 'This is a study group session.'
           },
           {
             id: 'cafe-hangout-fallback',
@@ -57,9 +53,7 @@ export default function PracticeGroups() {
             description: 'Casual conversation with Keiko and Haruki at a Tokyo cafe',
             default_personas: ['8b0f056c-41fb-4c47-baac-6029c64e026a', 'f7e8d9c2-1234-5678-9abc-def012345678'],
             difficulty: 'beginner',
-            group_prompt_suffix: 'This is a casual cafe conversation.',
-            topic: 'daily_life',
-            participant_count: 2
+            group_prompt_suffix: 'This is a casual cafe conversation.'
           }
         ];
       }

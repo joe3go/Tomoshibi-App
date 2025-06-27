@@ -1,4 +1,3 @@
-
 /**
  * 🧩 Group chat specific logic
  * ✅ Handles multiple personas and context-based response selection
@@ -16,10 +15,10 @@ export function useGroupChat(conversationId: string) {
   const core = useConversationCore();
   const { session, user } = useAuth();
   const { toast } = useToast();
-  
+
   const [groupPersonas, setGroupPersonas] = useState<GroupPersona[]>([]);
   const [typingPersonas, setTypingPersonas] = useState<Set<string>>(new Set());
-  
+
   const groupChatStates = useRef<Map<string, GroupChatState>>(new Map());
   const responseCooldown = 8000;
 
@@ -38,7 +37,7 @@ export function useGroupChat(conversationId: string) {
           template_id,
           conversation_templates:template_id (
             title,
-            default_personas,
+            description,
             group_prompt_suffix
           )
         `)
@@ -90,7 +89,7 @@ export function useGroupChat(conversationId: string) {
     // Check if user mentioned a specific persona
     const userMessages = core.messages.filter(m => m.sender_type === 'user');
     const lastUserMessage = userMessages[userMessages.length - 1];
-    
+
     if (lastUserMessage) {
       const userMessage = lastUserMessage.content.toLowerCase();
       for (const persona of groupPersonas) {
@@ -116,13 +115,13 @@ export function useGroupChat(conversationId: string) {
 
     const lastSpeakerIndex = groupPersonas.findIndex(p => p.id === lastAIMessage.sender_persona_id);
     const nextIndex = (lastSpeakerIndex + 1) % groupPersonas.length;
-    
+
     // 15% chance of random speaker for natural flow
     if (Math.random() < 0.15) {
       const randomIndex = Math.floor(Math.random() * groupPersonas.length);
       return groupPersonas[randomIndex].id;
     }
-    
+
     return groupPersonas[nextIndex].id;
   }, [groupPersonas, core.messages]);
 
@@ -162,7 +161,7 @@ export function useGroupChat(conversationId: string) {
     if (!message.trim() || core.sending || !session || !user) return;
 
     const finalMessage = romajiMode ? toHiragana(message.trim()) : message.trim();
-    
+
     try {
       core.setSending(true);
 
@@ -178,7 +177,7 @@ export function useGroupChat(conversationId: string) {
 
       // Check if AI should respond
       const shouldGenerateResponse = checkResponseThrottling();
-      
+
       if (!shouldGenerateResponse && core.messages.filter(m => m.sender_type === 'ai').length > 0) {
         core.setSending(false);
         return;
@@ -187,21 +186,21 @@ export function useGroupChat(conversationId: string) {
       // Get next AI speaker
       const nextSpeakerId = getNextAISpeaker();
       const speakingPersona = groupPersonas.find(p => p.id === nextSpeakerId);
-      
+
       if (speakingPersona) {
         setTypingPersonas(prev => new Set(prev).add(nextSpeakerId));
-        
+
         // Natural delay
         const delay = Math.random() * 2000 + 1000;
         await new Promise(resolve => setTimeout(resolve, delay));
-        
+
         setTypingPersonas(prev => {
           const newSet = new Set(prev);
           newSet.delete(nextSpeakerId);
           return newSet;
         });
       }
-      
+
       // Get group context
       const { data: conversation } = await supabase
         .from("conversations")
@@ -209,13 +208,14 @@ export function useGroupChat(conversationId: string) {
           title,
           conversation_templates (
             title,
+            description,
             group_prompt_suffix
           )
         `)
         .eq("id", conversationId)
         .single();
 
-      const groupTopic = conversation?.conversation_templates?.title || conversation?.title || "group conversation";
+      const groupTopic = conversation?.conversation_templates?.description || conversation?.title || "group conversation";
       const groupContext = conversation?.conversation_templates?.group_prompt_suffix || "";
 
       // Generate AI response
@@ -288,13 +288,14 @@ export function useGroupChat(conversationId: string) {
           title,
           conversation_templates (
             title,
+            description,
             group_prompt_suffix
           )
         `)
         .eq("id", conversationId)
         .single();
 
-      const groupTopic = conversation?.conversation_templates?.title || conversation?.title || "group conversation";
+      const groupTopic = conversation?.conversation_templates?.description || conversation?.title || "group conversation";
       const groupContext = conversation?.conversation_templates?.group_prompt_suffix || "";
 
       // Trigger introductions from all personas
@@ -320,7 +321,7 @@ export function useGroupChat(conversationId: string) {
 
         if (response.ok) {
           const aiData = await response.json();
-          
+
           const aiMessage = await core.createAIMessage(
             conversationId,
             aiData.content || '',
@@ -333,7 +334,7 @@ export function useGroupChat(conversationId: string) {
           }
         }
       }
-      
+
     } catch (error) {
       logError("First message error:", error);
     } finally {
