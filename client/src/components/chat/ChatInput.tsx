@@ -1,89 +1,98 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send } from "lucide-react";
-import { bind, unbind, toHiragana } from "wanakana";
 
 interface ChatInputProps {
-  message: string;
-  onMessageChange?: (message: string) => void;
+  message?: string;
   setMessage?: (message: string) => void;
+  onMessageChange?: (message: string) => void;
   onSendMessage: () => void;
-  romajiMode?: boolean;
   disabled?: boolean;
   placeholder?: string;
-  className?: string;
+  romajiMode?: boolean;
 }
 
 export function ChatInput({
-  message,
-  onMessageChange,
+  message: externalMessage,
   setMessage,
+  onMessageChange,
   onSendMessage,
-  romajiMode = false,
   disabled = false,
-  placeholder = "Type your message in Japanese...",
-  className = ""
+  placeholder = "Type your message...",
+  romajiMode = false,
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [internalMessage, setInternalMessage] = useState("");
 
-  // Wanakana binding
+  // Use external message if provided, otherwise use internal state
+  const message = externalMessage !== undefined ? externalMessage : internalMessage;
+
   useEffect(() => {
-    const element = textareaRef.current;
-    if (romajiMode && element) {
-      bind(element, { IMEMode: "toHiragana" });
+    // Auto-resize textarea
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
     }
+  }, [message]);
 
-    return () => {
-      if (element) {
-        try {
-          unbind(element);
-        } catch (e) {
-          console.log("Unbind cleanup completed");
-        }
-      }
-    };
-  }, [romajiMode]);
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      onSendMessage();
+      handleSend();
     }
   };
 
   const handleSend = () => {
     if (!message?.trim() || disabled) return;
     onSendMessage();
+
+    // Clear the input after sending
+    if (externalMessage === undefined) {
+      setInternalMessage("");
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+
+    // Update external state if provided
+    if (setMessage) {
+      setMessage(value);
+    }
+
+    // Update internal state if no external message
+    if (externalMessage === undefined) {
+      setInternalMessage(value);
+    }
+
+    // Call change handler if provided
+    if (onMessageChange) {
+      onMessageChange(value);
+    }
   };
 
   return (
-    <div className={`border-t bg-card p-4 ${className}`}>
-      <div className="max-w-4xl mx-auto flex gap-2">
+    <div className="flex items-end gap-2 p-4 border-t border-border bg-background">
+      <div className="flex-1">
         <Textarea
           ref={textareaRef}
-          value={message}
-          onChange={(e) => {
-            const newValue = e.target.value;
-            if (onMessageChange) {
-              onMessageChange(newValue);
-            } else if (setMessage) {
-              setMessage(newValue);
-            }
-          }}
-          onKeyPress={handleKeyPress}
+          value={message || ""}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="flex-1 min-h-[60px] resize-none"
           disabled={disabled}
+          className="min-h-[44px] max-h-32 resize-none"
+          rows={1}
         />
-        <Button
-          onClick={handleSend}
-          disabled={!message?.trim() || disabled}
-          size="lg"
-        >
-          <Send className="w-4 h-4" />
-        </Button>
       </div>
+      <Button
+        onClick={handleSend}
+        disabled={!message?.trim() || disabled}
+        size="lg"
+      >
+        <Send className="w-4 h-4" />
+      </Button>
     </div>
   );
 }

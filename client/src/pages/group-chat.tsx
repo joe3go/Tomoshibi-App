@@ -17,9 +17,9 @@ const GroupChatPage: React.FC = () => {
 
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [inputMessage, setInputMessage] = useState<string>('');
 
   const {
+    conversation,
     messages,
     groupPersonas,
     isLoading,
@@ -84,16 +84,10 @@ const GroupChatPage: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Handle message sending
+  // Handle message sending - this will be called by ChatInput
   const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
-
-    try {
-      await sendMessage(inputMessage);
-      setInputMessage(''); // Clear input after sending
-    } catch (error) {
-      logError('Failed to send message:', error);
-    }
+    // ChatInput will handle getting the message content internally
+    // and clear itself after sending
   };
 
   // Handle leaving the group chat
@@ -117,12 +111,8 @@ const GroupChatPage: React.FC = () => {
       <GroupChatHeader 
         onBack={handleLeaveChat}
         title={conversation?.title || "Group Chat"}
-        subtitle={`${groupPersonas.length} participants`}
-        personas={groupPersonas}
-        showFurigana={false}
-        onToggleFurigana={() => {}}
-        romajiMode={false}
-        onToggleRomaji={() => {}}
+        subtitle={`${groupPersonas?.length || 0} participants`}
+        personas={groupPersonas || []}
       />
 
       {/* Messages Container */}
@@ -161,9 +151,19 @@ const GroupChatPage: React.FC = () => {
       {/* Input Area */}
       <div className="border-t border-border p-4">
         <ChatInput
-          message={inputMessage}
-          setMessage={setInputMessage}
-          onSendMessage={handleSendMessage}
+          onSendMessage={async () => {
+            // Get the message from ChatInput's internal state
+            const textareaElement = document.querySelector('textarea');
+            const messageContent = textareaElement?.value?.trim();
+            
+            if (!messageContent) return;
+            
+            try {
+              await sendMessage(messageContent);
+            } catch (error) {
+              logError('Failed to send message:', error);
+            }
+          }}
           disabled={isLoading}
           placeholder="Type your message to the group..."
         />

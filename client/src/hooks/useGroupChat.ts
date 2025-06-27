@@ -234,7 +234,14 @@ export function useGroupChat(conversationId: string | null) {
   };
 
   const sendMessage = async (content: string) => {
+    if (!content?.trim()) {
+      logError('❌ Cannot send empty message');
+      return;
+    }
+
     try {
+      logDebug('📤 Sending message:', content);
+      
       const response = await fetch('/api/messages', {
         method: 'POST',
         headers: {
@@ -242,7 +249,7 @@ export function useGroupChat(conversationId: string | null) {
         },
         body: JSON.stringify({
           conversationId,
-          content,
+          content: content.trim(),
           mode: 'group'
         }),
       });
