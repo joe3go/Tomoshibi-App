@@ -79,7 +79,18 @@ export default function Dashboard() {
       }
 
       const title = `Chat with ${tutorName}`;
-      createConversationMutation.mutate({ personaId, title });
+      createConversationMutation.mutate({ 
+        personaId, 
+        title 
+      }, {
+        onSuccess: (conversation) => {
+          console.log('✅ Conversation created, navigating to chat:', conversation.id);
+          setLocation(`/chat/${conversation.id}`);
+        },
+        onError: (error) => {
+          console.error('❌ Failed to create conversation:', error);
+        }
+      });
     } catch (error) {
       console.error('Failed to start chat:', error);
     }

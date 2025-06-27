@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/context/SupabaseAuthContext";
 import { supabase } from "@/lib/supabase/client";
@@ -53,6 +52,9 @@ export function useConversations() {
         variant: "destructive",
       });
     },
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ["conversations", user?.id] });
+    }
   });
 
   // End conversation mutation
