@@ -29,11 +29,20 @@ const GroupChatPage: React.FC = () => {
 
   // Get conversation ID from URL or localStorage
   useEffect(() => {
+    // Check both URL query parameters and path parameters
     const urlParams = new URLSearchParams(window.location.search);
-    const urlConversationId = urlParams.get('conversationId');
+    const queryConversationId = urlParams.get('conversationId');
+    
+    // Extract from path if using /group-chat/:conversationId format
+    const pathMatch = window.location.pathname.match(/\/group-chat\/([^\/]+)/);
+    const pathConversationId = pathMatch ? pathMatch[1] : null;
+    
+    const urlConversationId = queryConversationId || pathConversationId;
 
-    logDebug('Current URL search params:', window.location.search);
-    logDebug('Extracted conversationId from URL:', urlConversationId);
+    logDebug('Current URL:', window.location.href);
+    logDebug('Query conversationId:', queryConversationId);
+    logDebug('Path conversationId:', pathConversationId);
+    logDebug('Final conversationId:', urlConversationId);
 
     if (urlConversationId) {
       logDebug('Found conversation ID in URL:', urlConversationId);

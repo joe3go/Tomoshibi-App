@@ -19,13 +19,14 @@ import { supabase } from "@/lib/supabase/client";
 import { extractPersonaFromTitle } from "@/lib/chat-utilities";
 import { bind, unbind } from "wanakana";
 // Import vocabulary tracking function from API
-const trackVocabularyUsage = async (text: string, source: 'user' | 'ai', session: any, tutorId?: string, conversationId?: string) => {
+// Import vocabulary tracking function from API
+const trackVocabularyUsage = async (text: string, source: 'user' | 'ai', authSession: any, tutorId?: string, conversationId?: string) => {
   try {
     await fetch('/api/vocab-tracker/increment', {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session?.access_token}` // ✅ Auth fix
+        'Authorization': `Bearer ${authSession?.access_token}`
       },
       body: JSON.stringify({ 
         text, 
@@ -146,9 +147,6 @@ export default function Chat() {
     const saved = localStorage.getItem("furigana-visible");
     return saved !== null ? saved === "true" : true;
   });
-  const [conversation, setConversation] = useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(true);
 
   // Use conversation mode hook
   const { isGroup, isSolo } = useConversationMode(conversation);
@@ -165,74 +163,10 @@ export default function Chat() {
       validateConversationParticipants(conversationId);
     }
 
-    loadConversationData();
     loadPersonas();
-  }, [conversationId, session, user]);
+  }, [conversationId, user]);
 
-  const loadConversationData = async () => {
-    try {
-      setLoading(true);
-
-      // Load conversation
-      const { data: convData, error: convError } = await supabase
-        .from("conversations")
-        .select("*")
-        .eq("id", conversationId)
-        .eq("user_id", user?.id)
-        .single();
-
-      if (convError || !convData) {
-        toast({
-          title: "Conversation not found",
-          description: "This conversation doesn't exist or you don't have access to it.",
-          variant: "destructive",
-        });
-        setLocation("/dashboard");
-        return;
-      }
-
-      setConversation(convData);
-
-      logDebug('🔍 Conversation loaded:', {
-        id: convData.id,
-        mode: convData.mode,
-        title: convData.title,
-        persona_id: convData.persona_id,
-        isGroup: convData.mode === 'group'
-      });
-
-      // Load messages
-      await loadMessages();
-
-    } catch (error) {
-      console.error("Error loading conversation:", error);
-      toast({
-        title: "Error loading conversation",
-        description: "Please try again or return to dashboard.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadMessages = async () => {
-    const { data: msgData, error: msgError } = await supabase
-      .from("messages")
-      .select("*")
-      .eq("conversation_id", conversationId)
-      .order("created_at", { ascending: true });
-
-    if (msgError) {
-      console.error("Error loading messages:", msgError);
-      return;
-    }
-
-    setMessages(msgData || []);
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
-  };
+  
 
   const loadConversationParticipants = async () => {
     try {

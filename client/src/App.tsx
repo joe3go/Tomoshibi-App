@@ -41,6 +41,7 @@ export default function App() {
             <Route path="/dashboard" component={Dashboard} />
             <Route path="/chat/:conversationId" component={Chat} />
             <Route path="/group-chat" component={GroupChat} />
+            <Route path="/group-chat/:conversationId" component={GroupChat} />
             <Route path="/tutors" component={TutorSelection} />
             <Route path="/tutor-selection" component={TutorSelection} />
             <Route path="/scenarios" component={ScenarioSelection} />
