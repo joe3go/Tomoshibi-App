@@ -482,7 +482,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Add participants from template
         if (template.default_personas && Array.isArray(template.default_personas)) {
-          for (let i = 0; < template.default_personas.length; i++) {
+          for (let i = 0; i < template.default_personas.length; i++) {
             const personaId = template.default_personas[i];
 
             const { error: participantError } = await supabase
