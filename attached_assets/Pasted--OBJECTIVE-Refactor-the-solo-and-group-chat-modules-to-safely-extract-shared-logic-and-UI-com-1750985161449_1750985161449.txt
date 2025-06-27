@@ -1,0 +1,121 @@
+### 🧠 OBJECTIVE
+
+Refactor the solo and group chat modules to safely extract shared logic and UI components.  
+Maintain distinct behavior between solo and group chats while improving modularity and reusability.
+
+🔒 This refactor must NOT change any UI or break any functional behavior.
+
+---
+
+### 🔒 NON-NEGOTIABLE RULES
+
+- ✅ Keep all current functionality, layout, and UX exactly as-is
+- ❌ Do NOT introduce fallbacks like "Unknown speaker" or default avatars unless currently implemented
+- ❌ Do NOT use `conversation_templates.difficulty` to define behavior
+- ✅ Always use `users.jlpt_goal_level` to determine AI response difficulty
+- ❌ Do NOT use `conversation_participants.order_in_convo` to rotate speakers
+- ✅ Use conversational context to determine which persona should respond (e.g., user says “Keiko, how are you?” → Keiko replies)
+
+---
+
+### 🔗 SCHEMA-AWARE DATA HANDLING
+
+#### Solo Chat (`mode = 'solo'`)
+- Single AI persona → from `conversations.persona_id`
+- AI messages have `sender_type = 'ai'` and `sender_persona_id = persona_id`
+
+#### Group Chat (`mode = 'group'`)
+- Multiple AI personas → from `conversation_participants.persona_id`
+- Group tone behavior → from `conversation_templates.group_prompt_suffix`
+- JLPT level logic → from `users.jlpt_goal_level`
+- Persona response selection must be:
+  - Based on direct reference (e.g., user addresses a persona by name)
+  - Or fallback to smart contextual AI turn logic (e.g., last active speaker, random, etc.)
+
+---
+
+### 🔁 LOGIC REFACTOR STRUCTURE
+
+#### 1. Create `useConversationCore()`
+- Abstract shared logic:
+  - Message sending/receiving
+  - Fetching conversation
+  - Mutation state
+- Must be mode-agnostic and used by both solo/group chat hooks
+
+#### 2. Create `useChatConversation()`
+- Wraps `useConversationCore()`
+- Handles solo-specific logic (1 AI speaker)
+- Uses `conversations.persona_id`
+
+#### 3. Create `useGroupConversation()`
+- Wraps `useConversationCore()`
+- Adds:
+  - Persona selection logic (context-based, NOT round-robin)
+  - Typing indicators per persona
+  - Multi-speaker messaging
+- Dynamically composes AI system prompts using:
+  - `conversation_templates.group_prompt_suffix`
+  - `users.jlpt_goal_level`
+
+---
+
+### 🧩 SHARED UI COMPONENT STRATEGY
+
+Extract reusable components:
+
+- `ChatMessage`
+- `TypingIndicator`
+- `MessageInput`
+- `ConversationLayout`
+- `ChatHeader`
+
+All components must:
+- Accept mode-agnostic props like `isGroup`, `persona`, `showName`, `speakerColor`, etc.
+- Never hardcode fallback values (name, avatar, labels)
+- Never assume solo/group mode without explicit props
+
+Example:
+```tsx
+<ChatMessage 
+  message={msg}
+  isGroup={true}
+  persona={msg.senderPersona}
+/>
+```
+
+---
+
+### ✅ SMART RESPONSE BEHAVIOR (Group Only)
+
+In group chat:
+- If user message includes a persona name (e.g., "Keiko", "Ren"), that persona should respond next
+- Else fallback to:
+  - Last responding persona
+  - Or a natural-seeming AI handoff
+- You may use simple name-matching or embed name detection in the prompt logic
+
+---
+
+### ✅ COMPLETION CHECKLIST
+
+- [ ] Solo chat uses one persona only
+- [ ] Group chat responds with correct persona based on user reference
+- [ ] No usage of `order_in_convo` for speaker rotation
+- [ ] `group_prompt_suffix` and `jlpt_goal_level` combined in AI context
+- [ ] All schema relationships respected (e.g., conversation → participants)
+- [ ] Shared components introduced with clean props
+- [ ] No UI or behavioral regressions
+
+---
+
+### 💡 Add This Header to Shared Files/Hooks
+
+```ts
+/**
+ * 🧩 Shared between solo and group chat
+ * 🔒 Must remain mode-agnostic
+ * ✅ All behavior controlled via props or context
+ * ❌ No assumptions, no fallbacks — only schema-driven logic
+ */
+```
