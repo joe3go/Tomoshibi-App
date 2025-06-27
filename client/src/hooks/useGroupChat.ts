@@ -6,13 +6,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/context/SupabaseAuthContext";
 import { supabase } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useConversationCore } from "./useConversationCore";
+import { useChatCore } from "@/hooks/useChatCore";
 import { logDebug, logError, logInfo } from "@utils/logger";
 import type { GroupPersona, GroupChatState } from "@/types/chat";
 import { toHiragana } from "wanakana";
 
 export function useGroupChat(conversationId: string) {
-  const core = useConversationCore();
+  const core = useChatCore();
   const { session, user } = useAuth();
   const { toast } = useToast();
 

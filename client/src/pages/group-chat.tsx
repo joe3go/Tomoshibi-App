@@ -6,16 +6,15 @@ import { ChatInput } from "@/components/chat/ChatInput";
 import { GroupChatHeader } from "@/components/chat/GroupChatHeader";
 import { Button } from "@/components/ui/button";
 import { logDebug } from "@utils/logger";
+import { useChatUIState } from "@/hooks/useChatUIState";
+import { useAutoScroll } from "@/hooks/useAutoScroll";
 
 export default function GroupChat() {
   const [, params] = useRoute("/group-chat/:conversationId");
   const [, setLocation] = useLocation();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { messagesEndRef } = useAutoScroll(messages);
 
-  const [showFurigana, setShowFurigana] = useState(() => {
-    return localStorage.getItem("furigana-visible") === "true";
-  });
-  const [romajiMode, setRomajiMode] = useState(false);
+  const { showFurigana, romajiMode, toggleFurigana, toggleRomajiMode } = useChatUIState();
 
   // Check both URL query parameters and path parameters
   const urlParams = new URLSearchParams(window.location.search);
@@ -45,19 +44,9 @@ export default function GroupChat() {
     getPersonaById
   } = useGroupChat(conversationId || "");
 
-  // Auto scroll to bottom when messages change
-  useEffect(() => {
-    if (messages.length > 0) {
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
-    }
-  }, [messages]);
+  // Auto-scroll handled by useAutoScroll hook
 
-  // Save furigana preference
-  useEffect(() => {
-    localStorage.setItem("furigana-visible", showFurigana.toString());
-  }, [showFurigana]);
+  // Furigana persistence handled by useChatUIState hook
 
   const handleSendMessage = (message: string) => {
     sendMessage(message, romajiMode);
@@ -94,9 +83,9 @@ export default function GroupChat() {
         conversation={conversation}
         groupPersonas={groupPersonas}
         showFurigana={showFurigana}
-        onToggleFurigana={() => setShowFurigana(!showFurigana)}
+        onToggleFurigana={toggleFurigana}
         romajiMode={romajiMode}
-        onToggleRomajiMode={() => setRomajiMode(!romajiMode)}
+        onToggleRomajiMode={toggleRomajiMode}
         onBack={() => setLocation("/practice-groups")}
       />
 
@@ -148,7 +137,7 @@ export default function GroupChat() {
             disabled={sending}
             placeholder="Type your message to the group..."
             romajiMode={romajiMode}
-            onRomajiModeToggle={() => setRomajiMode(!romajiMode)}
+            onRomajiModeToggle={toggleRomajiMode}
           />
         </div>
       </div>

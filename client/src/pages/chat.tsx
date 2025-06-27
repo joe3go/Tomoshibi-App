@@ -17,6 +17,10 @@ import { loadGroupPersonas, loadSoloPersona, loadAllPersonas, populateConversati
 import { logDebug, logError, logInfo } from "@utils/logger";
 import { isEnglishMessage, sanitizeInput } from "@utils/validation";
 import { generateUUID } from "@utils/uuid";
+import { useChatUIState } from "@/hooks/useChatUIState";
+import { useAutoScroll } from "@/hooks/useAutoScroll";
+import { getAvatarImage, getPersonaBubbleStyles, handleAvatarError } from "@/lib/chat/avatarUtils";
+import { getMessageBubbleStyles } from "@/lib/chat/messageUtils";
 // Import vocabulary tracking function from API
 const trackVocabularyUsage = async (text: string, source: 'user' | 'ai', session: any, tutorId?: string, conversationId?: string) => {
   try {
@@ -136,13 +140,8 @@ export default function Chat() {
   const [sending, setSending] = useState(false);
 
   const [message, setMessage] = useState("");
-  const [romajiMode, setRomajiMode] = useState(false);
-  const [showFurigana, setShowFurigana] = useState(() => {
-    const saved = localStorage.getItem("furigana-visible");
-    return saved !== null ? saved === "true" : true;
-  });
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { showFurigana, romajiMode, setRomajiMode, toggleFurigana, toggleRomajiMode } = useChatUIState();
+  const { messagesEndRef } = useAutoScroll(messages);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const conversationId = params?.conversationId || null;
 
@@ -336,25 +335,7 @@ export default function Chat() {
     }
   }, [conversation, personas]);
 
-  const getMessageBubbleStyles = (messageType: 'user' | 'ai', persona?: Persona | null) => {
-    if (messageType === 'user') {
-      return 'bg-blue-500 text-white';
-    }
-
-    // AI message bubble styling based on persona
-    if (persona?.name === 'Keiko') {
-      return 'bg-rose-100 text-rose-900 border border-rose-200';
-    } else if (persona?.name === 'Aoi') {
-      return 'bg-emerald-100 text-emerald-900 border border-emerald-200';
-    } else if (persona?.name === 'Haruki') {
-      return 'bg-orange-100 text-orange-900 border border-orange-200';
-    } else if (persona?.name === 'Satoshi') {
-      return 'bg-blue-100 text-blue-900 border border-blue-200';
-    }
-
-    // Default AI styling
-    return 'bg-gray-100 text-gray-900 border border-gray-200';
-  };
+  // Using shared getMessageBubbleStyles from messageUtils
 
   const sendMessage = async () => {
     if (!message.trim() || sending || !session || !user) return;
@@ -548,10 +529,7 @@ export default function Chat() {
     };
   }, [romajiMode]);
 
-  // Save furigana preference
-  useEffect(() => {
-    localStorage.setItem("furigana-visible", showFurigana.toString());
-  }, [showFurigana]);
+  // Furigana persistence handled by useChatUIState hook
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -560,10 +538,7 @@ export default function Chat() {
     }
   };
 
-  const getAvatarImage = (persona: Persona | null) => {
-    if (!persona?.avatar_url) return "/avatars/default.png";
-    return persona.avatar_url.startsWith("/") ? persona.avatar_url : `/avatars/${persona.avatar_url}`;
-  };
+  // Using shared getAvatarImage from avatarUtils
 
   if (loading) {
     return (
@@ -710,16 +685,13 @@ export default function Chat() {
                       src={getAvatarImage(senderPersona)}
                       alt={senderPersona?.name || "AI"}
                       className="w-8 h-8 rounded-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                      target.src = "/avatars/default.png";
-                    }}
-                  />
+                      onError={handleAvatarError}
+                    />
                 )}
               </div>
 
               <div
-                className={`max-w-[70%] rounded-lg p-3 ${getMessageBubbleStyles(msg.sender_type, senderPersona)}`}
+                className={`max-w-[70%] rounded-lg p-3 ${getMessageBubbleStyles(msg.sender_type, getPersonaBubbleStyles(senderPersona))}`}
               >
                 {/* Show persona name in group mode */}
                 {isGroup && msg.sender_type === 'ai' && senderPersona && (
@@ -810,7 +782,7 @@ export default function Chat() {
           <div className="flex items-center gap-2 mb-2">
             <Toggle
               pressed={romajiMode}
-              onPressedChange={setRomajiMode}
+              onPressedChange={toggleRomajiMode}
               aria-label="Toggle romaji input"
               size="sm"
             >
@@ -819,7 +791,7 @@ export default function Chat() {
             </Toggle>
             <Toggle
               pressed={showFurigana}
-              onPressedChange={setShowFurigana}
+              onPressedChange={toggleFurigana}
               aria-label="Toggle furigana display"
               size="sm"
             >
