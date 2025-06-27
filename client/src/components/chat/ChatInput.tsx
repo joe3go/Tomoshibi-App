@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -52,7 +51,7 @@ export function ChatInput({
   };
 
   const handleSend = () => {
-    if (!message.trim() || disabled) return;
+    if (!message?.trim() || disabled) return;
     onSendMessage();
   };
 
@@ -70,7 +69,7 @@ export function ChatInput({
         />
         <Button
           onClick={handleSend}
-          disabled={!message.trim() || disabled}
+          disabled={!message?.trim() || disabled}
           size="lg"
         >
           <Send className="w-4 h-4" />

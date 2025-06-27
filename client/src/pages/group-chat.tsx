@@ -32,11 +32,11 @@ const GroupChatPage: React.FC = () => {
     // Check both URL query parameters and path parameters
     const urlParams = new URLSearchParams(window.location.search);
     const queryConversationId = urlParams.get('conversationId');
-    
+
     // Extract from path if using /group-chat/:conversationId format
     const pathMatch = window.location.pathname.match(/\/group-chat\/([^\/]+)/);
     const pathConversationId = pathMatch ? pathMatch[1] : null;
-    
+
     const urlConversationId = queryConversationId || pathConversationId;
 
     logDebug('Current URL:', window.location.href);
@@ -153,9 +153,10 @@ const GroupChatPage: React.FC = () => {
       {/* Input Area */}
       <div className="border-t border-border p-4">
         <ChatInput
-          onSendMessage={handleSendMessage}
+          message=""
+          setMessage={() => {}}
+          onSendMessage={sendMessage}
           disabled={isLoading}
-          placeholder="Type your message to the group..."
         />
       </div>
     </div>
