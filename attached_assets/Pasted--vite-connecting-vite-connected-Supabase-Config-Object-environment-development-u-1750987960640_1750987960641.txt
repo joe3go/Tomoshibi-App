@@ -1,0 +1,40 @@
+[vite] connecting...
+[vite] connected.
+🔧 Supabase Config: 
+Object {environment: "development", url: "https://gsnnydemkpllycgzmalv.supabase.co", hasAnonKey: true}
+ℹ️ Creating new Supabase client for: https://gsnnydemkpllycgzmalv.supabase.co (Environment: development
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+ℹ️ Initializing auth context...
+🐛 Cleaning up auth subscription
+ℹ️ Initializing auth context...
+🐛 Auth state change: SIGNED_IN true
+ℹ️ Initial session retrieved: true
+🐛 Auth state change: INITIAL_SESSION true
+ℹ️ Initial session retrieved: true
+🐛 Auth state change: INITIAL_SESSION true
+ℹ️ Initial session retrieved: true
+🔀 User authenticated, redirecting to dashboard
+Tutors fetched successfully: 
+(6) [{…}, {…}, {…}, {…}, {…}, {…}]
+Tutors fetched successfully: 
+(6) [{…}, {…}, {…}, {…}, {…}, {…}]
+🎯 Starting new chat with persona ID: 8b0f056c-41fb-4c47-baac-6029c64e026a Type: string
+🎯 Creating conversation with persona: 8b0f056c-41fb-4c47-baac-6029c64e026a title: Chat with Keiko
+✅ Conversation created with ID: c0cba18f-6e8d-49dc-ad6b-752d45e894c7 Type: string
+✅ Conversation created, navigating to chat: undefined
+🔧 Running conversation participants diagnostic...
+e.set is not a function
+❌ Conversation not found: 
+Object {code: "22P02", details: null, hint: null, message: "invalid input syntax for type uuid: "undefined""}
+
+at t.value (https://74e160bc-d4e2-4a3b-9efc-feb62bffd2d8-00-1ivyxq6u5jrj5.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://74e160bc-d4e2-4a3b-9efc-feb62bffd2d8-00-1ivyxq6u5jrj5.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://74e160bc-d4e2-4a3b-9efc-feb62bffd2d8-00-1ivyxq6u5jrj5.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://74e160bc-d4e2-4a3b-9efc-feb62bffd2d8-00-1ivyxq6u5jrj5.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+❌ Conversation not found: 
+Object {code: "22P02", details: null, hint: null, message: "invalid input syntax for type uuid: "undefined""}
+
+Tutors fetched successfully: 
+(6) [{…}, {…}, {…}, {…}, {…}, {…}]
+Tutors fetched successfully: 
+(6) [{…}, {…}, {…}, {…}, {…}, {…}]
