@@ -54,7 +54,7 @@ export default function PracticeGroups() {
             title: 'Casual Random Chat',
             description: 'Light, everyday conversation with natural Japanese adapted to your level',
             default_personas: ['9612651e-d1df-428f-865c-2a1c005952ef', 'e4390fc8-40b4-4ad1-a153-08bc37482dad'],
-            group_prompt_suffix: 'Keep it light and informal. Use friendly Japanese appropriate for the user\'s level. Talk about food, daily life, or anything random.',
+            group_prompt_suffix: 'Keep it light and informal. Use friendly Japanese Japanese appropriate for the user\'s level. Talk about food, daily life, or anything random.',
             topic: 'daily_life',
             participant_count: 2
           }
@@ -104,12 +104,20 @@ export default function PracticeGroups() {
       const conversationId = data.conversationId || data.conversation?.id;
       if (!conversationId) {
         logError('❌ No conversation ID in response:', data);
-        throw new Error('Invalid response: missing conversation ID');
+        throw new Error('Invalid response: missing conversation ID')
       }
+
+      logInfo('✅ Navigating to group chat with conversation ID:', conversationId);
 
       // Store conversation ID and navigate with URL parameter
       localStorage.setItem('currentGroupConversationId', conversationId);
-      setLocation(`/group-chat?conversationId=${conversationId}`);
+
+      // Use a slight delay to ensure localStorage is written
+      setTimeout(() => {
+        const targetUrl = `/group-chat?conversationId=${conversationId}`;
+        logInfo('🔗 Navigating to:', targetUrl);
+        setLocation(targetUrl);
+      }, 50);
     },
     onError: (error) => {
       logError('❌ Error creating group conversation:', error);

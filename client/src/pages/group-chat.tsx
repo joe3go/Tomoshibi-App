@@ -32,6 +32,9 @@ const GroupChatPage: React.FC = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const urlConversationId = urlParams.get('conversationId');
 
+    logDebug('Current URL search params:', window.location.search);
+    logDebug('Extracted conversationId from URL:', urlConversationId);
+
     if (urlConversationId) {
       logDebug('Found conversation ID in URL:', urlConversationId);
       setConversationId(urlConversationId);
@@ -48,7 +51,10 @@ const GroupChatPage: React.FC = () => {
       } else {
         logDebug('No conversation ID found, redirecting to practice groups');
         // Add a small delay to ensure this runs after navigation
-        setTimeout(() => setLocation('/practice-groups'), 100);
+        setTimeout(() => {
+          logDebug('Executing redirect to practice groups');
+          setLocation('/practice-groups');
+        }, 100);
         return;
       }
     }
