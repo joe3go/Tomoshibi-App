@@ -12,8 +12,6 @@ import { useAutoScroll } from "@/hooks/useAutoScroll";
 export default function GroupChat() {
   const [, params] = useRoute("/group-chat/:conversationId");
   const [, setLocation] = useLocation();
-  const { messagesEndRef } = useAutoScroll(messages);
-
   const { showFurigana, romajiMode, toggleFurigana, toggleRomajiMode } = useChatUIState();
 
   // Check both URL query parameters and path parameters
@@ -43,6 +41,8 @@ export default function GroupChat() {
     sendMessage,
     getPersonaById
   } = useGroupChat(conversationId || "");
+
+  const { messagesEndRef } = useAutoScroll(messages);
 
   // Auto-scroll handled by useAutoScroll hook
 
