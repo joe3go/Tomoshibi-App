@@ -40,9 +40,11 @@ export function useConversations() {
       }
 
       console.log('🎯 Creating conversation with persona:', personaId, 'title:', title);
-      const result = await createConversation(user.id, personaId, null, title);
-      console.log('✅ Conversation created with ID:', result, 'Type:', typeof result);
-      return result;
+      const conversationId = await createConversation(user.id, personaId, null, title);
+      console.log('✅ Conversation created with ID:', conversationId, 'Type:', typeof conversationId);
+      
+      // Return an object with the id property for the onSuccess callback
+      return { id: conversationId, title, personaId };
     },
     onError: (error) => {
       console.error('❌ Conversation creation failed:', error);
