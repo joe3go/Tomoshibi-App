@@ -1,4 +1,3 @@
-
 /**
  * 🧩 Shared between solo and group chat
  * 🔒 Must remain mode-agnostic
@@ -25,7 +24,7 @@ export interface UseConversationCoreResult {
 }
 
 export function useConversationCore(): UseConversationCoreResult {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
   const [conversation, setConversation] = useState<any>(null);
@@ -33,20 +32,36 @@ export function useConversationCore(): UseConversationCoreResult {
   const { toast } = useToast();
 
   const loadMessages = useCallback(async (conversationId: string) => {
+    if (!conversationId || !session) {
+      logDebug("Skipping message load: missing conversationId or session");
+      return;
+    }
+
     try {
-      const { data: msgData, error: msgError } = await supabase
+      logDebug("📥 Loading messages for conversation:", conversationId);
+
+      const { data: messagesData, error: messagesError } = await supabase
         .from("messages")
         .select("*")
         .eq("conversation_id", conversationId)
         .order("created_at", { ascending: true });
 
-      if (!msgError && msgData) {
-        setMessages(msgData);
+      if (messagesError) {
+        logError("Messages fetch error:", messagesError);
+        throw new Error(`Failed to load messages: ${messagesError.message}`);
       }
+
+      setMessages(messagesData || []);
+      logDebug(`✅ Loaded ${messagesData?.length || 0} messages for conversation ${conversationId}`);
     } catch (error) {
-      logError("Error loading messages:", error);
+      logError("❌ Error loading messages:", error);
+      toast({
+        title: "Error loading messages",
+        description: error?.message || "Please refresh the page.",
+        variant: "destructive",
+      });
     }
-  }, []);
+  }, [session, toast]);
 
   const createUserMessage = useCallback(async (conversationId: string, content: string) => {
     if (!session || !user) throw new Error("Not authenticated");
@@ -98,12 +113,13 @@ export function useConversationCore(): UseConversationCoreResult {
 
   return {
     loading,
+    setLoading,
     sending,
-    messages,
-    conversation,
-    setMessages,
-    setConversation,
     setSending,
+    messages,
+    setMessages,
+    conversation,
+    setConversation,
     loadMessages,
     createUserMessage,
     createAIMessage

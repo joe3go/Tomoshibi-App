@@ -24,8 +24,14 @@ export function useGroupChat(conversationId: string) {
 
   // Load group conversation and personas
   const loadGroupConversation = useCallback(async () => {
+    if (!conversationId || !session) {
+      logError("Cannot load conversation: missing ID or session");
+      return;
+    }
+
     try {
       core.setLoading?.(true);
+      logDebug("🔍 Loading group conversation:", conversationId);
 
       // Load conversation details
       const { data: convData, error: convError } = await supabase
@@ -38,49 +44,86 @@ export function useGroupChat(conversationId: string) {
           conversation_templates:template_id (
             title,
             description,
-            group_prompt_suffix
+            group_prompt_suffix,
+            default_personas
           )
         `)
         .eq("id", conversationId)
-        .eq("mode", "group")
         .single();
 
-      if (convError || !convData) {
-        throw new Error("Group conversation not found");
+      if (convError) {
+        logError("Conversation fetch error:", convError);
+        throw new Error(`Failed to load conversation: ${convError.message}`);
       }
 
-      core.setConversation(convData);
-
-      // Load group personas from template
-      const personaIds = convData.conversation_templates?.default_personas || [
-        "8b0f056c-41fb-4c47-baac-6029c64e026a", // Keiko
-        "9612651e-d1df-428f-865c-2a1c005952ef", // Aoi
-        "e73a0afc-3ee9-4886-b39a-c6f516ad7db7"  // Haruki
-      ];
-
-      const { data: personasData, error: personasError } = await supabase
-        .from("personas")
-        .select("id, name, avatar_url, personality, speaking_style")
-        .in("id", personaIds);
-
-      if (!personasError && personasData) {
-        setGroupPersonas(personasData);
+      if (!convData) {
+        throw new Error("Conversation not found");
       }
 
-      // Load messages
-      await core.loadMessages(conversationId);
+      if (convData.mode !== "group") {
+        throw new Error("This is not a group conversation");
+      }
+
+      core.setConversation?.(convData);
+      logDebug("✅ Conversation loaded:", convData.title);
+
+      // Load group personas from conversation_participants first
+      const { data: participantsData, error: participantsError } = await supabase
+        .from("conversation_participants")
+        .select(`
+          persona_id,
+          order_in_convo,
+          personas:persona_id (
+            id, name, avatar_url, personality, speaking_style
+          )
+        `)
+        .eq("conversation_id", conversationId)
+        .order("order_in_convo", { ascending: true });
+
+      let personasToUse = [];
+
+      if (!participantsError && participantsData && participantsData.length > 0) {
+        personasToUse = participantsData
+          .filter(row => row.personas)
+          .map(row => row.personas);
+        logDebug("✅ Loaded personas from participants:", personasToUse.map(p => p.name));
+      } else {
+        // Fallback to template default_personas
+        const personaIds = convData.conversation_templates?.default_personas || [
+          "8b0f056c-41fb-4c47-baac-6029c64e026a", // Keiko
+          "9612651e-d1df-428f-865c-2a1c005952ef", // Aoi
+          "e73a0afc-3ee9-4886-b39a-c6f516ad7db7"  // Haruki
+        ];
+
+        const { data: personasData, error: personasError } = await supabase
+          .from("personas")
+          .select("id, name, avatar_url, personality, speaking_style")
+          .in("id", personaIds);
+
+        if (!personasError && personasData) {
+          personasToUse = personasData;
+          logDebug("✅ Loaded personas from template fallback:", personasToUse.map(p => p.name));
+        }
+      }
+
+      setGroupPersonas(personasToUse);
+
+      // Load messages if core.loadMessages exists
+      if (core.loadMessages) {
+        await core.loadMessages(conversationId);
+      }
 
     } catch (error) {
-      logError("Error loading group conversation:", error);
+      logError("❌ Error loading group conversation:", error);
       toast({
-        title: "Error loading conversation",
-        description: "Please try again or return to dashboard.",
+        title: "Failed to load conversation",
+        description: error?.message || "Please try again or return to practice groups.",
         variant: "destructive",
       });
     } finally {
       core.setLoading?.(false);
     }
-  }, [conversationId, core, toast]);
+  }, [conversationId, session, core, toast]);
 
   // Smart persona selection based on context
   const getNextAISpeaker = useCallback((): string => {
@@ -342,12 +385,13 @@ export function useGroupChat(conversationId: string) {
     }
   }, [conversationId, core, session, groupPersonas]);
 
-  // Initialize on mount
+  // Initialize on mount - only run once when conversationId and session are available
   useEffect(() => {
     if (conversationId && session) {
+      logDebug("🚀 Initializing group conversation load for:", conversationId);
       loadGroupConversation();
     }
-  }, [conversationId, session, loadGroupConversation]);
+  }, [conversationId, session]); // Removed loadGroupConversation from deps to prevent loop
 
   const getPersonaById = useCallback((id: string): GroupPersona | null => {
     return groupPersonas.find(p => p.id === id) || null;
